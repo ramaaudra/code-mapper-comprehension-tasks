@@ -1,0 +1,4476 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+public/
+  vite.svg
+src/
+  assets/
+    react.svg
+  components/
+    edges/
+      CustomEdge.tsx
+    nodes/
+      GroupNode.tsx
+    ui/
+      badge.tsx
+      button.tsx
+      card.tsx
+      command.tsx
+      dialog.tsx
+      input.tsx
+      label.tsx
+      sheet.tsx
+      slider.tsx
+      switch.tsx
+      tooltip.tsx
+    GraphView.tsx
+    IssuesPanel.tsx
+    LayoutControls.tsx
+    MetricsPanel.tsx
+    NodeDetailPanel.tsx
+    theme-provider.tsx
+  config/
+    layout.ts
+  lib/
+    api.ts
+    cluster.ts
+    clusterLayout.ts
+    layout.ts
+    simpleClusterLayout.ts
+    utils.ts
+  App.css
+  App.tsx
+  index.css
+  main.tsx
+  vite-env.d.ts
+.gitignore
+eslint.config.js
+index.html
+package.json
+postcss.config.js
+README.md
+SETUP_SUMMARY.md
+tailwind.config.js
+tsconfig.app.json
+tsconfig.json
+tsconfig.node.json
+vite.config.ts
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="public/vite.svg">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
+</file>
+
+<file path="src/assets/react.svg">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
+</file>
+
+<file path="src/components/edges/CustomEdge.tsx">
+import { memo } from 'react';
+import { BaseEdge, getBezierPath, getStraightPath, getSmoothStepPath, type EdgeProps } from 'reactflow';
+
+const CustomEdge = memo(({ 
+  id, 
+  sourceX, 
+  sourceY, 
+  targetX, 
+  targetY, 
+  sourcePosition, 
+  targetPosition, 
+  style = {}, 
+  data,
+  markerEnd 
+}: EdgeProps) => {
+  // Calculate distance dan direction untuk better routing
+  const dx = Math.abs(targetX - sourceX);
+  const dy = Math.abs(targetY - sourceY);
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  
+  // Determine if edge is going left-to-right or right-to-left
+  const isForward = targetX > sourceX;
+  const verticalOffset = Math.abs(targetY - sourceY);
+  
+  let edgePath: string;
+  
+  // Use improved routing logic untuk better edge separation
+  if (distance < 80) {
+    // Very short distances: straight line
+    [edgePath] = getStraightPath({ sourceX, sourceY, targetX, targetY });
+  } else if (verticalOffset < 50 && dx > 100) {
+    // Horizontal connections: use smooth step dengan offset
+    const offset = isForward ? 20 : -20; // Add horizontal offset untuk avoid overlap
+    [edgePath] = getSmoothStepPath({
+      sourceX: sourceX + offset,
+      sourceY,
+      sourcePosition,
+      targetX: targetX - offset,
+      targetY,
+      targetPosition,
+      borderRadius: 12, // Larger radius untuk smoother curves
+    });
+  } else {
+    // Vertical or diagonal connections: bezier dengan controlled curvature
+    let curvature = 0.25; // Base curvature
+    
+    // Adjust curvature based on direction dan distance
+    if (distance > 300) curvature = 0.15; // Less curve untuk long distances
+    if (verticalOffset > 150) curvature = 0.3; // More curve untuk vertical separation
+    if (!isForward) curvature *= 1.5; // More curve untuk backward connections
+    
+    [edgePath] = getBezierPath({
+      sourceX,
+      sourceY,
+      sourcePosition,
+      targetX,
+      targetY,
+      targetPosition,
+      curvature,
+    });
+  }
+
+  return (
+    <>
+      <BaseEdge 
+        id={id}
+        path={edgePath} 
+        style={{
+          ...style,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+        }}
+        markerEnd={markerEnd}
+      />
+      {/* Edge label untuk aggregated edges */}
+      {data?.weight > 1 && (
+        <text>
+          <textPath
+            href={`#${id}`}
+            style={{ fontSize: '9px', fill: '#6b7280', fontWeight: '500' }}
+            startOffset="50%"
+            textAnchor="middle"
+          >
+            {data.weight}
+          </textPath>
+        </text>
+      )}
+    </>
+  );
+});
+
+CustomEdge.displayName = 'CustomEdge';
+
+export default CustomEdge;
+</file>
+
+<file path="src/components/nodes/GroupNode.tsx">
+import { memo } from 'react';
+import { Handle, Position, type NodeProps } from 'reactflow';
+import { Folder, Files, ChevronDown, ChevronRight } from 'lucide-react';
+
+interface GroupNodeData {
+  label: string;
+  width?: number;
+  height?: number;
+  nodeCount: number;
+  color?: string;
+  isBackground?: boolean;
+  clusterId?: string;
+  collapsedNodes?: string[];
+  isCollapsed?: boolean;
+}
+
+const GroupNode = memo(function GroupNode({ data, selected }: NodeProps<GroupNodeData>) {
+  const { label, nodeCount, color = '#f8fafc', isBackground = false, collapsedNodes, isCollapsed = false } = data;
+  const actuallyCollapsed = isCollapsed || Boolean(collapsedNodes && collapsedNodes.length > 0);
+  
+  // Background nodes are just visual containers
+  if (isBackground) {
+    return (
+      <div
+        className="rounded-2xl border border-slate-300/30 dark:border-slate-600/30 bg-opacity-20"
+        style={{
+          backgroundColor: color,
+          width: '100%',
+          height: '100%',
+          minWidth: '160px',
+          minHeight: '120px'
+        }}
+      >
+        {/* Simple header for background */}
+        <div className="px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 opacity-70 border-b border-slate-200/30 dark:border-slate-600/30">
+          📁 {label} ({nodeCount})
+        </div>
+      </div>
+    );
+  }
+
+  // Interactive cluster nodes
+  return (
+    <div
+      className={`
+        rounded-2xl border-2 backdrop-blur-sm
+        transition-all duration-200 relative overflow-hidden cursor-pointer
+        hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]
+        ${actuallyCollapsed 
+          ? 'bg-slate-50/90 dark:bg-slate-800/90 border-slate-400 dark:border-slate-500' 
+          : 'bg-white/50 dark:bg-slate-900/50 border-slate-300 dark:border-slate-600'
+        }
+        ${selected 
+          ? 'border-blue-500 shadow-lg shadow-blue-200/50 ring-2 ring-blue-200' 
+          : ''
+        }
+      `}
+      style={{ 
+        backgroundColor: actuallyCollapsed ? color : `${color}40`,
+        minWidth: actuallyCollapsed ? '180px' : '160px',
+        minHeight: actuallyCollapsed ? '100px' : '120px'
+      }}
+    >
+      {/* Header with folder info */}
+      <div className={`
+        px-4 py-3 border-b border-slate-200 dark:border-slate-600/50
+        backdrop-blur-sm flex items-center justify-between
+        transition-colors duration-200
+        ${actuallyCollapsed 
+          ? 'bg-slate-100/80 dark:bg-slate-700/80 hover:bg-slate-200/80 dark:hover:bg-slate-600/80' 
+          : 'bg-white/70 dark:bg-slate-800/70 hover:bg-white/80 dark:hover:bg-slate-800/80'
+        }
+        ${selected ? 'bg-blue-50/70' : ''}
+      `}>
+        <div className="flex items-center gap-2">
+          <div className={`
+            p-1 rounded-full transition-all duration-200
+            ${actuallyCollapsed 
+              ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
+              : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+            }
+          `}>
+            {actuallyCollapsed ? (
+              <ChevronRight className="h-3 w-3" />
+            ) : (
+              <ChevronDown className="h-3 w-3" />
+            )}
+          </div>
+          <Folder 
+            className={`h-4 w-4 transition-colors duration-200 ${
+              actuallyCollapsed 
+                ? 'text-blue-600 dark:text-blue-400 fill-current' 
+                : 'text-slate-600 dark:text-slate-400 fill-current'
+            }`}
+          />
+          <span className={`text-sm font-medium truncate transition-colors duration-200 ${
+            actuallyCollapsed 
+              ? 'text-slate-800 dark:text-slate-200' 
+              : 'text-slate-700 dark:text-slate-300'
+          }`}>
+            {label}
+          </span>
+        </div>
+        
+        <div className={`flex items-center gap-1 text-xs rounded-full px-2 py-1 transition-colors duration-200 ${
+          actuallyCollapsed 
+            ? 'text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-blue-900/50' 
+            : 'text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-800/80'
+        }`}>
+          <Files className="h-3 w-3" />
+          <span className="font-medium">{nodeCount}</span>
+          <span className="opacity-60">{actuallyCollapsed ? 'files' : ''}</span>
+        </div>
+      </div>
+
+      {/* Main content area */}
+      <div className={`transition-all duration-200 ${
+        actuallyCollapsed 
+          ? 'p-3 min-h-[50px] flex items-center justify-center' 
+          : 'p-2 min-h-[80px] flex items-center justify-center'
+      }`}>
+        {actuallyCollapsed ? (
+          <div className="text-xs text-slate-500 dark:text-slate-400 text-center">
+            <div className="flex items-center gap-1 justify-center">
+              <div className="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full animate-pulse"></div>
+              <span>Click to expand {nodeCount} files</span>
+            </div>
+          </div>
+        ) : (
+          <div className="text-xs text-slate-400 dark:text-slate-500 text-center opacity-50">
+            <div>Cluster expanded</div>
+            <div className="mt-1 opacity-60">Files are shown individually</div>
+          </div>
+        )}
+      </div>
+
+      {/* Invisible handles for connections between clusters */}
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        style={{ 
+          opacity: 0, 
+          width: 1, 
+          height: 1,
+          right: -1,
+          top: '50%'
+        }} 
+      />
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        style={{ 
+          opacity: 0, 
+          width: 1, 
+          height: 1,
+          left: -1,
+          top: '50%'
+        }} 
+      />
+      
+      {/* Additional handles for different directions */}
+      <Handle 
+        type="source" 
+        position={Position.Bottom} 
+        style={{ 
+          opacity: 0, 
+          width: 1, 
+          height: 1,
+          bottom: -1,
+          left: '50%'
+        }} 
+      />
+      <Handle 
+        type="target" 
+        position={Position.Top} 
+        style={{ 
+          opacity: 0, 
+          width: 1, 
+          height: 1,
+          top: -1,
+          left: '50%'
+        }} 
+      />
+
+      {/* Selection indicator */}
+      {selected && (
+        <div className="absolute inset-0 rounded-2xl bg-blue-500/10 border-2 border-blue-500 pointer-events-none" />
+      )}
+    </div>
+  );
+});
+
+GroupNode.displayName = 'GroupNode';
+
+export default GroupNode;
+</file>
+
+<file path="src/components/ui/badge.tsx">
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default:
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
+
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return (
+    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+  )
+}
+
+export { Badge, badgeVariants }
+</file>
+
+<file path="src/components/ui/button.tsx">
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300",
+  {
+    variants: {
+      variant: {
+        default: "bg-slate-900 text-slate-50 hover:bg-slate-900/90 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-50/90",
+        destructive:
+          "bg-red-500 text-slate-50 hover:bg-red-500/90 dark:bg-red-900 dark:text-slate-50 dark:hover:bg-red-900/90",
+        outline:
+          "border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-800 dark:hover:text-slate-50",
+        secondary:
+          "bg-slate-100 text-slate-900 hover:bg-slate-100/80 dark:bg-slate-800 dark:text-slate-50 dark:hover:bg-slate-800/80",
+        ghost: "hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-50",
+        link: "text-slate-900 underline-offset-4 hover:underline dark:text-slate-50",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    return (
+      <button
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+</file>
+
+<file path="src/components/ui/card.tsx">
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      className
+    )}
+    {...props}
+  />
+))
+Card.displayName = "Card"
+
+const CardHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
+))
+CardHeader.displayName = "CardHeader"
+
+const CardTitle = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn(
+      "text-2xl font-semibold leading-none tracking-tight",
+      className
+    )}
+    {...props}
+  />
+))
+CardTitle.displayName = "CardTitle"
+
+const CardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+CardDescription.displayName = "CardDescription"
+
+const CardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+))
+CardContent.displayName = "CardContent"
+
+const CardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("flex items-center p-6 pt-0", className)} {...props} />
+))
+CardFooter.displayName = "CardFooter"
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+</file>
+
+<file path="src/components/ui/command.tsx">
+import * as React from "react"
+import { Search } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const Command = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "flex h-10 w-[320px] items-center rounded-md border bg-white text-sm text-slate-900 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50",
+      className
+    )}
+    {...props}
+  />
+))
+Command.displayName = "Command"
+
+interface CommandInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  onValueChange?: (value: string) => void
+}
+
+const CommandInput = React.forwardRef<
+  HTMLInputElement,
+  CommandInputProps
+>(({ className, onValueChange, onChange, ...props }, ref) => (
+  <div className="flex w-full items-center px-3" cmdk-input-wrapper="">
+    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+    <input
+      ref={ref}
+      className={cn(
+        "flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      )}
+      onChange={(e) => {
+        onChange?.(e)
+        onValueChange?.(e.target.value)
+      }}
+      {...props}
+    />
+  </div>
+))
+CommandInput.displayName = "CommandInput"
+
+const CommandList = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("absolute top-full left-0 right-0 z-10 bg-white border border-t-0 rounded-b-md shadow-lg max-h-72 overflow-y-auto overflow-x-hidden dark:bg-slate-950", className)}
+    {...props}
+  />
+))
+CommandList.displayName = "CommandList"
+
+const CommandEmpty = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>((props, ref) => (
+  <div ref={ref} className="py-6 text-center text-sm" {...props} />
+))
+CommandEmpty.displayName = "CommandEmpty"
+
+interface CommandGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  heading?: string
+}
+
+const CommandGroup = React.forwardRef<
+  HTMLDivElement,
+  CommandGroupProps
+>(({ className, heading, children, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("overflow-hidden p-1 text-slate-500", className)}
+    {...props}
+  >
+    {heading && <div className="px-2 py-1.5 text-xs font-medium">{heading}</div>}
+    {children}
+  </div>
+))
+CommandGroup.displayName = "CommandGroup"
+
+const CommandItem = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-50",
+      className
+    )}
+    {...props}
+  />
+))
+CommandItem.displayName = "CommandItem"
+
+export { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem }
+</file>
+
+<file path="src/components/ui/dialog.tsx">
+import * as React from "react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { X } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const Dialog = DialogPrimitive.Root
+
+const DialogTrigger = DialogPrimitive.Trigger
+
+const DialogPortal = DialogPrimitive.Portal
+
+const DialogClose = DialogPrimitive.Close
+
+const DialogOverlay = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Overlay
+    ref={ref}
+    className={cn(
+      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    )}
+    {...props}
+  />
+))
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+
+const DialogContent = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+  <DialogPortal>
+    <DialogOverlay />
+    <DialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+        <X className="h-4 w-4" />
+        <span className="sr-only">Close</span>
+      </DialogPrimitive.Close>
+    </DialogPrimitive.Content>
+  </DialogPortal>
+))
+DialogContent.displayName = DialogPrimitive.Content.displayName
+
+const DialogHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col space-y-1.5 text-center sm:text-left",
+      className
+    )}
+    {...props}
+  />
+)
+DialogHeader.displayName = "DialogHeader"
+
+const DialogFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      className
+    )}
+    {...props}
+  />
+)
+DialogFooter.displayName = "DialogFooter"
+
+const DialogTitle = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn(
+      "text-lg font-semibold leading-none tracking-tight",
+      className
+    )}
+    {...props}
+  />
+))
+DialogTitle.displayName = DialogPrimitive.Title.displayName
+
+const DialogDescription = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+DialogDescription.displayName = DialogPrimitive.Description.displayName
+
+export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+}
+</file>
+
+<file path="src/components/ui/input.tsx">
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          "flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:placeholder:text-slate-400 dark:focus-visible:ring-slate-300",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Input.displayName = "Input"
+
+export { Input }
+</file>
+
+<file path="src/components/ui/label.tsx">
+import * as React from "react"
+import * as LabelPrimitive from "@radix-ui/react-label"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const labelVariants = cva(
+  "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+)
+
+const Label = React.forwardRef<
+  React.ElementRef<typeof LabelPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
+    VariantProps<typeof labelVariants>
+>(({ className, ...props }, ref) => (
+  <LabelPrimitive.Root
+    ref={ref}
+    className={cn(labelVariants(), className)}
+    {...props}
+  />
+))
+Label.displayName = LabelPrimitive.Root.displayName
+
+export { Label }
+</file>
+
+<file path="src/components/ui/sheet.tsx">
+"use client"
+
+import * as React from "react"
+import * as SheetPrimitive from "@radix-ui/react-dialog"
+import { XIcon } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
+  return <SheetPrimitive.Root data-slot="sheet" {...props} />
+}
+
+function SheetTrigger({
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
+  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
+}
+
+function SheetClose({
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Close>) {
+  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
+}
+
+function SheetPortal({
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Portal>) {
+  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
+}
+
+function SheetOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
+  return (
+    <SheetPrimitive.Overlay
+      data-slot="sheet-overlay"
+      className={cn(
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function SheetContent({
+  className,
+  children,
+  side = "right",
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Content> & {
+  side?: "top" | "right" | "bottom" | "left"
+}) {
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      <SheetPrimitive.Content
+        data-slot="sheet-content"
+        className={cn(
+          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+          side === "right" &&
+            "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm",
+          side === "left" &&
+            "data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm",
+          side === "top" &&
+            "data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b",
+          side === "bottom" &&
+            "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        <SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+          <XIcon className="size-4" />
+          <span className="sr-only">Close</span>
+        </SheetPrimitive.Close>
+      </SheetPrimitive.Content>
+    </SheetPortal>
+  )
+}
+
+function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="sheet-header"
+      className={cn("flex flex-col gap-1.5 p-4", className)}
+      {...props}
+    />
+  )
+}
+
+function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="sheet-footer"
+      className={cn("mt-auto flex flex-col gap-2 p-4", className)}
+      {...props}
+    />
+  )
+}
+
+function SheetTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Title>) {
+  return (
+    <SheetPrimitive.Title
+      data-slot="sheet-title"
+      className={cn("text-foreground font-semibold", className)}
+      {...props}
+    />
+  )
+}
+
+function SheetDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Description>) {
+  return (
+    <SheetPrimitive.Description
+      data-slot="sheet-description"
+      className={cn("text-muted-foreground text-sm", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Sheet,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+}
+</file>
+
+<file path="src/components/ui/slider.tsx">
+import * as React from "react"
+import * as SliderPrimitive from "@radix-ui/react-slider"
+import { cn } from "@/lib/utils"
+
+const Slider = React.forwardRef<
+  React.ElementRef<typeof SliderPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
+>(({ className, ...props }, ref) => (
+  <SliderPrimitive.Root
+    ref={ref}
+    className={cn(
+      "relative flex w-full touch-none select-none items-center",
+      className
+    )}
+    {...props}
+  >
+    <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-slate-900/20 dark:bg-slate-50/20">
+      <SliderPrimitive.Range className="absolute h-full bg-slate-900 dark:bg-slate-50" />
+    </SliderPrimitive.Track>
+    <SliderPrimitive.Thumb className="block h-4 w-4 rounded-full border border-slate-200 border-slate-900/50 bg-white shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 dark:border-slate-800 dark:border-slate-50/50 dark:bg-slate-950 dark:focus-visible:ring-slate-300" />
+  </SliderPrimitive.Root>
+))
+Slider.displayName = SliderPrimitive.Root.displayName
+
+export { Slider }
+</file>
+
+<file path="src/components/ui/switch.tsx">
+import * as React from "react"
+import * as SwitchPrimitive from "@radix-ui/react-switch"
+
+import { cn } from "@/lib/utils"
+
+const Switch = React.forwardRef<
+  React.ElementRef<typeof SwitchPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>
+>(({ className, ...props }, ref) => (
+  <SwitchPrimitive.Root
+    className={cn(
+      "peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input",
+      className
+    )}
+    {...props}
+    ref={ref}
+  >
+    <SwitchPrimitive.Thumb
+      className={cn(
+        "pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0"
+      )}
+    />
+  </SwitchPrimitive.Root>
+))
+Switch.displayName = SwitchPrimitive.Root.displayName
+
+export { Switch }
+</file>
+
+<file path="src/components/ui/tooltip.tsx">
+import * as React from "react"
+import * as TooltipPrimitive from "@radix-ui/react-tooltip"
+
+import { cn } from "@/lib/utils"
+
+const TooltipProvider = TooltipPrimitive.Provider
+
+const Tooltip = TooltipPrimitive.Root
+
+const TooltipTrigger = TooltipPrimitive.Trigger
+
+const TooltipContent = React.forwardRef<
+  React.ElementRef<typeof TooltipPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
+>(({ className, sideOffset = 4, ...props }, ref) => (
+  <TooltipPrimitive.Content
+    ref={ref}
+    sideOffset={sideOffset}
+    className={cn(
+      "z-50 overflow-hidden rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+      className
+    )}
+    {...props}
+  />
+))
+TooltipContent.displayName = TooltipPrimitive.Content.displayName
+
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+</file>
+
+<file path="src/components/GraphView.tsx">
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState, memo } from 'react';
+import ReactFlow, { Background, Controls, MiniMap, type Node, type Edge, type NodeProps, Handle, Position, useReactFlow } from 'reactflow';
+import 'reactflow/dist/style.css';
+import { layoutGraph } from '@/lib/layout';
+import { shouldUseClustering } from '@/lib/clusterLayout';
+import { simpleLayoutWithClusters } from '@/lib/simpleClusterLayout';
+import { getClusteringStats, buildClusters } from '@/lib/cluster';
+import { DEFAULT_LAYOUT, getAdaptiveLayout, type LayoutDirection } from '@/config/layout';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import GroupNode from '@/components/nodes/GroupNode';
+import CustomEdge from '@/components/edges/CustomEdge';
+
+// Custom Node Component with hover effects
+const CustomNode = memo(({ data, selected }: NodeProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+  
+  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+  const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+  
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className={`
+              px-4 py-2 rounded-2xl border-2 bg-white dark:bg-gray-900 shadow-lg relative
+              transition-all duration-200 hover:shadow-xl hover:scale-105
+              text-sm font-medium cursor-pointer min-w-[120px] text-center
+              ${selected ? 'border-blue-500 shadow-blue-200' : isHovered ? 'border-gray-400' : 'border-gray-200'}
+            `}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            {data.isHighImpact && (
+              <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
+                data.impactLevel === 'critical' ? 'bg-red-500 text-white' :
+                data.impactLevel === 'high' ? 'bg-orange-500 text-white' :
+                'bg-yellow-500 text-white'
+              }`}>
+                {data.indegree}
+              </div>
+            )}
+            {data.basename}
+            <Handle type="target" position={Position.Left} className="w-2 h-2" />
+            <Handle type="source" position={Position.Right} className="w-2 h-2" />
+          </div>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">
+          <div className="space-y-1">
+            <div className="font-medium">{data.basename}</div>
+            <div className="text-xs opacity-75 font-mono break-all">{data.label}</div>
+            <div className="text-xs">Size: {data.size ? `${(data.size / 1024).toFixed(1)}KB` : 'Unknown'}</div>
+            {data.isHighImpact && (
+              <div className={`text-xs px-2 py-1 rounded-full text-center font-medium ${
+                data.impactLevel === 'critical' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' :
+                data.impactLevel === 'high' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300' :
+                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300'
+              }`}>
+                🔥 High Impact ({data.indegree} dependencies)
+              </div>
+            )}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+});
+
+CustomNode.displayName = 'CustomNode';
+
+// Move nodeTypes and edgeTypes outside component for better performance
+const nodeTypes = {
+  custom: CustomNode,
+  group: GroupNode,
+};
+
+const edgeTypes = {
+  default: CustomEdge,
+  custom: CustomEdge,
+};
+
+interface GraphViewProps {
+  data: any;
+  query: string;
+  showDynamicImports?: boolean;
+  onNodeClick?: (node: any) => void;
+  direction?: LayoutDirection;
+  ranksep?: number;
+  nodesep?: number;
+  // Clustering props
+  useClustering?: boolean;
+  clusterDepth?: number;
+  clusterMinSize?: number;
+  onClusteringStatsChange?: (stats: any) => void;
+}
+
+export interface GraphViewRef {
+  fitView: () => void;
+}
+
+const GraphView = forwardRef<GraphViewRef, GraphViewProps>(({ 
+  data, 
+  query, 
+  showDynamicImports = true, 
+  onNodeClick,
+  direction = 'TB',
+  ranksep,
+  nodesep,
+  useClustering = false,
+  clusterDepth = 1,
+  clusterMinSize = 2,
+  onClusteringStatsChange
+}, ref) => {
+  const rf = useReactFlow();
+  const [graph, setGraph] = useState<{ nodes: Node[]; edges: Edge[] }>({ nodes: [], edges: [] });
+  const [isLayouted, setIsLayouted] = useState(false);
+  const [collapsedClusterIds, setCollapsedClusterIds] = useState<Set<string>>(new Set());
+  const [autoCollapseInitialized, setAutoCollapseInitialized] = useState(false);
+
+  // Expose fitView function to parent via ref
+  useImperativeHandle(ref, () => ({
+    fitView: () => rf.fitView({ padding: 0.2 })
+  }), [rf]);
+
+  // Memoize path labels for clustering
+  const pathLabels = useMemo(() => {
+    if (!data) return {};
+    return Object.fromEntries(
+      data.nodes.map((n: any) => [n.id, n.label || ''])
+    );
+  }, [data]);
+
+  // Memoize layout options for stability with adaptive settings
+  const layoutOptions = useMemo(() => {
+    const nodeCount = graph.nodes.length;
+    const adaptiveDefaults = nodeCount > 50 ? getAdaptiveLayout(nodeCount) : DEFAULT_LAYOUT;
+    
+    return {
+      ...adaptiveDefaults,
+      direction,
+      ...(ranksep && { ranksep }),
+      ...(nodesep && { nodesep })
+    };
+  }, [direction, ranksep, nodesep, graph.nodes.length]);
+
+  // Determine if clustering should be used and is beneficial
+  const shouldCluster = useMemo(() => {
+    return useClustering && shouldUseClustering(pathLabels, { 
+      depth: clusterDepth, 
+      minSize: clusterMinSize 
+    });
+  }, [useClustering, pathLabels, clusterDepth, clusterMinSize]);
+
+  // Auto-collapse large clusters initially
+  useEffect(() => {
+    if (!shouldCluster || !pathLabels || autoCollapseInitialized) return;
+    
+    const labels = Object.entries(pathLabels).map(([id, pathLabel]) => ({ id, pathLabel }));
+    const clusters = buildClusters(labels, { 
+      depth: clusterDepth, 
+      minSize: clusterMinSize 
+    });
+    
+    // Auto-collapse clusters with more than 8 files for better initial view
+    const largeClusters = clusters.filter(c => c.nodes.length > 8).map(c => c.id);
+    if (largeClusters.length > 0) {
+      setCollapsedClusterIds(new Set(largeClusters));
+    }
+    
+    setAutoCollapseInitialized(true);
+  }, [shouldCluster, pathLabels, clusterDepth, clusterMinSize, autoCollapseInitialized]);
+
+  // 1) Build base nodes/edges with temporary positions
+  const baseGraph = useMemo(() => {
+    if (!data) return { nodes: [], edges: [] };
+    const q = (query || '').toLowerCase();
+    
+    // Filter edges based on showDynamicImports
+    const filteredEdges = showDynamicImports 
+      ? data.edges 
+      : data.edges.filter((e: any) => e.kind !== 'dynamic');
+    
+    // Create high impact files set for styling
+    const highImpactFiles = new Set(data.issues?.highImpact?.map((item: any) => item.file) || []);
+    const highImpactMap = new Map(
+      (data.issues?.highImpact || []).map((item: any) => [item.file, item.indegree])
+    );
+    
+    const nodes: Node[] = data.nodes.map((n: any) => {
+      const isHighImpact = highImpactFiles.has(n.id);
+      const indegreeValue = highImpactMap.get(n.id);
+      const indegree: number = typeof indegreeValue === 'number' ? indegreeValue : 0;
+      const isSearchMatch = n.label.toLowerCase().includes(q) || n.basename.toLowerCase().includes(q);
+      
+      // Determine node styling based on impact level
+      let impactClass = '';
+      if (isHighImpact) {
+        if (indegree >= 3) {
+          impactClass = 'ring-4 ring-red-500 ring-offset-2 shadow-lg shadow-red-200';
+        } else if (indegree >= 2) {
+          impactClass = 'ring-3 ring-orange-500 ring-offset-1 shadow-md shadow-orange-200';
+        } else {
+          impactClass = 'ring-2 ring-yellow-500 shadow-sm shadow-yellow-200';
+        }
+      }
+      
+      const searchClass = isSearchMatch ? 'ring-2 ring-blue-400' : '';
+      const finalClass = isSearchMatch ? searchClass : impactClass;
+      
+      return {
+        id: n.id,
+        type: 'custom',
+        data: { 
+          label: n.label,          // relative path from backend
+          basename: n.basename,    // basename for tooltip
+          fullPath: n.id,         // full absolute path
+          size: n.size,           // accurate file size in bytes
+          isHighImpact,           // flag untuk high impact
+          indegree,               // dependency count
+          impactLevel: indegree >= 3 ? 'critical' : indegree >= 2 ? 'high' : 'medium'
+        },
+        // Temporary random position for initial render
+        position: { x: Math.random() * 800, y: Math.random() * 600 },
+        className: finalClass,
+        style: isHighImpact ? {
+          zIndex: 10, // High impact nodes di atas
+          transform: indegree >= 2 ? 'scale(1.1)' : 'scale(1.05)' // Sedikit lebih besar
+        } : undefined
+      };
+    });
+    
+    // Calculate importance of target nodes untuk edge weight
+    const targetImportanceMap = new Map<string, number>();
+    (data.issues?.highImpact || []).forEach((item: any) => {
+      targetImportanceMap.set(item.file, item.indegree);
+    });
+    
+    const edges: Edge[] = filteredEdges.map((e: any, i: number) => {
+      const targetImportance = targetImportanceMap.get(e.target) || 0;
+      
+      // Calculate edge weight berdasarkan target importance
+      const baseWidth = e.kind === 'dynamic' ? 3 : 2;
+      const importanceBonus = targetImportance > 0 ? Math.min(targetImportance * 0.8, 3) : 0;
+      const finalWidth = Math.max(baseWidth + importanceBonus, baseWidth);
+      
+      const strokeColor = e.kind === 'dynamic' ? '#f59e0b' : 
+                          targetImportance >= 2 ? '#ef4444' : // Red untuk high impact targets
+                          targetImportance >= 1 ? '#f97316' : // Orange untuk medium impact
+                          '#6b7280';
+      
+      return { 
+        id: String(i), 
+        source: e.source, 
+        target: e.target, 
+        type: 'custom', // Menggunakan custom edge component
+        markerEnd: {
+          type: 'arrowclosed',
+          width: 14,
+          height: 14,
+          color: strokeColor,
+          strokeWidth: 1.5,
+          orient: 'auto-start-reverse'
+        }, 
+        animated: e.kind === 'dynamic',
+        style: {
+          stroke: strokeColor,
+          strokeWidth: Math.min(finalWidth, 4), // Max 4px untuk cleaner look
+          strokeDasharray: e.kind === 'dynamic' ? '4 2' : undefined, // More subtle dash
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          opacity: e.kind === 'dynamic' ? 0.9 : 
+                   targetImportance >= 2 ? 0.95 : // High impact sangat visible
+                   targetImportance >= 1 ? 0.85 :
+                   0.7, // Regular edges cukup visible
+        },
+        className: e.kind === 'dynamic' ? 'stroke-amber-500' : 
+                   targetImportance >= 2 ? 'stroke-red-400' : 
+                   targetImportance >= 1 ? 'stroke-orange-400' :
+                   'stroke-gray-400',
+        data: {
+          isDynamic: e.kind === 'dynamic',
+          originalKind: e.kind,
+          targetImportance,
+          finalWidth,
+          weight: 1 // For consistent API
+        }
+      };
+    });
+
+    return { nodes, edges };
+  }, [data, query, showDynamicImports]);
+
+  // Set base graph when data changes
+  useEffect(() => {
+    setGraph(baseGraph);
+    setIsLayouted(false);
+    setAutoCollapseInitialized(false); // Reset auto-collapse for new data
+    setCollapsedClusterIds(new Set()); // Reset collapsed clusters
+  }, [baseGraph]);
+
+  // 2) After nodes are measured by React Flow, re-layout with actual sizes
+  useEffect(() => {
+    if (!graph.nodes.length || isLayouted) return;
+    
+    // Wait for React Flow to measure node dimensions
+    const layoutId = requestAnimationFrame(() => {
+      const measuredNodes = rf.getNodes(); // Contains width/height
+      
+      // Merge measured dimensions back into our nodes
+      const nodesWithDimensions = graph.nodes.map(n => {
+        const measured = measuredNodes.find(m => m.id === n.id);
+        return measured ? { ...n, width: measured.width, height: measured.height } : n;
+      });
+      
+      // Now layout with accurate dimensions using clustering if enabled
+      const layoutedGraph = shouldCluster
+        ? simpleLayoutWithClusters(
+            nodesWithDimensions as Node[],
+            graph.edges,
+            pathLabels,
+            {
+              depth: clusterDepth,
+              minSize: clusterMinSize,
+              layoutOptions,
+              collapsedClusterIds
+            }
+          )
+        : layoutGraph(
+            nodesWithDimensions as Node[],
+            graph.edges,
+            layoutOptions
+          );
+
+      // Update clustering statistics if callback provided
+      if (shouldCluster && onClusteringStatsChange) {
+        const labels = Object.entries(pathLabels).map(([id, pathLabel]) => ({ id, pathLabel }));
+        const clusters = buildClusters(labels, { 
+          depth: clusterDepth, 
+          minSize: clusterMinSize 
+        });
+        const stats = getClusteringStats(clusters, nodesWithDimensions.length);
+        onClusteringStatsChange(stats);
+      }
+      
+      setGraph(layoutedGraph);
+      
+      // Fit view first, then show edges with slight delay for perfect positioning
+      requestAnimationFrame(() => {
+        rf.fitView({ padding: 0.2 });
+        // Small delay to ensure all nodes are properly positioned before showing edges
+        setTimeout(() => {
+          setIsLayouted(true);
+        }, 50);
+      });
+    });
+    
+    return () => cancelAnimationFrame(layoutId);
+  }, [graph.nodes, graph.edges, rf, isLayouted, layoutOptions, shouldCluster, pathLabels, clusterDepth, clusterMinSize, onClusteringStatsChange, collapsedClusterIds]);
+
+  // Re-layout when layout options or clustering settings change
+  useEffect(() => {
+    if (!isLayouted) return;
+    
+    const relayoutId = requestAnimationFrame(() => {
+      const currentNodes = rf.getNodes() as Node[];
+      
+      const layoutedGraph = shouldCluster
+        ? simpleLayoutWithClusters(
+            currentNodes,
+            graph.edges,
+            pathLabels,
+            {
+              depth: clusterDepth,
+              minSize: clusterMinSize,
+              layoutOptions,
+              collapsedClusterIds
+            }
+          )
+        : layoutGraph(
+            currentNodes,
+            graph.edges,
+            layoutOptions
+          );
+      
+      // Update clustering statistics for re-layout
+      if (shouldCluster && onClusteringStatsChange) {
+        const labels = Object.entries(pathLabels).map(([id, pathLabel]) => ({ id, pathLabel }));
+        const clusters = buildClusters(labels, { 
+          depth: clusterDepth, 
+          minSize: clusterMinSize 
+        });
+        const stats = getClusteringStats(clusters, currentNodes.length);
+        onClusteringStatsChange(stats);
+      }
+      
+      setGraph(layoutedGraph);
+      requestAnimationFrame(() => {
+        rf.fitView({ padding: 0.2 });
+        // Ensure edges appear after fit view is complete
+        setTimeout(() => {
+          if (!isLayouted) setIsLayouted(true);
+        }, 50);
+      });
+    });
+    
+    return () => cancelAnimationFrame(relayoutId);
+  }, [layoutOptions, shouldCluster, pathLabels, clusterDepth, clusterMinSize, rf, isLayouted, graph.edges, onClusteringStatsChange, collapsedClusterIds]);
+
+  // Auto-center on search results when query changes
+  useEffect(() => {
+    if (!query.trim() || !isLayouted) return;
+    
+    const searchTerm = query.toLowerCase();
+    const matchingNodes = rf.getNodes().filter(node => {
+      const basename = node.data?.basename?.toLowerCase() || '';
+      const label = node.data?.label?.toLowerCase() || '';
+      return basename.includes(searchTerm) || label.includes(searchTerm);
+    });
+    
+    if (matchingNodes.length > 0) {
+      // Focus on the first matching node with smooth transition
+      const firstMatch = matchingNodes[0];
+      rf.setCenter(firstMatch.position.x + (firstMatch.width || 160) / 2, 
+                   firstMatch.position.y + (firstMatch.height || 48) / 2, 
+                   { zoom: 1.2, duration: 800 });
+    }
+  }, [query, isLayouted, rf]);
+
+  if (!data) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center space-y-4 p-8">
+          <div className="text-6xl opacity-20">📊</div>
+          <div className="text-lg font-medium text-gray-600 dark:text-gray-400">
+            No data yet
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-500">
+            Open the sidebar and analyze a project to see the dependency graph
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  const handleNodeClick = useCallback((_event: React.MouseEvent, node: any) => {
+    // Handle cluster collapse/expand
+    if (node.type === 'group' && !node.data?.isBackground) {
+      const clusterId = node.id.replace('cluster-', '');
+      
+      setCollapsedClusterIds(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(clusterId)) {
+          newSet.delete(clusterId); // Expand cluster
+        } else {
+          newSet.add(clusterId); // Collapse cluster
+        }
+        return newSet;
+      });
+      
+      // Force re-layout after state change
+      setIsLayouted(false);
+      return;
+    }
+    
+    if (onNodeClick) {
+      onNodeClick(node);
+    }
+  }, [onNodeClick]);
+
+  // toggleCluster function removed as it's redundant with handleNodeClick logic
+  
+  return (
+    <div className="h-full bg-gray-50 dark:bg-gray-900 relative">
+      {/* Layout calculation loading indicator */}
+      {!isLayouted && graph.nodes.length > 0 && (
+        <div className="absolute inset-0 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <div className="text-slate-700 dark:text-slate-300 font-medium">
+                Calculating layout...
+              </div>
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
+              Positioning {graph.nodes.length} nodes
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <ReactFlow 
+        nodes={graph.nodes} 
+        edges={isLayouted ? graph.edges : []} // Hide edges until layout complete
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        onNodeClick={handleNodeClick}
+        fitView={!isLayouted}  // Only fitView on initial render
+        fitViewOptions={{ padding: 0.2 }}
+        minZoom={0.1}
+        maxZoom={2}
+        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+        className="bg-gray-50 dark:bg-gray-900"
+      >
+        <Background 
+          gap={20} 
+          size={1} 
+          className="opacity-30" 
+        />
+        <Controls 
+          className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border"
+          showZoom={true}
+          showFitView={true}
+          showInteractive={false}
+        />
+        <MiniMap 
+          className="bg-white dark:bg-gray-800 border rounded-2xl shadow-lg" 
+          pannable 
+          zoomable
+          nodeColor="#6b7280"
+          maskColor="rgb(0, 0, 0, 0.1)"
+        />
+      </ReactFlow>
+    </div>
+  );
+});
+
+GraphView.displayName = 'GraphView';
+export default GraphView;
+</file>
+
+<file path="src/components/IssuesPanel.tsx">
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertTriangle, FileX, TrendingUp } from 'lucide-react';
+
+interface IssuesPanelProps {
+  data: any;
+}
+
+export default function IssuesPanel({ data }: IssuesPanelProps) {
+  if (!data?.issues) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Issues</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">No data available</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const { circularDependencies, orphans, highImpact } = data.issues;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm font-medium">Issues</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Circular Dependencies */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-orange-500" />
+            <span className="text-sm text-muted-foreground">Cycles</span>
+          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Badge 
+                variant={circularDependencies.length > 0 ? "destructive" : "secondary"}
+                className="cursor-pointer hover:opacity-80"
+              >
+                {circularDependencies.length}
+              </Badge>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Circular Dependencies ({circularDependencies.length})</DialogTitle>
+              </DialogHeader>
+              <div className="max-h-96 overflow-y-auto space-y-2">
+                {circularDependencies.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No circular dependencies found.</p>
+                ) : (
+                  circularDependencies.map((cycle: string[], index: number) => (
+                    <div key={index} className="border rounded p-3">
+                      <p className="text-sm font-medium mb-2">Cycle {index + 1}:</p>
+                      <div className="space-y-1">
+                        {cycle.map((file, fileIndex) => (
+                          <div key={fileIndex} className="text-xs font-mono bg-muted p-1 rounded">
+                            {fileIndex + 1}. {file.split('/').pop()}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Orphaned Files */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileX className="h-4 w-4 text-gray-500" />
+            <span className="text-sm text-muted-foreground">Orphans</span>
+          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Badge 
+                variant={orphans.length > 0 ? "outline" : "secondary"}
+                className="cursor-pointer hover:opacity-80"
+              >
+                {orphans.length}
+              </Badge>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Orphaned Files ({orphans.length})</DialogTitle>
+              </DialogHeader>
+              <div className="max-h-96 overflow-y-auto">
+                {orphans.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No orphaned files found.</p>
+                ) : (
+                  <div className="space-y-1">
+                    {orphans.map((file: string, index: number) => (
+                      <div key={index} className="text-xs font-mono bg-muted p-2 rounded">
+                        {file.split('/').pop()}
+                        <div className="text-xs text-muted-foreground mt-1 truncate">
+                          {file}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* High Impact Files */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-blue-500" />
+            <span className="text-sm text-muted-foreground">High Impact</span>
+          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Badge 
+                variant="default"
+                className="cursor-pointer hover:opacity-80"
+              >
+                {highImpact.length}
+              </Badge>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>High Impact Files ({highImpact.length})</DialogTitle>
+              </DialogHeader>
+              <div className="max-h-96 overflow-y-auto">
+                {highImpact.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No high impact files found.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {highImpact.map((item: { file: string; indegree: number }, index: number) => (
+                      <div key={index} className="border rounded p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium">{item.file.split('/').pop()}</span>
+                          <Badge variant="secondary">{item.indegree} deps</Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {item.file}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+</file>
+
+<file path="src/components/LayoutControls.tsx">
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
+import { Card } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Settings, RotateCcw, Eye, EyeOff, Layers, FolderTree } from 'lucide-react';
+import { type LayoutDirection, debounce } from '@/config/layout';
+
+interface LayoutControlsProps {
+  direction: LayoutDirection;
+  onDirectionChange: (direction: LayoutDirection) => void;
+  ranksep: number;
+  onRanksepChange: (value: number) => void;
+  nodesep: number;
+  onNodesepChange: (value: number) => void;
+  showDynamicImports: boolean;
+  onShowDynamicImportsChange: (show: boolean) => void;
+  onFitView: () => void;
+  // Clustering controls
+  useClustering: boolean;
+  onUseClusteringChange: (use: boolean) => void;
+  clusterDepth: number;
+  onClusterDepthChange: (depth: number) => void;
+  clusterMinSize: number;
+  onClusterMinSizeChange: (size: number) => void;
+  clusteringStats?: {
+    clusterCount: number;
+    clusteredNodes: number;
+    orphanedNodes: number;
+  };
+}
+
+export default function LayoutControls({
+  direction,
+  onDirectionChange,
+  ranksep,
+  onRanksepChange,
+  nodesep,
+  onNodesepChange,
+  showDynamicImports,
+  onShowDynamicImportsChange,
+  onFitView,
+  useClustering,
+  onUseClusteringChange,
+  clusterDepth,
+  onClusterDepthChange,
+  clusterMinSize,
+  onClusterMinSizeChange,
+  clusteringStats
+}: LayoutControlsProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Debounce slider changes to avoid too frequent re-layouts
+  const debouncedRanksepChange = debounce(onRanksepChange, 200);
+  const debouncedNodesepChange = debounce(onNodesepChange, 200);
+  const debouncedClusterDepthChange = debounce(onClusterDepthChange, 300);
+  const debouncedClusterMinSizeChange = debounce(onClusterMinSizeChange, 300);
+
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <Button 
+          variant="outline" 
+          size="icon"
+          className="absolute top-4 right-4 z-10 bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow"
+        >
+          <Settings className="h-4 w-4" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="w-80 sm:w-96">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Layout Controls
+          </SheetTitle>
+        </SheetHeader>
+        
+        <div className="space-y-6 pt-6">
+          {/* Layout Direction */}
+          <Card className="p-4">
+            <h3 className="text-sm font-medium mb-3">Layout Direction</h3>
+            <div className="flex gap-2">
+              <Button
+                variant={direction === 'TB' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => onDirectionChange('TB')}
+                className="flex-1"
+              >
+                ↓ Top-Bottom
+              </Button>
+              <Button
+                variant={direction === 'LR' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => onDirectionChange('LR')}
+                className="flex-1"
+              >
+                → Left-Right
+              </Button>
+            </div>
+          </Card>
+
+          {/* Spacing Controls */}
+          <Card className="p-4">
+            <h3 className="text-sm font-medium mb-4">Spacing</h3>
+            
+            <div className="space-y-4">
+              {/* Rank Separation */}
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label htmlFor="ranksep" className="text-sm">
+                    Level Distance
+                  </Label>
+                  <span className="text-xs text-muted-foreground">
+                    {ranksep}px
+                  </span>
+                </div>
+                <Slider
+                  id="ranksep"
+                  min={50}
+                  max={200}
+                  step={10}
+                  value={[ranksep]}
+                  onValueChange={(values) => debouncedRanksepChange(values[0])}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Node Separation */}
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label htmlFor="nodesep" className="text-sm">
+                    Node Distance
+                  </Label>
+                  <span className="text-xs text-muted-foreground">
+                    {nodesep}px
+                  </span>
+                </div>
+                <Slider
+                  id="nodesep"
+                  min={20}
+                  max={120}
+                  step={10}
+                  value={[nodesep]}
+                  onValueChange={(values) => debouncedNodesepChange(values[0])}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </Card>
+
+          {/* Clustering Controls */}
+          <Card className="p-4">
+            <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
+              <FolderTree className="h-4 w-4" />
+              Folder Clustering
+            </h3>
+            
+            {/* Clustering Toggle */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label className="text-sm flex items-center gap-2">
+                    <Layers className="h-4 w-4" />
+                    Group by Folders
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Organize files into folder groups
+                  </p>
+                </div>
+                <Switch
+                  checked={useClustering}
+                  onCheckedChange={onUseClusteringChange}
+                />
+              </div>
+
+              {/* Clustering Settings - only show when enabled */}
+              {useClustering && (
+                <div className="space-y-4 border-t pt-4">
+                  {/* Cluster Depth */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label className="text-sm">
+                        Folder Depth
+                      </Label>
+                      <span className="text-xs text-muted-foreground">
+                        {clusterDepth} level{clusterDepth > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="flex gap-1">
+                      {[1, 2, 3].map(depth => (
+                        <Button
+                          key={depth}
+                          variant={clusterDepth === depth ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => debouncedClusterDepthChange(depth)}
+                          className="flex-1 text-xs"
+                        >
+                          {depth}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Minimum Cluster Size */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label className="text-sm">
+                        Min Files per Folder
+                      </Label>
+                      <span className="text-xs text-muted-foreground">
+                        {clusterMinSize} files
+                      </span>
+                    </div>
+                    <Slider
+                      min={2}
+                      max={8}
+                      step={1}
+                      value={[clusterMinSize]}
+                      onValueChange={(values) => debouncedClusterMinSizeChange(values[0])}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Clustering Statistics */}
+                  {clusteringStats && (
+                    <div className="bg-muted/50 rounded-lg p-3 text-xs space-y-2">
+                      <div className="font-medium text-muted-foreground">Clustering Stats:</div>
+                      <div className="flex justify-between">
+                        <span>Folders:</span>
+                        <span className="font-medium">{clusteringStats.clusterCount}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Grouped:</span>
+                        <span className="font-medium">{clusteringStats.clusteredNodes}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Ungrouped:</span>
+                        <span className="font-medium">{clusteringStats.orphanedNodes}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Efficiency:</span>
+                        <span className="font-medium">
+                          {Math.round((clusteringStats.clusteredNodes / (clusteringStats.clusteredNodes + clusteringStats.orphanedNodes)) * 100)}%
+                        </span>
+                      </div>
+                      {getClusteringRecommendation(clusteringStats, clusterMinSize) && (
+                        <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                          <div className="text-blue-700 dark:text-blue-300 font-medium">💡 Recommendation:</div>
+                          <div className="text-blue-600 dark:text-blue-400 mt-1">
+                            {getClusteringRecommendation(clusteringStats, clusterMinSize)?.message}
+                          </div>
+                          {getClusteringRecommendation(clusteringStats, clusterMinSize)?.action && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="mt-2 h-6 text-xs border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/30"
+                              onClick={() => {
+                                const rec = getClusteringRecommendation(clusteringStats, clusterMinSize);
+                                if (rec?.action?.type === 'adjust-minsize') {
+                                  debouncedClusterMinSizeChange(rec.action.value);
+                                }
+                              }}
+                            >
+                              {getClusteringRecommendation(clusteringStats, clusterMinSize)?.action?.label}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Visibility Controls */}
+          <Card className="p-4">
+            <h3 className="text-sm font-medium mb-4">Visibility</h3>
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label className="text-sm flex items-center gap-2">
+                  {showDynamicImports ? (
+                    <Eye className="h-4 w-4" />
+                  ) : (
+                    <EyeOff className="h-4 w-4" />
+                  )}
+                  Dynamic Imports
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Show dynamic import relationships
+                </p>
+              </div>
+              <Switch
+                checked={showDynamicImports}
+                onCheckedChange={onShowDynamicImportsChange}
+              />
+            </div>
+          </Card>
+
+          {/* Reset and Actions */}
+          <Card className="p-4">
+            <h3 className="text-sm font-medium mb-3">Actions</h3>
+            
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onFitView}
+                className="w-full flex items-center gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Fit to View
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  onDirectionChange('TB');
+                  onRanksepChange(80);
+                  onNodesepChange(40);
+                  onShowDynamicImportsChange(true);
+                  onUseClusteringChange(false);
+                  onClusterDepthChange(1);
+                  onClusterMinSizeChange(2);
+                }}
+                className="w-full text-xs"
+              >
+                Reset to Defaults
+              </Button>
+            </div>
+          </Card>
+
+          {/* Help Text */}
+          <div className="text-xs text-muted-foreground p-3 bg-muted rounded-lg">
+            <p className="font-medium mb-1">Tips:</p>
+            <ul className="space-y-1">
+              <li>• Enable clustering for large projects (50+ files)</li>
+              <li>• Use depth 1 for top-level folders, 2-3 for nested structure</li>
+              <li>• Increase level distance for cleaner hierarchies</li>
+              <li>• Use Left-Right for wide graphs</li>
+              <li>• Hide dynamic imports to reduce complexity</li>
+            </ul>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/**
+ * Analyze clustering statistics and provide adaptive recommendations
+ * @param stats Clustering statistics
+ * @param currentMinSize Current minimum cluster size setting
+ * @returns Recommendation object with message and optional action
+ */
+function getClusteringRecommendation(
+  stats: {
+    clusterCount: number;
+    clusteredNodes: number;
+    orphanedNodes: number;
+    clusteringRatio?: number;
+    averageClusterSize?: number;
+    largestCluster?: number;
+    smallestCluster?: number;
+  },
+  currentMinSize: number
+) {
+  const totalNodes = stats.clusteredNodes + stats.orphanedNodes;
+  const efficiency = stats.clusteredNodes / totalNodes;
+  
+  // Low clustering efficiency (< 30%)
+  if (efficiency < 0.3 && currentMinSize > 2) {
+    return {
+      message: `Only ${Math.round(efficiency * 100)}% of files are grouped. Lower min size to create more folders.`,
+      action: {
+        type: 'adjust-minsize',
+        value: Math.max(2, currentMinSize - 1),
+        label: `Try ${Math.max(2, currentMinSize - 1)} files`
+      }
+    };
+  }
+  
+  // Too many small clusters (efficiency > 80% but many clusters)
+  if (efficiency > 0.8 && stats.clusterCount > totalNodes * 0.4 && currentMinSize < 5) {
+    return {
+      message: `${stats.clusterCount} folders created - may be too granular. Increase min size for cleaner grouping.`,
+      action: {
+        type: 'adjust-minsize',
+        value: Math.min(8, currentMinSize + 1),
+        label: `Try ${Math.min(8, currentMinSize + 1)} files`
+      }
+    };
+  }
+  
+  // Good clustering
+  if (efficiency >= 0.5 && efficiency <= 0.8) {
+    return {
+      message: `Good clustering balance - ${Math.round(efficiency * 100)}% grouped in ${stats.clusterCount} folders.`
+    };
+  }
+  
+  // Very low clustering with high minSize
+  if (stats.clusterCount === 0 && currentMinSize >= 4) {
+    return {
+      message: 'No folders created. Your project may have a flat structure.',
+      action: {
+        type: 'adjust-minsize',
+        value: 2,
+        label: 'Try 2 files'
+      }
+    };
+  }
+  
+  return null;
+}
+</file>
+
+<file path="src/components/MetricsPanel.tsx">
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+interface MetricsPanelProps {
+  data: any;
+}
+
+export default function MetricsPanel({ data }: MetricsPanelProps) {
+  if (!data?.metrics) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Metrics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">No data available</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const { fileCount, edgeCount, avgDegree } = data.metrics;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm font-medium">Metrics</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-muted-foreground">Files</span>
+          <span className="text-sm font-medium">{fileCount.toLocaleString()}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-muted-foreground">Dependencies</span>
+          <span className="text-sm font-medium">{edgeCount.toLocaleString()}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-muted-foreground">Avg Degree</span>
+          <span className="text-sm font-medium">{avgDegree}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+</file>
+
+<file path="src/components/NodeDetailPanel.tsx">
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { X, FileText, ArrowRight, ArrowLeft, Focus, Copy } from 'lucide-react';
+
+interface NodeDetailPanelProps {
+  node: any;
+  data: any;
+  onClose: () => void;
+  onFocusSubgraph?: (nodeId: string, direction: 'inward' | 'outward') => void;
+}
+
+export default function NodeDetailPanel({ node, data, onClose, onFocusSubgraph }: NodeDetailPanelProps) {
+  const [focusDirection, setFocusDirection] = useState<'inward' | 'outward'>('outward');
+
+  if (!node || !data) return null;
+
+  // Calculate indegree and outdegree
+  const incomingEdges = data.edges.filter((e: any) => e.target === node.id);
+  const outgoingEdges = data.edges.filter((e: any) => e.source === node.id);
+  
+  const indegree = incomingEdges.length;
+  const outdegree = outgoingEdges.length;
+  
+  // Get importers (files that import this file)
+  const importers = incomingEdges.map((e: any) => {
+    const sourceNode = data.nodes.find((n: any) => n.id === e.source);
+    return {
+      id: e.source,
+      label: sourceNode?.label || e.source,
+      basename: sourceNode?.basename || '',
+      kind: e.kind
+    };
+  });
+  
+  // Get imports (files that this file imports)
+  const imports = outgoingEdges.map((e: any) => {
+    const targetNode = data.nodes.find((n: any) => n.id === e.target);
+    return {
+      id: e.target,
+      label: targetNode?.label || e.target,
+      basename: targetNode?.basename || '',
+      kind: e.kind
+    };
+  });
+
+  const copyPath = () => {
+    navigator.clipboard.writeText(node.data.fullPath);
+  };
+
+  const formatFileSize = (size: number) => {
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  return (
+    <div className="fixed top-0 right-0 h-full w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-y-auto">
+      <div className="p-4 space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-blue-600" />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">File Details</h2>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onClose}
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* File Info */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center justify-between">
+              <span className="truncate">{node.data.basename}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={copyPath}
+                className="h-6 w-6 shrink-0"
+                title="Copy full path"
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="text-xs text-slate-600 dark:text-slate-400 font-mono break-all">
+              {node.data.label}
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-600 dark:text-slate-400">Size:</span>
+              <span className="font-medium">{formatFileSize(node.data.size)}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Connection Stats */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Connections</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {indegree}
+                </div>
+                <div className="text-xs text-slate-600 dark:text-slate-400">Incoming</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {outdegree}
+                </div>
+                <div className="text-xs text-slate-600 dark:text-slate-400">Outgoing</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Focus Subgraph */}
+        {onFocusSubgraph && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Focus className="h-4 w-4" />
+                Focus Subgraph
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex gap-2">
+                <Button
+                  variant={focusDirection === 'inward' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFocusDirection('inward')}
+                  className="flex-1"
+                >
+                  <ArrowLeft className="h-3 w-3 mr-1" />
+                  Inward
+                </Button>
+                <Button
+                  variant={focusDirection === 'outward' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFocusDirection('outward')}
+                  className="flex-1"
+                >
+                  <ArrowRight className="h-3 w-3 mr-1" />
+                  Outward
+                </Button>
+              </div>
+              <Button
+                onClick={() => onFocusSubgraph(node.id, focusDirection)}
+                className="w-full"
+                size="sm"
+              >
+                Focus {focusDirection === 'inward' ? 'Dependencies' : 'Dependents'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Importers */}
+        {importers.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Imported By ({importers.length})</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {importers.slice(0, 10).map((imp: any) => (
+                <div key={imp.id} className="flex items-center justify-between text-sm">
+                  <div className="truncate">
+                    <div className="font-medium text-slate-900 dark:text-slate-100">
+                      {imp.basename}
+                    </div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                      {imp.label}
+                    </div>
+                  </div>
+                  <Badge 
+                    variant={imp.kind === 'dynamic' ? 'default' : 'secondary'}
+                    className="shrink-0"
+                  >
+                    {imp.kind}
+                  </Badge>
+                </div>
+              ))}
+              {importers.length > 10 && (
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  +{importers.length - 10} more...
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Imports */}
+        {imports.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Imports ({imports.length})</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {imports.slice(0, 10).map((imp: any) => (
+                <div key={imp.id} className="flex items-center justify-between text-sm">
+                  <div className="truncate">
+                    <div className="font-medium text-slate-900 dark:text-slate-100">
+                      {imp.basename}
+                    </div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                      {imp.label}
+                    </div>
+                  </div>
+                  <Badge 
+                    variant={imp.kind === 'dynamic' ? 'default' : 'secondary'}
+                    className="shrink-0"
+                  >
+                    {imp.kind}
+                  </Badge>
+                </div>
+              ))}
+              {imports.length > 10 && (
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  +{imports.length - 10} more...
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/components/theme-provider.tsx">
+import { createContext, useContext, useEffect, useState } from "react"
+
+type Theme = "dark" | "light" | "system"
+
+type ThemeProviderProps = {
+  children: React.ReactNode
+  defaultTheme?: Theme
+  storageKey?: string
+}
+
+type ThemeProviderState = {
+  theme: Theme
+  setTheme: (theme: Theme) => void
+}
+
+const initialState: ThemeProviderState = {
+  theme: "system",
+  setTheme: () => null,
+}
+
+const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
+
+export function ThemeProvider({
+  children,
+  defaultTheme = "system",
+  storageKey = "code-mapper-ui-theme",
+  ...props
+}: ThemeProviderProps) {
+  const [theme, setTheme] = useState<Theme>(
+    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+  )
+
+  useEffect(() => {
+    const root = window.document.documentElement
+
+    root.classList.remove("light", "dark")
+
+    if (theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+        .matches
+        ? "dark"
+        : "light"
+
+      root.classList.add(systemTheme)
+      return
+    }
+
+    root.classList.add(theme)
+  }, [theme])
+
+  const value = {
+    theme,
+    setTheme: (theme: Theme) => {
+      localStorage.setItem(storageKey, theme)
+      setTheme(theme)
+    },
+  }
+
+  return (
+    <ThemeProviderContext.Provider {...props} value={value}>
+      {children}
+    </ThemeProviderContext.Provider>
+  )
+}
+
+export const useTheme = () => {
+  const context = useContext(ThemeProviderContext)
+
+  if (context === undefined)
+    throw new Error("useTheme must be used within a ThemeProvider")
+
+  return context
+}
+</file>
+
+<file path="src/config/layout.ts">
+export type LayoutDirection = 'TB' | 'LR';
+
+export type LayoutOptions = {
+  direction?: LayoutDirection;
+  ranksep?: number;            // distance between levels
+  nodesep?: number;            // distance between nodes in same level
+  marginx?: number;            // left/right margin of graph
+  marginy?: number;            // top/bottom margin of graph
+};
+
+export const DEFAULT_LAYOUT: Required<LayoutOptions> = {
+  direction: 'TB',
+  ranksep: 120, // Much more vertical space between levels
+  nodesep: 80, // Much more horizontal space between nodes
+  marginx: 50,
+  marginy: 50,
+};
+
+// Adaptive settings based on graph size
+export function getAdaptiveLayout(nodeCount: number): Required<LayoutOptions> {
+  if (nodeCount > 200) {
+    return {
+      ...DEFAULT_LAYOUT,
+      ranksep: 180, // Much more space untuk complex graphs
+      nodesep: 120,
+      marginx: 80,
+      marginy: 80,
+    };
+  } else if (nodeCount > 100) {
+    return {
+      ...DEFAULT_LAYOUT,
+      ranksep: 160,
+      nodesep: 100,
+      marginx: 70,
+      marginy: 70,
+    };
+  } else if (nodeCount > 50) {
+    return {
+      ...DEFAULT_LAYOUT,
+      ranksep: 140,
+      nodesep: 90,
+      marginx: 60,
+      marginy: 60,
+    };
+  }
+  return DEFAULT_LAYOUT;
+}
+
+// Debounce utility for layout controls
+export function debounce<T extends (...args: any[]) => void>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+</file>
+
+<file path="src/lib/api.ts">
+import axios from 'axios';
+
+export const api = axios.create({ 
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000' 
+});
+
+export async function analyzeProject(payload: { 
+  rootPath: string; 
+  include?: string[]; 
+  exclude?: string[] 
+}) {
+  const { data } = await api.post('/analyze', payload); 
+  return data;
+}
+</file>
+
+<file path="src/lib/cluster.ts">
+export type Cluster = {
+  id: string;           // e.g. "components" or "pages/admin"
+  label: string;        // label to display
+  nodes: string[];      // list of node ids (file absolute paths)
+  depth: number;        // number of path segments
+  color?: string;       // optional cluster color for theming
+};
+
+export interface ClusterOptions {
+  depth?: number;       // path segments to use for clustering (1-3)
+  minSize?: number;     // minimum nodes per cluster (2-5)
+}
+
+/**
+ * Build clusters from node labels by grouping files with shared path prefixes
+ * @param labels Array of {id, pathLabel} where pathLabel is relative path
+ * @param options Clustering configuration
+ * @returns Array of clusters sorted by id
+ */
+export function buildClusters(
+  labels: { id: string; pathLabel: string }[], 
+  options: ClusterOptions = {}
+): Cluster[] {
+  const { depth = 1, minSize = 2 } = options;
+  
+  // Group nodes by path prefix
+  const groupMap = new Map<string, string[]>();
+  
+  for (const item of labels) {
+    // Skip if path doesn't have enough segments
+    const segments = item.pathLabel.split('/').filter(s => s.length > 0);
+    if (segments.length < depth) continue;
+    
+    // Create cluster key from first N segments
+    const key = segments.slice(0, depth).join('/');
+    const existing = groupMap.get(key) || [];
+    existing.push(item.id);
+    groupMap.set(key, existing);
+  }
+  
+  // Filter clusters by minimum size and create cluster objects
+  const clusters: Cluster[] = [];
+  const clusterColors = [
+    '#E3F2FD', '#F3E5F5', '#E8F5E8', '#FFF3E0', 
+    '#FCE4EC', '#E1F5FE', '#F1F8E9', '#FFF8E1'
+  ];
+  
+  let colorIndex = 0;
+  for (const [key, nodeIds] of groupMap) {
+    if (nodeIds.length >= minSize) {
+      clusters.push({
+        id: key,
+        label: key,
+        nodes: nodeIds,
+        depth,
+        color: clusterColors[colorIndex % clusterColors.length]
+      });
+      colorIndex++;
+    }
+  }
+  
+  return clusters.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/**
+ * Create a mapping from node ID to cluster ID
+ * @param clusters Array of clusters
+ * @returns Record mapping node ID to cluster ID
+ */
+export function createNodeClusterMap(clusters: Cluster[]): Record<string, string> {
+  const nodeToCluster: Record<string, string> = {};
+  
+  for (const cluster of clusters) {
+    for (const nodeId of cluster.nodes) {
+      nodeToCluster[nodeId] = cluster.id;
+    }
+  }
+  
+  return nodeToCluster;
+}
+
+/**
+ * Get nodes that don't belong to any cluster (orphaned nodes)
+ * @param allNodeIds All node IDs in the graph
+ * @param nodeToCluster Mapping from node ID to cluster ID
+ * @returns Array of unclustered node IDs
+ */
+export function getUnclusteredNodes(
+  allNodeIds: string[], 
+  nodeToCluster: Record<string, string>
+): string[] {
+  return allNodeIds.filter(id => !nodeToCluster[id]);
+}
+
+/**
+ * Calculate statistics about clustering
+ * @param clusters Array of clusters
+ * @param totalNodes Total number of nodes
+ * @returns Clustering statistics
+ */
+export function getClusteringStats(clusters: Cluster[], totalNodes: number) {
+  const clusteredNodes = clusters.reduce((sum, c) => sum + c.nodes.length, 0);
+  const orphanedNodes = totalNodes - clusteredNodes;
+  const clusterSizes = clusters.map(c => c.nodes.length);
+  
+  return {
+    clusterCount: clusters.length,
+    clusteredNodes,
+    orphanedNodes,
+    clusteringRatio: clusteredNodes / totalNodes,
+    averageClusterSize: clusteredNodes / (clusters.length || 1),
+    largestCluster: clusterSizes.length > 0 ? Math.max(...clusterSizes) : 0,
+    smallestCluster: clusterSizes.length > 0 ? Math.min(...clusterSizes) : 0,
+    // Additional metrics for adaptive recommendations
+    efficiency: clusteredNodes / totalNodes,
+    clusterSizeDistribution: {
+      small: clusterSizes.filter(s => s <= 3).length,
+      medium: clusterSizes.filter(s => s > 3 && s <= 8).length,
+      large: clusterSizes.filter(s => s > 8).length
+    }
+  };
+}
+</file>
+
+<file path="src/lib/clusterLayout.ts">
+import type { Edge, Node } from 'reactflow';
+import { MarkerType } from 'reactflow';
+import { layoutGraph } from './layout';
+import { buildClusters, createNodeClusterMap, getUnclusteredNodes, type ClusterOptions } from './cluster';
+import { type LayoutOptions, DEFAULT_LAYOUT } from '@/config/layout';
+
+export interface ClusterLayoutOptions extends ClusterOptions {
+  padding?: number;     // padding inside cluster containers
+  gap?: number;         // gap between clusters in meta-layout
+  layoutOptions?: LayoutOptions;  // layout options for individual clusters and meta-graph
+}
+
+/**
+ * Layout nodes using folder-based clustering
+ * Groups nodes by folder structure, layouts each cluster separately,
+ * then layouts clusters in a meta-graph
+ * This version avoids React Flow's parent-child system to prevent recursion issues
+ */
+export function layoutWithClusters(
+  baseNodes: Node[],
+  baseEdges: Edge[],
+  pathLabels: Record<string, string>, // nodeId -> relative path
+  options: ClusterLayoutOptions = {}
+): { nodes: Node[]; edges: Edge[] } {
+  const {
+    depth = 1,
+    minSize = 2,
+    padding = 24,
+    gap = 120,
+    layoutOptions = DEFAULT_LAYOUT
+  } = options;
+
+  // 1) Build clusters from path labels
+  const labels = baseNodes.map(n => ({
+    id: n.id,
+    pathLabel: pathLabels[n.id] || n.data?.label || ''
+  }));
+  
+  const clusters = buildClusters(labels, { depth, minSize });
+  const nodeToCluster = createNodeClusterMap(clusters);
+
+  // 2) Handle case with no clusters or unsafe conditions (fallback to regular layout)
+  if (clusters.length === 0 || baseNodes.length > 200) {
+    console.log('Clustering disabled: no clusters or too many nodes for safe clustering');
+    return layoutGraph(baseNodes, baseEdges, layoutOptions);
+  }
+
+  // Additional safety check: ensure no nodes already have parent relationships
+  const hasExistingParents = baseNodes.some(n => n.parentNode || n.data?.parentId);
+  if (hasExistingParents) {
+    console.log('Clustering disabled: existing parent relationships detected');
+    return layoutGraph(baseNodes, baseEdges, layoutOptions);
+  }
+
+  // 3) Layout each cluster internally
+  const containerNodes: Node[] = [];
+  const clusterChildren: Node[] = [];
+
+  for (const cluster of clusters) {
+    // Get nodes and edges within this cluster
+    const clusterNodes = baseNodes.filter(n => nodeToCluster[n.id] === cluster.id);
+    const clusterEdges = baseEdges.filter(e => 
+      nodeToCluster[e.source] === cluster.id && nodeToCluster[e.target] === cluster.id
+    );
+
+    if (clusterNodes.length === 0) continue;
+
+    // Layout nodes within cluster
+    const internalLayout = layoutGraph(clusterNodes, clusterEdges, {
+      ...layoutOptions,
+      direction: 'TB', // Use top-bottom for internal cluster layout
+      ranksep: Math.max(40, (layoutOptions.ranksep ?? DEFAULT_LAYOUT.ranksep) / 2),
+      nodesep: Math.max(30, (layoutOptions.nodesep ?? DEFAULT_LAYOUT.nodesep) / 2)
+    });
+
+    // Calculate bounding box of laid out cluster
+    const positions = internalLayout.nodes.map(n => n.position);
+    const widths = internalLayout.nodes.map(n => n.width ?? 160);
+    const heights = internalLayout.nodes.map(n => n.height ?? 48);
+    
+    const xs = positions.map(p => p.x);
+    const ys = positions.map(p => p.y);
+    const maxXs = positions.map((p, i) => p.x + widths[i]);
+    const maxYs = positions.map((p, i) => p.y + heights[i]);
+
+    const minX = Math.min(...xs);
+    const minY = Math.min(...ys);
+    const maxX = Math.max(...maxXs);
+    const maxY = Math.max(...maxYs);
+
+    const clusterWidth = (maxX - minX) + padding * 2;
+    const clusterHeight = (maxY - minY) + padding * 2;
+
+    // Store child nodes with their relative positions (we'll position them absolutely later)
+    const normalizedChildren = internalLayout.nodes.map(n => ({
+      ...n,
+      position: {
+        x: (n.position.x - minX) + padding,
+        y: (n.position.y - minY) + padding
+      },
+      // Add cluster metadata but don't use React Flow's parentNode system
+      data: {
+        ...n.data,
+        clusterId: cluster.id,
+        isChildNode: true
+      },
+      style: {
+        ...n.style,
+        zIndex: 10 // Ensure child nodes appear above containers
+      }
+    }));
+
+    clusterChildren.push(...normalizedChildren);
+
+    // Create container node for this cluster
+    containerNodes.push({
+      id: cluster.id,
+      type: 'group',
+      data: {
+        label: cluster.label,
+        width: clusterWidth,
+        height: clusterHeight,
+        nodeCount: clusterNodes.length,
+        color: cluster.color
+      },
+      position: { x: 0, y: 0 }, // Will be positioned by meta-layout
+      style: {
+        width: clusterWidth,
+        height: clusterHeight,
+        padding: 0,
+        borderRadius: 16,
+        border: '2px solid #e2e8f0',
+        backgroundColor: cluster.color || '#f8fafc',
+        opacity: 0.9,
+        zIndex: 1 // Container nodes behind child nodes
+      },
+      width: clusterWidth,
+      height: clusterHeight,
+      selectable: true,
+      draggable: true
+    });
+  }
+
+  // 4) Build meta-graph: edges between clusters
+  const metaEdges: Edge[] = [];
+  const addedMetaEdges = new Set<string>();
+
+  for (const edge of baseEdges) {
+    const sourceCluster = nodeToCluster[edge.source];
+    const targetCluster = nodeToCluster[edge.target];
+    
+    if (sourceCluster && targetCluster && sourceCluster !== targetCluster) {
+      const metaEdgeId = `${sourceCluster}->${targetCluster}`;
+      
+      if (!addedMetaEdges.has(metaEdgeId)) {
+        metaEdges.push({
+          id: metaEdgeId,
+          source: sourceCluster,
+          target: targetCluster,
+          type: 'smoothstep',
+          style: {
+            stroke: '#94a3b8',
+            strokeWidth: 3,
+            opacity: 0.7
+          },
+          markerEnd: { type: MarkerType.ArrowClosed }
+        });
+        addedMetaEdges.add(metaEdgeId);
+      }
+    }
+  }
+
+  // 5) Layout clusters in meta-graph
+  const metaLayoutOptions = {
+    ...layoutOptions,
+    direction: layoutOptions.direction, // Use user's preferred direction for clusters
+    ranksep: gap,
+    nodesep: gap / 2
+  };
+
+  const metaLayout = layoutGraph(containerNodes, metaEdges, metaLayoutOptions);
+
+  // 6) Apply cluster positions to child nodes
+  const clusterPositions = new Map(
+    metaLayout.nodes.map(n => [n.id, n.position])
+  );
+
+  const finalChildren = clusterChildren.map(child => {
+    const clusterId = child.data?.clusterId;
+    if (!clusterId) return child;
+    
+    const clusterPos = clusterPositions.get(clusterId);
+    if (!clusterPos) return child;
+
+    return {
+      ...child,
+      position: {
+        x: clusterPos.x + child.position.x,
+        y: clusterPos.y + child.position.y
+      }
+    };
+  });
+
+  // 7) Handle unclustered (orphan) nodes
+  const orphanNodeIds = getUnclusteredNodes(
+    baseNodes.map(n => n.id),
+    nodeToCluster
+  );
+  
+  const orphanNodes = baseNodes.filter(n => orphanNodeIds.includes(n.id));
+  const orphanEdges = baseEdges.filter(e =>
+    orphanNodeIds.includes(e.source) && orphanNodeIds.includes(e.target)
+  );
+
+  let positionedOrphans: Node[] = [];
+  if (orphanNodes.length > 0) {
+    const orphanLayout = layoutGraph(orphanNodes, orphanEdges, {
+      ...layoutOptions,
+      direction: 'TB'
+    });
+
+    // Position orphans below the clustered content
+    const maxY = metaLayout.nodes.length > 0 
+      ? Math.max(...metaLayout.nodes.map(n => (n.position.y + (n.height ?? 0))))
+      : 0;
+    
+    const orphanStartY = maxY + gap;
+
+    positionedOrphans = orphanLayout.nodes.map(n => ({
+      ...n,
+      position: {
+        x: n.position.x,
+        y: n.position.y + orphanStartY
+      }
+    }));
+  }
+
+  // 8) Combine all nodes and preserve original edges
+  const allNodes = [
+    ...metaLayout.nodes,      // Cluster container nodes
+    ...finalChildren,         // Child nodes within clusters
+    ...positionedOrphans      // Unclustered nodes
+  ];
+
+  return {
+    nodes: allNodes,
+    edges: baseEdges // Keep original edges for proper connections
+  };
+}
+
+/**
+ * Check if clustering would be beneficial for the given data
+ * @param pathLabels Record of nodeId -> relative path
+ * @param options Clustering options
+ * @returns True if clustering would create meaningful groups
+ */
+export function shouldUseClustering(
+  pathLabels: Record<string, string>,
+  options: ClusterOptions = {}
+): boolean {
+  const labels = Object.entries(pathLabels).map(([id, pathLabel]) => ({ id, pathLabel }));
+  const clusters = buildClusters(labels, options);
+  
+  // Only use clustering if we get meaningful groups
+  const totalNodes = labels.length;
+  const clusteredNodes = clusters.reduce((sum, c) => sum + c.nodes.length, 0);
+  const clusteringRatio = clusteredNodes / totalNodes;
+  
+  return clusters.length > 1 && clusteringRatio >= 0.3; // At least 30% of nodes should be clustered
+}
+</file>
+
+<file path="src/lib/layout.ts">
+import dagre from 'dagre';
+import type { Edge, Node } from 'reactflow';
+import { DEFAULT_LAYOUT, type LayoutOptions } from '@/config/layout';
+
+// Convert center coordinates to top-left (React Flow expects top-left)
+const toTopLeft = (x: number, y: number, w: number, h: number) => ({ 
+  x: x - w / 2, 
+  y: y - h / 2 
+});
+
+export function layoutGraph(
+  nodes: Node[],
+  edges: Edge[],
+  opts?: LayoutOptions,
+) {
+  const g = new dagre.graphlib.Graph();
+  const options = { ...DEFAULT_LAYOUT, ...(opts || {}) };
+  
+  g.setGraph({
+    rankdir: options.direction,
+    ranksep: options.ranksep,
+    nodesep: options.nodesep,
+    marginx: options.marginx,
+    marginy: options.marginy,
+    // Improved settings untuk better edge routing dan node distribution
+    acyclicer: 'greedy', // Better for removing cycles
+    ranker: 'network-simplex', // Better ranking algorithm untuk cleaner layouts
+    align: 'UL', // Align nodes untuk more consistent positioning
+    edgesep: 20, // Separation between edge segments
+    compound: false, // Disable compound nodes untuk simpler layout
+  });
+  
+  g.setDefaultEdgeLabel(() => ({
+    minlen: 2, // Minimum length untuk better edge spacing
+    weight: 1, // Equal weight untuk all edges
+    labeloffset: 10, // Offset untuk edge labels
+    labelpos: 'c' // Center position untuk labels
+  }));
+
+  // Use actual node dimensions if available, otherwise fallback to larger defaults
+  nodes.forEach((n) => {
+    const width = (n.width ?? (n.data?.width as number)) || 180; // Increased default width
+    const height = (n.height ?? (n.data?.height as number)) || 60; // Increased default height
+    g.setNode(n.id, { width, height });
+  });
+
+  edges.forEach((e) => {
+    g.setEdge(e.source, e.target);
+  });
+
+  dagre.layout(g);
+
+  // Create position map for efficient lookup
+  const positionMap = new Map<string, { x: number; y: number }>();
+  g.nodes().forEach((id) => {
+    const { x, y, width, height } = g.node(id);
+    positionMap.set(id, toTopLeft(x, y, width, height));
+  });
+
+  const layoutedNodes = nodes.map((n) => ({
+    ...n,
+    position: positionMap.get(n.id) ?? n.position,
+  }));
+
+  return { nodes: layoutedNodes, edges };
+}
+</file>
+
+<file path="src/lib/simpleClusterLayout.ts">
+import type { Edge, Node } from 'reactflow';
+import { layoutGraph } from './layout';
+import { buildClusters, createNodeClusterMap, type ClusterOptions } from './cluster';
+import { type LayoutOptions, DEFAULT_LAYOUT, type LayoutDirection } from '@/config/layout';
+
+export interface SimpleClusterLayoutOptions extends ClusterOptions {
+  padding?: number;
+  gap?: number;
+  clusterGap?: number;
+  layoutOptions?: LayoutOptions;
+  collapsedClusterIds?: Set<string>;
+}
+
+/**
+ * Simple clustering approach that treats all nodes as independent
+ * but renders cluster backgrounds for visual grouping
+ */
+export function simpleLayoutWithClusters(
+  baseNodes: Node[],
+  baseEdges: Edge[],
+  pathLabels: Record<string, string>,
+  options: SimpleClusterLayoutOptions = {}
+): { nodes: Node[]; edges: Edge[] } {
+  const {
+    depth = 1,
+    minSize = 2,
+    padding = 24,
+    clusterGap = 60,
+    layoutOptions = DEFAULT_LAYOUT,
+    collapsedClusterIds = new Set()
+  } = options;
+
+  // Build clusters
+  const labels = baseNodes.map(n => ({
+    id: n.id,
+    pathLabel: pathLabels[n.id] || n.data?.label || ''
+  }));
+  
+  const clusters = buildClusters(labels, { depth, minSize });
+  const nodeToCluster = createNodeClusterMap(clusters);
+
+  // If no meaningful clustering, use regular layout
+  if (clusters.length === 0) {
+    return layoutGraph(baseNodes, baseEdges, layoutOptions);
+  }
+
+  // Separate nodes into collapsed clusters and individual nodes
+  const collapsedClusters = clusters.filter(c => collapsedClusterIds.has(c.id));
+  const expandedClusters = clusters.filter(c => !collapsedClusterIds.has(c.id));
+  
+  // Nodes to layout: individual nodes from expanded clusters + collapsed cluster representatives
+  const nodesToLayout: Node[] = [];
+  const hiddenNodeIds = new Set<string>();
+  
+  // Add nodes from expanded clusters
+  for (const cluster of expandedClusters) {
+    const clusterNodes = baseNodes.filter(n => nodeToCluster[n.id] === cluster.id);
+    nodesToLayout.push(...clusterNodes);
+  }
+  
+  // Add individual nodes not in any cluster
+  const unclusteredNodes = baseNodes.filter(n => !nodeToCluster[n.id]);
+  nodesToLayout.push(...unclusteredNodes);
+  
+  // Create collapsed cluster representative nodes
+  for (const cluster of collapsedClusters) {
+    const clusterNodes = baseNodes.filter(n => nodeToCluster[n.id] === cluster.id);
+    
+    // Hide original cluster nodes
+    clusterNodes.forEach(n => hiddenNodeIds.add(n.id));
+    
+    // Create a representative group node for the collapsed cluster
+    nodesToLayout.push({
+      id: `cluster-${cluster.id}`,
+      type: 'group',
+      data: {
+        label: cluster.label,
+        nodeCount: clusterNodes.length,
+        color: cluster.color || '#f8fafc',
+        isBackground: false,
+        clusterId: cluster.id,
+        collapsedNodes: clusterNodes.map(n => n.id),
+        isCollapsed: true
+      },
+      position: { x: 0, y: 0 }, // Will be set by layout
+      width: 180,
+      height: 100
+    });
+  }
+
+  // Create aggregated edges for collapsed clusters
+  const aggregatedEdges = createAggregatedEdges(baseEdges, collapsedClusters, nodeToCluster, hiddenNodeIds);
+  
+  // Layout all nodes together first (simpler approach)
+  const regularLayout = layoutGraph(nodesToLayout, aggregatedEdges, layoutOptions);
+  
+  // Calculate cluster bounding boxes based on contained nodes
+  const clusterBounds = new Map<string, { 
+    minX: number; minY: number; maxX: number; maxY: number; nodes: Node[]; center: { x: number; y: number } 
+  }>();
+
+  // Only create background bounds for expanded clusters
+  for (const cluster of expandedClusters) {
+    const clusterNodes = regularLayout.nodes.filter(n => nodeToCluster[n.id] === cluster.id);
+    if (clusterNodes.length === 0) continue;
+
+    const positions = clusterNodes.map(n => n.position);
+    const widths = clusterNodes.map(n => n.width ?? 160);
+    const heights = clusterNodes.map(n => n.height ?? 48);
+
+    const xs = positions.map(p => p.x);
+    const ys = positions.map(p => p.y);
+    const maxXs = positions.map((p, i) => p.x + widths[i]);
+    const maxYs = positions.map((p, i) => p.y + heights[i]);
+
+    const minX = Math.min(...xs) - padding;
+    const minY = Math.min(...ys) - padding;
+    const maxX = Math.max(...maxXs) + padding;
+    const maxY = Math.max(...maxYs) + padding;
+
+    clusterBounds.set(cluster.id, {
+      minX,
+      minY,
+      maxX,
+      maxY,
+      nodes: clusterNodes,
+      center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
+    });
+  }
+
+  // Separate clusters with consistent gaps to prevent overlapping
+  separateClustersWithGaps(clusterBounds, clusterGap, layoutOptions.direction || 'TB');
+
+  // Update node positions based on adjusted cluster bounds
+  const adjustedNodes = regularLayout.nodes.map(node => {
+    const clusterId = nodeToCluster[node.id];
+    if (!clusterId) return node;
+    
+    const originalBounds = clusterBounds.get(clusterId);
+    if (!originalBounds) return node;
+    
+    // Find the original cluster bounds before separation
+    const originalClusterNodes = regularLayout.nodes.filter(n => nodeToCluster[n.id] === clusterId);
+    const originalPositions = originalClusterNodes.map(n => n.position);
+    
+    const originalMinX = Math.min(...originalPositions.map(p => p.x)) - padding;
+    const originalMinY = Math.min(...originalPositions.map(p => p.y)) - padding;
+    
+    // Calculate the offset to apply to this node
+    const offsetX = originalBounds.minX - originalMinX;
+    const offsetY = originalBounds.minY - originalMinY;
+    
+    return {
+      ...node,
+      position: {
+        x: node.position.x + offsetX,
+        y: node.position.y + offsetY
+      }
+    };
+  });
+
+  // Create background container nodes only for expanded clusters
+  const backgroundNodes: Node[] = [];
+  for (const cluster of expandedClusters) {
+    const bounds = clusterBounds.get(cluster.id);
+    if (!bounds) continue;
+
+    const width = bounds.maxX - bounds.minX;
+    const height = bounds.maxY - bounds.minY;
+
+    backgroundNodes.push({
+      id: `cluster-bg-${cluster.id}`,
+      type: 'group',
+      data: {
+        label: cluster.label,
+        width,
+        height,
+        nodeCount: bounds.nodes.length,
+        color: cluster.color,
+        isBackground: true
+      },
+      position: { x: bounds.minX, y: bounds.minY },
+      style: {
+        width,
+        height,
+        zIndex: -1, // Behind everything else
+        pointerEvents: 'none' // Don't interfere with interactions
+      },
+      width,
+      height,
+      selectable: false,
+      draggable: false,
+      // These nodes are just visual backgrounds
+      connectable: false
+    });
+  }
+
+  // Use adjusted nodes instead of regular layout nodes
+  const finalNodes = adjustedNodes || regularLayout.nodes;
+  
+  // Add cluster metadata to final nodes
+  const enhancedNodes = finalNodes.map(n => ({
+    ...n,
+    data: {
+      ...n.data,
+      clusterId: nodeToCluster[n.id] || null,
+      isClusteredNode: Boolean(nodeToCluster[n.id])
+    }
+  }));
+
+  return {
+    nodes: [...backgroundNodes, ...enhancedNodes],
+    edges: aggregatedEdges.length > 0 ? aggregatedEdges : baseEdges
+  };
+}
+
+/**
+ * Separate cluster bounds to ensure consistent gaps between clusters
+ * @param clusterBounds Map of cluster bounds to be modified in place
+ * @param gap Minimum gap between clusters
+ * @param direction Layout direction for determining separation axis
+ */
+function separateClustersWithGaps(
+  clusterBounds: Map<string, { 
+    minX: number; minY: number; maxX: number; maxY: number; nodes: Node[]; center: { x: number; y: number } 
+  }>,
+  gap: number,
+  direction: LayoutDirection
+): void {
+  const clusters = Array.from(clusterBounds.entries());
+  if (clusters.length <= 1) return;
+
+  // Sort clusters by their position in the primary layout direction
+  clusters.sort((a, b) => {
+    if (direction === 'TB') {
+      return a[1].center.y - b[1].center.y;
+    } else {
+      return a[1].center.x - b[1].center.x;
+    }
+  });
+
+  // Adjust positions to ensure minimum gap
+  for (let i = 1; i < clusters.length; i++) {
+    const [currentId, currentBounds] = clusters[i];
+    const [, prevBounds] = clusters[i - 1];
+    
+    let overlap = 0;
+    let offset = 0;
+    
+    if (direction === 'TB') {
+      // Check Y-axis overlap for top-bottom layout
+      overlap = prevBounds.maxY - currentBounds.minY;
+      if (overlap > -gap) {
+        offset = overlap + gap;
+        currentBounds.minY += offset;
+        currentBounds.maxY += offset;
+        currentBounds.center.y += offset;
+      }
+    } else {
+      // Check X-axis overlap for left-right layout
+      overlap = prevBounds.maxX - currentBounds.minX;
+      if (overlap > -gap) {
+        offset = overlap + gap;
+        currentBounds.minX += offset;
+        currentBounds.maxX += offset;
+        currentBounds.center.x += offset;
+      }
+    }
+    
+    // Update the map with adjusted bounds
+    clusterBounds.set(currentId, currentBounds);
+  }
+}
+
+/**
+ * Create aggregated edges for collapsed clusters
+ * @param baseEdges Original edges between individual nodes
+ * @param collapsedClusters List of collapsed clusters
+ * @param nodeToCluster Mapping from node ID to cluster ID
+ * @param hiddenNodeIds Set of node IDs that are hidden (in collapsed clusters)
+ * @returns Aggregated edges with cluster representatives
+ */
+function createAggregatedEdges(
+  baseEdges: Edge[],
+  _collapsedClusters: { id: string; label: string; nodes: string[] }[],
+  nodeToCluster: Record<string, string>,
+  hiddenNodeIds: Set<string>
+): Edge[] {
+  // If no nodes are hidden, return original edges
+  if (hiddenNodeIds.size === 0) {
+    return baseEdges;
+  }
+  
+  const aggregatedEdges: Edge[] = [];
+  const edgeCountMap = new Map<string, { count: number; isDynamic: boolean; originalEdge: Edge }>();
+  
+  for (const edge of baseEdges) {
+    let sourceId = edge.source;
+    let targetId = edge.target;
+    let needsAggregation = false;
+    
+    // Skip edges between hidden nodes within the same collapsed cluster
+    if (hiddenNodeIds.has(sourceId) && hiddenNodeIds.has(targetId)) {
+      const sourceCluster = nodeToCluster[sourceId];
+      const targetCluster = nodeToCluster[targetId];
+      if (sourceCluster === targetCluster) {
+        continue; // Skip internal cluster edges
+      }
+    }
+    
+    // Replace hidden node IDs with their cluster representative IDs
+    if (hiddenNodeIds.has(sourceId)) {
+      const clusterName = nodeToCluster[sourceId];
+      if (clusterName) {
+        sourceId = `cluster-${clusterName}`;
+        needsAggregation = true;
+      }
+    }
+    if (hiddenNodeIds.has(targetId)) {
+      const clusterName = nodeToCluster[targetId];
+      if (clusterName) {
+        targetId = `cluster-${clusterName}`;
+        needsAggregation = true;
+      }
+    }
+    
+    // Skip self-loops
+    if (sourceId === targetId) continue;
+    
+    // If no aggregation needed, keep original edge
+    if (!needsAggregation) {
+      aggregatedEdges.push(edge);
+      continue;
+    }
+    
+    const edgeKey = `${sourceId}->${targetId}`;
+    const existing = edgeCountMap.get(edgeKey);
+    const isDynamic = Boolean(edge.animated || edge.className?.includes('amber') || edge.style?.stroke?.includes('#f59e0b'));
+    
+    if (existing) {
+      existing.count += 1;
+      existing.isDynamic = existing.isDynamic || isDynamic;
+    } else {
+      edgeCountMap.set(edgeKey, { 
+        count: 1, 
+        isDynamic, 
+        originalEdge: edge
+      });
+    }
+  }
+  
+  // Create aggregated edges
+  let edgeIndex = baseEdges.length;
+  for (const [edgeKey, info] of edgeCountMap) {
+    const [sourceId, targetId] = edgeKey.split('->');
+    
+    aggregatedEdges.push({
+      id: `aggregated-${edgeIndex++}`,
+      source: sourceId,
+      target: targetId,
+      type: 'default', // Consistent dengan GraphView
+      markerEnd: { 
+        type: 'arrowclosed' as any,
+        width: 18, // Sedikit lebih besar untuk aggregated edges
+        height: 18,
+        color: info.isDynamic ? '#f59e0b' : '#6b7280'
+      },
+      animated: info.isDynamic,
+      style: {
+        stroke: info.isDynamic ? '#f59e0b' : '#6b7280',
+        strokeWidth: Math.max(
+          info.isDynamic ? 3 : 2.5, // Base width untuk aggregated
+          Math.min(2 + Math.log(info.count), 6) // Max 6px untuk consistency
+        ),
+        strokeDasharray: info.isDynamic ? '4 2' : undefined, // Consistent dengan GraphView
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+        opacity: info.isDynamic ? 0.9 : 0.8, // Consistent opacity dengan GraphView
+      },
+      label: info.count > 1 ? `${info.count}` : undefined,
+      className: info.isDynamic ? 'stroke-amber-500' : 'stroke-gray-400',
+      data: {
+        weight: info.count,
+        aggregated: true,
+        kind: info.isDynamic ? 'dynamic' : 'static',
+        isDynamic: info.isDynamic
+      }
+    });
+  }
+  
+  return aggregatedEdges;
+}
+</file>
+
+<file path="src/lib/utils.ts">
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+</file>
+
+<file path="src/App.css">
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+</file>
+
+<file path="src/App.tsx">
+import { useState, useRef } from 'react';
+import GraphView, { type GraphViewRef } from './components/GraphView';
+import NodeDetailPanel from './components/NodeDetailPanel';
+import LayoutControls from './components/LayoutControls';
+import { ThemeProvider, useTheme } from './components/theme-provider';
+import { analyzeProject } from './lib/api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Moon, Sun, Search, Play } from 'lucide-react';
+import { type LayoutDirection, DEFAULT_LAYOUT } from '@/config/layout';
+import { ReactFlowProvider } from 'reactflow';
+
+function AppContent() {
+  const [rootPath, setRootPath] = useState('/Users/mbam1/Local Document/Project/kirimpaket');
+  const [data, setData] = useState<any | null>(null);
+  const [query, setQuery] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedNode, setSelectedNode] = useState<any | null>(null);
+  const { theme, setTheme } = useTheme();
+  
+  // Layout control state
+  const [direction, setDirection] = useState<LayoutDirection>(DEFAULT_LAYOUT.direction);
+  const [ranksep, setRanksep] = useState(DEFAULT_LAYOUT.ranksep);
+  const [nodesep, setNodesep] = useState(DEFAULT_LAYOUT.nodesep);
+  const [showDynamicImports, setShowDynamicImports] = useState(true);
+  const graphViewRef = useRef<GraphViewRef>(null);
+  
+  // Clustering state
+  const [useClustering, setUseClustering] = useState(false);
+  const [clusterDepth, setClusterDepth] = useState(1);
+  const [clusterMinSize, setClusterMinSize] = useState(2);
+  const [clusteringStats, setClusteringStats] = useState<any>(null);
+  
+  // Focus subgraph state
+  const [focusedSubgraph, setFocusedSubgraph] = useState<{
+    nodeId: string;
+    direction: 'inward' | 'outward';
+    filteredData: any;
+  } | null>(null);
+  
+  const handleFocusSubgraph = (nodeId: string, direction: 'inward' | 'outward') => {
+    if (!data) return;
+    
+    // Get all relevant nodes and edges for the subgraph
+    const relevantNodes = new Set<string>();
+    const relevantEdges = new Set<string>();
+    
+    // Add the central node
+    relevantNodes.add(nodeId);
+    
+    if (direction === 'outward') {
+      // Find all nodes that this node depends on (outgoing edges)
+      const findOutgoing = (currentId: string, depth = 0) => {
+        if (depth > 3) return; // Limit depth to prevent infinite recursion
+        
+        data.edges.forEach((edge: any) => {
+          if (edge.source === currentId) {
+            relevantNodes.add(edge.target);
+            relevantEdges.add(`${edge.source}->${edge.target}`);
+            findOutgoing(edge.target, depth + 1);
+          }
+        });
+      };
+      findOutgoing(nodeId);
+    } else {
+      // Find all nodes that depend on this node (incoming edges)
+      const findIncoming = (currentId: string, depth = 0) => {
+        if (depth > 3) return; // Limit depth to prevent infinite recursion
+        
+        data.edges.forEach((edge: any) => {
+          if (edge.target === currentId) {
+            relevantNodes.add(edge.source);
+            relevantEdges.add(`${edge.source}->${edge.target}`);
+            findIncoming(edge.source, depth + 1);
+          }
+        });
+      };
+      findIncoming(nodeId);
+    }
+    
+    // Filter data to only include relevant nodes and edges
+    const filteredData = {
+      ...data,
+      nodes: data.nodes.filter((node: any) => relevantNodes.has(node.id)),
+      edges: data.edges.filter((edge: any) => 
+        relevantEdges.has(`${edge.source}->${edge.target}`)
+      )
+    };
+    
+    setFocusedSubgraph({
+      nodeId,
+      direction,
+      filteredData
+    });
+  };
+  
+  const clearFocusSubgraph = () => {
+    setFocusedSubgraph(null);
+  };
+  
+  const run = async () => {
+    try {
+      setIsAnalyzing(true);
+      const result = await analyzeProject({ rootPath });
+      setData(result);
+      setFocusedSubgraph(null); // Clear focus when new data is loaded
+      setSelectedNode(null); // Clear selected node
+    } catch (error) {
+      console.error('Analysis failed:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+  
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
+      {/* Simple Top Bar */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Left: Title */}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-4 h-4 bg-white rounded-sm opacity-90"></div>
+            </div>
+            <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+              Code Mapper
+            </h1>
+          </div>
+          
+          {/* Center: Input and Analyze */}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Input
+                value={rootPath}
+                onChange={e => setRootPath(e.target.value)}
+                placeholder="Enter project path..."
+                className="w-80 pr-4 border-slate-300 dark:border-slate-600 focus:border-blue-500 dark:focus:border-blue-400"
+              />
+            </div>
+            <Button 
+              onClick={run}
+              disabled={isAnalyzing}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+            >
+              {isAnalyzing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4 mr-2" />
+                  Analyze
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {/* Right: Search and Theme */}
+          <div className="flex items-center gap-3">
+            {data && (
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder="Search files..."
+                  className="pl-10 w-48 border-slate-300 dark:border-slate-600 focus:border-blue-500 dark:focus:border-blue-400"
+                />
+              </div>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              {theme === 'light' ? 
+                <Moon className="h-5 w-5" /> : 
+                <Sun className="h-5 w-5" />
+              }
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Stats Bar */}
+      {data && (
+        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2">
+          <div className="max-w-7xl mx-auto flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-6">
+              {focusedSubgraph ? (
+                <>
+                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
+                    🎯 Focused on {focusedSubgraph.direction === 'inward' ? 'Dependencies' : 'Dependents'}
+                  </span>
+                  <span><strong className="text-slate-900 dark:text-slate-100">{focusedSubgraph.filteredData.nodes?.length || 0}</strong> files</span>
+                  <span><strong className="text-slate-900 dark:text-slate-100">{focusedSubgraph.filteredData.edges?.length || 0}</strong> dependencies</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={clearFocusSubgraph}
+                    className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    Clear Focus
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <span><strong className="text-slate-900 dark:text-slate-100">{data.nodes?.length || 0}</strong> files</span>
+                  <span><strong className="text-slate-900 dark:text-slate-100">{data.edges?.length || 0}</strong> dependencies</span>
+                  {data.metrics?.circularDependencies?.length > 0 && (
+                    <span className="text-red-600 dark:text-red-400">
+                      <strong>{data.metrics.circularDependencies.length}</strong> circular deps
+                    </span>
+                  )}
+                  {data.metrics?.orphans?.length > 0 && (
+                    <span className="text-yellow-600 dark:text-yellow-400">
+                      <strong>{data.metrics.orphans.length}</strong> orphan files
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="text-xs">
+              Analyzed: <strong>{new Date().toLocaleTimeString()}</strong>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Main Graph Area */}
+      <div className={`h-[calc(100vh-140px)] ${selectedNode ? 'mr-96' : ''} transition-all duration-300 relative`}>
+        {data ? (
+          <ReactFlowProvider>
+            <GraphView 
+              ref={graphViewRef}
+              data={focusedSubgraph ? focusedSubgraph.filteredData : data} 
+              query={query} 
+              showDynamicImports={showDynamicImports}
+              onNodeClick={setSelectedNode}
+              direction={direction}
+              ranksep={ranksep}
+              nodesep={nodesep}
+              useClustering={useClustering && !focusedSubgraph} // Disable clustering in focus mode
+              clusterDepth={clusterDepth}
+              clusterMinSize={clusterMinSize}
+              onClusteringStatsChange={setClusteringStats}
+            />
+            <LayoutControls
+              direction={direction}
+              onDirectionChange={setDirection}
+              ranksep={ranksep}
+              onRanksepChange={setRanksep}
+              nodesep={nodesep}
+              onNodesepChange={setNodesep}
+              showDynamicImports={showDynamicImports}
+              onShowDynamicImportsChange={setShowDynamicImports}
+              onFitView={() => graphViewRef.current?.fitView()}
+              useClustering={useClustering}
+              onUseClusteringChange={setUseClustering}
+              clusterDepth={clusterDepth}
+              onClusterDepthChange={setClusterDepth}
+              clusterMinSize={clusterMinSize}
+              onClusterMinSizeChange={setClusterMinSize}
+              clusteringStats={clusteringStats}
+            />
+          </ReactFlowProvider>
+        ) : (
+          <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 opacity-20">
+                <div className="w-12 h-12 bg-white rounded-full opacity-90"></div>
+              </div>
+              <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                Ready to analyze your codebase
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400">
+                Enter a project path above and click "Analyze" to get started
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Node Detail Panel */}
+      {selectedNode && (
+        <NodeDetailPanel 
+          node={selectedNode}
+          data={focusedSubgraph ? focusedSubgraph.filteredData : data}
+          onClose={() => setSelectedNode(null)}
+          onFocusSubgraph={handleFocusSubgraph}
+        />
+      )}
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider defaultTheme="system" storageKey="code-mapper-theme">
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+</file>
+
+<file path="src/index.css">
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 1rem;
+    color-scheme: light;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  * {
+    /* Tailwind v4 may not allow @apply for border-color tokens here */
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f3f4f6; /* gray-100 */
+  border-radius: 9999px; /* rounded-full */
+}
+.dark ::-webkit-scrollbar-track {
+  background-color: #1f2937; /* gray-800 */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d1d5db; /* gray-300 */
+  border-radius: 9999px; /* rounded-full */
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #4b5563; /* gray-600 */
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af; /* gray-400 */
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280; /* gray-500 */
+}
+
+/* React Flow specific styling */
+.react-flow__node-custom {
+  @apply transition-all duration-200;
+}
+
+.react-flow__edge {
+  @apply transition-all duration-200;
+}
+
+.react-flow__controls {
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+.react-flow__minimap {
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+/* Animation classes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Glass morphism effect */
+.glass {
+  @apply bg-white/80 dark:bg-gray-950/80 backdrop-blur-lg;
+}
+</file>
+
+<file path="src/main.tsx">
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.tsx'
+import { TooltipProvider } from '@/components/ui/tooltip'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <TooltipProvider>
+      <App />
+    </TooltipProvider>
+  </StrictMode>,
+)
+</file>
+
+<file path="src/vite-env.d.ts">
+/// <reference types="vite/client" />
+</file>
+
+<file path=".gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+</file>
+
+<file path="eslint.config.js">
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from 'typescript-eslint'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs['recommended-latest'],
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+  },
+])
+</file>
+
+<file path="index.html">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React + TS</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+</file>
+
+<file path="package.json">
+{
+  "name": "code-mapper-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-slider": "^1.3.6",
+    "@radix-ui/react-switch": "^1.2.6",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "axios": "^1.12.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "dagre": "^0.8.5",
+    "lucide-react": "^0.544.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "reactflow": "^11.11.4",
+    "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.35.0",
+    "@shadcn/ui": "^0.0.4",
+    "@types/dagre": "^0.7.53",
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.35.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.4.0",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.4.13",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.43.0",
+    "vite": "^7.1.6"
+  }
+}
+</file>
+
+<file path="postcss.config.js">
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+</file>
+
+<file path="README.md">
+# React + TypeScript + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
+
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
+</file>
+
+<file path="SETUP_SUMMARY.md">
+# Code Mapper Frontend - Setup Summary
+
+## ✅ Fase 4 - Bootstrap Frontend Complete
+
+### 🎯 Goal Achieved
+- Shell UI modern-minimalis siap: header, form input path, Tailwind styling
+
+### 📦 Tech Stack Installed
+- **Vite** + **React** + **TypeScript** (base framework)
+- **Tailwind CSS** with **@tailwindcss/postcss** plugin
+- **shadcn/ui components** (Button, Input, utility functions)
+- **Axios** for API calls
+- **ReactFlow** for future graph visualization
+- **Lucide React** for icons
+
+### 🛠️ Configuration Files
+- `vite.config.ts` - Path aliases (@/ -> ./src/)
+- `tailwind.config.js` - Dark mode support, content paths
+- `postcss.config.js` - Tailwind CSS integration
+- `tsconfig.app.json` - TypeScript path mapping
+- `.env` - API URL configuration
+
+### 🎨 UI Components
+- **Button component** with variants (default, outline, ghost, etc.)
+- **Input component** with proper styling and dark mode
+- **Utility functions** (cn helper for class merging)
+
+### 📁 Project Structure
+```
+src/
+├── components/
+│   └── ui/
+│       ├── button.tsx
+│       └── input.tsx
+├── lib/
+│   ├── api.ts      # API helper functions
+│   └── utils.ts    # Utility functions
+├── App.tsx         # Main app with basic form
+├── main.tsx        # Entry point
+└── index.css       # Tailwind directives
+```
+
+### ✨ Features Implemented
+- **Clean Header** with "Code Mapper" title
+- **Project Path Input Form** with placeholder text
+- **Analyze Button** (basic click handler)
+- **Dark Mode Support** (via Tailwind classes)
+- **Responsive Design** (container + max-width constraints)
+
+### 🧪 Testing Results
+- ✅ Build successful (`npm run build`)
+- ✅ Preview server working (`npm run preview`)
+- ✅ Tailwind CSS properly configured
+- ✅ TypeScript compilation clean
+- ✅ Path aliases working (@/ imports)
+
+### 🔗 API Integration Ready
+- `analyzeProject()` function configured
+- Axios instance with environment variable support
+- Backend endpoint: `POST http://localhost:4000/analyze`
+
+### 🚀 How to Run
+```bash
+# Development
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview built files  
+npm run preview
+```
+
+### 🎨 UI Preview
+The current UI shows:
+- Modern minimalist header
+- Centered form with project path input
+- Styled button with hover effects
+- Placeholder text guiding user input
+- Ready for dark mode toggle
+
+### 🔜 Next Steps (Future Phases)
+- Add graph visualization with ReactFlow
+- Implement file analysis results display
+- Add dark mode toggle
+- Create sidebar navigation
+- Add loading states and error handling
+</file>
+
+<file path="tailwind.config.js">
+/** @type {import('tailwindcss').Config} */
+export default {
+  darkMode: ['class'],
+  content: ['./index.html','./src/**/*.{ts,tsx}','./components/**/*.{ts,tsx}'],
+  theme: {
+    container: {
+      center: true,
+      padding: '2rem',
+      screens: {
+        '2xl': '1400px',
+      },
+    },
+    extend: {
+      colors: {
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
+        },
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
+        xl: '1rem',
+        '2xl': '1.25rem',
+      },
+      keyframes: {
+        'accordion-down': {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
+        },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+      },
+    },
+  },
+  plugins: [require('tailwindcss-animate')],
+}
+</file>
+
+<file path="tsconfig.app.json">
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    
+    /* Path Alias */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src"]
+}
+</file>
+
+<file path="tsconfig.json">
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}
+</file>
+
+<file path="tsconfig.node.json">
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["vite.config.ts"]
+}
+</file>
+
+<file path="vite.config.ts">
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: { alias: { '@': path.resolve(__dirname, './src') } }
+});
+</file>
+
+</files>

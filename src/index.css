@@ -1,0 +1,240 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 1rem;
+    color-scheme: light;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  * {
+    /* Tailwind v4 may not allow @apply for border-color tokens here */
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f3f4f6; /* gray-100 */
+  border-radius: 9999px; /* rounded-full */
+}
+.dark ::-webkit-scrollbar-track {
+  background-color: #1f2937; /* gray-800 */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d1d5db; /* gray-300 */
+  border-radius: 9999px; /* rounded-full */
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #4b5563; /* gray-600 */
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af; /* gray-400 */
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280; /* gray-500 */
+}
+
+/* React Flow specific styling */
+.react-flow__node-custom {
+  @apply transition-all duration-200;
+}
+
+.react-flow__edge {
+  @apply transition-all duration-200;
+}
+
+.react-flow__controls {
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+.react-flow__minimap {
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+/* Animation classes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Glass morphism effect */
+.glass {
+  @apply bg-white/80 dark:bg-gray-950/80 backdrop-blur-lg;
+}
+
+/* Mermaid diagram styling - Force SVG to be fully responsive */
+.mermaid-container > svg {
+  max-width: 100% !important; /* Ensure SVG doesn't exceed container width */
+  height: auto; /* Maintain aspect ratio */
+  width: 100%; /* Force SVG to stretch to full container width */
+  pointer-events: auto;
+  /* Remove any fixed dimensions that Mermaid might set */
+  min-width: 100% !important;
+}
+
+/* Enhanced container for better user experience */
+.mermaid-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.dark .mermaid-container {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+/* Pan and zoom hint for first-time users */
+.mermaid-container::before {
+  content: '🔍 Scroll/+/- to zoom (up to 10x) • Double-click to zoom in • F to fit • 0 to reset';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+  max-width: 200px;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.mermaid-container:hover::before {
+  opacity: 1;
+}
+
+.dark .mermaid-container::before {
+  background: rgba(255, 255, 255, 0.9);
+  color: black;
+}
+
+/* Smooth zoom transition */
+.mermaid-container svg {
+  transition: transform 0.2s ease-out;
+}
+
+/* Enhanced cursor feedback during pan/zoom */
+.mermaid-container:active {
+  cursor: grabbing;
+}
+
+.mermaid-container {
+  cursor: grab;
+}
+
+/* Ensure smooth transitions for hover effects */
+.mermaid-container svg g {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Basic styling for Mermaid nodes to ensure they're interactive */
+.mermaid-container svg g.node {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Aggressive hover highlighting for Mermaid nodes */
+.mermaid-container svg .mermaid-hover-highlight rect,
+.mermaid-container svg .mermaid-hover-highlight polygon,
+.mermaid-container svg .mermaid-hover-highlight path,
+.mermaid-container svg .mermaid-hover-highlight circle,
+.mermaid-container svg .mermaid-hover-highlight ellipse {
+  stroke: #3b82f6 !important;
+  stroke-width: 3px !important;
+  fill: #dbeafe !important;
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)) !important;
+  transition: all 0.2s ease-in-out !important;
+  opacity: 1 !important;
+}
+
+.mermaid-container svg .mermaid-hover-highlight text,
+.mermaid-container svg .mermaid-hover-highlight tspan {
+  fill: #1e40af !important;
+  font-weight: bold !important;
+  opacity: 1 !important;
+}
+
+/* Additional specificity for stubborn Mermaid styles */
+.mermaid-container svg g.mermaid-hover-highlight > * {
+  animation: pulseHover 0.6s ease-in-out;
+}
+
+@keyframes pulseHover {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
