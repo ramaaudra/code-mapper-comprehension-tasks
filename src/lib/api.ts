@@ -30,7 +30,7 @@ export async function findAllDependencyPaths(payload: {
   return data.paths; // Mengembalikan array dari semua jalur yang ditemukan
 }
 
-export async function simulateRemoval(payload: { fileToRemove: string }) {
+export async function simulateRemoval(payload: { fileToRemove: string; dependencyMap?: Record<string, any> }) {
   const { data } = await api.post('/api/simulate-removal', payload);
   return data; // Mengembalikan { brokenFiles, newOrphans }
 }

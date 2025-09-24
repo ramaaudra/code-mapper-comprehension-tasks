@@ -26,6 +26,28 @@ interface MermaidDiagramProps {
 export function MermaidDiagram({ chart, hoveredFile }: MermaidDiagramProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const panzoomInstanceRef = useRef<any>(null);
+  const isPointerInsideRef = useRef(false);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handlePointerEnter = () => {
+      isPointerInsideRef.current = true;
+    };
+
+    const handlePointerLeave = () => {
+      isPointerInsideRef.current = false;
+    };
+
+    container.addEventListener('pointerenter', handlePointerEnter);
+    container.addEventListener('pointerleave', handlePointerLeave);
+
+    return () => {
+      container.removeEventListener('pointerenter', handlePointerEnter);
+      container.removeEventListener('pointerleave', handlePointerLeave);
+    };
+  }, []);
 
   useEffect(() => {
     if (containerRef.current && chart) {
@@ -54,8 +76,6 @@ export function MermaidDiagram({ chart, hoveredFile }: MermaidDiagramProps) {
                 boundsPadding: 0.1,
                 smoothScroll: false,
                 zoomSpeed: 0.2, // Slower zoom for more precision
-                // Custom zoom increment for buttons
-                increment: 0.3,
                 // Disable panning when clicking on interactive elements
                 filterKey: function() {
                   return true;
@@ -375,17 +395,14 @@ export function MermaidDiagram({ chart, hoveredFile }: MermaidDiagramProps) {
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Only handle shortcuts when the mermaid container is focused or hovered
-      if (!containerRef.current) return;
-      
-      // Check if the container or its children have focus or are being hovered
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const isWithinContainer = 
-        e.clientX >= containerRect.left &&
-        e.clientX <= containerRect.right &&
-        e.clientY >= containerRect.top &&
-        e.clientY <= containerRect.bottom;
-        
-      if (!isWithinContainer) return;
+      const container = containerRef.current;
+      if (!container) return;
+
+      const activeElement = document.activeElement;
+      const hasFocus = activeElement ? container.contains(activeElement) : false;
+      const hasPointer = isPointerInsideRef.current;
+
+      if (!hasPointer && !hasFocus) return;
       
       // Prevent shortcuts from interfering with text input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {

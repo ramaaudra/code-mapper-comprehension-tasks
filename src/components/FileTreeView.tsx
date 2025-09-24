@@ -4,12 +4,14 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { memo, forwardRef } from "react";
+import type { FileRiskProfile } from "@/types/risk";
 
 // Node Renderer Kustom untuk menampilkan ikon
 const createNodeRenderer = (
   filesInCycle: Set<string>,
   highImpactFilesMap: Map<string, number>,
   orphanFilesSet: Set<string>,
+  riskProfileMap: Map<string, FileRiskProfile>,
   hoveredFile: string | null,
   setHoveredFile: (fileId: string | null) => void,
   onSimulateDelete: (fileId: string) => void,
@@ -24,6 +26,8 @@ const createNodeRenderer = (
   const isHovered = hoveredFile === node.id;
   const isBroken = brokenFilesSet.has(node.id);
   const isNewOrphan = newOrphansSet.has(node.id);
+  const normalizedNodeId = node.id.replace(/\\/g, '/');
+  const riskProfile = riskProfileMap.get(normalizedNodeId) || riskProfileMap.get(node.id);
   
   return (
     <div
@@ -60,6 +64,20 @@ const createNodeRenderer = (
         }
       }}
     >
+      {riskProfile && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <div className={`h-2.5 w-2.5 rounded-full ${getRiskColor(riskProfile.category)}`} />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">
+                Risiko Refactor: {riskProfile.category} (Skor: {riskProfile.score})
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
       <Icon className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
       <span className={`truncate text-sm ${
         isInCycle 
@@ -206,6 +224,19 @@ const createNodeRenderer = (
   );
 });
 
+const getRiskColor = (category: FileRiskProfile['category']): string => {
+  switch (category) {
+    case 'Kritis':
+      return 'bg-red-500';
+    case 'Tinggi':
+      return 'bg-orange-500';
+    case 'Sedang':
+      return 'bg-yellow-500';
+    default:
+      return 'bg-green-500';
+  }
+};
+
 // Helper function untuk menentukan warna berdasarkan ekstensi file
 const getFileTypeColor = (fileName: string): string => {
   const ext = fileName.split('.').pop()?.toLowerCase();
@@ -234,6 +265,7 @@ interface FileTreeViewProps {
   filesInCycle: Set<string>; // Files that are involved in circular dependencies
   highImpactFilesMap: Map<string, number>; // High-impact files with their indegree
   orphanFilesSet: Set<string>; // Orphan files (never imported)
+  riskProfileMap: Map<string, FileRiskProfile>; // Refactor risk profiles per file
   searchTerm: string; // Search term for filtering files
   hoveredFile: string | null; // Currently hovered file
   setHoveredFile: (fileId: string | null) => void; // Function to set hovered file
@@ -250,6 +282,7 @@ export const FileTreeView = forwardRef<TreeApi<any> | undefined, FileTreeViewPro
     filesInCycle, 
     highImpactFilesMap, 
     orphanFilesSet, 
+    riskProfileMap,
     searchTerm, 
     hoveredFile, 
     setHoveredFile,
@@ -262,6 +295,7 @@ export const FileTreeView = forwardRef<TreeApi<any> | undefined, FileTreeViewPro
       filesInCycle, 
       highImpactFilesMap, 
       orphanFilesSet, 
+      riskProfileMap,
       hoveredFile, 
       setHoveredFile,
       onSimulateDelete,

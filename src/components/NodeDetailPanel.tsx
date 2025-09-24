@@ -6,16 +6,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { X, FileText, ArrowRight, ArrowLeft, Focus, Copy, Map } from 'lucide-react';
 import { findDependencyPath } from '@/lib/api';
-import path from 'path';
+import type { FileRiskProfile } from '@/types/risk';
 
 interface NodeDetailPanelProps {
   node: any;
   data: any;
   onClose: () => void;
   onFocusSubgraph?: (nodeId: string, direction: 'inward' | 'outward') => void;
+  riskProfile?: FileRiskProfile | null;
 }
 
-export default function NodeDetailPanel({ node, data, onClose, onFocusSubgraph }: NodeDetailPanelProps) {
+// Custom basename function for browser compatibility
+const getBasename = (filePath: string): string => {
+  return filePath.split('/').pop() || filePath.split('\\').pop() || filePath;
+};
+
+export default function NodeDetailPanel({ node, data, onClose, onFocusSubgraph, riskProfile }: NodeDetailPanelProps) {
   const [focusDirection, setFocusDirection] = useState<'inward' | 'outward'>('outward');
   const [isPathModalOpen, setIsPathModalOpen] = useState(false);
   const [tracedPath, setTracedPath] = useState<string[] | null>(null);
@@ -67,9 +73,19 @@ export default function NodeDetailPanel({ node, data, onClose, onFocusSubgraph }
     navigator.clipboard.writeText(nodeData.id);
   };
 
+  const riskBadgeClass = riskProfile
+    ? riskProfile.category === 'Kritis'
+      ? 'bg-red-500'
+      : riskProfile.category === 'Tinggi'
+        ? 'bg-orange-500'
+        : riskProfile.category === 'Sedang'
+          ? 'bg-yellow-500 text-yellow-900'
+          : 'bg-green-500'
+    : '';
+
   const handleTracePath = async (targetFile: string) => {
     setIsTracing(true);
-    setTraceTarget(path.basename(targetFile));
+    setTraceTarget(getBasename(targetFile));
     try {
       const pathResult = await findDependencyPath({
         startNode: nodeId,
@@ -159,6 +175,28 @@ export default function NodeDetailPanel({ node, data, onClose, onFocusSubgraph }
             </div>
           </CardContent>
         </Card>
+
+        {riskProfile && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Analisis Risiko Refactor</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="text-center">
+                <Badge className={`text-lg px-4 py-1 ${riskBadgeClass}`}>
+                  {riskProfile.category}
+                </Badge>
+                <p className="text-xs text-muted-foreground mt-2">Skor: {riskProfile.score}</p>
+              </div>
+              <div className="text-sm space-y-2 pt-2 border-t">
+                <h4 className="font-semibold">Faktor Pemicu:</h4>
+                <div className="flex justify-between"><span>Diimpor oleh (Indegree):</span> <span className="font-bold">{riskProfile.factors.indegree} files</span></div>
+                <div className="flex justify-between"><span>Mengimpor (Outdegree):</span> <span className="font-bold">{riskProfile.factors.outdegree} files</span></div>
+                <div className="flex justify-between"><span>Terlibat Siklus:</span> <span className="font-bold">{riskProfile.factors.inCycle ? 'Ya' : 'Tidak'}</span></div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Focus Subgraph */}
         {onFocusSubgraph && (
@@ -346,7 +384,7 @@ export default function NodeDetailPanel({ node, data, onClose, onFocusSubgraph }
                       <div className="flex-1 min-w-0">
                         <div className="font-mono text-sm bg-muted p-3 rounded-md truncate">
                           <div className="font-semibold text-foreground">
-                            {path.basename(file)}
+                            {getBasename(file)}
                           </div>
                           <div className="text-xs text-muted-foreground mt-1 truncate" title={file}>
                             {file}

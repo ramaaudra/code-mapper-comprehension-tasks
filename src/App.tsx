@@ -1,9 +1,7 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { FileTreeView } from './components/FileTreeView';
-import { MermaidDiagram } from './components/MermaidDiagram';
-import { IssuesPanel } from './components/IssuesPanel';
-import MetricsPanel from './components/MetricsPanel';
 import NodeDetailPanel from './components/NodeDetailPanel';
+import { ProjectDashboard } from './components/ProjectDashboard';
 import { ThemeProvider, useTheme } from './components/theme-provider';
 import { analyzeProject, simulateRemoval } from './lib/api';
 import { Button } from '@/components/ui/button';
@@ -11,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Moon, Sun, Search, Play, FileWarning, FileX, ArrowRight, ArrowDown } from 'lucide-react';
 import { TreeApi } from 'react-arborist';
+import type { FileRiskProfile } from '@/types/risk';
 
 // TypeScript interfaces for new format
 interface DependencyInfo {
@@ -31,6 +30,7 @@ interface AnalysisData {
   edges: any[];  // Add edges array
   fileTree: any[];
   dependencyMap: { [filePath: string]: DependencyInfo[] };
+  riskAnalysis?: FileRiskProfile[];
   issues: {
     circularDependencies: CircularDependencyInfo[];
     orphans: string[];
@@ -70,14 +70,53 @@ function AppContent() {
   
   // State baru dengan full analysis data
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+  const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [hoveredFile, setHoveredFile] = useState<string | null>(null);
   const [mermaidChart, setMermaidChart] = useState<string>('');
-  const [showNodeDetail, setShowNodeDetail] = useState<boolean>(false);
-  
+  const [riskAnalysis, setRiskAnalysis] = useState<FileRiskProfile[]>([]);
+  const [viewMode, setViewMode] = useState<'overview' | 'file'>('overview');
+
   // Simulation state
   const [simulationResult, setSimulationResult] = useState<{ brokenFiles: string[], newOrphans: string[] } | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+
+  const normalizePath = useCallback((value: string) => value.replace(/\\/g, '/'), []);
+
+  const riskProfileMap = useMemo(() => {
+    const map = new Map<string, FileRiskProfile>();
+    const normalizedRoot = normalizePath(rootPath).replace(/\/+$|\\+$/g, '');
+    const rootPrefix = normalizedRoot ? `${normalizedRoot}/` : '';
+
+    riskAnalysis.forEach(profile => {
+      const normalizedFile = normalizePath(profile.file);
+      map.set(normalizedFile, profile);
+
+      if (rootPrefix && normalizedFile.startsWith(rootPrefix)) {
+        const relativePath = normalizedFile.slice(rootPrefix.length);
+        map.set(relativePath, profile);
+      }
+    });
+
+    return map;
+  }, [normalizePath, riskAnalysis, rootPath]);
+
+  const getRiskProfileForFile = useCallback((fileId: string | null) => {
+    if (!fileId) return null;
+    const normalizedId = normalizePath(fileId);
+
+    if (riskProfileMap.has(normalizedId)) {
+      return riskProfileMap.get(normalizedId) || null;
+    }
+
+    for (const [key, profile] of riskProfileMap.entries()) {
+      if (key === normalizedId || key.endsWith(`/${normalizedId}`)) {
+        return profile;
+      }
+    }
+
+    return null;
+  }, [normalizePath, riskProfileMap]);
 
   // MEMOIZED SETS: Untuk pengecekan cepat file status
   const filesInCycle = useMemo(() => {
@@ -99,6 +138,111 @@ function AppContent() {
   // Memoized sets for simulation results
   const brokenFilesSet = useMemo(() => new Set(simulationResult?.brokenFiles || []), [simulationResult]);
   const newOrphansSet = useMemo(() => new Set(simulationResult?.newOrphans || []), [simulationResult]);
+
+  const generateMermaidForFile = useCallback((fileId: string | null, sourceData?: AnalysisData | null) => {
+    const currentData = sourceData ?? analysisData;
+
+    if (!fileId || !currentData) {
+      setMermaidChart('');
+      return null;
+    }
+
+    const dependencyMap = currentData.dependencyMap || {};
+    const absoluteFileId = Object.keys(dependencyMap).find(key =>
+      key.endsWith('/' + fileId) || key === fileId
+    );
+
+    const actualFileId = absoluteFileId || fileId;
+    const selectedFileName = getBasename(actualFileId);
+
+    const nodeMap = new Map<string, string>();
+    nodeMap.set(selectedFileName, actualFileId);
+
+    const outgoing = dependencyMap[actualFileId] || [];
+    outgoing.forEach((dep: DependencyInfo) => {
+      nodeMap.set(getBasename(dep.target), dep.target);
+    });
+
+    const incoming = Object.entries(dependencyMap).filter(([, deps]) =>
+      (deps as DependencyInfo[]).some((dep: DependencyInfo) => dep.target === actualFileId)
+    );
+    incoming.forEach(([importer]) => {
+      nodeMap.set(getBasename(importer), importer);
+    });
+
+    let chartString = `graph ${layoutDirection}\n`;
+    nodeMap.forEach((fullPath, basename) => {
+      const nodeId = basename.replace(/[^a-zA-Z0-9]/g, '_');
+      chartString += `  ${nodeId}["${basename}"]\n`;
+      chartString += `  click ${nodeId} call handleMermaidNodeClick("${fullPath}")\n`;
+    });
+
+    let linkIndex = 0;
+    const selectedNodeId = selectedFileName.replace(/[^a-zA-Z0-9]/g, '_');
+
+    if (outgoing.length > 0) {
+      outgoing.forEach((dep: DependencyInfo) => {
+        const targetNodeId = getBasename(dep.target).replace(/[^a-zA-Z0-9]/g, '_');
+        chartString += `  ${selectedNodeId} --> ${targetNodeId}\n`;
+
+        const strokeWidth = Math.min(1 + Math.log2(dep.strength + 1), 5).toFixed(2);
+        const strokeColor = dep.strength >= 3 ? '#ef4444' : '#6b7280';
+        chartString += `  linkStyle ${linkIndex} stroke-width:${strokeWidth}px,stroke:${strokeColor}\n`;
+        linkIndex++;
+      });
+    }
+
+    if (incoming.length > 0) {
+      incoming.forEach(([importer, deps]) => {
+        const sourceNodeId = getBasename(importer).replace(/[^a-zA-Z0-9]/g, '_');
+        chartString += `  ${sourceNodeId} --> ${selectedNodeId}\n`;
+
+        const connection = (deps as DependencyInfo[]).find((d: DependencyInfo) => d.target === actualFileId);
+        const strength = connection ? connection.strength : 1;
+
+        const strokeWidth = Math.min(1 + Math.log2(strength + 1), 5).toFixed(2);
+        const strokeColor = strength >= 3 ? '#ef4444' : '#6b7280';
+        chartString += `  linkStyle ${linkIndex} stroke-width:${strokeWidth}px,stroke:${strokeColor}\n`;
+        linkIndex++;
+      });
+    }
+
+    if (outgoing.length === 0 && incoming.length === 0) {
+      chartString += `  ${selectedNodeId} --> NONE["No dependencies found"]\n`;
+      chartString += '  style NONE fill:#f3f4f6,stroke:#9ca3af,stroke-dasharray: 5 5\n';
+    }
+
+    chartString += `  style ${selectedNodeId} fill:#BAF8D0,stroke:#16a34a,stroke-width:2px\n`;
+
+    setMermaidChart(chartString);
+    return actualFileId;
+  }, [analysisData, layoutDirection]);
+
+  const handleFileSelect = useCallback((fileId: string | null) => {
+    if (!fileId || !analysisData) {
+      setSelectedFileId(null);
+      setSelectedNode(null);
+      setViewMode('overview');
+      generateMermaidForFile(null);
+      return;
+    }
+
+    setViewMode('file');
+    const resolvedFileId = generateMermaidForFile(fileId) || fileId;
+    setSelectedFileId(resolvedFileId);
+
+    const nodeData = analysisData.nodes?.find((n: any) => n.id === resolvedFileId)
+      || analysisData.nodes?.find((n: any) => n.id.endsWith('/' + resolvedFileId));
+
+    setSelectedNode(nodeData || null);
+  }, [analysisData, generateMermaidForFile]);
+
+  const handleShowOverview = useCallback(() => {
+    setViewMode('overview');
+    setSelectedFileId(null);
+    setSelectedNode(null);
+    setMermaidChart('');
+  }, []);
 
   // Register global function for Mermaid click navigation
   useEffect(() => {
@@ -134,24 +278,28 @@ function AppContent() {
     return () => {
       delete (window as any).handleMermaidNodeClick;
     };
-  }, [analysisData]); // Add analysisData as dependency
+  }, [analysisData, handleFileSelect]);
 
   // Regenerate chart when layout direction changes
   useEffect(() => {
-    if (selectedFile && analysisData) {
-      // Regenerate the chart with the new layout direction
-      handleFileSelect(selectedFile);
+    if (selectedFileId) {
+      generateMermaidForFile(selectedFileId);
     }
-  }, [layoutDirection]);
+  }, [generateMermaidForFile, layoutDirection, selectedFileId]);
 
   const handleAnalyze = async () => {
     try {
       setIsAnalyzing(true);
+      setRiskAnalysis([]);
       const result = await analyzeProject({ rootPath });
       // Store the complete analysis result including issues
-      setAnalysisData(result as AnalysisData);
-      setSelectedFile(null);
+      const typedResult = result as AnalysisData;
+      setAnalysisData(typedResult);
+      setRiskAnalysis(typedResult.riskAnalysis || []);
+      setSelectedFileId(null);
+      setSelectedNode(null);
       setMermaidChart('');
+      setViewMode('overview');
       // Clear any previous simulation results
       setSimulationResult(null);
       
@@ -171,7 +319,10 @@ function AppContent() {
     console.log('🚀 Frontend: Starting simulation for file:', fileId);
     setIsSimulating(true);
     try {
-      const result = await simulateRemoval({ fileToRemove: fileId });
+      const result = await simulateRemoval({
+        fileToRemove: fileId,
+        dependencyMap: analysisData?.dependencyMap,
+      });
       console.log('✅ Frontend: Simulation result received:', result);
       setSimulationResult(result);
     } catch (error) {
@@ -182,102 +333,6 @@ function AppContent() {
   };
   
   const closeSimulation = () => setSimulationResult(null);
-
-  const handleFileSelect = (fileId: string | null) => {
-    setSelectedFile(fileId);
-    setShowNodeDetail(!!fileId); // Show NodeDetailPanel when file is selected
-
-    if (!fileId || !analysisData) {
-      setMermaidChart('');
-      setShowNodeDetail(false);
-      return;
-    }
-
-    // Convert relative path to absolute path to match dependencyMap keys
-    const absoluteFileId = Object.keys(analysisData.dependencyMap).find(key => 
-      key.endsWith('/' + fileId) || key === fileId
-    );
-
-    // Logika untuk membuat string chart Mermaid dengan click handlers
-    const { dependencyMap } = analysisData;
-    const actualFileId = absoluteFileId || fileId;
-    const selectedFileName = getBasename(actualFileId);
-    
-    // Create node mapping for click handlers
-    const nodeMap = new Map<string, string>();
-    nodeMap.set(selectedFileName, actualFileId);
-    
-    // Dependensi keluar (Outgoing)
-    const outgoing = dependencyMap[actualFileId] || [];
-    outgoing.forEach((dep: DependencyInfo) => {
-      nodeMap.set(getBasename(dep.target), dep.target);
-    });
-
-    // Dependensi masuk (Incoming)
-    const incoming = Object.entries(dependencyMap).filter(([, deps]) => 
-      (deps as DependencyInfo[]).some((dep: DependencyInfo) => dep.target === actualFileId)
-    );
-    incoming.forEach(([importer]) => {
-      nodeMap.set(getBasename(importer), importer);
-    });
-
-    // Generate Mermaid diagram with click handlers
-    let chartString = `graph ${layoutDirection}\n`;
-    
-    // Add nodes with click handlers
-    nodeMap.forEach((fullPath, basename) => {
-      const nodeId = basename.replace(/[^a-zA-Z0-9]/g, '_');
-      chartString += `  ${nodeId}["${basename}"]\n`;
-      chartString += `  click ${nodeId} call handleMermaidNodeClick("${fullPath}")\n`;
-    });
-    
-    // Add edges with coupling strength visualization
-    let linkIndex = 0;
-    
-    if (outgoing.length > 0) {
-      const selectedNodeId = selectedFileName.replace(/[^a-zA-Z0-9]/g, '_');
-      outgoing.forEach((dep: DependencyInfo) => {
-        const targetNodeId = getBasename(dep.target).replace(/[^a-zA-Z0-9]/g, '_');
-        chartString += `  ${selectedNodeId} --> ${targetNodeId}\n`;
-        
-        // Add link styling based on coupling strength
-        const strokeWidth = Math.min(1 + Math.log2(dep.strength + 1), 5).toFixed(2);
-        const strokeColor = dep.strength >= 3 ? '#ef4444' : '#6b7280'; // Red for strong coupling
-        chartString += `  linkStyle ${linkIndex} stroke-width:${strokeWidth}px,stroke:${strokeColor}\n`;
-        linkIndex++;
-      });
-    }
-    
-    if (incoming.length > 0) {
-      const selectedNodeId = selectedFileName.replace(/[^a-zA-Z0-9]/g, '_');
-      incoming.forEach(([importer, deps]) => {
-        const sourceNodeId = getBasename(importer).replace(/[^a-zA-Z0-9]/g, '_');
-        chartString += `  ${sourceNodeId} --> ${selectedNodeId}\n`;
-        
-        // Find the specific dependency for strength info
-        const connection = (deps as DependencyInfo[]).find((d: DependencyInfo) => d.target === actualFileId);
-        const strength = connection ? connection.strength : 1;
-        
-        const strokeWidth = Math.min(1 + Math.log2(strength + 1), 5).toFixed(2);
-        const strokeColor = strength >= 3 ? '#ef4444' : '#6b7280';
-        chartString += `  linkStyle ${linkIndex} stroke-width:${strokeWidth}px,stroke:${strokeColor}\n`;
-        linkIndex++;
-      });
-    }
-
-    // Handle case with no dependencies
-    if (outgoing.length === 0 && incoming.length === 0) {
-      const selectedNodeId = selectedFileName.replace(/[^a-zA-Z0-9]/g, '_');
-      chartString += `  ${selectedNodeId} --> NONE["No dependencies found"]\n`;
-      chartString += `  style NONE fill:#f3f4f6,stroke:#9ca3af,stroke-dasharray: 5 5\n`;
-    }
-    
-    // Style the selected node
-    const selectedNodeId = selectedFileName.replace(/[^a-zA-Z0-9]/g, '_');
-    chartString += `  style ${selectedNodeId} fill:#BAF8D0,stroke:#16a34a,stroke-width:2px\n`;
-    
-    setMermaidChart(chartString);
-  };
 
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
@@ -366,6 +421,16 @@ function AppContent() {
                 TB
               </Button>
             </div>
+            {analysisData && (
+              <Button
+                variant={viewMode === 'overview' ? 'default' : 'outline'}
+                size="sm"
+                onClick={handleShowOverview}
+                className="px-3 py-1 text-xs"
+              >
+                Project Overview
+              </Button>
+            )}
             
             <Button
               variant="ghost"
@@ -392,9 +457,9 @@ function AppContent() {
                   {Object.keys(analysisData.dependencyMap).length}
                 </strong> files
               </span>
-              {selectedFile && (
+              {selectedNode && (
                 <span className="text-green-600 dark:text-green-400">
-                  <strong>Selected:</strong> {getBasename(selectedFile)}
+                  <strong>Selected:</strong> {getBasename(selectedNode.id || selectedFileId || '')}
                 </span>
               )}
             </div>
@@ -405,14 +470,13 @@ function AppContent() {
         </div>
       )}
 
-      {/* Layout Utama - 3 columns with Issues Panel */}
+      {/* Layout Utama - Tree, Dashboard, dan Panel Detail */}
       <div className="flex h-[calc(100vh-140px)]">
-        {/* Left: File Tree */}
-        <div className="w-1/4 border-r border-slate-200 dark:border-slate-800">
+        <div className="w-80 border-r border-slate-200 dark:border-slate-800">
           {analysisData && (
-            <FileTreeView 
+            <FileTreeView
               ref={treeRef}
-              data={analysisData.fileTree} 
+              data={analysisData.fileTree}
               onFileSelect={handleFileSelect}
               filesInCycle={filesInCycle}
               highImpactFilesMap={highImpactFilesMap}
@@ -424,16 +488,19 @@ function AppContent() {
               brokenFilesSet={brokenFilesSet}
               newOrphansSet={newOrphansSet}
               isSimulating={isSimulating}
+              riskProfileMap={riskProfileMap}
             />
           )}
         </div>
-        
-        {/* Center: Mermaid Diagram */}
-        <div className="w-1/2 flex flex-col">
+
+        <div className="flex-1 overflow-hidden">
           {analysisData ? (
-            <div className="h-full">
-              <MermaidDiagram chart={mermaidChart} hoveredFile={hoveredFile} />
-            </div>
+            <ProjectDashboard
+              analysisData={analysisData}
+              mermaidChart={mermaidChart}
+              hoveredFile={hoveredFile}
+              viewMode={viewMode}
+            />
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
@@ -450,31 +517,17 @@ function AppContent() {
             </div>
           )}
         </div>
-        
-        {/* Right: Node Detail Panel or Metrics Panel */}
-        <div className="w-1/4 border-l border-slate-200 dark:border-slate-800 overflow-hidden">
-          {analysisData && (
-            <>
-              {showNodeDetail && selectedFile ? (
-                <NodeDetailPanel 
-                  node={selectedFile}
-                  data={analysisData}
-                  onClose={() => {
-                    setSelectedFile(null);
-                    setShowNodeDetail(false);
-                  }}
-                />
-              ) : (
-                <div className="p-4 overflow-y-auto h-full">
-                  <div className="space-y-4">
-                    <MetricsPanel data={analysisData} />
-                    <IssuesPanel data={analysisData} />
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+
+        {analysisData && viewMode === 'file' && selectedNode && (
+          <div className="w-96 border-l border-slate-200 dark:border-slate-800 overflow-hidden">
+            <NodeDetailPanel
+              node={selectedNode}
+              data={analysisData}
+              onClose={() => handleFileSelect(null)}
+              riskProfile={getRiskProfileForFile(selectedFileId)}
+            />
+          </div>
+        )}
       </div>
 
       {/* Modal untuk menampilkan hasil simulasi */}
