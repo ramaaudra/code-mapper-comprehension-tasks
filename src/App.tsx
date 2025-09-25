@@ -1,81 +1,43 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { FileTreeView } from './components/FileTreeView';
-import NodeDetailPanel from './components/NodeDetailPanel';
-import { ProjectDashboard } from './components/ProjectDashboard';
-import { ThemeProvider, useTheme } from './components/theme-provider';
-import { analyzeProject, simulateRemoval } from './lib/api';
+import { FileTreeView } from '@/components/graph/FileTreeView';
+import NodeDetailPanel from '@/components/detail/NodeDetailPanel';
+import { ProjectDashboard } from '@/components/dashboard/ProjectDashboard';
+import { ThemeProvider, useTheme } from '@/components/theme-provider';
+import { simulateRemoval } from '@/lib/api';
+import { useAnalysisData } from '@/hooks/useAnalysisData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Moon, Sun, Search, Play, FileWarning, FileX, ArrowRight, ArrowDown } from 'lucide-react';
+import { Moon, Sun, Search, FileWarning, FileX, ArrowRight, ArrowDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { TreeApi } from 'react-arborist';
+import type { AnalysisData, DependencyInfo } from '@/types/analysis';
 import type { FileRiskProfile } from '@/types/risk';
-
-// TypeScript interfaces for new format
-interface DependencyInfo {
-  target: string;
-  strength: number;
-  line: number;
-}
-
-interface CircularDependencyInfo {
-  cycle: string[];
-  length: number;
-  files: string[];
-  severity: 'high' | 'medium' | 'low';
-}
-
-interface AnalysisData {
-  nodes: any[];  // Add nodes array
-  edges: any[];  // Add edges array
-  fileTree: any[];
-  dependencyMap: { [filePath: string]: DependencyInfo[] };
-  riskAnalysis?: FileRiskProfile[];
-  issues: {
-    circularDependencies: CircularDependencyInfo[];
-    orphans: string[];
-    highImpact: { file: string; indegree: number }[];
-    summary: string;
-  };
-  metrics: {
-    fileCount: number;
-    edgeCount: number;
-    avgDegree: number;
-  };
-  detailedMetrics?: {
-    totalFiles: number;
-    totalDependencies: number;
-    averageDependenciesPerFile: number;
-    mostComplexFiles: { file: string; outdegree: number }[];
-    mostCriticalFiles: { file: string; indegree: number }[];
-    codebaseHealth: {
-      orphanCount: number;
-      highImpactCount: number;
-      circularCount: number;
-    };
-  };
-}
 // Helper function to get basename without path module
 const getBasename = (filePath: string) => {
   return filePath.split('/').pop() || filePath;
 };
 
 function AppContent() {
-  const [rootPath, setRootPath] = useState('/Users/mbam1/Local Document/Project/kirimpaket');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [query, setQuery] = useState('');
   const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR'>('LR'); // Default ke Left-Right
   const { theme, setTheme } = useTheme();
   const treeRef = useRef<TreeApi<any> | null>(null);
-  
-  // State baru dengan full analysis data
-  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+
+  const {
+    analysisData,
+    riskAnalysis,
+    analysisLoadedAt,
+    isLoading,
+    loadError,
+    loadAnalysis: fetchAnalysis,
+  } = useAnalysisData();
+
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [hoveredFile, setHoveredFile] = useState<string | null>(null);
   const [mermaidChart, setMermaidChart] = useState<string>('');
-  const [riskAnalysis, setRiskAnalysis] = useState<FileRiskProfile[]>([]);
   const [viewMode, setViewMode] = useState<'overview' | 'file'>('overview');
+  const [isTreeCollapsed, setIsTreeCollapsed] = useState(false);
 
   // Simulation state
   const [simulationResult, setSimulationResult] = useState<{ brokenFiles: string[], newOrphans: string[] } | null>(null);
@@ -83,23 +45,35 @@ function AppContent() {
 
   const normalizePath = useCallback((value: string) => value.replace(/\\/g, '/'), []);
 
+  const nodePathLookup = useMemo(() => {
+    if (!analysisData?.nodes) return new Map<string, string>();
+    const map = new Map<string, string>();
+
+    analysisData.nodes.forEach((node: any) => {
+      if (!node?.id) return;
+      const normalizedId = normalizePath(node.id);
+      const relativeLabel = typeof node.label === 'string' ? normalizePath(node.label) : '';
+      map.set(normalizedId, relativeLabel);
+    });
+
+    return map;
+  }, [analysisData, normalizePath]);
+
   const riskProfileMap = useMemo(() => {
     const map = new Map<string, FileRiskProfile>();
-    const normalizedRoot = normalizePath(rootPath).replace(/\/+$|\\+$/g, '');
-    const rootPrefix = normalizedRoot ? `${normalizedRoot}/` : '';
 
     riskAnalysis.forEach(profile => {
       const normalizedFile = normalizePath(profile.file);
       map.set(normalizedFile, profile);
 
-      if (rootPrefix && normalizedFile.startsWith(rootPrefix)) {
-        const relativePath = normalizedFile.slice(rootPrefix.length);
-        map.set(relativePath, profile);
+      const relativeLabel = nodePathLookup.get(normalizedFile);
+      if (relativeLabel) {
+        map.set(relativeLabel, profile);
       }
     });
 
     return map;
-  }, [normalizePath, riskAnalysis, rootPath]);
+  }, [normalizePath, nodePathLookup, riskAnalysis]);
 
   const getRiskProfileForFile = useCallback((fileId: string | null) => {
     if (!fileId) return null;
@@ -237,12 +211,38 @@ function AppContent() {
     setSelectedNode(nodeData || null);
   }, [analysisData, generateMermaidForFile]);
 
+  const navigateToFile = useCallback((fileId: string) => {
+    if (!analysisData) return;
+
+    const normalizedTarget = normalizePath(fileId);
+    const dependencyMap = analysisData.dependencyMap ?? {};
+    const allFiles = Object.keys(dependencyMap);
+
+    const matchedFile = allFiles.find((candidate) => {
+      const normalizedCandidate = normalizePath(candidate);
+      return (
+        normalizedCandidate === normalizedTarget ||
+        normalizedCandidate.endsWith(`/${normalizedTarget}`)
+      );
+    }) || fileId;
+
+    handleFileSelect(matchedFile);
+
+    if (treeRef.current) {
+      try {
+        treeRef.current.select(matchedFile, { focus: true });
+      } catch (error) {
+        console.warn('Failed to focus file in tree:', error);
+      }
+    }
+  }, [analysisData, handleFileSelect, normalizePath]);
+
   const handleShowOverview = useCallback(() => {
     setViewMode('overview');
     setSelectedFileId(null);
     setSelectedNode(null);
     setMermaidChart('');
-  }, []);
+  }, [setMermaidChart, setSelectedFileId, setSelectedNode, setViewMode]);
 
   // Register global function for Mermaid click navigation
   useEffect(() => {
@@ -287,33 +287,23 @@ function AppContent() {
     }
   }, [generateMermaidForFile, layoutDirection, selectedFileId]);
 
-  const handleAnalyze = async () => {
-    try {
-      setIsAnalyzing(true);
-      setRiskAnalysis([]);
-      const result = await analyzeProject({ rootPath });
-      // Store the complete analysis result including issues
-      const typedResult = result as AnalysisData;
-      setAnalysisData(typedResult);
-      setRiskAnalysis(typedResult.riskAnalysis || []);
-      setSelectedFileId(null);
-      setSelectedNode(null);
-      setMermaidChart('');
-      setViewMode('overview');
-      // Clear any previous simulation results
-      setSimulationResult(null);
-      
-      // Log circular dependencies for debugging
-      if (result.issues?.circularDependencies?.length > 0) {
-        console.log('🔄 Circular Dependencies Found:', result.issues.circularDependencies);
-        console.log('📋 Summary:', result.issues.summary);
-      }
-    } catch (error) {
-      console.error('Analysis failed:', error);
-    } finally {
-      setIsAnalyzing(false);
+  const refreshAnalysis = useCallback(async () => {
+    const result = await fetchAnalysis();
+
+    setSelectedFileId(null);
+    setSelectedNode(null);
+    setHoveredFile(null);
+    setMermaidChart('');
+    setViewMode('overview');
+    setSimulationResult(null);
+
+    if (result?.issues?.circularDependencies?.length) {
+      console.log('🔄 Circular Dependencies Found:', result.issues.circularDependencies);
+      console.log('📋 Summary:', result.issues.summary);
     }
-  };
+
+    return result;
+  }, [fetchAnalysis, setHoveredFile, setMermaidChart, setSelectedFileId, setSelectedNode, setSimulationResult, setViewMode]);
 
   const handleSimulateDelete = async (fileId: string) => {
     console.log('🚀 Frontend: Starting simulation for file:', fileId);
@@ -321,7 +311,6 @@ function AppContent() {
     try {
       const result = await simulateRemoval({
         fileToRemove: fileId,
-        dependencyMap: analysisData?.dependencyMap,
       });
       console.log('✅ Frontend: Simulation result received:', result);
       setSimulationResult(result);
@@ -338,6 +327,14 @@ function AppContent() {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
+  const toggleTreeView = () => {
+    setIsTreeCollapsed((prev) => !prev);
+  };
+
+  useEffect(() => {
+    refreshAnalysis();
+  }, [refreshAnalysis]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
       {/* Simple Top Bar */}
@@ -345,6 +342,19 @@ function AppContent() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Left: Title */}
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTreeView}
+              className="text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              aria-label={isTreeCollapsed ? 'Tampilkan tree view' : 'Sembunyikan tree view'}
+            >
+              {isTreeCollapsed ? (
+                <PanelLeftOpen className="h-5 w-5" />
+              ) : (
+                <PanelLeftClose className="h-5 w-5" />
+              )}
+            </Button>
             <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
               <div className="w-4 h-4 bg-white rounded-sm opacity-90"></div>
             </div>
@@ -353,32 +363,30 @@ function AppContent() {
             </h1>
           </div>
           
-          {/* Center: Input and Analyze */}
+          {/* Center: Status & Refresh */}
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <Input
-                value={rootPath}
-                onChange={e => setRootPath(e.target.value)}
-                placeholder="Enter project path..."
-                className="w-80 pr-4 border-slate-300 dark:border-slate-600 focus:border-green-500 dark:focus:border-green-400"
+            <div className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
+              <span
+                className={`h-2 w-2 rounded-full ${isLoading ? 'bg-amber-400 animate-pulse' : loadError ? 'bg-red-500' : 'bg-emerald-500'}`}
+                aria-hidden="true"
               />
-            </div>
-            <Button 
-              onClick={handleAnalyze}
-              disabled={isAnalyzing}
-              className="bg-green-600 hover:bg-green-700 text-white px-6"
-            >
-              {isAnalyzing ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-2" />
-                  Analyze
-                </>
+              {isLoading && 'Memuat data analisis...'}
+              {!isLoading && loadError && (
+                <span className="text-red-500 dark:text-red-400 font-medium">
+                  Gagal memuat data
+                </span>
               )}
+              {!isLoading && !loadError && analysisData && 'Data analisis siap'}
+              {!isLoading && !loadError && !analysisData && 'Data analisis belum tersedia'}
+            </div>
+            <Button
+              onClick={refreshAnalysis}
+              disabled={isLoading}
+              variant="outline"
+              size="sm"
+              className="px-4"
+            >
+              {isLoading ? 'Memuat...' : 'Muat Ulang'}
             </Button>
           </div>
           
@@ -464,7 +472,11 @@ function AppContent() {
               )}
             </div>
             <div className="text-xs">
-              Analyzed: <strong>{new Date().toLocaleTimeString()}</strong>
+              {analysisLoadedAt && (
+                <>
+                  Diperbarui: <strong>{new Date(analysisLoadedAt).toLocaleTimeString()}</strong>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -472,8 +484,14 @@ function AppContent() {
 
       {/* Layout Utama - Tree, Dashboard, dan Panel Detail */}
       <div className="flex h-[calc(100vh-140px)]">
-        <div className="w-80 border-r border-slate-200 dark:border-slate-800">
-          {analysisData && (
+        <div
+          className={`transition-all duration-200 ease-out ${
+            isTreeCollapsed
+              ? 'w-0 min-w-0 overflow-hidden'
+              : 'w-80 border-r border-slate-200 dark:border-slate-800'
+          }`}
+        >
+          {!isTreeCollapsed && analysisData && (
             <FileTreeView
               ref={treeRef}
               data={analysisData.fileTree}
@@ -500,6 +518,7 @@ function AppContent() {
               mermaidChart={mermaidChart}
               hoveredFile={hoveredFile}
               viewMode={viewMode}
+              onNavigateToFile={navigateToFile}
             />
           ) : (
             <div className="h-full flex items-center justify-center">
@@ -508,11 +527,17 @@ function AppContent() {
                   <div className="w-12 h-12 bg-white rounded-full opacity-90"></div>
                 </div>
                 <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Ready to analyze your codebase
+                  Menunggu data analisis
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400">
-                  Enter a project path above and click "Analyze" to get started
+                <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                  Jalankan perintah <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-800 rounded">code-mapper analyze &lt;path-proyek&gt;</code>
+                  {' '}di terminal Anda untuk menghasilkan data baru, kemudian biarkan server CLI tetap berjalan.
                 </p>
+                {loadError && (
+                  <p className="mt-3 text-sm text-red-500 dark:text-red-400">
+                    Gagal memuat data: {loadError}
+                  </p>
+                )}
               </div>
             </div>
           )}

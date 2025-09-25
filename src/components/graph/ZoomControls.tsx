@@ -1,5 +1,5 @@
 import { ZoomIn, ZoomOut, RotateCcw, Maximize } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
 
 interface ZoomControlsProps {
   onZoomIn: () => void;
