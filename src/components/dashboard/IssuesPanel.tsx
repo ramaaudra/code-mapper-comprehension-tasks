@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AlertTriangle, Ghost, Flame, ArrowRight } from 'lucide-react';
+import { AlertTriangle, Ghost, Flame, ArrowRight } from '@/components/ui/icons';
 import type { AnalysisData } from '@/types/analysis';
 
 interface IssuesPanelProps {
@@ -58,10 +58,10 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
   const [highImpactDialogOpen, setHighImpactDialogOpen] = useState(false);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-x-hidden">
       {/* Summary Card */}
       {summary && (
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <AlertTriangle className="h-4 w-4" />
@@ -77,7 +77,7 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
       )}
 
       {/* Circular Dependencies */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -215,7 +215,7 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
 
       <div className="space-y-4">
         {/* Orphaned Files */}
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -307,7 +307,7 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
         </Card>
 
         {/* High Impact Files */}
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-import { ZoomIn, ZoomOut, RotateCcw, Maximize } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Maximize } from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
 
 interface ZoomControlsProps {

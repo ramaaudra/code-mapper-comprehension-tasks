@@ -1,5 +1,5 @@
 import { Tree, TreeApi } from "react-arborist";
-import { File, Folder, FolderOpen, AlertTriangle, Flame, Ghost, Trash2, Bomb } from "lucide-react";
+import { File, Folder, FolderOpen, AlertTriangle, Flame, Ghost, Trash2, Bomb } from '@/components/ui/icons';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -337,6 +337,9 @@ export const FileTreeView = forwardRef<TreeApi<any> | undefined, FileTreeViewPro
           searchTerm={searchTerm}
           onSelect={(nodes) => {
             const selectedNode = nodes[0];
+            if (!selectedNode) {
+              return;
+            }
             if (selectedNode?.isLeaf) {
               onFileSelect(selectedNode.id);
             } else {

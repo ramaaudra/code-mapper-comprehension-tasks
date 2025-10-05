@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { X, FileText, ArrowRight, ArrowLeft, Focus, Copy, Map } from 'lucide-react';
+import { X, FileText, ArrowRight, ArrowLeft, Focus, Copy, Map } from '@/components/ui/icons';
 import { findDependencyPath } from '@/lib/api';
 import type { FileRiskProfile } from '@/types/risk';
 

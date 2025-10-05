@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { BarChart3, FileText, Network, Puzzle, ShieldCheck, AlertCircle, TrendingUp } from 'lucide-react';
+import { BarChart3, FileText, Network, Puzzle, ShieldCheck, AlertCircle, TrendingUp } from '@/components/ui/icons';
 import type { AnalysisData, DetailedMetrics, AnalysisMetrics } from '@/types/analysis';
 
 // Helper function to get file basename

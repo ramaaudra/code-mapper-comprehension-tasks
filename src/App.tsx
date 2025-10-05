@@ -1,17 +1,26 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { FileTreeView } from '@/components/graph/FileTreeView';
-import NodeDetailPanel from '@/components/detail/NodeDetailPanel';
-import { ProjectDashboard } from '@/components/dashboard/ProjectDashboard';
+import { useState, useMemo, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { ThemeProvider, useTheme } from '@/components/theme-provider';
 import { simulateRemoval } from '@/lib/api';
 import { useAnalysisData } from '@/hooks/useAnalysisData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Moon, Sun, Search, FileWarning, FileX, ArrowRight, ArrowDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { 
+  Moon, Sun, Search, FileWarning, FileX, 
+  ArrowRight, ArrowDown, PanelLeftClose, PanelLeftOpen 
+} from '@/components/ui/icons';
 import { TreeApi } from 'react-arborist';
 import type { AnalysisData, DependencyInfo } from '@/types/analysis';
 import type { FileRiskProfile } from '@/types/risk';
+import { MarkerType } from '@xyflow/react';
+import type { Node, Edge } from '@xyflow/react';
+import type { DependencyNodeData, DependencyEdgeData } from '@/components/graph/DependencyGraph';
+import { GraphSkeleton } from '@/components/graph/GraphSkeleton';
+
+// Lazy load heavy components
+const FileTreeView = lazy(() => import('@/components/graph/FileTreeView').then(m => ({ default: m.FileTreeView })));
+const NodeDetailPanel = lazy(() => import('@/components/detail/NodeDetailPanel'));
+const ProjectDashboard = lazy(() => import('@/components/dashboard/ProjectDashboard').then(m => ({ default: m.ProjectDashboard })));
 // Helper function to get basename without path module
 const getBasename = (filePath: string) => {
   return filePath.split('/').pop() || filePath;
@@ -35,7 +44,11 @@ function AppContent() {
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [hoveredFile, setHoveredFile] = useState<string | null>(null);
-  const [mermaidChart, setMermaidChart] = useState<string>('');
+  const [graphElements, setGraphElements] = useState<{
+    nodes: Node<DependencyNodeData>[];
+    edges: Edge<DependencyEdgeData>[];
+    focusNodeId: string | null;
+  }>({ nodes: [], edges: [], focusNodeId: null });
   const [viewMode, setViewMode] = useState<'overview' | 'file'>('overview');
   const [isTreeCollapsed, setIsTreeCollapsed] = useState(false);
 
@@ -113,118 +126,236 @@ function AppContent() {
   const brokenFilesSet = useMemo(() => new Set(simulationResult?.brokenFiles || []), [simulationResult]);
   const newOrphansSet = useMemo(() => new Set(simulationResult?.newOrphans || []), [simulationResult]);
 
-  const generateMermaidForFile = useCallback((fileId: string | null, sourceData?: AnalysisData | null) => {
+  const matchesFile = useCallback((candidate: string, target: string) => {
+    const normalizedCandidate = normalizePath(candidate);
+    const normalizedTarget = normalizePath(target);
+    return normalizedCandidate === normalizedTarget || normalizedCandidate.endsWith(`/${normalizedTarget}`);
+  }, [normalizePath]);
+
+  const hasMatchInSet = useCallback((set: Set<string>, target: string) => {
+    for (const candidate of set) {
+      if (matchesFile(candidate, target)) {
+        return true;
+      }
+    }
+    return false;
+  }, [matchesFile]);
+
+  const getValueFromMap = useCallback((map: Map<string, number>, target: string) => {
+    for (const [key, value] of map.entries()) {
+      if (matchesFile(key, target)) {
+        return value;
+      }
+    }
+    return undefined;
+  }, [matchesFile]);
+
+  const collectBadges = useCallback((fullPath: string) => {
+    const badges: DependencyNodeData['badges'] = [];
+
+    if (hasMatchInSet(filesInCycle, fullPath)) {
+      badges.push({ label: 'Cycle', tone: 'danger' });
+    }
+
+    const highImpact = getValueFromMap(highImpactFilesMap, fullPath);
+    if (typeof highImpact === 'number') {
+      badges.push({ label: `High Impact ${highImpact}`, tone: 'warning' });
+    }
+
+    if (hasMatchInSet(orphanFilesSet, fullPath)) {
+      badges.push({ label: 'Orphan', tone: 'warning' });
+    }
+
+    if (hasMatchInSet(brokenFilesSet, fullPath)) {
+      badges.push({ label: 'Sim Result: Broken', tone: 'danger' });
+    }
+
+    if (hasMatchInSet(newOrphansSet, fullPath)) {
+      badges.push({ label: 'Sim Result: Orphan', tone: 'info' });
+    }
+
+    const riskProfile = getRiskProfileForFile(fullPath);
+    if (riskProfile) {
+      const tone = riskProfile.category === 'Kritis'
+        ? 'danger'
+        : riskProfile.category === 'Tinggi'
+          ? 'warning'
+          : riskProfile.category === 'Sedang'
+            ? 'info'
+            : 'success';
+      badges.push({ label: `Risiko ${riskProfile.category}`, tone });
+    }
+
+    return badges;
+  }, [
+    brokenFilesSet,
+    filesInCycle,
+    getRiskProfileForFile,
+    hasMatchInSet,
+    highImpactFilesMap,
+    newOrphansSet,
+    orphanFilesSet,
+    getValueFromMap,
+  ]);
+
+  const generateGraphForFile = useCallback((fileId: string | null, sourceData?: AnalysisData | null) => {
     const currentData = sourceData ?? analysisData;
 
     if (!fileId || !currentData) {
-      setMermaidChart('');
+      setGraphElements({ nodes: [], edges: [], focusNodeId: null });
       return null;
     }
 
     const dependencyMap = currentData.dependencyMap || {};
-    const absoluteFileId = Object.keys(dependencyMap).find(key =>
-      key.endsWith('/' + fileId) || key === fileId
+    const candidates = Object.keys(dependencyMap);
+    const matchedEntry = candidates.find(candidate => matchesFile(candidate, fileId));
+    const actualFileId = matchedEntry ?? fileId;
+    const normalizedActual = normalizePath(actualFileId);
+
+    const outgoing = dependencyMap[actualFileId] ?? [];
+    const incomingEntries = Object.entries(dependencyMap).filter(([, deps]) =>
+      (deps as DependencyInfo[]).some(dep => matchesFile(dep.target, normalizedActual))
     );
 
-    const actualFileId = absoluteFileId || fileId;
-    const selectedFileName = getBasename(actualFileId);
+    const nodesMap = new Map<string, Node<DependencyNodeData>>();
+    const edges: Edge<DependencyEdgeData>[] = [];
 
-    const nodeMap = new Map<string, string>();
-    nodeMap.set(selectedFileName, actualFileId);
+    const ensureNode = (
+      fullPath: string,
+      direction: DependencyNodeData['direction'],
+      subtitle?: string,
+    ) => {
+      const normalizedFullPath = normalizePath(fullPath);
+      const existing = nodesMap.get(normalizedFullPath);
+      if (existing) return existing;
 
-    const outgoing = dependencyMap[actualFileId] || [];
-    outgoing.forEach((dep: DependencyInfo) => {
-      nodeMap.set(getBasename(dep.target), dep.target);
-    });
+      const node: Node<DependencyNodeData> = {
+        id: normalizedFullPath,
+        type: 'dependency',
+        position: { x: 0, y: 0 },
+        data: {
+          label: getBasename(normalizedFullPath),
+          fullPath: normalizedFullPath,
+          direction,
+          subtitle,
+          badges: collectBadges(normalizedFullPath),
+        },
+      };
 
-    const incoming = Object.entries(dependencyMap).filter(([, deps]) =>
-      (deps as DependencyInfo[]).some((dep: DependencyInfo) => dep.target === actualFileId)
-    );
-    incoming.forEach(([importer]) => {
-      nodeMap.set(getBasename(importer), importer);
-    });
+      nodesMap.set(normalizedFullPath, node);
+      return node;
+    };
 
-    let chartString = `graph ${layoutDirection}\n`;
-    nodeMap.forEach((fullPath, basename) => {
-      const nodeId = basename.replace(/[^a-zA-Z0-9]/g, '_');
-      chartString += `  ${nodeId}["${basename}"]\n`;
-      chartString += `  click ${nodeId} call handleMermaidNodeClick("${fullPath}")\n`;
-    });
+    ensureNode(normalizedActual, 'selected', 'Active file');
 
-    let linkIndex = 0;
-    const selectedNodeId = selectedFileName.replace(/[^a-zA-Z0-9]/g, '_');
-
-    if (outgoing.length > 0) {
-      outgoing.forEach((dep: DependencyInfo) => {
-        const targetNodeId = getBasename(dep.target).replace(/[^a-zA-Z0-9]/g, '_');
-        chartString += `  ${selectedNodeId} --> ${targetNodeId}\n`;
-
-        const strokeWidth = Math.min(1 + Math.log2(dep.strength + 1), 5).toFixed(2);
-        const strokeColor = dep.strength >= 3 ? '#ef4444' : '#6b7280';
-        chartString += `  linkStyle ${linkIndex} stroke-width:${strokeWidth}px,stroke:${strokeColor}\n`;
-        linkIndex++;
+    outgoing.forEach(dep => {
+      const targetPath = normalizePath(dep.target);
+      ensureNode(targetPath, 'outgoing', 'Required module');
+      const strokeWidth = Math.min(1 + Math.log2(dep.strength + 1), 5);
+      const strokeColor = dep.strength >= 3 ? '#ef4444' : '#d97706';
+      edges.push({
+        id: `out-${normalizedActual}->${targetPath}`,
+        source: normalizedActual,
+        target: targetPath,
+        data: { strength: dep.strength, direction: 'outgoing' },
+        style: { strokeWidth, stroke: strokeColor },
+        animated: dep.strength >= 3,
+        markerEnd: { type: MarkerType.ArrowClosed, color: strokeColor, width: 18, height: 18 },
+        label: dep.strength > 1 ? `${dep.strength} refs` : '1 ref',
+        labelBgPadding: [6, 2],
+        labelBgBorderRadius: 4,
+        labelBgStyle: {
+          fill: 'rgba(248, 250, 252, 0.95)',
+          stroke: 'rgba(15, 23, 42, 0.4)',
+          color: '#0f172a',
+        },
+        labelStyle: {
+          fontWeight: 600,
+          letterSpacing: '0.01em',
+        },
       });
-    }
+    });
 
-    if (incoming.length > 0) {
-      incoming.forEach(([importer, deps]) => {
-        const sourceNodeId = getBasename(importer).replace(/[^a-zA-Z0-9]/g, '_');
-        chartString += `  ${sourceNodeId} --> ${selectedNodeId}\n`;
-
-        const connection = (deps as DependencyInfo[]).find((d: DependencyInfo) => d.target === actualFileId);
-        const strength = connection ? connection.strength : 1;
-
-        const strokeWidth = Math.min(1 + Math.log2(strength + 1), 5).toFixed(2);
-        const strokeColor = strength >= 3 ? '#ef4444' : '#6b7280';
-        chartString += `  linkStyle ${linkIndex} stroke-width:${strokeWidth}px,stroke:${strokeColor}\n`;
-        linkIndex++;
+    incomingEntries.forEach(([importer, deps]) => {
+      const importerPath = normalizePath(importer);
+      ensureNode(importerPath, 'incoming', 'Imports this file');
+      const connection = (deps as DependencyInfo[]).find(dep => matchesFile(dep.target, normalizedActual));
+      const strength = connection?.strength ?? 1;
+      const strokeWidth = Math.min(1 + Math.log2(strength + 1), 5);
+      const strokeColor = strength >= 3 ? '#ef4444' : '#2563eb';
+      edges.push({
+        id: `in-${importerPath}->${normalizedActual}`,
+        source: importerPath,
+        target: normalizedActual,
+        data: { strength, direction: 'incoming' },
+        style: { strokeWidth, stroke: strokeColor },
+        animated: strength >= 3,
+        markerEnd: { type: MarkerType.ArrowClosed, color: strokeColor, width: 18, height: 18 },
+        label: strength > 1 ? `${strength} refs` : '1 ref',
+        labelBgPadding: [6, 2],
+        labelBgBorderRadius: 4,
+        labelBgStyle: {
+          fill: 'rgba(248, 250, 252, 0.95)',
+          stroke: 'rgba(15, 23, 42, 0.4)',
+          color: '#0f172a',
+        },
+        labelStyle: {
+          fontWeight: 600,
+          letterSpacing: '0.01em',
+        },
       });
-    }
+    });
 
-    if (outgoing.length === 0 && incoming.length === 0) {
-      chartString += `  ${selectedNodeId} --> NONE["No dependencies found"]\n`;
-      chartString += '  style NONE fill:#f3f4f6,stroke:#9ca3af,stroke-dasharray: 5 5\n';
-    }
+    const graphNodes = Array.from(nodesMap.values()).sort((a, b) => {
+      const order: Record<DependencyNodeData['direction'], number> = {
+        selected: 0,
+        incoming: 1,
+        outgoing: 2,
+        placeholder: 3,
+      };
+      return order[a.data.direction] - order[b.data.direction];
+    });
 
-    chartString += `  style ${selectedNodeId} fill:#BAF8D0,stroke:#16a34a,stroke-width:2px\n`;
+    setGraphElements({
+      nodes: graphNodes,
+      edges,
+      focusNodeId: normalizedActual,
+    });
 
-    setMermaidChart(chartString);
-    return actualFileId;
-  }, [analysisData, layoutDirection]);
+    return normalizedActual;
+  }, [
+    analysisData,
+    collectBadges,
+    matchesFile,
+    normalizePath,
+  ]);
 
   const handleFileSelect = useCallback((fileId: string | null) => {
     if (!fileId || !analysisData) {
       setSelectedFileId(null);
       setSelectedNode(null);
       setViewMode('overview');
-      generateMermaidForFile(null);
+      setGraphElements({ nodes: [], edges: [], focusNodeId: null });
       return;
     }
 
     setViewMode('file');
-    const resolvedFileId = generateMermaidForFile(fileId) || fileId;
+    const resolvedFileId = generateGraphForFile(fileId) || fileId;
     setSelectedFileId(resolvedFileId);
 
-    const nodeData = analysisData.nodes?.find((n: any) => n.id === resolvedFileId)
-      || analysisData.nodes?.find((n: any) => n.id.endsWith('/' + resolvedFileId));
+    const nodeData = analysisData.nodes?.find((n: any) => matchesFile(n.id, resolvedFileId))
+      || analysisData.nodes?.find((n: any) => matchesFile(n.id, fileId));
 
     setSelectedNode(nodeData || null);
-  }, [analysisData, generateMermaidForFile]);
+  }, [analysisData, generateGraphForFile, matchesFile]);
 
   const navigateToFile = useCallback((fileId: string) => {
     if (!analysisData) return;
 
-    const normalizedTarget = normalizePath(fileId);
     const dependencyMap = analysisData.dependencyMap ?? {};
     const allFiles = Object.keys(dependencyMap);
 
-    const matchedFile = allFiles.find((candidate) => {
-      const normalizedCandidate = normalizePath(candidate);
-      return (
-        normalizedCandidate === normalizedTarget ||
-        normalizedCandidate.endsWith(`/${normalizedTarget}`)
-      );
-    }) || fileId;
+    const matchedFile = allFiles.find(candidate => matchesFile(candidate, fileId)) || fileId;
 
     handleFileSelect(matchedFile);
 
@@ -235,57 +366,21 @@ function AppContent() {
         console.warn('Failed to focus file in tree:', error);
       }
     }
-  }, [analysisData, handleFileSelect, normalizePath]);
+  }, [analysisData, handleFileSelect, matchesFile]);
 
   const handleShowOverview = useCallback(() => {
     setViewMode('overview');
-    setSelectedFileId(null);
-    setSelectedNode(null);
-    setMermaidChart('');
-  }, [setMermaidChart, setSelectedFileId, setSelectedNode, setViewMode]);
+   setSelectedFileId(null);
+   setSelectedNode(null);
+    setGraphElements({ nodes: [], edges: [], focusNodeId: null });
+  }, [setGraphElements, setSelectedFileId, setSelectedNode, setViewMode]);
 
-  // Register global function for Mermaid click navigation
-  useEffect(() => {
-    (window as any).handleMermaidNodeClick = (fileIdOrName: string) => {
-      console.log('Mermaid node clicked:', fileIdOrName);
-      
-      if (!analysisData || !treeRef.current) return;
-      
-      // Try to find the full path by matching filename or full path
-      let matchedFileId = fileIdOrName;
-      
-      // If it's just a filename, try to find the full path
-      if (!fileIdOrName.includes('/') && analysisData.dependencyMap) {
-        const allFiles = Object.keys(analysisData.dependencyMap);
-        const matchedFile = allFiles.find(filePath => {
-          const basename = filePath.split('/').pop() || '';
-          return basename === fileIdOrName || basename.replace(/\.[^/.]+$/, '') === fileIdOrName.replace(/\.[^/.]+$/, '');
-        });
-        
-        if (matchedFile) {
-          matchedFileId = matchedFile;
-          console.log('Resolved filename to full path:', matchedFile);
-        }
-      }
-      
-      // Find the node in the tree and select it
-      treeRef.current.select(matchedFileId, { focus: true });
-      // Also trigger the file select handler
-      handleFileSelect(matchedFileId);
-    };
-
-    // Cleanup on unmount
-    return () => {
-      delete (window as any).handleMermaidNodeClick;
-    };
-  }, [analysisData, handleFileSelect]);
-
-  // Regenerate chart when layout direction changes
+  // Regenerate dependency view when analysis data refreshes
   useEffect(() => {
     if (selectedFileId) {
-      generateMermaidForFile(selectedFileId);
+      generateGraphForFile(selectedFileId, analysisData);
     }
-  }, [generateMermaidForFile, layoutDirection, selectedFileId]);
+  }, [analysisData, generateGraphForFile, selectedFileId]);
 
   const refreshAnalysis = useCallback(async () => {
     const result = await fetchAnalysis();
@@ -293,7 +388,7 @@ function AppContent() {
     setSelectedFileId(null);
     setSelectedNode(null);
     setHoveredFile(null);
-    setMermaidChart('');
+    setGraphElements({ nodes: [], edges: [], focusNodeId: null });
     setViewMode('overview');
     setSimulationResult(null);
 
@@ -303,7 +398,7 @@ function AppContent() {
     }
 
     return result;
-  }, [fetchAnalysis, setHoveredFile, setMermaidChart, setSelectedFileId, setSelectedNode, setSimulationResult, setViewMode]);
+  }, [fetchAnalysis, setGraphElements, setHoveredFile, setSelectedFileId, setSelectedNode, setSimulationResult, setViewMode]);
 
   const handleSimulateDelete = async (fileId: string) => {
     console.log('🚀 Frontend: Starting simulation for file:', fileId);
@@ -355,9 +450,6 @@ function AppContent() {
                 <PanelLeftClose className="h-5 w-5" />
               )}
             </Button>
-            <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-              <div className="w-4 h-4 bg-white rounded-sm opacity-90"></div>
-            </div>
             <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
               Code Mapper
             </h1>
@@ -483,43 +575,52 @@ function AppContent() {
       )}
 
       {/* Layout Utama - Tree, Dashboard, dan Panel Detail */}
-      <div className="flex h-[calc(100vh-140px)]">
+      <div className="flex h-[calc(100vh-140px)] overflow-hidden">
         <div
-          className={`transition-all duration-200 ease-out ${
+          className={`transition-all duration-200 ease-out overflow-hidden shrink-0 ${
             isTreeCollapsed
-              ? 'w-0 min-w-0 overflow-hidden'
+              ? 'w-0 min-w-0'
               : 'w-80 border-r border-slate-200 dark:border-slate-800'
           }`}
         >
           {!isTreeCollapsed && analysisData && (
-            <FileTreeView
-              ref={treeRef}
-              data={analysisData.fileTree}
-              onFileSelect={handleFileSelect}
-              filesInCycle={filesInCycle}
-              highImpactFilesMap={highImpactFilesMap}
-              orphanFilesSet={orphanFilesSet}
-              searchTerm={query}
-              hoveredFile={hoveredFile}
-              setHoveredFile={setHoveredFile}
-              onSimulateDelete={handleSimulateDelete}
-              brokenFilesSet={brokenFilesSet}
-              newOrphansSet={newOrphansSet}
-              isSimulating={isSimulating}
-              riskProfileMap={riskProfileMap}
-            />
+            <Suspense fallback={
+              <div className="h-full flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-emerald-500 border-t-transparent" />
+              </div>
+            }>
+              <FileTreeView
+                ref={treeRef}
+                data={analysisData.fileTree}
+                onFileSelect={handleFileSelect}
+                filesInCycle={filesInCycle}
+                highImpactFilesMap={highImpactFilesMap}
+                orphanFilesSet={orphanFilesSet}
+                searchTerm={query}
+                hoveredFile={hoveredFile}
+                setHoveredFile={setHoveredFile}
+                onSimulateDelete={handleSimulateDelete}
+                brokenFilesSet={brokenFilesSet}
+                newOrphansSet={newOrphansSet}
+                isSimulating={isSimulating}
+                riskProfileMap={riskProfileMap}
+              />
+            </Suspense>
           )}
         </div>
 
         <div className="flex-1 overflow-hidden">
           {analysisData ? (
-            <ProjectDashboard
-              analysisData={analysisData}
-              mermaidChart={mermaidChart}
-              hoveredFile={hoveredFile}
-              viewMode={viewMode}
-              onNavigateToFile={navigateToFile}
-            />
+            <Suspense fallback={<GraphSkeleton />}>
+              <ProjectDashboard
+                analysisData={analysisData}
+                dependencyGraph={graphElements}
+                hoveredFile={hoveredFile}
+                layoutDirection={layoutDirection}
+                viewMode={viewMode}
+                onNavigateToFile={navigateToFile}
+              />
+            </Suspense>
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
@@ -545,12 +646,18 @@ function AppContent() {
 
         {analysisData && viewMode === 'file' && selectedNode && (
           <div className="w-96 border-l border-slate-200 dark:border-slate-800 overflow-hidden">
-            <NodeDetailPanel
-              node={selectedNode}
-              data={analysisData}
-              onClose={() => handleFileSelect(null)}
-              riskProfile={getRiskProfileForFile(selectedFileId)}
-            />
+            <Suspense fallback={
+              <div className="h-full flex items-center justify-center bg-white dark:bg-slate-900">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-emerald-500 border-t-transparent" />
+              </div>
+            }>
+              <NodeDetailPanel
+                node={selectedNode}
+                data={analysisData}
+                onClose={() => handleFileSelect(null)}
+                riskProfile={getRiskProfileForFile(selectedFileId)}
+              />
+            </Suspense>
           </div>
         )}
       </div>

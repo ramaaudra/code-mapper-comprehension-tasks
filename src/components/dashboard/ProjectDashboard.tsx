@@ -1,18 +1,32 @@
 import { IssuesPanel } from './IssuesPanel';
 import MetricsPanel from './MetricsPanel';
-import { MermaidDiagram } from '@/components/graph/MermaidDiagram';
-import { FileText, Network, TrendingUp, ShieldAlert } from 'lucide-react';
+import { DependencyGraph } from '@/components/graph/DependencyGraph';
+import { FileText, Network, TrendingUp, ShieldAlert } from '@/components/ui/icons';
 import type { AnalysisData } from '@/types/analysis';
+import type { DependencyEdgeData, DependencyNodeData } from '@/components/graph/DependencyGraph';
+import type { Edge, Node } from '@xyflow/react';
 
 interface ProjectDashboardProps {
   analysisData: AnalysisData | null;
-  mermaidChart: string;
+  dependencyGraph: {
+    nodes: Node<DependencyNodeData>[];
+    edges: Edge<DependencyEdgeData>[];
+    focusNodeId: string | null;
+  };
   hoveredFile: string | null;
+  layoutDirection: 'LR' | 'TB';
   viewMode: 'overview' | 'file';
   onNavigateToFile: (fileId: string) => void;
 }
 
-export function ProjectDashboard({ analysisData, mermaidChart, hoveredFile, viewMode, onNavigateToFile }: ProjectDashboardProps) {
+export function ProjectDashboard({
+  analysisData,
+  dependencyGraph,
+  hoveredFile,
+  layoutDirection,
+  viewMode,
+  onNavigateToFile,
+}: ProjectDashboardProps) {
   if (viewMode === 'overview') {
     const snapshot = {
       totalFiles: analysisData?.detailedMetrics?.totalFiles ?? analysisData?.metrics?.fileCount ?? 0,
@@ -47,8 +61,8 @@ export function ProjectDashboard({ analysisData, mermaidChart, hoveredFile, view
     ];
 
     return (
-      <div className="h-full overflow-y-auto bg-white dark:bg-slate-900">
-        <div className="max-w-7xl mx-auto p-6 space-y-8">
+      <div className="h-full overflow-y-auto overflow-x-hidden bg-white dark:bg-slate-900">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 lg:px-12 py-6 pb-12 space-y-8">
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">Project Overview</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -73,11 +87,11 @@ export function ProjectDashboard({ analysisData, mermaidChart, hoveredFile, view
             ))}
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-            <div className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="space-y-6 min-w-0">
               <MetricsPanel data={analysisData} onSelectFile={onNavigateToFile} />
             </div>
-            <div className="space-y-6">
+            <div className="space-y-6 min-w-0">
               <IssuesPanel data={analysisData} onNavigateToFile={onNavigateToFile} />
             </div>
           </div>
@@ -86,24 +100,16 @@ export function ProjectDashboard({ analysisData, mermaidChart, hoveredFile, view
     );
   }
 
-  const hasChart = Boolean(mermaidChart?.trim());
-
   return (
     <div className="h-full bg-white dark:bg-slate-900">
-      {hasChart ? (
-        <MermaidDiagram chart={mermaidChart} hoveredFile={hoveredFile} />
-      ) : (
-        <div className="h-full flex items-center justify-center p-12">
-          <div className="text-center space-y-3">
-            <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-200">
-              Select a file to explore its dependencies
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Choose a file from the tree to visualize its relationships and inspect metrics.
-            </p>
-          </div>
-        </div>
-      )}
+      <DependencyGraph
+        nodes={dependencyGraph.nodes}
+        edges={dependencyGraph.edges}
+        focusNodeId={dependencyGraph.focusNodeId}
+        hoveredFile={hoveredFile}
+        layoutDirection={layoutDirection}
+        onNodeClick={onNavigateToFile}
+      />
     </div>
   );
 }
