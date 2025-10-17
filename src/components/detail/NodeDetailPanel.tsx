@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { X, FileText, ArrowRight, ArrowLeft, Focus, Copy, Map } from '@/components/ui/icons';
 import { findDependencyPath } from '@/lib/api';
+import { getBasename, getRelativePath } from '@/lib/utils';
 import type { FileRiskProfile } from '@/types/risk';
 
 interface NodeDetailPanelProps {
@@ -15,11 +16,6 @@ interface NodeDetailPanelProps {
   onFocusSubgraph?: (nodeId: string, direction: 'inward' | 'outward') => void;
   riskProfile?: FileRiskProfile | null;
 }
-
-// Custom basename function for browser compatibility
-const getBasename = (filePath: string): string => {
-  return filePath.split('/').pop() || filePath.split('\\').pop() || filePath;
-};
 
 export default function NodeDetailPanel({ node, data, onClose, onFocusSubgraph, riskProfile }: NodeDetailPanelProps) {
   const [focusDirection, setFocusDirection] = useState<'inward' | 'outward'>('outward');
@@ -69,8 +65,17 @@ export default function NodeDetailPanel({ node, data, onClose, onFocusSubgraph, 
     };
   });
 
-  const copyPath = () => {
-    navigator.clipboard.writeText(nodeData.id);
+  const [showCopyMenu, setShowCopyMenu] = useState(false);
+  const [copiedType, setCopiedType] = useState<'full' | 'relative' | null>(null);
+
+  const copyPath = (type: 'full' | 'relative') => {
+    const pathToCopy = type === 'full' ? nodeData.id : getRelativePath(nodeData.id);
+    navigator.clipboard.writeText(pathToCopy);
+    setCopiedType(type);
+    setTimeout(() => {
+      setCopiedType(null);
+      setShowCopyMenu(false);
+    }, 2000);
   };
 
   const riskBadgeClass = riskProfile
@@ -131,20 +136,57 @@ export default function NodeDetailPanel({ node, data, onClose, onFocusSubgraph, 
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center justify-between">
               <span className="truncate">{nodeData.basename}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={copyPath}
-                className="h-6 w-6 shrink-0"
-                title="Copy full path"
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
+              <div className="relative shrink-0">
+                <TooltipProvider>
+                  <Tooltip open={showCopyMenu || copiedType !== null}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowCopyMenu(!showCopyMenu)}
+                        className="h-6 w-6"
+                        title="Copy path"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent 
+                      side="bottom" 
+                      className="p-1 min-w-[120px]"
+                      onPointerDownOutside={() => setShowCopyMenu(false)}
+                    >
+                      {copiedType ? (
+                        <div className="px-2 py-1 text-xs text-green-600">
+                          ✓ Copied {copiedType === 'full' ? 'full' : 'relative'} path!
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={() => copyPath('full')}
+                            className="px-2 py-1 text-xs text-left hover:bg-accent rounded transition-colors"
+                          >
+                            Copy full path
+                          </button>
+                          <button
+                            onClick={() => copyPath('relative')}
+                            className="px-2 py-1 text-xs text-left hover:bg-accent rounded transition-colors"
+                          >
+                            Copy relative path
+                          </button>
+                        </div>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="text-xs text-slate-600 dark:text-slate-400 font-mono break-all">
-              {nodeData.label}
+              {getRelativePath(nodeData.label)}
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-500 font-mono break-all border-t pt-2">
+              Full: {nodeData.label}
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-600 dark:text-slate-400">Size:</span>

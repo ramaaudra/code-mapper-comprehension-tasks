@@ -61,12 +61,12 @@ export function ProjectDashboard({
     ];
 
     return (
-      <div className="h-full overflow-y-auto overflow-x-hidden bg-white dark:bg-slate-900">
-        <div className="max-w-7xl mx-auto px-6 md:px-8 lg:px-12 py-6 pb-12 space-y-8">
+      <div className="h-full overflow-y-auto overflow-x-hidden bg-white dark:bg-slate-900 w-full">
+        <div className="max-w-full mx-auto px-6 md:px-8 lg:px-12 py-6 pb-12 space-y-8">
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">Project Overview</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Ringkasan analisis dependensi dan prioritas perbaikan untuk proyek Anda.
+              Dependency analysis summary and repair priorities for your project.
             </p>
           </div>
 

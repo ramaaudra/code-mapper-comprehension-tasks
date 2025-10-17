@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertTriangle, Ghost, Flame, ArrowRight } from '@/components/ui/icons';
+import { getBasename, getRelativePath } from '@/lib/utils';
 import type { AnalysisData } from '@/types/analysis';
 
 interface IssuesPanelProps {
@@ -18,11 +19,6 @@ const getSeverityColor = (severity: 'high' | 'medium' | 'low'): string => {
     case 'medium': return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400';
     case 'low': return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400';
   }
-};
-
-// Helper function to get file basename
-const getBasename = (filePath: string): string => {
-  return filePath.split('/').pop() || filePath;
 };
 
 export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
@@ -258,8 +254,8 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                                 }}
                                 className="w-full rounded-lg border px-3 py-3 text-left transition hover:border-primary/50 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                               >
-                                <span className="block truncate text-sm font-medium">{getBasename(file)}</span>
-                                <span className="block truncate font-mono text-xs text-muted-foreground">{file}</span>
+                                <span className="block truncate text-sm font-medium mb-1">{getBasename(file)}</span>
+                                <span className="block break-all font-mono text-xs text-muted-foreground leading-tight">{getRelativePath(file)}</span>
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -287,7 +283,7 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                           className="w-full rounded-md border bg-background px-3 py-2 text-left text-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                         >
                           <span className="block truncate font-medium">{getBasename(file)}</span>
-                          <span className="block truncate font-mono text-xs text-muted-foreground">{file}</span>
+                          <span className="block break-all font-mono text-xs text-muted-foreground leading-tight">{getRelativePath(file)}</span>
                         </button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -351,10 +347,10 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                               >
                                 <div className="mb-1 flex items-center justify-between gap-3">
                                   <span className="flex-1 truncate text-sm font-medium">{getBasename(item.file)}</span>
-                                  <Badge variant="secondary">{item.indegree} deps</Badge>
+                                  <Badge variant="secondary" className="shrink-0">{item.indegree} deps</Badge>
                                 </div>
-                                <div className="truncate font-mono text-xs text-muted-foreground">
-                                  {item.file}
+                                <div className="break-all font-mono text-xs text-muted-foreground leading-tight">
+                                  {getRelativePath(item.file)}
                                 </div>
                               </button>
                             </TooltipTrigger>
@@ -382,11 +378,11 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                           onClick={() => onNavigateToFile?.(item.file)}
                           className="w-full rounded-md border bg-background px-3 py-2 text-left text-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                         >
-                          <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center justify-between gap-3 mb-1">
                             <span className="flex-1 truncate font-medium">{getBasename(item.file)}</span>
-                            <Badge variant="secondary">{item.indegree} deps</Badge>
+                            <Badge variant="secondary" className="shrink-0">{item.indegree} deps</Badge>
                           </div>
-                          <span className="block truncate font-mono text-xs text-muted-foreground">{item.file}</span>
+                          <span className="block break-all font-mono text-xs text-muted-foreground leading-tight">{getRelativePath(item.file)}</span>
                         </button>
                       </TooltipTrigger>
                       <TooltipContent>

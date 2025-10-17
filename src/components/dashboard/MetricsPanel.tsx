@@ -4,12 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { BarChart3, FileText, Network, Puzzle, ShieldCheck, AlertCircle, TrendingUp } from '@/components/ui/icons';
+import { getBasename, getRelativePath } from '@/lib/utils';
 import type { AnalysisData, DetailedMetrics, AnalysisMetrics } from '@/types/analysis';
-
-// Helper function to get file basename
-const getBasename = (filePath: string): string => {
-  return filePath.split('/').pop() || filePath;
-};
 
 interface MetricsPanelProps {
   data?: AnalysisData | null;
@@ -66,14 +62,19 @@ const FileListItem = ({
         <button
           type="button"
           onClick={() => onSelect?.(file)}
-          className="flex w-full items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="w-full rounded-md border bg-background px-3 py-2 text-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
-          <span className="flex-1 truncate text-left font-medium text-foreground">
-            {getBasename(file)}
-          </span>
-          <Badge variant="secondary" className="whitespace-nowrap text-xs">
-            {value} {label}
-          </Badge>
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <span className="flex-1 truncate text-left font-medium text-foreground">
+              {getBasename(file)}
+            </span>
+            <Badge variant="secondary" className="whitespace-nowrap text-xs shrink-0">
+              {value} {label}
+            </Badge>
+          </div>
+          <div className="break-all text-left font-mono text-xs text-muted-foreground leading-tight">
+            {getRelativePath(file)}
+          </div>
         </button>
       </TooltipTrigger>
       <TooltipContent>
@@ -291,10 +292,10 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
                                 >
                                   <div className="mb-1 flex items-center justify-between gap-3">
                                     <span className="flex-1 truncate text-sm font-medium">{getBasename(item.file)}</span>
-                                    <Badge variant="secondary">{item.indegree} imports</Badge>
+                                    <Badge variant="secondary" className="shrink-0">{item.indegree} imports</Badge>
                                   </div>
-                                  <div className="truncate font-mono text-xs text-muted-foreground">
-                                    {item.file}
+                                  <div className="break-all font-mono text-xs text-muted-foreground leading-tight">
+                                    {getRelativePath(item.file)}
                                   </div>
                                 </button>
                               </TooltipTrigger>
@@ -377,10 +378,10 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
                                 >
                                   <div className="mb-1 flex items-center justify-between gap-3">
                                     <span className="flex-1 truncate text-sm font-medium">{getBasename(item.file)}</span>
-                                    <Badge variant="secondary">{item.outdegree} deps</Badge>
+                                    <Badge variant="secondary" className="shrink-0">{item.outdegree} deps</Badge>
                                   </div>
-                                  <div className="truncate font-mono text-xs text-muted-foreground">
-                                    {item.file}
+                                  <div className="break-all font-mono text-xs text-muted-foreground leading-tight">
+                                    {getRelativePath(item.file)}
                                   </div>
                                 </button>
                               </TooltipTrigger>

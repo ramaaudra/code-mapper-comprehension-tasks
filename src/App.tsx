@@ -462,14 +462,16 @@ function AppContent() {
                 className={`h-2 w-2 rounded-full ${isLoading ? 'bg-amber-400 animate-pulse' : loadError ? 'bg-red-500' : 'bg-emerald-500'}`}
                 aria-hidden="true"
               />
-              {isLoading && 'Memuat data analisis...'}
+                          <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+              {isLoading && 'Loading analysis data...'}
               {!isLoading && loadError && (
                 <span className="text-red-500 dark:text-red-400 font-medium">
-                  Gagal memuat data
+                  Failed to load data
                 </span>
               )}
-              {!isLoading && !loadError && analysisData && 'Data analisis siap'}
-              {!isLoading && !loadError && !analysisData && 'Data analisis belum tersedia'}
+              {!isLoading && !loadError && analysisData && 'Analysis data ready'}
+              {!isLoading && !loadError && !analysisData && 'Analysis data not available'}
+            </div>
             </div>
             <Button
               onClick={refreshAnalysis}
@@ -478,7 +480,7 @@ function AppContent() {
               size="sm"
               className="px-4"
             >
-              {isLoading ? 'Memuat...' : 'Muat Ulang'}
+              {isLoading ? 'Loading...' : 'Reload'}
             </Button>
           </div>
           
@@ -575,7 +577,7 @@ function AppContent() {
       )}
 
       {/* Layout Utama - Tree, Dashboard, dan Panel Detail */}
-      <div className="flex h-[calc(100vh-140px)] overflow-hidden">
+      <div className="flex h-[calc(100vh-140px)] overflow-hidden w-full">
         <div
           className={`transition-all duration-200 ease-out overflow-hidden shrink-0 ${
             isTreeCollapsed
