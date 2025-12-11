@@ -4,7 +4,7 @@ interface StatsBarProps {
   fileCount: number
   selectedFileId: string | null
   selectedNodeId: string | null
-  analysisLoadedAt: string | null
+  analysisLoadedAt: number | string | null
 }
 
 export function StatsBar({
