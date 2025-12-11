@@ -1,0 +1,22 @@
+{
+  "semi": false,
+  "printWidth": 80,
+  "arrowParens": "always",
+  "singleQuote": true,
+  "trailingComma": "none",
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "importOrder": [
+    "@uqwah/data",
+    "^@/(lib|service|i18n)/(.*)$",
+    "^@/(hook|store)/(.*)$",
+    "^@/component/(.*)$",
+    "^@/model/(.*)$",
+    "^@/constant/(.*)$",
+    "^.+\\.css$",
+    "^@/style/(.*)$",
+    "^@/(.*)$",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
+}

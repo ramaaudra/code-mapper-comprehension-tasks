@@ -1,28 +1,53 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { BarChart3, FileText, Network, Puzzle, ShieldCheck, AlertCircle, TrendingUp } from '@/components/ui/icons';
-import { getBasename, getRelativePath } from '@/lib/utils';
-import type { AnalysisData, DetailedMetrics, AnalysisMetrics } from '@/types/analysis';
+import React, { useState } from 'react'
+
+import { getBasename, getRelativePath } from '@/lib/utils'
+
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog'
+import {
+  AlertCircle,
+  BarChart3,
+  FileText,
+  Network,
+  Puzzle,
+  ShieldCheck,
+  TrendingUp
+} from '@/components/ui/icons'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip'
+import type {
+  AnalysisData,
+  AnalysisMetrics,
+  DetailedMetrics
+} from '@/types/analysis'
 
 interface MetricsPanelProps {
-  data?: AnalysisData | null;
-  onSelectFile?: (file: string) => void;
+  data?: AnalysisData | null
+  onSelectFile?: (file: string) => void
 }
 
 // Component untuk menampilkan metrik item dengan ikon
-const MetricItem = ({ 
-  icon, 
-  label, 
-  value, 
-  tooltip 
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
-  value: string | number;
-  tooltip?: string;
+const MetricItem = ({
+  icon,
+  label,
+  value,
+  tooltip
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string | number
+  tooltip?: string
 }) => (
   <TooltipProvider>
     <Tooltip>
@@ -42,19 +67,19 @@ const MetricItem = ({
       )}
     </Tooltip>
   </TooltipProvider>
-);
+)
 
 // Component untuk menampilkan item file dengan value
-const FileListItem = ({ 
-  file, 
-  value, 
+const FileListItem = ({
+  file,
+  value,
   label,
-  onSelect,
-}: { 
-  file: string; 
-  value: number; 
-  label: string;
-  onSelect?: (file: string) => void;
+  onSelect
+}: {
+  file: string
+  value: number
+  label: string
+  onSelect?: (file: string) => void
 }) => (
   <TooltipProvider>
     <Tooltip>
@@ -68,7 +93,10 @@ const FileListItem = ({
             <span className="flex-1 truncate text-left font-medium text-foreground">
               {getBasename(file)}
             </span>
-            <Badge variant="secondary" className="whitespace-nowrap text-xs shrink-0">
+            <Badge
+              variant="secondary"
+              className="whitespace-nowrap text-xs shrink-0"
+            >
               {value} {label}
             </Badge>
           </div>
@@ -82,29 +110,27 @@ const FileListItem = ({
       </TooltipContent>
     </Tooltip>
   </TooltipProvider>
-);
+)
 
 // Health indicator component
-const HealthIndicator = ({ 
-  value, 
-  total, 
-  label, 
+const HealthIndicator = ({
+  value,
+  total,
+  label,
   icon,
-  colorClass = "text-green-500"
+  colorClass = 'text-green-500'
 }: {
-  value: number;
-  total: number;
-  label: string;
-  icon: React.ReactNode;
-  colorClass?: string;
+  value: number
+  total: number
+  label: string
+  icon: React.ReactNode
+  colorClass?: string
 }) => {
-  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-  
+  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0'
+
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-      <div className={`${colorClass}`}>
-        {icon}
-      </div>
+      <div className={`${colorClass}`}>{icon}</div>
       <div className="flex-1">
         <div className="flex items-center justify-between mb-1">
           <span className="text-sm font-medium">{label}</span>
@@ -115,13 +141,18 @@ const HealthIndicator = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) {
+export default function MetricsPanel({
+  data,
+  onSelectFile
+}: MetricsPanelProps) {
+  const [criticalDialogOpen, setCriticalDialogOpen] = useState(false)
+  const [complexDialogOpen, setComplexDialogOpen] = useState(false)
   // Fallback to old metrics format if detailedMetrics not available
-  const detailedMetrics: DetailedMetrics | undefined = data?.detailedMetrics;
-  const basicMetrics: AnalysisMetrics | undefined = data?.metrics;
+  const detailedMetrics: DetailedMetrics | undefined = data?.detailedMetrics
+  const basicMetrics: AnalysisMetrics | undefined = data?.metrics
 
   if (!detailedMetrics && !basicMetrics) {
     return (
@@ -140,7 +171,7 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   // If only basic metrics available, show simple version
@@ -153,19 +184,25 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
         <CardContent className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Files</span>
-            <span className="text-sm font-medium">{basicMetrics.fileCount.toLocaleString()}</span>
+            <span className="text-sm font-medium">
+              {basicMetrics.fileCount.toLocaleString()}
+            </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Dependencies</span>
-            <span className="text-sm font-medium">{basicMetrics.edgeCount.toLocaleString()}</span>
+            <span className="text-sm font-medium">
+              {basicMetrics.edgeCount.toLocaleString()}
+            </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Avg Degree</span>
-            <span className="text-sm font-medium">{basicMetrics.avgDegree}</span>
+            <span className="text-sm font-medium">
+              {basicMetrics.avgDegree}
+            </span>
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   const {
@@ -174,11 +211,8 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
     averageDependenciesPerFile,
     mostComplexFiles,
     mostCriticalFiles,
-    codebaseHealth,
-  } = detailedMetrics!;
-
-  const [criticalDialogOpen, setCriticalDialogOpen] = useState(false);
-  const [complexDialogOpen, setComplexDialogOpen] = useState(false);
+    codebaseHealth
+  } = detailedMetrics!
 
   return (
     <div className="space-y-6">
@@ -191,21 +225,21 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
-          <MetricItem 
-            icon={<FileText size={16} />} 
-            label="Total Files" 
+          <MetricItem
+            icon={<FileText size={16} />}
+            label="Total Files"
             value={totalFiles.toLocaleString()}
             tooltip="Total number of analyzed files in the project"
           />
-          <MetricItem 
-            icon={<Network size={16} />} 
-            label="Total Dependencies" 
+          <MetricItem
+            icon={<Network size={16} />}
+            label="Total Dependencies"
             value={totalDependencies.toLocaleString()}
             tooltip="Total number of import/require statements across all files"
           />
-          <MetricItem 
-            icon={<TrendingUp size={16} />} 
-            label="Avg. Complexity" 
+          <MetricItem
+            icon={<TrendingUp size={16} />}
+            label="Avg. Complexity"
             value={`${averageDependenciesPerFile}/file`}
             tooltip="Average number of dependencies per file"
           />
@@ -226,14 +260,22 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
             total={totalFiles}
             label="Orphaned Files"
             icon={<AlertCircle size={16} />}
-            colorClass={codebaseHealth.orphanCount > 0 ? "text-yellow-500" : "text-green-500"}
+            colorClass={
+              codebaseHealth.orphanCount > 0
+                ? 'text-yellow-500'
+                : 'text-green-500'
+            }
           />
           <HealthIndicator
             value={codebaseHealth.circularCount}
             total={totalFiles}
             label="Circular Dependencies"
             icon={<AlertCircle size={16} />}
-            colorClass={codebaseHealth.circularCount > 0 ? "text-red-500" : "text-green-500"}
+            colorClass={
+              codebaseHealth.circularCount > 0
+                ? 'text-red-500'
+                : 'text-green-500'
+            }
           />
           <HealthIndicator
             value={codebaseHealth.highImpactCount}
@@ -254,9 +296,12 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
                 <ShieldCheck className="h-4 w-4 text-red-500" />
                 <span className="text-sm font-medium">Most Critical Files</span>
               </div>
-              <Dialog open={criticalDialogOpen} onOpenChange={setCriticalDialogOpen}>
+              <Dialog
+                open={criticalDialogOpen}
+                onOpenChange={setCriticalDialogOpen}
+              >
                 <DialogTrigger asChild>
-                  <Badge 
+                  <Badge
                     variant="default"
                     className="cursor-pointer hover:opacity-80"
                   >
@@ -285,14 +330,21 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    onSelectFile?.(item.file);
-                                    setCriticalDialogOpen(false);
+                                    onSelectFile?.(item.file)
+                                    setCriticalDialogOpen(false)
                                   }}
                                   className="w-full rounded-lg border px-3 py-3 text-left transition hover:border-primary/50 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                                 >
                                   <div className="mb-1 flex items-center justify-between gap-3">
-                                    <span className="flex-1 truncate text-sm font-medium">{getBasename(item.file)}</span>
-                                    <Badge variant="secondary" className="shrink-0">{item.indegree} imports</Badge>
+                                    <span className="flex-1 truncate text-sm font-medium">
+                                      {getBasename(item.file)}
+                                    </span>
+                                    <Badge
+                                      variant="secondary"
+                                      className="shrink-0"
+                                    >
+                                      {item.indegree} imports
+                                    </Badge>
                                   </div>
                                   <div className="break-all font-mono text-xs text-muted-foreground leading-tight">
                                     {getRelativePath(item.file)}
@@ -300,7 +352,9 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
                                 </button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p className="max-w-sm whitespace-pre-line text-xs">{item.file}</p>
+                                <p className="max-w-sm whitespace-pre-line text-xs">
+                                  {item.file}
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -315,10 +369,10 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
           <CardContent>
             <div className="space-y-2">
               {mostCriticalFiles.slice(0, 3).map((item, index) => (
-                <FileListItem 
+                <FileListItem
                   key={index}
-                  file={item.file} 
-                  value={item.indegree} 
+                  file={item.file}
+                  value={item.indegree}
                   label="imports"
                   onSelect={onSelectFile}
                 />
@@ -340,9 +394,12 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
                 <Puzzle className="h-4 w-4 text-blue-500" />
                 <span className="text-sm font-medium">Most Complex Files</span>
               </div>
-              <Dialog open={complexDialogOpen} onOpenChange={setComplexDialogOpen}>
+              <Dialog
+                open={complexDialogOpen}
+                onOpenChange={setComplexDialogOpen}
+              >
                 <DialogTrigger asChild>
-                  <Badge 
+                  <Badge
                     variant="default"
                     className="cursor-pointer hover:opacity-80"
                   >
@@ -371,14 +428,21 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    onSelectFile?.(item.file);
-                                    setComplexDialogOpen(false);
+                                    onSelectFile?.(item.file)
+                                    setComplexDialogOpen(false)
                                   }}
                                   className="w-full rounded-lg border px-3 py-3 text-left transition hover:border-primary/50 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                                 >
                                   <div className="mb-1 flex items-center justify-between gap-3">
-                                    <span className="flex-1 truncate text-sm font-medium">{getBasename(item.file)}</span>
-                                    <Badge variant="secondary" className="shrink-0">{item.outdegree} deps</Badge>
+                                    <span className="flex-1 truncate text-sm font-medium">
+                                      {getBasename(item.file)}
+                                    </span>
+                                    <Badge
+                                      variant="secondary"
+                                      className="shrink-0"
+                                    >
+                                      {item.outdegree} deps
+                                    </Badge>
                                   </div>
                                   <div className="break-all font-mono text-xs text-muted-foreground leading-tight">
                                     {getRelativePath(item.file)}
@@ -386,7 +450,9 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
                                 </button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p className="max-w-sm whitespace-pre-line text-xs">{item.file}</p>
+                                <p className="max-w-sm whitespace-pre-line text-xs">
+                                  {item.file}
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -401,11 +467,11 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
           <CardContent>
             <div className="space-y-2">
               {mostComplexFiles.slice(0, 3).map((item, index) => (
-                <FileListItem 
+                <FileListItem
                   key={index}
-                  file={item.file} 
-                  value={item.outdegree} 
-                  label="deps" 
+                  file={item.file}
+                  value={item.outdegree}
+                  label="deps"
                   onSelect={onSelectFile}
                 />
               ))}
@@ -419,5 +485,5 @@ export default function MetricsPanel({ data, onSelectFile }: MetricsPanelProps) 
         </Card>
       </div>
     </div>
-  );
+  )
 }

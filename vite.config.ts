@@ -1,11 +1,11 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+import react from '@vitejs/plugin-react'
+import path from 'path'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [react()],
-  resolve: { 
-    alias: { '@': path.resolve(__dirname, './src') } 
+  resolve: {
+    alias: { '@': path.resolve(__dirname, './src') }
   },
   build: {
     // Enable tree-shaking and optimization
@@ -22,27 +22,22 @@ export default defineConfig({
             '@radix-ui/react-label',
             '@radix-ui/react-slider',
             '@radix-ui/react-switch',
-            '@radix-ui/react-tooltip',
+            '@radix-ui/react-tooltip'
           ],
           'tree-view': ['react-arborist'],
           // Icons are now optimized through centralized imports
-          'utils': ['clsx', 'tailwind-merge', 'class-variance-authority'],
-        },
-      },
+          utils: ['clsx', 'tailwind-merge', 'class-variance-authority']
+        }
+      }
     },
     // Chunk size warnings
     chunkSizeWarningLimit: 1000,
     // Enable source maps for production debugging (optional)
-    sourcemap: false,
+    sourcemap: false
   },
   // Optimize dependencies
   optimizeDeps: {
-    include: [
-      'react',
-      'react-dom',
-      '@xyflow/react',
-      'react-arborist',
-    ],
-    exclude: ['lucide-react'],
-  },
-});
+    include: ['react', 'react-dom', '@xyflow/react', 'react-arborist'],
+    exclude: ['lucide-react']
+  }
+})

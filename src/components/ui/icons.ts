@@ -1,6 +1,6 @@
 // Centralized icon exports for tree-shaking optimization
 // Import only the icons we actually use
-export { 
+export {
   AlertCircle,
   AlertTriangle,
   ArrowDown,
@@ -35,4 +35,4 @@ export {
   X,
   ZoomIn,
   ZoomOut
-} from 'lucide-react';
+} from 'lucide-react'

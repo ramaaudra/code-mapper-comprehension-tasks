@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function GraphSkeleton() {
   return (
@@ -19,7 +19,7 @@ export function GraphSkeleton() {
         <Skeleton className="h-24 w-48 rounded-xl" />
         <Skeleton className="h-24 w-48 rounded-xl" />
       </div>
-      
+
       {/* Loading indicator */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="bg-white/90 dark:bg-slate-800/90 px-6 py-3 rounded-lg shadow-lg">
@@ -32,5 +32,5 @@ export function GraphSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }

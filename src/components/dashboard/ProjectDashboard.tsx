@@ -1,22 +1,32 @@
-import { IssuesPanel } from './IssuesPanel';
-import MetricsPanel from './MetricsPanel';
-import { DependencyGraph } from '@/components/graph/DependencyGraph';
-import { FileText, Network, TrendingUp, ShieldAlert } from '@/components/ui/icons';
-import type { AnalysisData } from '@/types/analysis';
-import type { DependencyEdgeData, DependencyNodeData } from '@/components/graph/DependencyGraph';
-import type { Edge, Node } from '@xyflow/react';
+import type { Edge, Node } from '@xyflow/react'
+
+import { DependencyGraph } from '@/components/graph/DependencyGraph'
+import type {
+  DependencyEdgeData,
+  DependencyNodeData
+} from '@/components/graph/DependencyGraph'
+import {
+  FileText,
+  Network,
+  ShieldAlert,
+  TrendingUp
+} from '@/components/ui/icons'
+import type { AnalysisData } from '@/types/analysis'
+
+import { IssuesPanel } from './IssuesPanel'
+import MetricsPanel from './MetricsPanel'
 
 interface ProjectDashboardProps {
-  analysisData: AnalysisData | null;
+  analysisData: AnalysisData | null
   dependencyGraph: {
-    nodes: Node<DependencyNodeData>[];
-    edges: Edge<DependencyEdgeData>[];
-    focusNodeId: string | null;
-  };
-  hoveredFile: string | null;
-  layoutDirection: 'LR' | 'TB';
-  viewMode: 'overview' | 'file';
-  onNavigateToFile: (fileId: string) => void;
+    nodes: Node<DependencyNodeData>[]
+    edges: Edge<DependencyEdgeData>[]
+    focusNodeId: string | null
+  }
+  hoveredFile: string | null
+  layoutDirection: 'LR' | 'TB'
+  viewMode: 'overview' | 'file'
+  onNavigateToFile: (fileId: string) => void
 }
 
 export function ProjectDashboard({
@@ -25,48 +35,64 @@ export function ProjectDashboard({
   hoveredFile,
   layoutDirection,
   viewMode,
-  onNavigateToFile,
+  onNavigateToFile
 }: ProjectDashboardProps) {
   if (viewMode === 'overview') {
     const snapshot = {
-      totalFiles: analysisData?.detailedMetrics?.totalFiles ?? analysisData?.metrics?.fileCount ?? 0,
-      totalDependencies: analysisData?.detailedMetrics?.totalDependencies ?? analysisData?.metrics?.edgeCount ?? 0,
-      averageDependenciesPerFile: analysisData?.detailedMetrics?.averageDependenciesPerFile ?? analysisData?.metrics?.avgDegree ?? 0,
-      highImpactCount: analysisData?.detailedMetrics?.codebaseHealth?.highImpactCount ?? analysisData?.issues?.highImpact?.length ?? 0,
-    };
+      totalFiles:
+        analysisData?.detailedMetrics?.totalFiles ??
+        analysisData?.metrics?.fileCount ??
+        0,
+      totalDependencies:
+        analysisData?.detailedMetrics?.totalDependencies ??
+        analysisData?.metrics?.edgeCount ??
+        0,
+      averageDependenciesPerFile:
+        analysisData?.detailedMetrics?.averageDependenciesPerFile ??
+        analysisData?.metrics?.avgDegree ??
+        0,
+      highImpactCount:
+        analysisData?.detailedMetrics?.codebaseHealth?.highImpactCount ??
+        analysisData?.issues?.highImpact?.length ??
+        0
+    }
 
     const overviewCards = [
       {
         label: 'Total Files',
         value: snapshot.totalFiles.toLocaleString(),
-        icon: <FileText className="h-4 w-4" />,
+        icon: <FileText className="h-4 w-4" />
       },
       {
         label: 'Dependencies',
         value: snapshot.totalDependencies.toLocaleString(),
-        icon: <Network className="h-4 w-4" />,
+        icon: <Network className="h-4 w-4" />
       },
       {
         label: 'Avg. Dependencies / File',
-        value: typeof snapshot.averageDependenciesPerFile === 'number'
-          ? `${snapshot.averageDependenciesPerFile}`
-          : snapshot.averageDependenciesPerFile,
-        icon: <TrendingUp className="h-4 w-4" />,
+        value:
+          typeof snapshot.averageDependenciesPerFile === 'number'
+            ? `${snapshot.averageDependenciesPerFile}`
+            : snapshot.averageDependenciesPerFile,
+        icon: <TrendingUp className="h-4 w-4" />
       },
       {
         label: 'High Impact Files',
         value: snapshot.highImpactCount.toLocaleString(),
-        icon: <ShieldAlert className="h-4 w-4" />,
-      },
-    ];
+        icon: <ShieldAlert className="h-4 w-4" />
+      }
+    ]
 
     return (
       <div className="h-full overflow-y-auto overflow-x-hidden bg-white dark:bg-slate-900 w-full">
         <div className="max-w-full mx-auto px-6 md:px-8 lg:px-12 py-6 pb-12 space-y-8">
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">Project Overview</h1>
+            <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">
+              Project Overview
+            </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Dependency analysis summary and repair priorities for your project.
+              Dependency analysis summary and repair priorities for your
+              project.
             </p>
           </div>
 
@@ -89,15 +115,21 @@ export function ProjectDashboard({
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-6 min-w-0">
-              <MetricsPanel data={analysisData} onSelectFile={onNavigateToFile} />
+              <MetricsPanel
+                data={analysisData}
+                onSelectFile={onNavigateToFile}
+              />
             </div>
             <div className="space-y-6 min-w-0">
-              <IssuesPanel data={analysisData} onNavigateToFile={onNavigateToFile} />
+              <IssuesPanel
+                data={analysisData}
+                onNavigateToFile={onNavigateToFile}
+              />
             </div>
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -111,5 +143,5 @@ export function ProjectDashboard({
         onNodeClick={onNavigateToFile}
       />
     </div>
-  );
+  )
 }

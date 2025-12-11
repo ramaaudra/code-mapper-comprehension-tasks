@@ -1,9 +1,11 @@
 # Minimalist UI Design Changes
 
 ## Overview
+
 This document outlines the comprehensive UI redesign for the React Flow dependency graph visualization, focusing on a clean, minimalist, and informative approach.
 
 ## Key Design Principles
+
 - **Simplicity**: Removed visual clutter and unnecessary decorative elements
 - **Clarity**: Enhanced readability with better contrast and spacing
 - **Information Hierarchy**: Used subtle visual cues to convey importance
@@ -12,6 +14,7 @@ This document outlines the comprehensive UI redesign for the React Flow dependen
 ## Changes Made
 
 ### 1. Custom Edges (`CustomEdge.tsx`)
+
 - **Before**: Complex bezier curves with multiple routing logic
 - **After**: Clean straight lines for clarity
 - **Visual Changes**:
@@ -22,6 +25,7 @@ This document outlines the comprehensive UI redesign for the React Flow dependen
   - Smaller, cleaner arrow markers (8x8px instead of 14x14px)
 
 ### 2. Custom Nodes (`GraphView.tsx` - CustomNode)
+
 - **Before**: Rounded rectangles with shadows, badges, and complex styling
 - **After**: Clean, minimal rectangles with essential information only
 - **Visual Changes**:
@@ -33,6 +37,7 @@ This document outlines the comprehensive UI redesign for the React Flow dependen
   - Clean borders with subtle hover states
 
 ### 3. Group Nodes (`GroupNode.tsx`)
+
 - **Before**: Complex folder-style nodes with icons and animations
 - **After**: Simple rectangular containers with minimal indicators
 - **Visual Changes**:
@@ -43,6 +48,7 @@ This document outlines the comprehensive UI redesign for the React Flow dependen
   - Clean background containers for grouping
 
 ### 4. Main Graph View (`GraphView.tsx`)
+
 - **Before**: Gray background with prominent controls and visual effects
 - **After**: Clean white background with subtle elements
 - **Visual Changes**:
@@ -54,11 +60,12 @@ This document outlines the comprehensive UI redesign for the React Flow dependen
   - Simplified empty state with geometric icon
 
 ## Color Palette
+
 - **Background**: White / Slate-950 (dark mode)
 - **Borders**: Slate-200/300/700/800
 - **Text**: Slate-600/700/300/400 hierarchy
 - **Edges**: Slate-300 (regular) / Slate-400 (dynamic)
-- **File Types**: 
+- **File Types**:
   - TypeScript: #3178c6
   - JavaScript: #f7df1e
   - CSS: #1572b6
@@ -67,12 +74,14 @@ This document outlines the comprehensive UI redesign for the React Flow dependen
   - Default: #64748b
 
 ## Technical Improvements
+
 - Fixed TypeScript errors for better code quality
 - Optimized component performance with proper memoization
 - Simplified prop interfaces for easier maintenance
 - Reduced bundle size by removing unused imports
 
 ## Benefits
+
 1. **Better Performance**: Reduced visual complexity improves rendering performance
 2. **Enhanced Readability**: Clean design makes dependency relationships clearer
 3. **Professional Appearance**: Minimal design looks more polished and modern
@@ -80,6 +89,7 @@ This document outlines the comprehensive UI redesign for the React Flow dependen
 5. **Easier Maintenance**: Simplified styling is easier to modify and maintain
 
 ## Accessibility Features Maintained
+
 - Proper contrast ratios for all text elements
 - Keyboard navigation support through React Flow
 - Screen reader compatible with semantic HTML

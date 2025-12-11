@@ -1,14 +1,19 @@
-import { ZoomIn, ZoomOut, RotateCcw, Maximize } from '@/components/ui/icons';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
+import { Maximize, RotateCcw, ZoomIn, ZoomOut } from '@/components/ui/icons'
 
 interface ZoomControlsProps {
-  onZoomIn: () => void;
-  onZoomOut: () => void;
-  onReset: () => void;
-  onFitToScreen: () => void;
+  onZoomIn: () => void
+  onZoomOut: () => void
+  onReset: () => void
+  onFitToScreen: () => void
 }
 
-export function ZoomControls({ onZoomIn, onZoomOut, onReset, onFitToScreen }: ZoomControlsProps) {
+export function ZoomControls({
+  onZoomIn,
+  onZoomOut,
+  onReset,
+  onFitToScreen
+}: ZoomControlsProps) {
   return (
     <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-20">
       <Button
@@ -20,7 +25,7 @@ export function ZoomControls({ onZoomIn, onZoomOut, onReset, onFitToScreen }: Zo
       >
         <ZoomIn className="h-4 w-4" />
       </Button>
-      
+
       <Button
         variant="secondary"
         size="icon"
@@ -30,7 +35,7 @@ export function ZoomControls({ onZoomIn, onZoomOut, onReset, onFitToScreen }: Zo
       >
         <ZoomOut className="h-4 w-4" />
       </Button>
-      
+
       <Button
         variant="secondary"
         size="icon"
@@ -40,7 +45,7 @@ export function ZoomControls({ onZoomIn, onZoomOut, onReset, onFitToScreen }: Zo
       >
         <Maximize className="h-4 w-4" />
       </Button>
-      
+
       <Button
         variant="secondary"
         size="icon"
@@ -51,5 +56,5 @@ export function ZoomControls({ onZoomIn, onZoomOut, onReset, onFitToScreen }: Zo
         <RotateCcw className="h-4 w-4" />
       </Button>
     </div>
-  );
+  )
 }

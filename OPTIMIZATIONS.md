@@ -1,6 +1,7 @@
 # Frontend Performance Optimizations
 
 ## Overview
+
 This document summarizes the high-priority performance optimizations implemented to reduce bundle size and improve Core Web Vitals.
 
 ---
@@ -14,6 +15,7 @@ This document summarizes the high-priority performance optimizations implemented
 **Solution:** Created centralized icon exports in `src/components/ui/icons.ts`
 
 **Changes:**
+
 - Created `/src/components/ui/icons.ts` with explicit icon exports
 - Updated all component files to import from `@/components/ui/icons` instead of `lucide-react`
 - Files updated:
@@ -26,6 +28,7 @@ This document summarizes the high-priority performance optimizations implemented
   - `ProjectDashboard.tsx`
 
 **Impact:**
+
 - Bundle size reduction: ~900 KB (35% reduction)
 - LCP improvement: ~1-2 seconds on slow connections
 - Better tree-shaking by bundler
@@ -39,21 +42,28 @@ This document summarizes the high-priority performance optimizations implemented
 **Solution:** Implemented React.lazy() with Suspense boundaries
 
 **Changes:**
+
 - Lazy loaded heavy components:
   - `FileTreeView`
-  - `ProjectDashboard`  
+  - `ProjectDashboard`
   - `NodeDetailPanel`
 - Added Suspense boundaries with appropriate fallbacks
 - Created `GraphSkeleton` component for better loading UX
 
 **Implementation:**
+
 ```typescript
-const FileTreeView = lazy(() => import('./FileTreeView').then(m => ({ default: m.FileTreeView })));
-const NodeDetailPanel = lazy(() => import('./NodeDetailPanel'));
-const ProjectDashboard = lazy(() => import('./ProjectDashboard').then(m => ({ default: m.ProjectDashboard })));
+const FileTreeView = lazy(() =>
+  import('./FileTreeView').then((m) => ({ default: m.FileTreeView }))
+)
+const NodeDetailPanel = lazy(() => import('./NodeDetailPanel'))
+const ProjectDashboard = lazy(() =>
+  import('./ProjectDashboard').then((m) => ({ default: m.ProjectDashboard }))
+)
 ```
 
 **Impact:**
+
 - Initial bundle reduced by ~40%
 - Improved Time to Interactive (TTI)
 - Progressive component loading
@@ -68,25 +78,29 @@ const ProjectDashboard = lazy(() => import('./ProjectDashboard').then(m => ({ de
 **Solution:** Multiple approaches to prevent layout shifts
 
 **Changes:**
+
 - Added `GraphSkeleton` component with pre-defined dimensions
 - Created `Skeleton` UI component for consistent loading states
 - Added CSS containment and optimizations in `index.css`:
+
   ```css
   .graph-container {
     min-height: 600px;
     contain: layout style paint;
     will-change: transform;
   }
-  
+
   .react-flow__node {
     will-change: transform;
     transform: translateZ(0);
     backface-visibility: hidden;
   }
   ```
+
 - Applied `graph-container` class to `DependencyGraph` component
 
 **Impact:**
+
 - CLS score: 0.26 → 0.0 (passes Core Web Vitals)
 - No visual jumps during loading
 - Better perceived performance
@@ -101,6 +115,7 @@ const ProjectDashboard = lazy(() => import('./ProjectDashboard').then(m => ({ de
 **Solution:** Configured advanced Vite build options
 
 **Changes in `vite.config.ts`:**
+
 - Enabled Terser minification with console/debugger removal
 - Implemented manual chunk splitting:
   - `react-vendor`: React core libraries
@@ -112,6 +127,7 @@ const ProjectDashboard = lazy(() => import('./ProjectDashboard').then(m => ({ de
 - Excluded `lucide-react` from optimization (centralized now)
 
 **Configuration:**
+
 ```typescript
 build: {
   minify: 'terser',
@@ -136,6 +152,7 @@ build: {
 ```
 
 **Impact:**
+
 - Better code splitting and caching
 - Smaller individual chunks
 - Parallel loading of resources
@@ -146,15 +163,16 @@ build: {
 ## 📊 Expected Performance Improvements
 
 ### Bundle Size
+
 - **Before:** ~2.5 MB (estimated)
 - **After:** ~1.5 MB (estimated)
 - **Reduction:** ~40% smaller
 
 ### Core Web Vitals
+
 - **LCP (Largest Contentful Paint):**
   - Before: 3-4s on slow connections
   - After: 1.5-2s (estimated)
-  
 - **CLS (Cumulative Layout Shift):**
   - Before: 0.26
   - After: 0.0
@@ -163,6 +181,7 @@ build: {
   - Improved by ~40% due to code splitting
 
 ### Loading Performance
+
 - Initial JavaScript load: ~40% reduction
 - Icon bundle: 900 KB → ~50 KB
 - Progressive component loading
@@ -173,22 +192,26 @@ build: {
 ## 🚀 Testing the Optimizations
 
 ### Build the optimized version:
+
 ```bash
 cd code-mapper-frontend
 npm run build
 ```
 
 ### Analyze bundle size:
+
 ```bash
 npm run build -- --mode analyze
 ```
 
 ### Test locally:
+
 ```bash
 npm run preview
 ```
 
 ### Check performance:
+
 1. Open Chrome DevTools
 2. Go to Lighthouse tab
 3. Run performance audit
@@ -199,23 +222,22 @@ npm run preview
 ## 📝 Additional Recommendations
 
 ### Future Optimizations (Medium Priority)
+
 1. **Image Optimization**
    - Use WebP format for images
    - Implement lazy loading for images
-   
 2. **Font Optimization**
    - Preload critical fonts
    - Use font-display: swap
-   
 3. **API Response Optimization**
    - Implement response compression
    - Use HTTP/2 multiplexing
-   
 4. **Service Worker**
    - Cache static assets
    - Offline support
 
 ### Low Priority
+
 1. Implement virtual scrolling for large lists
 2. Add Web Workers for heavy computations
 3. Implement progressive web app (PWA) features
@@ -225,6 +247,7 @@ npm run preview
 ## 🔍 Monitoring
 
 ### Key Metrics to Track
+
 - Bundle size (target: < 1.5 MB)
 - LCP (target: < 2.5s)
 - CLS (target: < 0.1)
@@ -232,6 +255,7 @@ npm run preview
 - First Input Delay (target: < 100ms)
 
 ### Tools
+
 - Chrome DevTools Lighthouse
 - WebPageTest
 - Bundle analyzer

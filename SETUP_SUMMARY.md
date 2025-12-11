@@ -3,9 +3,11 @@
 ## ✅ Fase 4 - Bootstrap Frontend Complete
 
 ### 🎯 Goal Achieved
+
 - Shell UI modern-minimalis siap: header, form input path, Tailwind styling
 
 ### 📦 Tech Stack Installed
+
 - **Vite** + **React** + **TypeScript** (base framework)
 - **Tailwind CSS** with **@tailwindcss/postcss** plugin
 - **shadcn/ui components** (Button, Input, utility functions)
@@ -14,6 +16,7 @@
 - **Lucide React** for icons
 
 ### 🛠️ Configuration Files
+
 - `vite.config.ts` - Path aliases (@/ -> ./src/)
 - `tailwind.config.js` - Dark mode support, content paths
 - `postcss.config.js` - Tailwind CSS integration
@@ -21,11 +24,13 @@
 - `.env` - API URL configuration
 
 ### 🎨 UI Components
+
 - **Button component** with variants (default, outline, ghost, etc.)
 - **Input component** with proper styling and dark mode
 - **Utility functions** (cn helper for class merging)
 
 ### 📁 Project Structure
+
 ```
 src/
 ├── components/
@@ -41,6 +46,7 @@ src/
 ```
 
 ### ✨ Features Implemented
+
 - **Clean Header** with "Code Mapper" title
 - **Project Path Input Form** with placeholder text
 - **Analyze Button** (basic click handler)
@@ -48,6 +54,7 @@ src/
 - **Responsive Design** (container + max-width constraints)
 
 ### 🧪 Testing Results
+
 - ✅ Build successful (`npm run build`)
 - ✅ Preview server working (`npm run preview`)
 - ✅ Tailwind CSS properly configured
@@ -55,11 +62,13 @@ src/
 - ✅ Path aliases working (@/ imports)
 
 ### 🔗 API Integration Ready
+
 - `analyzeProject()` function configured
 - Axios instance with environment variable support
 - Backend endpoint: `POST http://localhost:4000/analyze`
 
 ### 🚀 How to Run
+
 ```bash
 # Development
 npm run dev
@@ -67,12 +76,14 @@ npm run dev
 # Build for production
 npm run build
 
-# Preview built files  
+# Preview built files
 npm run preview
 ```
 
 ### 🎨 UI Preview
+
 The current UI shows:
+
 - Modern minimalist header
 - Centered form with project path input
 - Styled button with hover effects
@@ -80,6 +91,7 @@ The current UI shows:
 - Ready for dark mode toggle
 
 ### 🔜 Next Steps (Future Phases)
+
 - Add graph visualization with ReactFlow
 - Implement file analysis results display
 - Add dark mode toggle

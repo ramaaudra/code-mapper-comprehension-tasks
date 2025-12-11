@@ -142,7 +142,9 @@
 }
 
 .react-flow__edge path {
-  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+  transition:
+    stroke 0.2s ease,
+    stroke-width 0.2s ease;
 }
 
 /* Prevent Cumulative Layout Shift (CLS) */
