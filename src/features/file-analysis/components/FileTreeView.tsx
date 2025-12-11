@@ -21,6 +21,8 @@ import {
 } from '@/shared/components/ui/tooltip'
 import type { FileRiskProfile } from '@/shared/types/risk'
 
+import { useFileAnalysisContext } from '../context/FileAnalysisContext'
+
 // Node Renderer Kustom untuk menampilkan ikon
 const createNodeRenderer = (
   filesInCycle: Set<string>,
@@ -292,102 +294,87 @@ interface FileTreeViewProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any[] // Data dari backend (fileTree)
   onFileSelect: (fileId: string | null) => void
-  filesInCycle: Set<string> // Files that are involved in circular dependencies
-  highImpactFilesMap: Map<string, number> // High-impact files with their indegree
-  orphanFilesSet: Set<string> // Orphan files (never imported)
-  riskProfileMap: Map<string, FileRiskProfile> // Refactor risk profiles per file
-  searchTerm: string // Search term for filtering files
-  hoveredFile: string | null // Currently hovered file
-  setHoveredFile: (fileId: string | null) => void // Function to set hovered file
-  onSimulateDelete?: (fileId: string) => void // Function to simulate file deletion
-  brokenFilesSet?: Set<string> // Files that would break if simulated file is deleted
-  newOrphansSet?: Set<string> // Files that would become orphans if simulated file is deleted
-  isSimulating?: boolean // Whether simulation is currently running
+  onSimulateDelete?: (fileId: string) => void
 }
 
 export const FileTreeView = forwardRef<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TreeApi<any> | undefined,
   FileTreeViewProps
->(
-  (
-    {
-      data,
-      onFileSelect,
-      filesInCycle,
-      highImpactFilesMap,
-      orphanFilesSet,
-      riskProfileMap,
-      searchTerm,
-      hoveredFile,
-      setHoveredFile,
-      onSimulateDelete = () => {},
-      brokenFilesSet = new Set(),
-      newOrphansSet = new Set(),
-      isSimulating = false
-    },
-    ref
-  ) => {
-    const NodeRenderer = createNodeRenderer(
-      filesInCycle,
-      highImpactFilesMap,
-      orphanFilesSet,
-      riskProfileMap,
-      hoveredFile,
-      setHoveredFile,
-      onSimulateDelete,
-      brokenFilesSet,
-      newOrphansSet,
-      isSimulating
-    )
+>(({ data, onFileSelect, onSimulateDelete = () => {} }, ref) => {
+  // Get all status data from context
+  const {
+    hoveredFile,
+    setHoveredFile,
+    searchQuery,
+    filesInCycle,
+    highImpactFilesMap,
+    orphanFilesSet,
+    riskProfileMap,
+    brokenFilesSet,
+    newOrphansSet,
+    isSimulating
+  } = useFileAnalysisContext()
 
-    if (!data || data.length === 0) {
-      return (
-        <div className="h-full flex items-center justify-center text-slate-500 dark:text-slate-400">
-          <div className="text-center">
-            <Folder className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>No files to display</p>
-          </div>
-        </div>
-      )
-    }
+  const NodeRenderer = createNodeRenderer(
+    filesInCycle,
+    highImpactFilesMap,
+    orphanFilesSet,
+    riskProfileMap,
+    hoveredFile,
+    setHoveredFile,
+    onSimulateDelete,
+    brokenFilesSet,
+    newOrphansSet,
+    isSimulating
+  )
 
+  if (!data || data.length === 0) {
     return (
-      <div className="h-full overflow-y-auto bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800">
-        {/* Header */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            Project Files
-          </h3>
-        </div>
-
-        {/* Tree */}
-        <div className="p-2">
-          <Tree
-            ref={ref}
-            data={data}
-            width="100%"
-            height={800}
-            rowHeight={28}
-            indent={16}
-            openByDefault={false}
-            searchTerm={searchTerm}
-            onSelect={(nodes) => {
-              const selectedNode = nodes[0]
-              if (!selectedNode) {
-                return
-              }
-              if (selectedNode?.isLeaf) {
-                onFileSelect(selectedNode.id)
-              } else {
-                onFileSelect(null)
-              }
-            }}
-          >
-            {NodeRenderer}
-          </Tree>
+      <div className="h-full flex items-center justify-center text-slate-500 dark:text-slate-400">
+        <div className="text-center">
+          <Folder className="h-12 w-12 mx-auto mb-2 opacity-50" />
+          <p>No files to display</p>
         </div>
       </div>
     )
   }
-)
+
+  return (
+    <div className="h-full overflow-y-auto bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800">
+      {/* Header */}
+      <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+          Project Files
+        </h3>
+      </div>
+
+      {/* Tree */}
+      <div className="p-2">
+        <Tree
+          ref={ref}
+          data={data}
+          width="100%"
+          height={800}
+          rowHeight={28}
+          indent={16}
+          openByDefault={false}
+          searchTerm={searchQuery}
+          onSelect={(nodes) => {
+            const selectedNode = nodes[0]
+            if (!selectedNode) {
+              return
+            }
+            if (selectedNode?.isLeaf) {
+              onFileSelect(selectedNode.id)
+            } else {
+              onFileSelect(null)
+            }
+          }}
+        >
+          {NodeRenderer}
+        </Tree>
+      </div>
+    </div>
+  )
+})

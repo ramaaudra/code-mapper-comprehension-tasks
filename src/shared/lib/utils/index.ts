@@ -81,3 +81,11 @@ export function getBasename(filePath: string): string {
   }
   return filePath.split('/').pop() || filePath.split('\\').pop() || filePath
 }
+
+// Re-export file status utilities
+export {
+  normalizePath,
+  matchesFile,
+  hasMatchInSet,
+  getValueFromMap
+} from './file-status'

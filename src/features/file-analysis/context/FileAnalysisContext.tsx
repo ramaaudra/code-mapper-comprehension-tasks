@@ -2,6 +2,7 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 
 import { useAnalysisData } from '@/shared/hooks/useAnalysisData'
+import { getValueFromMap, normalizePath } from '@/shared/lib/utils'
 import type { FileRiskProfile } from '@/shared/types/risk'
 
 interface FileAnalysisContextValue {
@@ -30,6 +31,13 @@ interface FileAnalysisContextValue {
       newOrphans: string[]
     } | null
   ) => void
+
+  // Utility functions
+  getRiskProfileForFile: (fileId: string | null) => FileRiskProfile | null
+
+  // Simulation loading state
+  isSimulating: boolean
+  setIsSimulating: (value: boolean) => void
 }
 
 const FileAnalysisContext = createContext<FileAnalysisContextValue | null>(null)
@@ -61,12 +69,10 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
     brokenFiles: string[]
     newOrphans: string[]
   } | null>(null)
+  const [isSimulating, setIsSimulating] = useState(false)
 
   // Get analysis data from React Query
   const { analysisData, riskAnalysis } = useAnalysisData()
-
-  // Helper: normalize path
-  const normalizePath = (value: string) => value.replace(/\\/g, '/')
 
   // Computed: files in circular dependencies
   const filesInCycle = useMemo(() => {
@@ -142,6 +148,16 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
     [simulationResult]
   )
 
+  // Utility: get risk profile for a file
+  const getRiskProfileForFile = (
+    fileId: string | null
+  ): FileRiskProfile | null => {
+    if (!fileId) {
+      return null
+    }
+    return getValueFromMap(riskProfileMap, fileId) ?? null
+  }
+
   const value: FileAnalysisContextValue = {
     selectedFileId,
     hoveredFile,
@@ -155,7 +171,10 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
     riskProfileMap,
     brokenFilesSet,
     newOrphansSet,
-    setSimulationResult
+    setSimulationResult,
+    getRiskProfileForFile,
+    isSimulating,
+    setIsSimulating
   }
 
   return (

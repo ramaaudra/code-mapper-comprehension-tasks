@@ -25,12 +25,10 @@
       "@/lib/*": ["./src/shared/lib/*", "./src/lib/*"],
       "@/hooks/*": ["./src/shared/hooks/*", "./src/hooks/*"],
       "@/components/ui/*": [
-        "./src/shared/components/ui/*",
-        "./src/components/ui/*"
+        "./src/shared/components/ui/*"
       ],
       "@/components/theme-provider": [
-        "./src/shared/components/providers/ThemeProvider",
-        "./src/components/theme-provider"
+        "./src/shared/components/providers/ThemeProvider"
       ]
     },
 
