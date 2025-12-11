@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { fetchAnalysisData } from '@/shared/lib/api/analysis'
-
 import type { AnalysisData } from '@/shared/types/analysis'
 import type { FileRiskProfile } from '@/shared/types/risk'
 
