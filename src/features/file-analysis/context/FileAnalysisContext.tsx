@@ -1,5 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useMemo, useState } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState
+} from 'react'
 
 import { useAnalysisData } from '@/shared/hooks/useAnalysisData'
 import { getValueFromMap, normalizePath } from '@/shared/lib/utils'
@@ -149,33 +155,49 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
   )
 
   // Utility: get risk profile for a file
-  const getRiskProfileForFile = (
-    fileId: string | null
-  ): FileRiskProfile | null => {
-    if (!fileId) {
-      return null
-    }
-    return getValueFromMap(riskProfileMap, fileId) ?? null
-  }
+  const getRiskProfileForFile = useCallback(
+    (fileId: string | null): FileRiskProfile | null => {
+      if (!fileId) {
+        return null
+      }
+      return getValueFromMap(riskProfileMap, fileId) ?? null
+    },
+    [riskProfileMap]
+  )
 
-  const value: FileAnalysisContextValue = {
-    selectedFileId,
-    hoveredFile,
-    setSelectedFileId,
-    setHoveredFile,
-    searchQuery,
-    setSearchQuery,
-    filesInCycle,
-    orphanFilesSet,
-    highImpactFilesMap,
-    riskProfileMap,
-    brokenFilesSet,
-    newOrphansSet,
-    setSimulationResult,
-    getRiskProfileForFile,
-    isSimulating,
-    setIsSimulating
-  }
+  const value = useMemo<FileAnalysisContextValue>(
+    () => ({
+      selectedFileId,
+      hoveredFile,
+      setSelectedFileId,
+      setHoveredFile,
+      searchQuery,
+      setSearchQuery,
+      filesInCycle,
+      orphanFilesSet,
+      highImpactFilesMap,
+      riskProfileMap,
+      brokenFilesSet,
+      newOrphansSet,
+      setSimulationResult,
+      getRiskProfileForFile,
+      isSimulating,
+      setIsSimulating
+    }),
+    [
+      selectedFileId,
+      hoveredFile,
+      searchQuery,
+      filesInCycle,
+      orphanFilesSet,
+      highImpactFilesMap,
+      riskProfileMap,
+      brokenFilesSet,
+      newOrphansSet,
+      isSimulating,
+      getRiskProfileForFile
+    ]
+  )
 
   return (
     <FileAnalysisContext.Provider value={value}>

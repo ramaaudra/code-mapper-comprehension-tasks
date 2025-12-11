@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useCallback } from 'react'
 
 import { fetchAnalysisData } from '@/shared/lib/api/analysis'
 import type { AnalysisData } from '@/shared/types/analysis'
@@ -13,6 +14,8 @@ interface UseAnalysisDataResult {
   loadAnalysis: () => Promise<AnalysisData | null>
 }
 
+const EMPTY_RISK_ANALYSIS: FileRiskProfile[] = []
+
 export function useAnalysisData(): UseAnalysisDataResult {
   const { data, isLoading, error, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['analysis'],
@@ -21,14 +24,14 @@ export function useAnalysisData(): UseAnalysisDataResult {
     retry: 1
   })
 
-  const loadAnalysis = async () => {
+  const loadAnalysis = useCallback(async () => {
     const { data: result } = await refetch()
     return result || null
-  }
+  }, [refetch])
 
   return {
     analysisData: data || null,
-    riskAnalysis: data?.riskAnalysis || [],
+    riskAnalysis: data?.riskAnalysis || EMPTY_RISK_ANALYSIS,
     analysisLoadedAt: data ? dataUpdatedAt : null,
     isLoading,
     loadError: error?.message || null,

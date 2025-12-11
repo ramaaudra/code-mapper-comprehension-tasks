@@ -24,9 +24,7 @@
       "@/types/*": ["./src/shared/types/*", "./src/types/*"],
       "@/lib/*": ["./src/shared/lib/*", "./src/lib/*"],
       "@/hooks/*": ["./src/shared/hooks/*", "./src/hooks/*"],
-      "@/components/ui/*": [
-        "./src/shared/components/ui/*"
-      ],
+      "@/components/ui/*": ["./src/shared/components/ui/*"],
       "@/components/theme-provider": [
         "./src/shared/components/providers/ThemeProvider"
       ]

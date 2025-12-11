@@ -59,11 +59,11 @@ export interface DependencyGraphProps {
 }
 
 const dagreDefaults = {
-  ranksep: 140,
-  nodesep: 80,
-  edgesep: 40,
-  marginx: 40,
-  marginy: 40
+  ranksep: 200,
+  nodesep: 140,
+  edgesep: 80,
+  marginx: 60,
+  marginy: 60
 }
 
 const normalizePath = (value: string) => value.replace(/\\/g, '/')
@@ -384,7 +384,7 @@ function DependencyGraphInner({
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
         nodeTypes={nodeTypes}
-        defaultEdgeOptions={{ type: ConnectionLineType.SmoothStep }}
+        defaultEdgeOptions={{ type: ConnectionLineType.SimpleBezier }}
         fitView
         minZoom={0.1}
         maxZoom={2.5}

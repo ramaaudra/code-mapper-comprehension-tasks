@@ -130,43 +130,58 @@ export function useGraphGeneration({
       const edges: Edge<DependencyEdgeData>[] = []
 
       const ensureNode = (
-        fullPath: string,
+        rawPath: string,
         direction: DependencyNodeData['direction'],
         subtitle?: string
-      ) => {
-        const normalizedFullPath = normalizePath(fullPath)
-        const existing = nodesMap.get(normalizedFullPath)
+      ): string => {
+        const normalizedPath = normalizePath(rawPath)
+        const existing = nodesMap.get(normalizedPath)
         if (existing) {
-          return existing
+          return normalizedPath
         }
 
         const node: Node<DependencyNodeData> = {
-          id: normalizedFullPath,
+          id: normalizedPath,
           type: 'dependency',
           position: { x: 0, y: 0 },
           data: {
-            label: getBasename(normalizedFullPath),
-            fullPath: normalizedFullPath,
+            label: getBasename(normalizedPath),
+            fullPath: normalizedPath,
             direction,
             subtitle,
-            badges: collectBadges(normalizedFullPath)
+            badges: collectBadges(normalizedPath)
           }
         }
-        nodesMap.set(normalizedFullPath, node)
-        return node
+        nodesMap.set(normalizedPath, node)
+        return normalizedPath
       }
 
-      ensureNode(normalizedActual, 'selected', 'Active file')
+      const focusNodeId = ensureNode(
+        normalizedActual,
+        'selected',
+        'Active file'
+      )
 
       outgoing.forEach((dep) => {
-        const targetPath = normalizePath(dep.target)
-        ensureNode(targetPath, 'outgoing', 'Required module')
+        const targetNodeId = ensureNode(
+          dep.target,
+          'outgoing',
+          'Required module'
+        )
+
+        if (!nodesMap.has(focusNodeId) || !nodesMap.has(targetNodeId)) {
+          console.warn(
+            `Skipping invalid edge: ${focusNodeId} -> ${targetNodeId}`
+          )
+          return
+        }
+
         const strokeWidth = Math.min(1 + Math.log2(dep.strength + 1), 5)
         const strokeColor = dep.strength >= 3 ? '#ef4444' : '#d97706'
         edges.push({
-          id: `out-${normalizedActual}->${targetPath}`,
-          source: normalizedActual,
-          target: targetPath,
+          id: `out-${focusNodeId}->${targetNodeId}`,
+          source: focusNodeId,
+          target: targetNodeId,
           data: { strength: dep.strength, direction: 'outgoing' },
           style: { strokeWidth, stroke: strokeColor },
           animated: dep.strength >= 3,
@@ -189,8 +204,19 @@ export function useGraphGeneration({
       })
 
       incomingEntries.forEach(([importer, deps]) => {
-        const importerPath = normalizePath(importer)
-        ensureNode(importerPath, 'incoming', 'Imports this file')
+        const importerNodeId = ensureNode(
+          importer,
+          'incoming',
+          'Imports this file'
+        )
+
+        if (!nodesMap.has(importerNodeId) || !nodesMap.has(focusNodeId)) {
+          console.warn(
+            `Skipping invalid edge: ${importerNodeId} -> ${focusNodeId}`
+          )
+          return
+        }
+
         const connection = (deps as DependencyInfo[]).find((dep) =>
           matchesFile(dep.target, normalizedActual)
         )
@@ -198,9 +224,9 @@ export function useGraphGeneration({
         const strokeWidth = Math.min(1 + Math.log2(strength + 1), 5)
         const strokeColor = strength >= 3 ? '#ef4444' : '#2563eb'
         edges.push({
-          id: `in-${importerPath}->${normalizedActual}`,
-          source: importerPath,
-          target: normalizedActual,
+          id: `in-${importerNodeId}->${focusNodeId}`,
+          source: importerNodeId,
+          target: focusNodeId,
           data: { strength, direction: 'incoming' },
           style: { strokeWidth, stroke: strokeColor },
           animated: strength >= 3,
@@ -232,8 +258,34 @@ export function useGraphGeneration({
         return order[a.data.direction] - order[b.data.direction]
       })
 
+      // Filter: only keep nodes yang punya connection (either as source or target)
+      const connectedNodeIds = new Set<string>()
+      connectedNodeIds.add(focusNodeId) // Always include focus node
+      edges.forEach((edge) => {
+        connectedNodeIds.add(edge.source)
+        connectedNodeIds.add(edge.target)
+      })
+
+      const filteredNodes = graphNodes.filter((node) =>
+        connectedNodeIds.has(node.id)
+      )
+
+      const orphanedNodes = graphNodes.filter(
+        (node) => !connectedNodeIds.has(node.id)
+      )
+      if (orphanedNodes.length > 0) {
+        console.warn(
+          `Filtered ${orphanedNodes.length} orphaned nodes:`,
+          orphanedNodes.map((n) => n.data.label)
+        )
+      }
+
+      console.info(
+        `Graph generated: ${filteredNodes.length} nodes, ${edges.length} edges`
+      )
+
       setGraphElements({
-        nodes: graphNodes,
+        nodes: filteredNodes,
         edges,
         focusNodeId: normalizedActual
       })

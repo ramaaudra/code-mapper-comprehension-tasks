@@ -4,6 +4,18 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
   plugins: [react(), tsconfigPaths()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true
+      },
+      '/health': {
+        target: 'http://localhost:4000',
+        changeOrigin: true
+      }
+    }
+  },
   build: {
     // Enable tree-shaking and optimization
     minify: 'esbuild',
