@@ -27,6 +27,9 @@ import {
 
 import '@xyflow/react/dist/style.css'
 
+import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
+
+import { useAdaptiveQuality } from '../hooks/useAdaptiveQuality'
 import { ZoomControls } from './ZoomControls'
 
 export interface DependencyNodeData extends Record<string, unknown> {
@@ -56,6 +59,7 @@ export interface DependencyGraphProps {
   hoveredFile?: string | null
   layoutDirection: 'LR' | 'TB'
   onNodeClick?: (fileId: string) => void
+  isLayoutTransitioning?: boolean
 }
 
 const dagreDefaults = {
@@ -78,7 +82,6 @@ function layoutNodes(
   nodes: DependencyFlowNode[],
   edges: DependencyFlowEdge[],
   layoutDirection: 'LR' | 'TB',
-  hoveredFile?: string | null,
   focusNodeId?: string | null
 ) {
   const dagreGraph = new dagre.graphlib.Graph()
@@ -88,12 +91,6 @@ function layoutNodes(
     ...dagreDefaults
   })
 
-  const normalizedHover = hoveredFile
-    ? normalizePath(hoveredFile).toLowerCase()
-    : null
-  const normalizedHoverBasename = normalizedHover
-    ? getBasename(normalizedHover).toLowerCase()
-    : null
   const normalizedFocus = focusNodeId
     ? normalizePath(focusNodeId).toLowerCase()
     : null
@@ -113,22 +110,12 @@ function layoutNodes(
   return nodes.map((node) => {
     const { x, y } = dagreGraph.node(node.id) as { x: number; y: number }
     const normalizedNodePath = normalizePath(node.data.fullPath).toLowerCase()
-    const normalizedNodeBasename = getBasename(node.data.fullPath).toLowerCase()
-    const isHovered = Boolean(
-      normalizedHover &&
-      (normalizedHover === normalizedNodePath ||
-        normalizedHoverBasename === normalizedNodeBasename)
-    )
     const isFocused = normalizedFocus
       ? normalizedFocus === normalizedNodePath
       : false
 
     return {
       ...node,
-      data: {
-        ...node.data,
-        isHovered
-      },
       position: { x, y },
       sourcePosition:
         layoutDirection === 'LR' ? Position.Right : Position.Bottom,
@@ -173,6 +160,10 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
   const direction = (data.direction ??
     'placeholder') as DependencyNodeData['direction']
 
+  // Get quality from context or estimate based on data
+  // For simplicity, we'll add conditional rendering based on badge count
+  const shouldShowAllBadges = (data.badges?.length || 0) < 3
+
   const backgroundTone: Record<DependencyNodeData['direction'], string> = {
     selected:
       'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-400 dark:border-emerald-500',
@@ -198,7 +189,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
         'text-left min-w-[220px] max-w-[280px] flex flex-col gap-2',
         backgroundTone[direction],
         data.isHovered &&
-        'ring-2 ring-emerald-500/70 ring-offset-2 ring-offset-slate-900/0'
+          'ring-2 ring-emerald-500/70 ring-offset-2 ring-offset-slate-900/0'
       )}
       tabIndex={0}
       role="button"
@@ -240,24 +231,31 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
 
       {data.badges && data.badges.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {data.badges.map((badge) => (
-            <span
-              key={`${badge.label}-${badge.tone}`}
-              className={clsx(
-                'text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full',
-                badge.tone === 'danger' &&
-                'bg-red-500/10 text-red-600 dark:text-red-300',
-                badge.tone === 'warning' &&
-                'bg-amber-500/10 text-amber-600 dark:text-amber-300',
-                badge.tone === 'success' &&
-                'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
-                badge.tone === 'info' &&
-                'bg-blue-500/10 text-blue-600 dark:text-blue-300'
-              )}
-            >
-              {badge.label}
+          {(shouldShowAllBadges ? data.badges : data.badges.slice(0, 2)).map(
+            (badge) => (
+              <span
+                key={`${badge.label}-${badge.tone}`}
+                className={clsx(
+                  'text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full',
+                  badge.tone === 'danger' &&
+                    'bg-red-500/10 text-red-600 dark:text-red-300',
+                  badge.tone === 'warning' &&
+                    'bg-amber-500/10 text-amber-600 dark:text-amber-300',
+                  badge.tone === 'success' &&
+                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
+                  badge.tone === 'info' &&
+                    'bg-blue-500/10 text-blue-600 dark:text-blue-300'
+                )}
+              >
+                {badge.label}
+              </span>
+            )
+          )}
+          {!shouldShowAllBadges && data.badges.length > 2 && (
+            <span className="text-[10px] text-slate-500">
+              +{data.badges.length - 2}
             </span>
-          ))}
+          )}
         </div>
       )}
 
@@ -297,18 +295,73 @@ function DependencyGraphInner({
   focusNodeId,
   hoveredFile,
   layoutDirection,
-  onNodeClick
+  onNodeClick,
+  isLayoutTransitioning = false
 }: DependencyGraphProps) {
-  const layoutedNodes = useMemo(
-    () => layoutNodes(nodes, edges, layoutDirection, hoveredFile, focusNodeId),
-    [nodes, edges, layoutDirection, hoveredFile, focusNodeId]
+  const quality = useAdaptiveQuality(nodes.length)
+
+  const layoutedNodes = useMemo(() => {
+    if (isLayoutTransitioning) {
+      return [] // Empty during transition
+    }
+
+    const endMeasure = perfMonitor.startMeasure('graph-layout')
+
+    try {
+      return layoutNodes(nodes, edges, layoutDirection, focusNodeId)
+    } finally {
+      endMeasure()
+    }
+  }, [nodes, edges, layoutDirection, focusNodeId, isLayoutTransitioning])
+
+  const nodesWithHover = useMemo(
+    () =>
+      layoutedNodes.map((node) => {
+        const normalizedNodePath = normalizePath(
+          node.data.fullPath
+        ).toLowerCase()
+        const normalizedHover = hoveredFile
+          ? normalizePath(hoveredFile).toLowerCase()
+          : null
+        const normalizedHoverBasename = normalizedHover
+          ? getBasename(normalizedHover).toLowerCase()
+          : null
+        const normalizedNodeBasename = getBasename(
+          node.data.fullPath
+        ).toLowerCase()
+
+        const isHovered = Boolean(
+          normalizedHover &&
+          (normalizedHover === normalizedNodePath ||
+            normalizedHoverBasename === normalizedNodeBasename)
+        )
+
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            isHovered
+          }
+        }
+      }),
+    [layoutedNodes, hoveredFile]
   )
 
   const [flowNodes, setNodes, onNodesChange] =
-    useNodesState<DependencyFlowNode>(layoutedNodes)
+    useNodesState<DependencyFlowNode>(nodesWithHover)
   const [flowEdges, setEdges, onEdgesChange] =
     useEdgesState<DependencyFlowEdge>(edges)
   const reactFlow = useReactFlow()
+
+  // Apply to edges
+  const qualityAdjustedEdges = useMemo(
+    () =>
+      flowEdges.map((edge) => ({
+        ...edge,
+        animated: quality.enableAnimations && edge.animated
+      })),
+    [flowEdges, quality.enableAnimations]
+  )
 
   const fitViewToGraph = useCallback(() => {
     if (layoutedNodes.length === 0) {
@@ -321,8 +374,8 @@ function DependencyGraphInner({
   }, [layoutedNodes, reactFlow])
 
   useEffect(() => {
-    setNodes(layoutedNodes)
-  }, [layoutedNodes, setNodes])
+    setNodes(nodesWithHover)
+  }, [nodesWithHover, setNodes])
 
   useEffect(() => {
     setEdges(edges)
@@ -375,11 +428,20 @@ function DependencyGraphInner({
     [onNodeClick]
   )
 
+  // Show skeleton during transition
+  if (isLayoutTransitioning || layoutedNodes.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent" />
+      </div>
+    )
+  }
+
   return (
     <div className="relative w-full h-full graph-container">
       <ReactFlow<DependencyFlowNode, DependencyFlowEdge>
         nodes={flowNodes}
-        edges={flowEdges}
+        edges={qualityAdjustedEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
@@ -388,11 +450,14 @@ function DependencyGraphInner({
         fitView
         minZoom={0.1}
         maxZoom={2.5}
-
-
         nodesDraggable={false}
-        nodesFocusable
+        nodesFocusable={false}
         elementsSelectable={false}
+        nodesConnectable={false}
+        edgesFocusable={false}
+        onlyRenderVisibleElements={true}
+        selectNodesOnDrag={false}
+        preventScrolling={false}
         panOnDrag
         panOnScroll
         selectionOnDrag={false}

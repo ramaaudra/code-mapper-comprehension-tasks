@@ -295,13 +295,14 @@ interface FileTreeViewProps {
   data: any[] // Data dari backend (fileTree)
   onFileSelect: (fileId: string | null) => void
   onSimulateDelete?: (fileId: string) => void
+  onFileHover?: (fileId: string) => void
 }
 
 export const FileTreeView = forwardRef<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TreeApi<any> | undefined,
   FileTreeViewProps
->(({ data, onFileSelect, onSimulateDelete = () => {} }, ref) => {
+>(({ data, onFileSelect, onSimulateDelete = () => {}, onFileHover }, ref) => {
   // Get all status data from context
   const {
     hoveredFile,
@@ -322,7 +323,12 @@ export const FileTreeView = forwardRef<
     orphanFilesSet,
     riskProfileMap,
     hoveredFile,
-    setHoveredFile,
+    (id) => {
+      setHoveredFile(id)
+      if (id) {
+        onFileHover?.(id)
+      }
+    },
     onSimulateDelete,
     brokenFilesSet,
     newOrphansSet,

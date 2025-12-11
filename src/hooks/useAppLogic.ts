@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { TreeApi } from 'react-arborist'
 
 import { useFileAnalysisContext } from '@/features/file-analysis'
-import { useGraphGeneration } from '@/features/graph'
+import { useGraphGeneration, usePrefetch } from '@/features/graph'
 import { useSimulation } from '@/features/simulation'
 import { useTheme } from '@/shared/components/providers/ThemeProvider'
 import { useAnalysisData } from '@/shared/hooks/useAnalysisData'
@@ -11,6 +11,7 @@ import { matchesFile } from '@/shared/lib/utils'
 
 export function useAppLogic() {
   const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR'>('LR')
+  const [isLayoutTransitioning, setIsLayoutTransitioning] = useState(false)
   const { theme, setTheme } = useTheme()
   const treeRef = useRef<TreeApi<any> | null>(null)
 
@@ -57,6 +58,16 @@ export function useAppLogic() {
       brokenFilesSet,
       newOrphansSet
     })
+
+  const { prefetch, clearPrefetchCache } = usePrefetch(
+    analysisData,
+    generateGraphForFile
+  )
+
+  // Clear prefetch cache when analysis changes
+  useEffect(() => {
+    clearPrefetchCache()
+  }, [analysisData, clearPrefetchCache])
 
   // Simulation hook
   const {
@@ -120,13 +131,6 @@ export function useAppLogic() {
     clearGraph()
   }, [setSelectedFileId, clearGraph])
 
-  // Regenerate graph when file changes
-  useEffect(() => {
-    if (selectedFileId) {
-      generateGraphForFile(selectedFileId, analysisData)
-    }
-  }, [analysisData, generateGraphForFile, selectedFileId])
-
   // Refresh analysis data
   const refreshAnalysis = useCallback(async () => {
     const result = await fetchAnalysis()
@@ -170,9 +174,20 @@ export function useAppLogic() {
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light')
   const toggleTreeView = () => setIsTreeCollapsed((prev) => !prev)
 
+  const handleLayoutDirectionChange = useCallback((direction: 'TB' | 'LR') => {
+    setIsLayoutTransitioning(true)
+    setLayoutDirection(direction)
+
+    // Allow transition to complete
+    setTimeout(() => {
+      setIsLayoutTransitioning(false)
+    }, 400) // Match fitView duration
+  }, [])
+
   return {
     layoutDirection,
-    setLayoutDirection,
+    setLayoutDirection: handleLayoutDirectionChange,
+    isLayoutTransitioning,
     theme,
     toggleTheme,
     treeRef,
@@ -197,6 +212,7 @@ export function useAppLogic() {
     navigateToFile,
     handleShowOverview,
     handleSimulateDelete,
-    getRiskProfileForFile
+    getRiskProfileForFile,
+    prefetchFile: prefetch
   }
 }

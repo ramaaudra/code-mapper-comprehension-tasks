@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useCallback } from 'react'
 
 import { FileAnalysisProvider } from '@/features/file-analysis'
 import { GraphSkeleton } from '@/features/graph'
@@ -58,8 +58,19 @@ function AppContent() {
     navigateToFile,
     handleShowOverview,
     handleSimulateDelete,
-    getRiskProfileForFile
+    getRiskProfileForFile,
+    isLayoutTransitioning
   } = useAppLogic()
+
+  // Stable callbacks to prevent child re-renders
+  const handleDetailClose = useCallback(() => {
+    handleFileSelect(null)
+  }, [handleFileSelect])
+
+  const handleSimulationClose = useCallback(() => {
+    closeSimulation()
+    setSimulationResult(null)
+  }, [closeSimulation, setSimulationResult])
 
   return (
     <AppLayout>
@@ -119,6 +130,7 @@ function AppContent() {
                 layoutDirection={layoutDirection}
                 viewMode={viewMode}
                 onNavigateToFile={navigateToFile}
+                isLayoutTransitioning={isLayoutTransitioning}
               />
             </Suspense>
           ) : (
@@ -154,7 +166,7 @@ function AppContent() {
               <NodeDetailPanel
                 node={selectedNode}
                 data={analysisData}
-                onClose={() => handleFileSelect(null)}
+                onClose={handleDetailClose}
                 riskProfile={getRiskProfileForFile(selectedFileId)}
               />
             </Suspense>
@@ -164,10 +176,7 @@ function AppContent() {
 
       <SimulationDialog
         result={simulationResult}
-        onClose={() => {
-          closeSimulation()
-          setSimulationResult(null)
-        }}
+        onClose={handleSimulationClose}
       />
     </AppLayout>
   )
