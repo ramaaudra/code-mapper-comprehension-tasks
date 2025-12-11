@@ -1,0 +1,5 @@
+export { ProjectDashboard } from './components/ProjectDashboard'
+export { default as MetricsPanel } from './components/MetricsPanel'
+export { IssuesPanel } from './components/IssuesPanel'
+export { useViewMode } from './hooks/useViewMode'
+export type { ViewMode } from './hooks/useViewMode'

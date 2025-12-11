@@ -12,59 +12,56 @@ import {
 } from 'react'
 import { TreeApi } from 'react-arborist'
 
-import { simulateRemoval } from '@/lib/api'
-
-import type {
-  DependencyEdgeData,
-  DependencyNodeData
-} from '@/components/graph/DependencyGraph'
-import { GraphSkeleton } from '@/components/graph/GraphSkeleton'
-import { ThemeProvider, useTheme } from '@/components/theme-provider'
-import { Button } from '@/components/ui/button'
+import { FileAnalysisProvider } from '@/features/file-analysis'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
+  type DependencyEdgeData,
+  type DependencyNodeData,
+  GraphSkeleton
+} from '@/features/graph'
+import { SimulationDialog, useSimulation } from '@/features/simulation'
+import {
+  ThemeProvider,
+  useTheme
+} from '@/shared/components/providers/ThemeProvider'
+import { Button } from '@/shared/components/ui/button'
 import {
   ArrowDown,
   ArrowRight,
-  FileWarning,
-  FileX,
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
   Search,
   Sun
-} from '@/components/ui/icons'
-import { Input } from '@/components/ui/input'
-import { useAnalysisData } from '@/hooks/useAnalysisData'
-import type { AnalysisData, DependencyInfo } from '@/types/analysis'
-import type { FileRiskProfile } from '@/types/risk'
+} from '@/shared/components/ui/icons'
+import { Input } from '@/shared/components/ui/input'
+import { useAnalysisData } from '@/shared/hooks/useAnalysisData'
+import type { AnalysisData, DependencyInfo } from '@/shared/types/analysis'
+import type { FileRiskProfile } from '@/shared/types/risk'
 
-// Lazy load heavy components
+// Lazy load heavy components from features
 const FileTreeView = lazy(() =>
-  import('@/components/graph/FileTreeView').then((m) => ({
+  import('@/features/file-analysis').then((m) => ({
     default: m.FileTreeView
   }))
 )
-const NodeDetailPanel = lazy(
-  () => import('@/components/detail/NodeDetailPanel')
+const NodeDetailPanel = lazy(() =>
+  import('@/features/node-detail').then((m) => ({
+    default: m.NodeDetailPanel
+  }))
 )
 const ProjectDashboard = lazy(() =>
-  import('@/components/dashboard/ProjectDashboard').then((m) => ({
+  import('@/features/dashboard').then((m) => ({
     default: m.ProjectDashboard
   }))
 )
-// Helper function to get basename without path module
+
 const getBasename = (filePath: string) => {
   return filePath.split('/').pop() || filePath
 }
 
 function AppContent() {
   const [query, setQuery] = useState('')
-  const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR'>('LR') // Default ke Left-Right
+  const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR'>('LR')
   const { theme, setTheme } = useTheme()
   const treeRef = useRef<TreeApi<any> | null>(null)
 
@@ -88,12 +85,13 @@ function AppContent() {
   const [viewMode, setViewMode] = useState<'overview' | 'file'>('overview')
   const [isTreeCollapsed, setIsTreeCollapsed] = useState(false)
 
-  // Simulation state
-  const [simulationResult, setSimulationResult] = useState<{
-    brokenFiles: string[]
-    newOrphans: string[]
-  } | null>(null)
-  const [isSimulating, setIsSimulating] = useState(false)
+  // Simulation from feature
+  const {
+    result: simulationResult,
+    reset: closeSimulation,
+    simulate,
+    isSimulating
+  } = useSimulation()
 
   const normalizePath = useCallback(
     (value: string) => value.replace(/\\/g, '/'),
@@ -105,7 +103,6 @@ function AppContent() {
       return new Map<string, string>()
     }
     const map = new Map<string, string>()
-
     analysisData.nodes.forEach((node: any) => {
       if (!node?.id) {
         return
@@ -115,23 +112,19 @@ function AppContent() {
         typeof node.label === 'string' ? normalizePath(node.label) : ''
       map.set(normalizedId, relativeLabel)
     })
-
     return map
   }, [analysisData, normalizePath])
 
   const riskProfileMap = useMemo(() => {
     const map = new Map<string, FileRiskProfile>()
-
     riskAnalysis.forEach((profile) => {
       const normalizedFile = normalizePath(profile.file)
       map.set(normalizedFile, profile)
-
       const relativeLabel = nodePathLookup.get(normalizedFile)
       if (relativeLabel) {
         map.set(relativeLabel, profile)
       }
     })
-
     return map
   }, [normalizePath, nodePathLookup, riskAnalysis])
 
@@ -141,23 +134,20 @@ function AppContent() {
         return null
       }
       const normalizedId = normalizePath(fileId)
-
       if (riskProfileMap.has(normalizedId)) {
         return riskProfileMap.get(normalizedId) || null
       }
-
       for (const [key, profile] of riskProfileMap.entries()) {
         if (key === normalizedId || key.endsWith(`/${normalizedId}`)) {
           return profile
         }
       }
-
       return null
     },
     [normalizePath, riskProfileMap]
   )
 
-  // MEMOIZED SETS: Untuk pengecekan cepat file status
+  // Memoized sets for file status
   const filesInCycle = useMemo(() => {
     if (!analysisData?.issues?.circularDependencies) {
       return new Set<string>()
@@ -184,7 +174,7 @@ function AppContent() {
     return new Set(analysisData.issues.orphans)
   }, [analysisData?.issues?.orphans])
 
-  // Memoized sets for simulation results
+  // Simulation result sets
   const brokenFilesSet = useMemo(
     () => new Set(simulationResult?.brokenFiles || []),
     [simulationResult]
@@ -233,28 +223,22 @@ function AppContent() {
   const collectBadges = useCallback(
     (fullPath: string) => {
       const badges: DependencyNodeData['badges'] = []
-
       if (hasMatchInSet(filesInCycle, fullPath)) {
         badges.push({ label: 'Cycle', tone: 'danger' })
       }
-
       const highImpact = getValueFromMap(highImpactFilesMap, fullPath)
       if (typeof highImpact === 'number') {
         badges.push({ label: `High Impact ${highImpact}`, tone: 'warning' })
       }
-
       if (hasMatchInSet(orphanFilesSet, fullPath)) {
         badges.push({ label: 'Orphan', tone: 'warning' })
       }
-
       if (hasMatchInSet(brokenFilesSet, fullPath)) {
         badges.push({ label: 'Sim Result: Broken', tone: 'danger' })
       }
-
       if (hasMatchInSet(newOrphansSet, fullPath)) {
         badges.push({ label: 'Sim Result: Orphan', tone: 'info' })
       }
-
       const riskProfile = getRiskProfileForFile(fullPath)
       if (riskProfile) {
         const tone =
@@ -267,7 +251,6 @@ function AppContent() {
                 : 'success'
         badges.push({ label: `Risiko ${riskProfile.category}`, tone })
       }
-
       return badges
     },
     [
@@ -285,7 +268,6 @@ function AppContent() {
   const generateGraphForFile = useCallback(
     (fileId: string | null, sourceData?: AnalysisData | null) => {
       const currentData = sourceData ?? analysisData
-
       if (!fileId || !currentData) {
         setGraphElements({ nodes: [], edges: [], focusNodeId: null })
         return null
@@ -332,7 +314,6 @@ function AppContent() {
             badges: collectBadges(normalizedFullPath)
           }
         }
-
         nodesMap.set(normalizedFullPath, node)
         return node
       }
@@ -365,10 +346,7 @@ function AppContent() {
             stroke: 'rgba(15, 23, 42, 0.4)',
             color: '#0f172a'
           },
-          labelStyle: {
-            fontWeight: 600,
-            letterSpacing: '0.01em'
-          }
+          labelStyle: { fontWeight: 600, letterSpacing: '0.01em' }
         })
       })
 
@@ -402,10 +380,7 @@ function AppContent() {
             stroke: 'rgba(15, 23, 42, 0.4)',
             color: '#0f172a'
           },
-          labelStyle: {
-            fontWeight: 600,
-            letterSpacing: '0.01em'
-          }
+          labelStyle: { fontWeight: 600, letterSpacing: '0.01em' }
         })
       })
 
@@ -459,15 +434,11 @@ function AppContent() {
       if (!analysisData) {
         return
       }
-
       const dependencyMap = analysisData.dependencyMap ?? {}
       const allFiles = Object.keys(dependencyMap)
-
       const matchedFile =
         allFiles.find((candidate) => matchesFile(candidate, fileId)) || fileId
-
       handleFileSelect(matchedFile)
-
       if (treeRef.current) {
         try {
           treeRef.current.select(matchedFile, { focus: true })
@@ -484,9 +455,8 @@ function AppContent() {
     setSelectedFileId(null)
     setSelectedNode(null)
     setGraphElements({ nodes: [], edges: [], focusNodeId: null })
-  }, [setGraphElements, setSelectedFileId, setSelectedNode, setViewMode])
+  }, [])
 
-  // Regenerate dependency view when analysis data refreshes
   useEffect(() => {
     if (selectedFileId) {
       generateGraphForFile(selectedFileId, analysisData)
@@ -495,58 +465,26 @@ function AppContent() {
 
   const refreshAnalysis = useCallback(async () => {
     const result = await fetchAnalysis()
-
     setSelectedFileId(null)
     setSelectedNode(null)
     setHoveredFile(null)
     setGraphElements({ nodes: [], edges: [], focusNodeId: null })
     setViewMode('overview')
-    setSimulationResult(null)
-
     if (result?.issues?.circularDependencies?.length) {
       console.info(
-        '🔄 Circular Dependencies Found:',
+        'Circular Dependencies Found:',
         result.issues.circularDependencies
       )
-      console.info('📋 Summary:', result.issues.summary)
     }
-
     return result
-  }, [
-    fetchAnalysis,
-    setGraphElements,
-    setHoveredFile,
-    setSelectedFileId,
-    setSelectedNode,
-    setSimulationResult,
-    setViewMode
-  ])
+  }, [fetchAnalysis])
 
   const handleSimulateDelete = async (fileId: string) => {
-    console.info('🚀 Frontend: Starting simulation for file:', fileId)
-    setIsSimulating(true)
-    try {
-      const result = await simulateRemoval({
-        fileToRemove: fileId
-      })
-      console.info('✅ Frontend: Simulation result received:', result)
-      setSimulationResult(result)
-    } catch (error) {
-      console.error('😭 Simulasi gagal:', error)
-    } finally {
-      setIsSimulating(false)
-    }
+    simulate({ fileToRemove: fileId })
   }
 
-  const closeSimulation = () => setSimulationResult(null)
-
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light')
-  }
-
-  const toggleTreeView = () => {
-    setIsTreeCollapsed((prev) => !prev)
-  }
+  const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light')
+  const toggleTreeView = () => setIsTreeCollapsed((prev) => !prev)
 
   useEffect(() => {
     refreshAnalysis()
@@ -554,21 +492,15 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
-      {/* Simple Top Bar */}
+      {/* Top Bar */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Left: Title */}
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleTreeView}
-              className="text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              aria-label={
-                isTreeCollapsed
-                  ? 'Tampilkan tree view'
-                  : 'Sembunyikan tree view'
-              }
+              className="text-slate-600 dark:text-slate-400"
             >
               {isTreeCollapsed ? (
                 <PanelLeftOpen className="h-5 w-5" />
@@ -581,28 +513,16 @@ function AppContent() {
             </h1>
           </div>
 
-          {/* Center: Status & Refresh */}
           <div className="flex items-center gap-3">
             <div className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
               <span
                 className={`h-2 w-2 rounded-full ${isLoading ? 'bg-amber-400 animate-pulse' : loadError ? 'bg-red-500' : 'bg-emerald-500'}`}
-                aria-hidden="true"
               />
               <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-                {isLoading && 'Loading analysis data...'}
-                {!isLoading && loadError && (
-                  <span className="text-red-500 dark:text-red-400 font-medium">
-                    Failed to load data
-                  </span>
-                )}
-                {!isLoading &&
-                  !loadError &&
-                  analysisData &&
-                  'Analysis data ready'}
-                {!isLoading &&
-                  !loadError &&
-                  !analysisData &&
-                  'Analysis data not available'}
+                {isLoading && 'Loading...'}
+                {!isLoading && loadError && 'Failed'}
+                {!isLoading && !loadError && analysisData && 'Ready'}
+                {!isLoading && !loadError && !analysisData && 'No data'}
               </div>
             </div>
             <Button
@@ -610,13 +530,11 @@ function AppContent() {
               disabled={isLoading}
               variant="outline"
               size="sm"
-              className="px-4"
             >
               {isLoading ? 'Loading...' : 'Reload'}
             </Button>
           </div>
 
-          {/* Right: Search, Layout Controls, and Theme */}
           <div className="flex items-center gap-3">
             {analysisData && (
               <div className="relative">
@@ -625,20 +543,18 @@ function AppContent() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search files..."
-                  className="pl-10 w-48 border-slate-300 dark:border-slate-600 focus:border-green-500 dark:focus:border-green-400"
+                  className="pl-10 w-48"
                 />
               </div>
             )}
 
-            {/* Layout Direction Controls */}
             <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-md p-1">
               <Button
                 variant={layoutDirection === 'LR' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setLayoutDirection('LR')}
                 disabled={!analysisData}
-                className={`px-3 py-1 text-xs ${layoutDirection === 'LR' ? 'bg-white dark:bg-slate-700 shadow-sm' : ''} ${!analysisData ? 'opacity-50 cursor-not-allowed' : ''}`}
-                title="Left-Right Layout"
+                className="px-3 py-1 text-xs"
               >
                 <ArrowRight className="h-3 w-3 mr-1" />
                 LR
@@ -648,30 +564,24 @@ function AppContent() {
                 size="sm"
                 onClick={() => setLayoutDirection('TB')}
                 disabled={!analysisData}
-                className={`px-3 py-1 text-xs ${layoutDirection === 'TB' ? 'bg-white dark:bg-slate-700 shadow-sm' : ''} ${!analysisData ? 'opacity-50 cursor-not-allowed' : ''}`}
-                title="Top-Bottom Layout"
+                className="px-3 py-1 text-xs"
               >
                 <ArrowDown className="h-3 w-3 mr-1" />
                 TB
               </Button>
             </div>
+
             {analysisData && (
               <Button
                 variant={viewMode === 'overview' ? 'default' : 'outline'}
                 size="sm"
                 onClick={handleShowOverview}
-                className="px-3 py-1 text-xs"
               >
                 Project Overview
               </Button>
             )}
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
+            <Button variant="ghost" size="icon" onClick={toggleTheme}>
               {theme === 'light' ? (
                 <Moon className="h-5 w-5" />
               ) : (
@@ -703,7 +613,7 @@ function AppContent() {
             <div className="text-xs">
               {analysisLoadedAt && (
                 <>
-                  Diperbarui:{' '}
+                  Updated:{' '}
                   <strong>
                     {new Date(analysisLoadedAt).toLocaleTimeString()}
                   </strong>
@@ -714,8 +624,9 @@ function AppContent() {
         </div>
       )}
 
-      {/* Layout Utama - Tree, Dashboard, dan Panel Detail */}
+      {/* Main Layout */}
       <div className="flex h-[calc(100vh-140px)] overflow-hidden w-full">
+        {/* Tree Sidebar */}
         <div
           className={`transition-all duration-200 ease-out overflow-hidden shrink-0 ${
             isTreeCollapsed
@@ -751,6 +662,7 @@ function AppContent() {
           )}
         </div>
 
+        {/* Main Content */}
         <div className="flex-1 overflow-hidden">
           {analysisData ? (
             <Suspense fallback={<GraphSkeleton />}>
@@ -777,19 +689,14 @@ function AppContent() {
                   <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-800 rounded">
                     code-mapper analyze &lt;path-proyek&gt;
                   </code>{' '}
-                  di terminal Anda untuk menghasilkan data baru, kemudian
-                  biarkan server CLI tetap berjalan.
+                  di terminal Anda.
                 </p>
-                {loadError && (
-                  <p className="mt-3 text-sm text-red-500 dark:text-red-400">
-                    Gagal memuat data: {loadError}
-                  </p>
-                )}
               </div>
             </div>
           )}
         </div>
 
+        {/* Node Detail Panel */}
         {analysisData && viewMode === 'file' && selectedNode && (
           <div className="w-96 border-l border-slate-200 dark:border-slate-800 overflow-hidden">
             <Suspense
@@ -810,72 +717,18 @@ function AppContent() {
         )}
       </div>
 
-      {/* Modal untuk menampilkan hasil simulasi */}
-      <Dialog
-        open={!!simulationResult}
-        onOpenChange={(isOpen) => !isOpen && closeSimulation()}
-      >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Hasil Simulasi Penghapusan</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4 space-y-6">
-            <div>
-              <h3 className="font-semibold flex items-center gap-2">
-                <FileWarning className="h-5 w-5 text-red-500" />
-                File yang Akan Rusak (
-                {simulationResult?.brokenFiles.length || 0})
-              </h3>
-              <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
-                {simulationResult?.brokenFiles.length === 0 ? (
-                  <p className="text-sm text-muted-foreground italic">
-                    Tidak ada file yang akan rusak
-                  </p>
-                ) : (
-                  simulationResult?.brokenFiles.map((file) => (
-                    <div
-                      key={file}
-                      className="text-sm p-2 bg-muted rounded font-mono"
-                    >
-                      {getBasename(file)}
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold flex items-center gap-2">
-                <FileX className="h-5 w-5 text-yellow-500" />
-                Orphan Baru ({simulationResult?.newOrphans.length || 0})
-              </h3>
-              <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
-                {simulationResult?.newOrphans.length === 0 ? (
-                  <p className="text-sm text-muted-foreground italic">
-                    Tidak ada file yang akan menjadi orphan
-                  </p>
-                ) : (
-                  simulationResult?.newOrphans.map((file) => (
-                    <div
-                      key={file}
-                      className="text-sm p-2 bg-muted rounded font-mono"
-                    >
-                      {getBasename(file)}
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Simulation Dialog */}
+      <SimulationDialog result={simulationResult} onClose={closeSimulation} />
     </div>
   )
 }
 
-export default function SimpleApp() {
+export default function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="code-mapper-theme">
-      <AppContent />
+      <FileAnalysisProvider>
+        <AppContent />
+      </FileAnalysisProvider>
     </ThemeProvider>
   )
 }

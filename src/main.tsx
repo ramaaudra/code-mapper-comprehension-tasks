@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client'
 
 import './index.css'
 
-import { TooltipProvider } from '@/components/ui/tooltip'
+import { TooltipProvider } from '@/shared/components/ui/tooltip'
 import { queryClient } from '@/shared/lib/queryClient'
 
 import App from './App.tsx'
