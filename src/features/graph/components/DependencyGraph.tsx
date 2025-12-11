@@ -198,7 +198,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
         'text-left min-w-[220px] max-w-[280px] flex flex-col gap-2',
         backgroundTone[direction],
         data.isHovered &&
-          'ring-2 ring-emerald-500/70 ring-offset-2 ring-offset-slate-900/0'
+        'ring-2 ring-emerald-500/70 ring-offset-2 ring-offset-slate-900/0'
       )}
       tabIndex={0}
       role="button"
@@ -246,13 +246,13 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
               className={clsx(
                 'text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full',
                 badge.tone === 'danger' &&
-                  'bg-red-500/10 text-red-600 dark:text-red-300',
+                'bg-red-500/10 text-red-600 dark:text-red-300',
                 badge.tone === 'warning' &&
-                  'bg-amber-500/10 text-amber-600 dark:text-amber-300',
+                'bg-amber-500/10 text-amber-600 dark:text-amber-300',
                 badge.tone === 'success' &&
-                  'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
+                'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
                 badge.tone === 'info' &&
-                  'bg-blue-500/10 text-blue-600 dark:text-blue-300'
+                'bg-blue-500/10 text-blue-600 dark:text-blue-300'
               )}
             >
               {badge.label}
@@ -388,6 +388,8 @@ function DependencyGraphInner({
         fitView
         minZoom={0.1}
         maxZoom={2.5}
+
+
         nodesDraggable={false}
         nodesFocusable
         elementsSelectable={false}
