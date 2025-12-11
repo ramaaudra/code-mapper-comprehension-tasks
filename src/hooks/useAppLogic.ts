@@ -11,7 +11,7 @@ import { matchesFile } from '@/shared/lib/utils'
 
 export function useAppLogic() {
   const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR'>('LR')
-  const [isLayoutTransitioning, setIsLayoutTransitioning] = useState(false)
+  const isLayoutTransitioning = false
   const { theme, setTheme } = useTheme()
   const treeRef = useRef<TreeApi<any> | null>(null)
 
@@ -174,19 +174,9 @@ export function useAppLogic() {
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light')
   const toggleTreeView = () => setIsTreeCollapsed((prev) => !prev)
 
-  const handleLayoutDirectionChange = useCallback((direction: 'TB' | 'LR') => {
-    setIsLayoutTransitioning(true)
-    setLayoutDirection(direction)
-
-    // Allow transition to complete
-    setTimeout(() => {
-      setIsLayoutTransitioning(false)
-    }, 400) // Match fitView duration
-  }, [])
-
   return {
     layoutDirection,
-    setLayoutDirection: handleLayoutDirectionChange,
+    setLayoutDirection,
     isLayoutTransitioning,
     theme,
     toggleTheme,
