@@ -1,0 +1,16 @@
+// src/shared/lib/queryClient.ts
+import { QueryClient } from '@tanstack/react-query'
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
+      gcTime: 10 * 60 * 1000, // 10 minutes - cache garbage collection
+      refetchOnWindowFocus: true, // Auto-refresh when user focuses tab
+      retry: 1 // Retry failed requests once
+    },
+    mutations: {
+      retry: 0 // Don't retry mutations automatically
+    }
+  }
+})
