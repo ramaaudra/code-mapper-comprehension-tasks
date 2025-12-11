@@ -18,7 +18,20 @@
     /* Path Alias */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/shared/*": ["./src/shared/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/types/*": ["./src/shared/types/*", "./src/types/*"],
+      "@/lib/*": ["./src/shared/lib/*", "./src/lib/*"],
+      "@/hooks/*": ["./src/shared/hooks/*", "./src/hooks/*"],
+      "@/components/ui/*": [
+        "./src/shared/components/ui/*",
+        "./src/components/ui/*"
+      ],
+      "@/components/theme-provider": [
+        "./src/shared/components/providers/ThemeProvider",
+        "./src/components/theme-provider"
+      ]
     },
 
     /* Linting */
