@@ -5,14 +5,12 @@ import { TreeApi } from 'react-arborist'
 import { useFileAnalysisContext } from '@/features/file-analysis'
 import { useGraphGeneration, usePrefetch } from '@/features/graph'
 import { useSimulation } from '@/features/simulation'
-import { useTheme } from '@/shared/components/providers/ThemeProvider'
 import { useAnalysisData } from '@/shared/hooks/useAnalysisData'
 import { matchesFile } from '@/shared/lib/utils'
 
 export function useAppLogic() {
   const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR'>('LR')
   const isLayoutTransitioning = false
-  const { theme, setTheme } = useTheme()
   const treeRef = useRef<TreeApi<any> | null>(null)
 
   // Get context data
@@ -23,7 +21,6 @@ export function useAppLogic() {
     searchQuery,
     setSearchQuery,
     filesInCycle,
-    highImpactFilesMap,
     orphanFilesSet,
     riskProfileMap,
     brokenFilesSet,
@@ -52,7 +49,6 @@ export function useAppLogic() {
     useGraphGeneration({
       analysisData,
       filesInCycle,
-      highImpactFilesMap,
       orphanFilesSet,
       riskProfileMap,
       brokenFilesSet,
@@ -171,15 +167,12 @@ export function useAppLogic() {
   }, [refreshAnalysis])
 
   // Toggle handlers
-  const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light')
   const toggleTreeView = () => setIsTreeCollapsed((prev) => !prev)
 
   return {
     layoutDirection,
     setLayoutDirection,
     isLayoutTransitioning,
-    theme,
-    toggleTheme,
     treeRef,
     selectedFileId,
     hoveredFile,

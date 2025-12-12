@@ -30,17 +30,30 @@ interface GraphElements {
 interface UseGraphGenerationOptions {
   analysisData: AnalysisData | null
   filesInCycle: Set<string>
-  highImpactFilesMap: Map<string, number>
   orphanFilesSet: Set<string>
   riskProfileMap: Map<string, FileRiskProfile>
   brokenFilesSet: Set<string>
   newOrphansSet: Set<string>
 }
 
-const BATCH_THRESHOLD = 50 // Nodes - use batching if more than this
-const MAX_NODES_IN_VIEW = 200 // Limit display for performance
+const BATCH_THRESHOLD = 100 // Nodes - use batching if more than this (increased for SWC speed)
 // Global badge cache - shared across all component instances
 const badgeCache = new Map<string, BadgeInfo[]>()
+
+function getSimplifiedEdgeStyle(isLargeGraph: boolean) {
+  if (isLargeGraph) {
+    return {
+      styles: {
+        strong: { strokeWidth: 2, stroke: '#ef4444' },
+        medium: { strokeWidth: 1.5, stroke: '#d97706' },
+        weak: { strokeWidth: 1, stroke: '#94a3b8' }
+      },
+      showLabels: false,
+      animated: false
+    }
+  }
+  return null
+}
 
 function renderGraphSync(
   nodesMap: Map<string, Node<DependencyNodeData>>,
@@ -70,7 +83,6 @@ function renderGraphSync(
 export function useGraphGeneration({
   analysisData,
   filesInCycle,
-  highImpactFilesMap,
   orphanFilesSet,
   riskProfileMap,
   brokenFilesSet,
@@ -175,6 +187,9 @@ export function useGraphGeneration({
         const nodesMap = new Map<string, Node<DependencyNodeData>>()
         const edges: Edge<DependencyEdgeData>[] = []
 
+        // Pre-calculate large graph mode for simplified node styling
+        const isLargeGraphMode = outgoing.length + incomingEntries.length > 100
+
         const ensureNode = (
           rawPath: string,
           direction: DependencyNodeData['direction'],
@@ -195,17 +210,6 @@ export function useGraphGeneration({
 
             if (hasMatchInSet(filesInCycle, normalizedPath)) {
               badges.push({ label: 'Cycle', tone: 'danger' })
-            }
-
-            const highImpact = getValueFromMap(
-              highImpactFilesMap,
-              normalizedPath
-            )
-            if (typeof highImpact === 'number') {
-              badges.push({
-                label: `High Impact ${highImpact}`,
-                tone: 'warning'
-              })
             }
 
             if (hasMatchInSet(orphanFilesSet, normalizedPath)) {
@@ -246,18 +250,27 @@ export function useGraphGeneration({
               fullPath: normalizedPath,
               direction,
               subtitle,
-              badges
+              badges,
+              isSimplified: isLargeGraphMode
             }
           }
           nodesMap.set(normalizedPath, node)
           return normalizedPath
         }
 
+        // Count incoming edges for focus node
+        const incomingCount = incomingEntries.length
+
         const focusNodeId = ensureNode(
           normalizedActual,
           'selected',
-          'Active file'
+          incomingCount > 0
+            ? `Imported by ${incomingCount} files`
+            : 'Active file'
         )
+
+        // Get simplified style for large graphs
+        const simplifiedStyle = getSimplifiedEdgeStyle(isLargeGraphMode)
 
         outgoing.forEach((dep) => {
           const targetNodeId = ensureNode(
@@ -275,22 +288,32 @@ export function useGraphGeneration({
 
           const styleKey =
             dep.strength >= 3 ? 'strong' : dep.strength >= 2 ? 'medium' : 'weak'
+          const effectiveStyle =
+            simplifiedStyle?.styles[styleKey] ?? edgeStyles[styleKey]
+          const showLabel = simplifiedStyle ? simplifiedStyle.showLabels : true
+          const shouldAnimate = simplifiedStyle
+            ? simplifiedStyle.animated
+            : dep.strength >= 3
+
           edges.push({
             id: `out-${focusNodeId}->${targetNodeId}`,
             source: focusNodeId,
             target: targetNodeId,
             data: { strength: dep.strength, direction: 'outgoing' },
-            style: edgeStyles[styleKey],
-            animated: dep.strength >= 3,
+            style: effectiveStyle,
+            animated: shouldAnimate,
             markerEnd: markerEnds[styleKey],
-            label: dep.strength > 1 ? `${dep.strength} refs` : '1 ref',
-            labelBgPadding: [6, 2],
-            labelBgBorderRadius: 4,
-            labelBgStyle,
-            labelStyle
+            ...(showLabel && {
+              label: dep.strength > 1 ? `${dep.strength} refs` : '1 ref',
+              labelBgPadding: [6, 2],
+              labelBgBorderRadius: 4,
+              labelBgStyle,
+              labelStyle
+            })
           })
         })
 
+        // Render ALL incoming edges (no hub mode filtering)
         incomingEntries.forEach(([importer, deps]) => {
           const importerNodeId = ensureNode(
             importer,
@@ -311,19 +334,28 @@ export function useGraphGeneration({
           const strength = connection?.strength ?? 1
           const styleKey =
             strength >= 3 ? 'strong' : strength >= 2 ? 'medium' : 'weak'
+          const effectiveStyle =
+            simplifiedStyle?.styles[styleKey] ?? edgeStyles[styleKey]
+          const showLabel = simplifiedStyle ? simplifiedStyle.showLabels : true
+          const shouldAnimate = simplifiedStyle
+            ? simplifiedStyle.animated
+            : strength >= 3
+
           edges.push({
             id: `in-${importerNodeId}->${focusNodeId}`,
             source: importerNodeId,
             target: focusNodeId,
             data: { strength, direction: 'incoming' },
-            style: edgeStyles[styleKey],
-            animated: strength >= 3,
+            style: effectiveStyle,
+            animated: shouldAnimate,
             markerEnd: markerEnds[styleKey],
-            label: strength > 1 ? `${strength} refs` : '1 ref',
-            labelBgPadding: [6, 2],
-            labelBgBorderRadius: 4,
-            labelBgStyle,
-            labelStyle
+            ...(showLabel && {
+              label: strength > 1 ? `${strength} refs` : '1 ref',
+              labelBgPadding: [6, 2],
+              labelBgBorderRadius: 4,
+              labelBgStyle,
+              labelStyle
+            })
           })
         })
 
@@ -334,72 +366,29 @@ export function useGraphGeneration({
         // Synchronous render for filtering logic (needed for both paths)
         filteredNodes = renderGraphSync(nodesMap, edges, focusNodeId)
 
-        let nodesToRender = filteredNodes
-        let hiddenCount = 0
-
-        if (filteredNodes.length > MAX_NODES_IN_VIEW) {
-          // Rank nodes by importance
-          const rankedNodes = filteredNodes.map((node, index) => {
-            let priority = index
-
-            // Focus node = highest priority
-            if (node.id === focusNodeId) {
-              priority = -1000
-            } else if (
-              // Direct connections = high priority
-              node.data.direction === 'incoming' ||
-              node.data.direction === 'outgoing'
-            ) {
-              priority = node.data.direction === 'incoming' ? 0 : 100
-            } else if (node.data.badges?.some((b) => b.tone === 'danger')) {
-              // Has critical badges = medium priority
-              priority = 200
-            }
-
-            return { node, priority }
-          })
-
-          // Sort by priority and take top N
-          rankedNodes.sort((a, b) => a.priority - b.priority)
-          nodesToRender = rankedNodes
-            .slice(0, MAX_NODES_IN_VIEW)
-            .map((r) => r.node)
-          hiddenCount = filteredNodes.length - nodesToRender.length
-
-          console.warn(
-            `Graph limited: showing ${nodesToRender.length} of ${filteredNodes.length} nodes (${hiddenCount} hidden)`
-          )
-        }
-
-        // Filter edges to only include visible nodes
-        const visibleNodeIds = new Set(nodesToRender.map((n) => n.id))
-        const visibleEdges = edges.filter(
-          (edge) =>
-            visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target)
-        )
+        // No limiting - render all nodes
+        const nodesToRender = filteredNodes
 
         if (totalNodeCount < BATCH_THRESHOLD) {
-          // filteredNodes = renderGraphSync(nodesMap, edges, focusNodeId) // Moved up
-
           console.info(
-            `Graph generated: ${nodesToRender.length} nodes, ${visibleEdges.length} edges`
+            `Graph generated: ${nodesToRender.length} nodes, ${edges.length} edges`
           )
 
           setGraphElements({
             nodes: nodesToRender,
-            edges: visibleEdges,
+            edges,
             focusNodeId: normalizedActual
           })
 
           // Cache the generated graph
           graphCache.current.set(normalizedActual, {
             nodes: nodesToRender,
-            edges: visibleEdges,
+            edges,
             focusNodeId: normalizedActual
           })
 
           console.info(
-            `Graph generated and cached: ${nodesToRender.length} nodes, ${visibleEdges.length} edges`
+            `Graph generated and cached: ${nodesToRender.length} nodes, ${edges.length} edges`
           )
         } else {
           // Large graph: progressive rendering
@@ -434,21 +423,15 @@ export function useGraphGeneration({
             requestAnimationFrame(() => {
               setGraphElements({
                 nodes: nodesToRender,
-                edges: visibleEdges,
+                edges,
                 focusNodeId: normalizedActual
               })
 
               console.info(
-                `Graph fully rendered: ${nodesToRender.length} nodes, ${visibleEdges.length} edges`
+                `Graph fully rendered: ${nodesToRender.length} nodes, ${edges.length} edges`
               )
             })
           })
-        }
-
-        if (hiddenCount > 0) {
-          console.info(
-            `💡 Tip: ${hiddenCount} nodes hidden for performance. Use search or filters to narrow down.`
-          )
         }
 
         return normalizedActual
@@ -460,7 +443,6 @@ export function useGraphGeneration({
       analysisData,
       edgeStyles,
       filesInCycle,
-      highImpactFilesMap,
       orphanFilesSet,
       brokenFilesSet,
       newOrphansSet,

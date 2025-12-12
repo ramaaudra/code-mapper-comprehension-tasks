@@ -18,13 +18,6 @@ function createStableHash(arr: string[]): string {
   return [...arr].sort().join('|')
 }
 
-function createMapHash<K, V>(map: Map<K, V>): string {
-  return Array.from(map.entries())
-    .sort((a, b) => String(a[0]).localeCompare(String(b[0])))
-    .map(([k, v]) => `${k}:${JSON.stringify(v)}`)
-    .join('|')
-}
-
 interface FileAnalysisContextValue {
   // Selection state
   selectedFileId: string | null
@@ -39,7 +32,6 @@ interface FileAnalysisContextValue {
   // Computed data from analysis (memoized)
   filesInCycle: Set<string>
   orphanFilesSet: Set<string>
-  highImpactFilesMap: Map<string, number>
   riskProfileMap: Map<string, FileRiskProfile>
 
   // Simulation results state
@@ -151,27 +143,6 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
     return new Set(analysisData.issues.orphans)
   }, [orphanFilesHash, analysisData?.issues?.orphans])
 
-  // Computed: high impact files
-  const highImpactHash = useMemo(() => {
-    if (!analysisData?.issues?.highImpact) {
-      return ''
-    }
-    return createMapHash(
-      new Map(
-        analysisData.issues.highImpact.map((item) => [item.file, item.indegree])
-      )
-    )
-  }, [analysisData?.issues?.highImpact])
-
-  const highImpactFilesMap = useMemo(() => {
-    if (!analysisData?.issues?.highImpact) {
-      return new Map<string, number>()
-    }
-    return new Map(
-      analysisData.issues.highImpact.map((item) => [item.file, item.indegree])
-    )
-  }, [highImpactHash, analysisData?.issues?.highImpact])
-
   // Computed: risk profile map with path normalization
   const riskAnalysisHash = useMemo(() => {
     return JSON.stringify(riskAnalysis) // Simple stringify for array of objects
@@ -242,7 +213,6 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
       setSearchQuery,
       filesInCycle,
       orphanFilesSet,
-      highImpactFilesMap,
       riskProfileMap,
       brokenFilesSet,
       newOrphansSet,
@@ -257,7 +227,6 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
       searchQuery,
       filesInCycle,
       orphanFilesSet,
-      highImpactFilesMap,
       riskProfileMap,
       brokenFilesSet,
       newOrphansSet,

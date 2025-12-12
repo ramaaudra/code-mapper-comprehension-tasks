@@ -2,11 +2,9 @@ import { Button } from '@/shared/components/ui/button'
 import {
   ArrowDown,
   ArrowRight,
-  Moon,
   PanelLeftClose,
   PanelLeftOpen,
-  Search,
-  Sun
+  Search
 } from '@/shared/components/ui/icons'
 import { Input } from '@/shared/components/ui/input'
 
@@ -21,8 +19,6 @@ interface TopBarProps {
   onLayoutDirectionChange: (direction: 'LR' | 'TB') => void
   viewMode: 'overview' | 'file'
   onShowOverview: () => void
-  theme: string
-  onToggleTheme: () => void
   isTreeCollapsed: boolean
   onToggleTree: () => void
 }
@@ -38,8 +34,6 @@ export function TopBar({
   onLayoutDirectionChange,
   viewMode,
   onShowOverview,
-  theme,
-  onToggleTheme,
   isTreeCollapsed,
   onToggleTree
 }: TopBarProps) {
@@ -131,14 +125,6 @@ export function TopBar({
               Project Overview
             </Button>
           )}
-
-          <Button variant="ghost" size="icon" onClick={onToggleTheme}>
-            {theme === 'light' ? (
-              <Moon className="h-5 w-5" />
-            ) : (
-              <Sun className="h-5 w-5" />
-            )}
-          </Button>
         </div>
       </div>
     </div>

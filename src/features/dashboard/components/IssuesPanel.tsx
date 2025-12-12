@@ -14,12 +14,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/shared/components/ui/dialog'
-import {
-  AlertTriangle,
-  ArrowRight,
-  Flame,
-  Ghost
-} from '@/shared/components/ui/icons'
+import { AlertTriangle, ArrowRight, Ghost } from '@/shared/components/ui/icons'
 import {
   Tooltip,
   TooltipContent,
@@ -49,7 +44,6 @@ const getSeverityColor = (severity: 'high' | 'medium' | 'low'): string => {
 export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
   const [circularDialogOpen, setCircularDialogOpen] = useState(false)
   const [orphansDialogOpen, setOrphansDialogOpen] = useState(false)
-  const [highImpactDialogOpen, setHighImpactDialogOpen] = useState(false)
   if (!data?.issues) {
     return (
       <Card className="h-full">
@@ -68,7 +62,7 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
     )
   }
 
-  const { circularDependencies, orphans, highImpact, summary } = data.issues
+  const { circularDependencies, orphans, summary } = data.issues
 
   // Count by severity
   const severityCounts = circularDependencies.reduce(
@@ -365,130 +359,6 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                 {orphans.length > 4 && (
                   <p className="text-center text-xs text-muted-foreground">
                     +{orphans.length - 4} more files
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          )}
-        </Card>
-
-        {/* High Impact Files */}
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Flame className="h-4 w-4 text-red-500" />
-                <span className="text-sm font-medium">High Impact Files</span>
-              </div>
-              <Dialog
-                open={highImpactDialogOpen}
-                onOpenChange={setHighImpactDialogOpen}
-              >
-                <DialogTrigger asChild>
-                  <Badge
-                    variant="default"
-                    className="cursor-pointer hover:opacity-80"
-                  >
-                    {highImpact.length}
-                  </Badge>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <Flame className="h-5 w-5 text-red-500" />
-                      High Impact Files ({highImpact.length})
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="max-h-96 space-y-2 overflow-y-auto p-2">
-                    {highImpact.length === 0 ? (
-                      <div className="py-8 text-center text-muted-foreground">
-                        <Flame className="mx-auto h-12 w-12 opacity-50" />
-                        <p>No high impact files found.</p>
-                      </div>
-                    ) : (
-                      highImpact.map(
-                        (
-                          item: { file: string; indegree: number },
-                          index: number
-                        ) => (
-                          <TooltipProvider key={index}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onNavigateToFile?.(item.file)
-                                    setHighImpactDialogOpen(false)
-                                  }}
-                                  className="w-full rounded-lg border px-3 py-3 text-left transition hover:border-primary/50 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                                >
-                                  <div className="mb-1 flex items-center justify-between gap-3">
-                                    <span className="flex-1 truncate text-sm font-medium">
-                                      {getBasename(item.file)}
-                                    </span>
-                                    <Badge
-                                      variant="secondary"
-                                      className="shrink-0"
-                                    >
-                                      {item.indegree} deps
-                                    </Badge>
-                                  </div>
-                                  <div className="break-all font-mono text-xs text-muted-foreground leading-tight">
-                                    {getRelativePath(item.file)}
-                                  </div>
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="max-w-sm whitespace-pre-line text-xs">
-                                  {item.file}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )
-                      )
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CardHeader>
-          {highImpact.length > 0 && (
-            <CardContent>
-              <div className="space-y-2">
-                {highImpact.slice(0, 4).map((item, index) => (
-                  <TooltipProvider key={index}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={() => onNavigateToFile?.(item.file)}
-                          className="w-full rounded-md border bg-background px-3 py-2 text-left text-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                        >
-                          <div className="flex items-center justify-between gap-3 mb-1">
-                            <span className="flex-1 truncate font-medium">
-                              {getBasename(item.file)}
-                            </span>
-                            <Badge variant="secondary" className="shrink-0">
-                              {item.indegree} deps
-                            </Badge>
-                          </div>
-                          <span className="block break-all font-mono text-xs text-muted-foreground leading-tight">
-                            {getRelativePath(item.file)}
-                          </span>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-sm whitespace-pre-line text-xs">
-                          {item.file}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ))}
-                {highImpact.length > 4 && (
-                  <p className="text-center text-xs text-muted-foreground">
-                    +{highImpact.length - 4} more files
                   </p>
                 )}
               </div>

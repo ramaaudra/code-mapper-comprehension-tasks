@@ -6,12 +6,7 @@ import {
   DependencyGraph,
   type DependencyNodeData
 } from '@/features/graph'
-import {
-  FileText,
-  Network,
-  ShieldAlert,
-  TrendingUp
-} from '@/shared/components/ui/icons'
+import { FileText, Network, TrendingUp } from '@/shared/components/ui/icons'
 import type { AnalysisData } from '@/shared/types/analysis'
 
 import { IssuesPanel } from './IssuesPanel'
@@ -54,10 +49,6 @@ export const ProjectDashboard = memo(
         averageDependenciesPerFile:
           analysisData?.detailedMetrics?.averageDependenciesPerFile ??
           analysisData?.metrics?.avgDegree ??
-          0,
-        highImpactCount:
-          analysisData?.detailedMetrics?.codebaseHealth?.highImpactCount ??
-          analysisData?.issues?.highImpact?.length ??
           0
       }
 
@@ -79,11 +70,6 @@ export const ProjectDashboard = memo(
               ? `${snapshot.averageDependenciesPerFile}`
               : snapshot.averageDependenciesPerFile,
           icon: <TrendingUp className="h-4 w-4" />
-        },
-        {
-          label: 'High Impact Files',
-          value: snapshot.highImpactCount.toLocaleString(),
-          icon: <ShieldAlert className="h-4 w-4" />
         }
       ]
 

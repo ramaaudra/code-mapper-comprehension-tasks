@@ -213,8 +213,8 @@ export default function MetricsPanel({
     totalFiles,
     totalDependencies,
     averageDependenciesPerFile,
-    mostComplexFiles,
-    mostCriticalFiles,
+    topImporters,
+    mostDependedOn,
     codebaseHealth
   } = detailedMetrics!
 
@@ -243,7 +243,7 @@ export default function MetricsPanel({
           />
           <MetricItem
             icon={<TrendingUp size={16} />}
-            label="Avg. Complexity"
+            label="Avg. Outgoing Dependencies"
             value={`${averageDependenciesPerFile}/file`}
             tooltip="Average number of dependencies per file"
           />
@@ -281,24 +281,17 @@ export default function MetricsPanel({
                 : 'text-green-500'
             }
           />
-          <HealthIndicator
-            value={codebaseHealth.highImpactCount}
-            total={totalFiles}
-            label="High Impact Files"
-            icon={<AlertCircle size={16} />}
-            colorClass="text-blue-500"
-          />
         </CardContent>
       </Card>
 
       <div className="space-y-4">
-        {/* Most Critical Files Card */}
+        {/* Most Depended On Files Card */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-red-500" />
-                <span className="text-sm font-medium">Most Critical Files</span>
+                <span className="text-sm font-medium">Most Depended On</span>
               </div>
               <Dialog
                 open={criticalDialogOpen}
@@ -309,25 +302,25 @@ export default function MetricsPanel({
                     variant="default"
                     className="cursor-pointer hover:opacity-80"
                   >
-                    {mostCriticalFiles.length}
+                    {mostDependedOn.length}
                   </Badge>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <ShieldCheck className="h-5 w-5 text-red-500" />
-                      Most Critical Files ({mostCriticalFiles.length})
+                      Most Depended On ({mostDependedOn.length})
                     </DialogTitle>
                   </DialogHeader>
                   <div className="max-h-96 overflow-y-auto p-2">
-                    {mostCriticalFiles.length === 0 ? (
+                    {mostDependedOn.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
                         <ShieldCheck className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p>No critical files identified</p>
+                        <p>No highly depended files identified</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        {mostCriticalFiles.map((item, index) => (
+                        {mostDependedOn.map((item, index) => (
                           <TooltipProvider key={index}>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -372,7 +365,7 @@ export default function MetricsPanel({
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {mostCriticalFiles.slice(0, 3).map((item, index) => (
+              {mostDependedOn.slice(0, 3).map((item, index) => (
                 <FileListItem
                   key={index}
                   file={item.file}
@@ -381,22 +374,22 @@ export default function MetricsPanel({
                   onSelect={onSelectFile}
                 />
               ))}
-              {mostCriticalFiles.length > 3 && (
+              {mostDependedOn.length > 3 && (
                 <div className="py-2 text-center text-xs text-muted-foreground">
-                  +{mostCriticalFiles.length - 3} more files
+                  +{mostDependedOn.length - 3} more files
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Most Complex Files Card */}
+        {/* Top Importers Card */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Puzzle className="h-4 w-4 text-blue-500" />
-                <span className="text-sm font-medium">Most Complex Files</span>
+                <span className="text-sm font-medium">Top Importers</span>
               </div>
               <Dialog
                 open={complexDialogOpen}
@@ -407,25 +400,25 @@ export default function MetricsPanel({
                     variant="default"
                     className="cursor-pointer hover:opacity-80"
                   >
-                    {mostComplexFiles.length}
+                    {topImporters.length}
                   </Badge>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Puzzle className="h-5 w-5 text-blue-500" />
-                      Most Complex Files ({mostComplexFiles.length})
+                      Top Importers ({topImporters.length})
                     </DialogTitle>
                   </DialogHeader>
                   <div className="max-h-96 overflow-y-auto p-2">
-                    {mostComplexFiles.length === 0 ? (
+                    {topImporters.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
                         <Puzzle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p>No complex files identified</p>
+                        <p>No top importers identified</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        {mostComplexFiles.map((item, index) => (
+                        {topImporters.map((item, index) => (
                           <TooltipProvider key={index}>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -470,7 +463,7 @@ export default function MetricsPanel({
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {mostComplexFiles.slice(0, 3).map((item, index) => (
+              {topImporters.slice(0, 3).map((item, index) => (
                 <FileListItem
                   key={index}
                   file={item.file}
@@ -479,9 +472,9 @@ export default function MetricsPanel({
                   onSelect={onSelectFile}
                 />
               ))}
-              {mostComplexFiles.length > 3 && (
+              {topImporters.length > 3 && (
                 <div className="py-2 text-center text-xs text-muted-foreground">
-                  +{mostComplexFiles.length - 3} more files
+                  +{topImporters.length - 3} more files
                 </div>
               )}
             </div>

@@ -42,6 +42,7 @@ export interface DependencyNodeData extends Record<string, unknown> {
     tone: 'info' | 'warning' | 'danger' | 'success'
   }>
   isHovered?: boolean
+  isSimplified?: boolean
 }
 
 export interface DependencyEdgeData extends Record<string, unknown> {
@@ -160,9 +161,10 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
   const direction = (data.direction ??
     'placeholder') as DependencyNodeData['direction']
 
-  // Get quality from context or estimate based on data
-  // For simplicity, we'll add conditional rendering based on badge count
-  const shouldShowAllBadges = (data.badges?.length || 0) < 3
+  // Simplified mode for large graphs - show max 1 badge
+  const isSimplified = data.isSimplified === true
+  const maxBadges = isSimplified ? 1 : 3
+  const shouldShowAllBadges = (data.badges?.length || 0) <= maxBadges
 
   const backgroundTone: Record<DependencyNodeData['direction'], string> = {
     selected:
@@ -185,7 +187,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
   return (
     <div
       className={clsx(
-        'rounded-xl border px-4 py-3 shadow-sm backdrop-blur-sm transition-colors duration-200',
+        'rounded-lg border px-4 py-3 transition-colors duration-100',
         'text-left min-w-[220px] max-w-[280px] flex flex-col gap-2',
         backgroundTone[direction],
         data.isHovered &&
@@ -299,6 +301,7 @@ function DependencyGraphInner({
   isLayoutTransitioning = false
 }: DependencyGraphProps) {
   const quality = useAdaptiveQuality(nodes.length)
+  const [showMiniMap, setShowMiniMap] = useState(false)
 
   const layoutedNodes = useMemo(() => {
     if (isLayoutTransitioning) {
@@ -461,7 +464,7 @@ function DependencyGraphInner({
         panOnDrag
         panOnScroll
         selectionOnDrag={false}
-        className="bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950"
+        className="bg-slate-50 dark:bg-slate-900"
       >
         <Background
           variant={BackgroundVariant.Dots}
@@ -469,29 +472,31 @@ function DependencyGraphInner({
           size={1}
           className="opacity-40"
         />
-        <MiniMap
-          pannable
-          zoomable
-          className="!bg-white/80 dark:!bg-slate-900/70 backdrop-blur-md"
-          nodeStrokeColor={(n: DependencyFlowNode) =>
-            n.data.direction === 'selected'
-              ? '#059669'
-              : n.data.direction === 'incoming'
-                ? '#2563eb'
-                : n.data.direction === 'outgoing'
-                  ? '#d97706'
-                  : '#64748b'
-          }
-          nodeColor={(n: DependencyFlowNode) =>
-            n.data.direction === 'selected'
-              ? '#bbf7d0'
-              : n.data.direction === 'incoming'
-                ? '#dbeafe'
-                : n.data.direction === 'outgoing'
-                  ? '#fef3c7'
-                  : '#e2e8f0'
-          }
-        />
+        {showMiniMap && (
+          <MiniMap
+            pannable
+            zoomable
+            className="!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-700"
+            nodeStrokeColor={(n: DependencyFlowNode) =>
+              n.data.direction === 'selected'
+                ? '#059669'
+                : n.data.direction === 'incoming'
+                  ? '#2563eb'
+                  : n.data.direction === 'outgoing'
+                    ? '#d97706'
+                    : '#64748b'
+            }
+            nodeColor={(n: DependencyFlowNode) =>
+              n.data.direction === 'selected'
+                ? '#bbf7d0'
+                : n.data.direction === 'incoming'
+                  ? '#dbeafe'
+                  : n.data.direction === 'outgoing'
+                    ? '#fef3c7'
+                    : '#e2e8f0'
+            }
+          />
+        )}
       </ReactFlow>
 
       <ZoomIndicator />
@@ -503,6 +508,8 @@ function DependencyGraphInner({
           reactFlow.setViewport({ x: 0, y: 0, zoom: 1 }, { duration: 200 })
         }
         onFitToScreen={() => reactFlow.fitView({ padding: 0.2, duration: 200 })}
+        showMiniMap={showMiniMap}
+        onToggleMiniMap={() => setShowMiniMap((prev) => !prev)}
       />
     </div>
   )

@@ -34,8 +34,6 @@ function AppContent() {
   const {
     layoutDirection,
     setLayoutDirection,
-    theme,
-    toggleTheme,
     treeRef,
     selectedFileId,
     hoveredFile,
@@ -85,8 +83,6 @@ function AppContent() {
         onLayoutDirectionChange={setLayoutDirection}
         viewMode={viewMode}
         onShowOverview={handleShowOverview}
-        theme={theme}
-        onToggleTheme={toggleTheme}
         isTreeCollapsed={isTreeCollapsed}
         onToggleTree={toggleTreeView}
       />
@@ -184,7 +180,7 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="code-mapper-theme">
+    <ThemeProvider>
       <FileAnalysisProvider>
         <AppContent />
       </FileAnalysisProvider>

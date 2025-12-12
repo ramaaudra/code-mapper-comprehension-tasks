@@ -23,11 +23,10 @@ export interface DetailedMetrics {
   totalFiles: number
   totalDependencies: number
   averageDependenciesPerFile: number
-  mostComplexFiles: { file: string; outdegree: number }[]
-  mostCriticalFiles: { file: string; indegree: number }[]
+  topImporters: { file: string; outdegree: number }[]
+  mostDependedOn: { file: string; indegree: number }[]
   codebaseHealth: {
     orphanCount: number
-    highImpactCount: number
     circularCount: number
   }
 }
@@ -35,7 +34,6 @@ export interface DetailedMetrics {
 export interface AnalysisIssues {
   circularDependencies: CircularDependencyInfo[]
   orphans: string[]
-  highImpact: { file: string; indegree: number }[]
   summary: string
 }
 

@@ -10,6 +10,8 @@ export interface DependencyNodeData extends Record<string, unknown> {
     tone: 'info' | 'warning' | 'danger' | 'success'
   }>
   isHovered?: boolean
+  // Simplified mode for large graph optimization
+  isSimplified?: boolean
 }
 
 export interface DependencyEdgeData extends Record<string, unknown> {

@@ -14,3 +14,4 @@ export type {
   DependencyGraphData,
   LayoutDirection
 } from './types/graph'
+export { EDGE_THRESHOLDS, QUALITY_THRESHOLDS } from './constants'

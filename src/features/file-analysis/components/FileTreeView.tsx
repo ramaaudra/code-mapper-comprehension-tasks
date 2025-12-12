@@ -1,13 +1,11 @@
 import { forwardRef, memo } from 'react'
 import { Tree, TreeApi } from 'react-arborist'
 
-import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
   AlertTriangle,
   Bomb,
   File,
-  Flame,
   Folder,
   FolderOpen,
   Ghost,
@@ -26,7 +24,6 @@ import { useFileAnalysisContext } from '../context/FileAnalysisContext'
 // Node Renderer Kustom untuk menampilkan ikon
 const createNodeRenderer = (
   filesInCycle: Set<string>,
-  highImpactFilesMap: Map<string, number>,
   orphanFilesSet: Set<string>,
   riskProfileMap: Map<string, FileRiskProfile>,
   hoveredFile: string | null,
@@ -40,7 +37,6 @@ const createNodeRenderer = (
   memo(({ node, style, dragHandle }: any) => {
     const Icon = node.isLeaf ? File : node.isOpen ? FolderOpen : Folder
     const isInCycle = filesInCycle.has(node.id)
-    const highImpactData = highImpactFilesMap.get(node.id)
     const isOrphan = orphanFilesSet.has(node.id)
     const isHovered = hoveredFile === node.id
     const isBroken = brokenFilesSet.has(node.id)
@@ -58,8 +54,8 @@ const createNodeRenderer = (
             ? 'bg-blue-50 dark:bg-blue-900/20 border-r-2 border-blue-500'
             : ''
         } ${isInCycle ? 'bg-orange-50 dark:bg-orange-900/20' : ''} ${
-          highImpactData ? 'bg-red-50 dark:bg-red-900/20' : ''
-        } ${isOrphan ? 'bg-gray-50 dark:bg-gray-900/20' : ''} ${
+          isOrphan ? 'bg-gray-50 dark:bg-gray-900/20' : ''
+        } ${
           isBroken || isNewOrphan
             ? 'bg-red-100 dark:bg-red-900/30 ring-2 ring-red-300 dark:ring-red-600'
             : ''
@@ -108,11 +104,9 @@ const createNodeRenderer = (
           className={`truncate text-sm ${
             isInCycle
               ? 'text-orange-700 dark:text-orange-300 font-medium'
-              : highImpactData
-                ? 'text-red-700 dark:text-red-300 font-semibold'
-                : isOrphan
-                  ? 'text-gray-500 dark:text-gray-400 italic'
-                  : 'text-slate-700 dark:text-slate-300'
+              : isOrphan
+                ? 'text-gray-500 dark:text-gray-400 italic'
+                : 'text-slate-700 dark:text-slate-300'
           }`}
         >
           {node.data.name}
@@ -120,28 +114,6 @@ const createNodeRenderer = (
 
         {/* Status indicators container */}
         <div className="flex items-center gap-1 ml-auto">
-          {/* High Impact File indicator */}
-          {highImpactData && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="flex items-center gap-1">
-                  <Flame className="h-4 w-4 text-red-500" />
-                  <Badge
-                    variant="destructive"
-                    className="text-xs px-1 py-0 h-4"
-                  >
-                    {highImpactData}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p className="text-xs">
-                    🔥 High-Impact: Diimpor oleh {highImpactData} file lain
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-
           {/* Orphan File indicator */}
           {isOrphan && (
             <TooltipProvider>
@@ -243,7 +215,7 @@ const createNodeRenderer = (
         </div>
 
         {/* File type indicator - only show if no other indicators */}
-        {node.isLeaf && !isInCycle && !highImpactData && !isOrphan && (
+        {node.isLeaf && !isInCycle && !isOrphan && (
           <div
             className="w-2 h-2 rounded-full ml-auto"
             style={{
@@ -309,7 +281,6 @@ export const FileTreeView = forwardRef<
     setHoveredFile,
     searchQuery,
     filesInCycle,
-    highImpactFilesMap,
     orphanFilesSet,
     riskProfileMap,
     brokenFilesSet,
@@ -319,7 +290,6 @@ export const FileTreeView = forwardRef<
 
   const NodeRenderer = createNodeRenderer(
     filesInCycle,
-    highImpactFilesMap,
     orphanFilesSet,
     riskProfileMap,
     hoveredFile,
