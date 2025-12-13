@@ -8,7 +8,6 @@ import { useAppLogic } from '@/hooks/useAppLogic'
 import {
   AppLayout,
   Sidebar,
-  StatsBar,
   TopBar
 } from '@/shared/components/layouts'
 import { ThemeProvider } from '@/shared/components/providers/ThemeProvider'
@@ -85,24 +84,21 @@ function AppContent() {
         onShowOverview={handleShowOverview}
         isTreeCollapsed={isTreeCollapsed}
         onToggleTree={toggleTreeView}
+        fileCount={
+          analysisData
+            ? Object.keys(analysisData.dependencyMap).length
+            : undefined
+        }
+        analysisLoadedAt={analysisLoadedAt}
       />
 
-      {analysisData && (
-        <StatsBar
-          fileCount={Object.keys(analysisData.dependencyMap).length}
-          selectedFileId={selectedFileId}
-          selectedNodeId={selectedNode?.id}
-          analysisLoadedAt={analysisLoadedAt}
-        />
-      )}
-
-      <div className="flex h-[calc(100vh-140px)] overflow-hidden w-full">
+      <div className="flex h-[calc(100vh-56px)] overflow-hidden w-full">
         <Sidebar isCollapsed={isTreeCollapsed}>
           {analysisData && (
             <Suspense
               fallback={
                 <div className="h-full flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-emerald-500 border-t-transparent" />
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
                 </div>
               }
             >
@@ -132,15 +128,15 @@ function AppContent() {
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
-                <div className="w-24 h-24 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 opacity-20">
-                  <div className="w-12 h-12 bg-white rounded-full opacity-90"></div>
+                <div className="w-24 h-24 bg-primary/15 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-12 h-12 bg-primary/50 rounded-full" />
                 </div>
-                <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <h2 className="text-xl font-semibold text-foreground mb-2">
                   Menunggu data analisis
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                <p className="text-muted-foreground max-w-md mx-auto">
                   Jalankan perintah{' '}
-                  <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-800 rounded">
+                  <code className="px-1 py-0.5 bg-muted rounded">
                     code-mapper analyze &lt;path-proyek&gt;
                   </code>{' '}
                   di terminal Anda.
@@ -151,11 +147,11 @@ function AppContent() {
         </div>
 
         {analysisData && viewMode === 'file' && selectedNode && (
-          <div className="w-96 border-l border-slate-200 dark:border-slate-800 overflow-hidden">
+          <div className="w-96 border-l border-border overflow-hidden">
             <Suspense
               fallback={
-                <div className="h-full flex items-center justify-center bg-white dark:bg-slate-900">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-emerald-500 border-t-transparent" />
+                <div className="h-full flex items-center justify-center bg-background">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
                 </div>
               }
             >
