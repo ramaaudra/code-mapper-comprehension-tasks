@@ -1,10 +1,12 @@
 import { forwardRef, memo } from 'react'
 import { Tree, TreeApi } from 'react-arborist'
 
+import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
   AlertTriangle,
   Bomb,
+  ChevronRight,
   File,
   Folder,
   FolderOpen,
@@ -21,7 +23,7 @@ import type { FileRiskProfile } from '@/shared/types/risk'
 
 import { useFileAnalysisContext } from '../context/FileAnalysisContext'
 
-// Node Renderer Kustom untuk menampilkan ikon
+// Node Renderer - Clean Minimalist Style
 const createNodeRenderer = (
   filesInCycle: Set<string>,
   orphanFilesSet: Set<string>,
@@ -45,25 +47,18 @@ const createNodeRenderer = (
     const riskProfile =
       riskProfileMap.get(normalizedNodeId) || riskProfileMap.get(node.id)
 
+    // Determine if file has any status
+    const hasStatus = isInCycle || isOrphan || isBroken || isNewOrphan
+    const isHighRisk = riskProfile && (riskProfile.category === 'Kritis' || riskProfile.category === 'Tinggi')
+
     return (
       <div
         style={style}
         ref={dragHandle}
-        className={`group flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded-md transition-colors ${
-          node.isSelected
-            ? 'bg-blue-50 dark:bg-blue-900/20 border-r-2 border-blue-500'
-            : ''
-        } ${isInCycle ? 'bg-orange-50 dark:bg-orange-900/20' : ''} ${
-          isOrphan ? 'bg-gray-50 dark:bg-gray-900/20' : ''
-        } ${
-          isBroken || isNewOrphan
-            ? 'bg-red-100 dark:bg-red-900/30 ring-2 ring-red-300 dark:ring-red-600'
-            : ''
-        } ${
-          isHovered
-            ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-300 dark:ring-blue-600'
-            : ''
-        }`}
+        className={`group flex items-center gap-2 cursor-pointer rounded-md transition-colors h-8 px-2 ${node.isSelected
+          ? 'bg-primary/5 border-l-2 border-primary'
+          : 'hover:bg-muted border-l-2 border-transparent'
+          } ${isHovered && !node.isSelected ? 'bg-muted' : ''}`}
         onClick={() => {
           if (node.isLeaf) {
             node.select()
@@ -82,119 +77,114 @@ const createNodeRenderer = (
           }
         }}
       >
-        {riskProfile && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <div
-                  className={`h-2.5 w-2.5 rounded-full ${getRiskColor(riskProfile.category)}`}
-                />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">
-                  Risiko Refactor: {riskProfile.category} (Skor:{' '}
-                  {riskProfile.score})
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+        {/* Chevron for folders */}
+        {!node.isLeaf && (
+          <ChevronRight
+            className={`h-3 w-3 text-muted-foreground shrink-0 transition-transform ${node.isOpen ? 'rotate-90' : ''
+              }`}
+          />
         )}
-        <Icon className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
-        <span
-          className={`truncate text-sm ${
-            isInCycle
-              ? 'text-orange-700 dark:text-orange-300 font-medium'
-              : isOrphan
-                ? 'text-gray-500 dark:text-gray-400 italic'
-                : 'text-slate-700 dark:text-slate-300'
-          }`}
-        >
+
+        {/* File/Folder icon - neutral color */}
+        <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+
+        {/* Filename */}
+        <span className="truncate text-sm text-foreground flex-1">
           {node.data.name}
         </span>
 
-        {/* Status indicators container */}
-        <div className="flex items-center gap-1 ml-auto">
-          {/* Orphan File indicator */}
-          {isOrphan && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Ghost className="h-4 w-4 text-gray-500" />
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p className="text-xs">
-                    👻 Orphan: Tidak diimpor oleh file lain
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-
-          {/* Circular dependency warning */}
-          {isInCycle && (
-            <TooltipProvider>
+        {/* Status indicators - only show on hover or if selected, except for high-risk items */}
+        <div className={`flex items-center gap-1 ${(node.isSelected || isHovered || isHighRisk || hasStatus) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          } transition-opacity`}>
+          {/* Risk badge - outline style */}
+          {riskProfile && (node.isSelected || isHovered || isHighRisk) && (
+            <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0" />
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+                    {riskProfile.category === 'Kritis' ? 'K' :
+                      riskProfile.category === 'Tinggi' ? 'T' :
+                        riskProfile.category === 'Sedang' ? 'S' : 'R'}
+                  </Badge>
                 </TooltipTrigger>
                 <TooltipContent side="right">
                   <p className="text-xs">
-                    ⚠️ File ini terlibat dalam dependensi melingkar
+                    Risk: {riskProfile.category} (Score: {riskProfile.score})
                   </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
 
-          {/* Simulation result indicators */}
+          {/* Orphan indicator */}
+          {isOrphan && (
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Ghost className="h-3.5 w-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p className="text-xs">Orphan: Not imported by any file</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {/* Circular dependency */}
+          {isInCycle && (
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p className="text-xs">Circular dependency detected</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {/* Broken by simulation */}
           {isBroken && (
-            <TooltipProvider>
+            <TooltipProvider delayDuration={300}>
               <Tooltip>
-                <TooltipTrigger>
-                  <Bomb className="h-4 w-4 text-red-600" />
+                <TooltipTrigger asChild>
+                  <Bomb className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent side="right">
-                  <p className="text-xs">
-                    💣 Akan rusak jika file yang disimulasi dihapus
-                  </p>
+                  <p className="text-xs">Will break if simulated file is deleted</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
 
+          {/* New orphan by simulation */}
           {isNewOrphan && (
-            <TooltipProvider>
+            <TooltipProvider delayDuration={300}>
               <Tooltip>
-                <TooltipTrigger>
-                  <Ghost className="h-4 w-4 text-yellow-600" />
+                <TooltipTrigger asChild>
+                  <Ghost className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent side="right">
-                  <p className="text-xs">
-                    👻 Akan menjadi orphan jika file yang disimulasi dihapus
-                  </p>
+                  <p className="text-xs">Will become orphan if simulated file is deleted</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
 
-          {/* Simulation button - only visible on hover for files */}
+          {/* Delete simulation button - only on hover */}
           {node.isLeaf && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-              <TooltipProvider>
+              <TooltipProvider delayDuration={300}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
+                      className="h-5 w-5"
                       disabled={isSimulating}
                       onClick={(e) => {
-                        e.stopPropagation() // Prevent tree selection
-                        console.info(
-                          '🎯 Simulating delete for node ID:',
-                          node.id
-                        )
-                        console.info('Node data:', node.data)
+                        e.stopPropagation()
                         onSimulateDelete(node.id)
                       }}
                     >
@@ -206,61 +196,16 @@ const createNodeRenderer = (
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="right">
-                    <p className="text-xs">🗑️ Simulasi Penghapusan</p>
+                    <p className="text-xs">Simulate deletion</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
           )}
         </div>
-
-        {/* File type indicator - only show if no other indicators */}
-        {node.isLeaf && !isInCycle && !isOrphan && (
-          <div
-            className="w-2 h-2 rounded-full ml-auto"
-            style={{
-              backgroundColor: getFileTypeColor(node.data.name)
-            }}
-          />
-        )}
       </div>
     )
   })
-
-const getRiskColor = (category: FileRiskProfile['category']): string => {
-  switch (category) {
-    case 'Kritis':
-      return 'bg-red-500'
-    case 'Tinggi':
-      return 'bg-orange-500'
-    case 'Sedang':
-      return 'bg-yellow-500'
-    default:
-      return 'bg-green-500'
-  }
-}
-
-// Helper function untuk menentukan warna berdasarkan ekstensi file
-const getFileTypeColor = (fileName: string): string => {
-  const ext = fileName.split('.').pop()?.toLowerCase()
-  switch (ext) {
-    case 'ts':
-    case 'tsx':
-      return '#3178c6'
-    case 'js':
-    case 'jsx':
-      return '#f7df1e'
-    case 'css':
-    case 'scss':
-      return '#1572b6'
-    case 'json':
-      return '#000000'
-    case 'md':
-      return '#083fa1'
-    default:
-      return '#64748b'
-  }
-}
 
 interface FileTreeViewProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -274,7 +219,7 @@ export const FileTreeView = forwardRef<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TreeApi<any> | undefined,
   FileTreeViewProps
->(({ data, onFileSelect, onSimulateDelete = () => {}, onFileHover }, ref) => {
+>(({ data, onFileSelect, onSimulateDelete = () => { }, onFileHover }, ref) => {
   // Get all status data from context
   const {
     hoveredFile,
@@ -307,49 +252,51 @@ export const FileTreeView = forwardRef<
 
   if (!data || data.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-slate-500 dark:text-slate-400">
+      <div className="h-full flex items-center justify-center text-muted-foreground">
         <div className="text-center">
           <Folder className="h-12 w-12 mx-auto mb-2 opacity-50" />
-          <p>No files to display</p>
+          <p className="text-sm">No files to display</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800">
-      {/* Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-          Project Files
-        </h3>
+    <div className="h-full flex flex-col bg-background">
+      {/* Section Label */}
+      <div className="px-4 py-3">
+        <span className="text-xs font-medium text-muted-foreground tracking-wider uppercase">
+          File Explorer
+        </span>
       </div>
 
       {/* Tree */}
-      <div className="p-2">
-        <Tree
-          ref={ref}
-          data={data}
-          width="100%"
-          height={800}
-          rowHeight={28}
-          indent={16}
-          openByDefault={false}
-          searchTerm={searchQuery}
-          onSelect={(nodes) => {
-            const selectedNode = nodes[0]
-            if (!selectedNode) {
-              return
-            }
-            if (selectedNode?.isLeaf) {
-              onFileSelect(selectedNode.id)
-            } else {
-              onFileSelect(null)
-            }
-          }}
-        >
-          {NodeRenderer}
-        </Tree>
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-2 pb-4">
+          <Tree
+            ref={ref}
+            data={data}
+            width="100%"
+            height={800}
+            rowHeight={32}
+            indent={16}
+            openByDefault={false}
+            searchTerm={searchQuery}
+            onSelect={(nodes) => {
+              const selectedNode = nodes[0]
+              if (!selectedNode) {
+                return
+              }
+              if (selectedNode?.isLeaf) {
+                onFileSelect(selectedNode.id)
+              } else {
+                onFileSelect(null)
+              }
+            }}
+          >
+            {NodeRenderer}
+          </Tree>
+        </div>
       </div>
     </div>
   )

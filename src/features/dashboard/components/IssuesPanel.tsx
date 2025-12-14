@@ -33,11 +33,11 @@ interface IssuesPanelProps {
 const getSeverityColor = (severity: 'high' | 'medium' | 'low'): string => {
   switch (severity) {
     case 'high':
-      return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400'
+      return 'bg-muted text-muted-foreground border-border'
     case 'medium':
-      return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400'
+      return 'bg-muted text-muted-foreground border-border'
     case 'low':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400'
+      return 'bg-muted text-muted-foreground border-border'
   }
 }
 
@@ -97,7 +97,7 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-orange-500" />
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">Circular Dependencies</span>
             </div>
             <Dialog
@@ -262,7 +262,7 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Ghost className="h-4 w-4 text-gray-500" />
+                <Ghost className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">Orphaned Files</span>
               </div>
               <Dialog
@@ -338,7 +338,7 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                         <button
                           type="button"
                           onClick={() => onNavigateToFile?.(file)}
-                          className="w-full rounded-md border bg-background px-3 py-2 text-left text-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                          className="w-full rounded-md border bg-background px-3 py-2 text-left text-sm transition hover:border-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                         >
                           <span className="block truncate font-medium">
                             {getBasename(file)}

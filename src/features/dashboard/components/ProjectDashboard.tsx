@@ -74,13 +74,13 @@ export const ProjectDashboard = memo(
       ]
 
       return (
-        <div className="h-full overflow-y-auto overflow-x-hidden bg-white dark:bg-slate-900 w-full">
+        <div className="h-full overflow-y-auto overflow-x-hidden bg-background w-full">
           <div className="max-w-full mx-auto px-6 md:px-8 lg:px-12 py-6 pb-12 space-y-8">
             <div className="space-y-2">
-              <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">
+              <h1 className="text-2xl font-semibold text-foreground">
                 Project Overview
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 Dependency analysis summary and repair priorities for your
                 project.
               </p>
@@ -90,13 +90,13 @@ export const ProjectDashboard = memo(
               {overviewCards.map(({ label, value, icon }) => (
                 <div
                   key={label}
-                  className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/60"
+                  className="rounded-lg border bg-card p-4"
                 >
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{label}</span>
                     {icon}
                   </div>
-                  <div className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                  <div className="mt-3 text-2xl font-semibold text-foreground">
                     {value}
                   </div>
                 </div>
@@ -123,7 +123,7 @@ export const ProjectDashboard = memo(
     }
 
     return (
-      <div className="h-full bg-white dark:bg-slate-900">
+      <div className="h-full bg-background">
         <DependencyGraph
           nodes={dependencyGraph.nodes}
           edges={dependencyGraph.edges}
@@ -141,7 +141,7 @@ export const ProjectDashboard = memo(
     if (next.viewMode === 'overview') {
       return (
         prev.analysisData?.metrics?.fileCount ===
-          next.analysisData?.metrics?.fileCount &&
+        next.analysisData?.metrics?.fileCount &&
         prev.viewMode === next.viewMode
       )
     }

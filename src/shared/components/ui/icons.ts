@@ -8,6 +8,7 @@ export {
   ArrowRight,
   ChartBar as BarChart3,
   Bomb,
+  CaretRight as ChevronRight,
   Copy,
   File,
   FileText,
