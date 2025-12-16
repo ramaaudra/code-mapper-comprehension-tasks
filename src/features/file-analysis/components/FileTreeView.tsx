@@ -82,10 +82,11 @@ const createNodeRenderer = (
       <div
         style={style}
         ref={dragHandle}
-        className={`group flex items-center gap-2 cursor-pointer rounded-md transition-colors h-8 px-2 ${node.isSelected
-          ? 'bg-primary/5 border-l-2 border-primary'
-          : 'hover:bg-muted border-l-2 border-transparent'
-          } ${isHovered && !node.isSelected ? 'bg-muted' : ''}`}
+        className={`group flex items-center gap-2 cursor-pointer rounded-md transition-colors h-8 px-2 ${
+          node.isSelected
+            ? 'bg-primary/5 border-l-2 border-primary'
+            : 'hover:bg-muted border-l-2 border-transparent'
+        } ${isHovered && !node.isSelected ? 'bg-muted' : ''}`}
         onClick={() => {
           if (node.isLeaf) {
             node.select()
@@ -107,8 +108,9 @@ const createNodeRenderer = (
         {/* Chevron for folders */}
         {!node.isLeaf && (
           <ChevronRight
-            className={`h-3 w-3 text-muted-foreground shrink-0 transition-transform ${node.isOpen ? 'rotate-90' : ''
-              }`}
+            className={`h-3 w-3 text-muted-foreground shrink-0 transition-transform ${
+              node.isOpen ? 'rotate-90' : ''
+            }`}
           />
         )}
 
@@ -122,10 +124,11 @@ const createNodeRenderer = (
 
         {/* Status indicators - only show on hover or if selected, except for high-risk items */}
         <div
-          className={`flex items-center gap-1 ${node.isSelected || isHovered || isHighRisk || hasStatus
-            ? 'opacity-100'
-            : 'opacity-0 group-hover:opacity-100'
-            } transition-opacity`}
+          className={`flex items-center gap-1 ${
+            node.isSelected || isHovered || isHighRisk || hasStatus
+              ? 'opacity-100'
+              : 'opacity-0 group-hover:opacity-100'
+          } transition-opacity`}
         >
           {/* Risk badge - outline style */}
           {riskProfile && (node.isSelected || isHovered || isHighRisk) && (
@@ -261,7 +264,7 @@ export const FileTreeView = forwardRef<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TreeApi<any> | undefined,
   FileTreeViewProps
->(({ data, onFileSelect, onSimulateDelete = () => { }, onFileHover }, ref) => {
+>(({ data, onFileSelect, onSimulateDelete = () => {}, onFileHover }, ref) => {
   // Get all status data from context
   const {
     hoveredFile,

@@ -228,7 +228,9 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
         <div className="flex items-center gap-2">
           {(() => {
             const FileIcon = getFileIcon(data.label)
-            return <FileIcon size={16} className="shrink-0 text-muted-foreground" />
+            return (
+              <FileIcon size={16} className="shrink-0 text-muted-foreground" />
+            )
           })()}
           <div>
             <div className="text-sm font-semibold text-[hsl(var(--foreground))] break-words">
