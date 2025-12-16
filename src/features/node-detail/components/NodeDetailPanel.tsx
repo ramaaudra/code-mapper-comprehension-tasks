@@ -4,12 +4,6 @@ import { memo, useMemo, useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from '@/shared/components/ui/card'
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -19,11 +13,18 @@ import {
   ArrowLeft,
   ArrowRight,
   Copy,
-  FileText,
   Focus,
+  FileText,
   Map,
   X
 } from '@/shared/components/ui/icons'
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from '@/shared/components/ui/tabs'
 import {
   Tooltip,
   TooltipContent,
@@ -63,16 +64,11 @@ const NodeDetailPanel = memo(
       null
     )
 
-    // Pagination state for virtualization
-    const [showAllImporters, setShowAllImporters] = useState(false)
-    const [showAllImports, setShowAllImports] = useState(false)
-    const PAGE_SIZE = 10
-
-    // Handle both old node object format and new node ID format - BEFORE any return
+    // Handle both old node object format and new node ID format
     const nodeId = typeof node === 'string' ? node : node.id
     const nodeData = data?.nodes?.find((n: any) => n.id === nodeId)
 
-    // Calculate indegree and outdegree - BEFORE any return
+    // Calculate indegree and outdegree
     const incomingEdges = useMemo(() => {
       if (!data?.edges || !nodeId) {
         return []
@@ -90,7 +86,7 @@ const NodeDetailPanel = memo(
     const indegree = incomingEdges.length
     const outdegree = outgoingEdges.length
 
-    // Get importers (files that import this file) - ALL HOOKS MUST BE BEFORE RETURN
+    // Get importers (files that import this file)
     const importers = useMemo(
       () =>
         incomingEdges.map((e: any) => {
@@ -124,15 +120,6 @@ const NodeDetailPanel = memo(
       [outgoingEdges, data?.nodes]
     )
 
-    const visibleImporters = useMemo(() => {
-      return showAllImporters ? importers : importers.slice(0, PAGE_SIZE)
-    }, [importers, showAllImporters])
-
-    const visibleImports = useMemo(() => {
-      return showAllImports ? imports : imports.slice(0, PAGE_SIZE)
-    }, [imports, showAllImports])
-
-    // NOW safe to return early - AFTER all hooks
     if (!node || !data || !nodeData) {
       return null
     }
@@ -147,8 +134,6 @@ const NodeDetailPanel = memo(
         setShowCopyMenu(false)
       }, 2000)
     }
-
-    const riskBadgeClass = riskProfile ? getRiskColor(riskProfile.category) : ''
 
     const handleTracePath = async (targetFile: string) => {
       setIsTracing(true)
@@ -177,68 +162,94 @@ const NodeDetailPanel = memo(
       return `${(size / (1024 * 1024)).toFixed(1)} MB`
     }
 
-    return (
-      <div className="h-full w-full bg-white dark:bg-slate-900 overflow-y-auto">
-        <div className="p-4 space-y-4">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                File Details
-              </h2>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+    const renderDependencyList = (items: any[], type: 'imports' | 'importers') => {
+      if (items.length === 0) {
+        return (
+          <div className="flex flex-col items-center justify-center h-40 text-muted-foreground text-sm">
+            <p>No {type} found.</p>
           </div>
+        )
+      }
 
-          {/* File Info */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center justify-between">
-                <span className="truncate">{nodeData.basename}</span>
-                <div className="relative shrink-0">
+      return (
+        <ScrollArea className="h-[calc(100vh-200px)] lg:h-[calc(100vh-220px)] w-full">
+          <div className='p-4 space-y-1'>
+            {items.map((item: any) => (
+              <div
+                key={item.id}
+                className="group flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex-1 min-w-0 pr-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium truncate">
+                      {item.basename}
+                    </span>
+                    {item.strength > 1 && (
+                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                        x{item.strength}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate" title={item.label}>
+                    {item.label}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => handleTracePath(item.id)}
+                    disabled={isTracing}
+                    className="p-1.5 rounded-md hover:bg-background border border-transparent hover:border-border text-muted-foreground hover:text-foreground"
+                    title="Trace path"
+                  >
+                    <Map className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      )
+    }
+
+    return (
+      <div className="h-full w-full bg-background flex flex-col">
+        {/* Header */}
+        <div className="flex-none p-4 border-b">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 overflow-hidden">
+              <div className="mt-1 p-1.5 bg-muted rounded-md shrink-0">
+                <FileText className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold truncate" title={nodeData.basename}>
+                  {nodeData.basename}
+                </h2>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <p className="text-xs text-muted-foreground truncate max-w-[240px]" title={nodeData.id}>
+                    {getRelativePath(nodeData.id)}
+                  </p>
                   <TooltipProvider>
                     <Tooltip open={showCopyMenu || copiedType !== null}>
                       <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
+                        <button
                           onClick={() => setShowCopyMenu(!showCopyMenu)}
-                          className="h-6 w-6"
-                          title="Copy path"
+                          className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
                         >
                           <Copy className="h-3 w-3" />
-                        </Button>
+                          <span className="sr-only">Copy path</span>
+                        </button>
                       </TooltipTrigger>
-                      <TooltipContent
-                        side="bottom"
-                        className="p-1 min-w-[120px]"
-                        onPointerDownOutside={() => setShowCopyMenu(false)}
-                      >
+                      <TooltipContent side="bottom" className="p-1 min-w-[120px]" onPointerDownOutside={() => setShowCopyMenu(false)}>
                         {copiedType ? (
                           <div className="px-2 py-1 text-xs text-green-600">
-                            ✓ Copied{' '}
-                            {copiedType === 'full' ? 'full' : 'relative'} path!
+                            ✓ Copied!
                           </div>
                         ) : (
                           <div className="flex flex-col gap-1">
-                            <button
-                              onClick={() => copyPath('full')}
-                              className="px-2 py-1 text-xs text-left hover:bg-accent rounded transition-colors"
-                            >
+                            <button onClick={() => copyPath('full')} className="px-2 py-1 text-xs text-left hover:bg-accent rounded">
                               Copy full path
                             </button>
-                            <button
-                              onClick={() => copyPath('relative')}
-                              className="px-2 py-1 text-xs text-left hover:bg-accent rounded transition-colors"
-                            >
+                            <button onClick={() => copyPath('relative')} className="px-2 py-1 text-xs text-left hover:bg-accent rounded">
                               Copy relative path
                             </button>
                           </div>
@@ -247,297 +258,129 @@ const NodeDetailPanel = memo(
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="text-xs text-slate-600 dark:text-slate-400 font-mono break-all">
-                {getRelativePath(nodeData.label)}
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-500 font-mono break-all border-t pt-2">
-                Full: {nodeData.label}
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600 dark:text-slate-400">
-                  Size:
-                </span>
-                <span className="font-medium">
-                  {formatFileSize(nodeData.size)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 -mr-2 -mt-2">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
 
-          {/* Connection Stats */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Connections</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {indegree}
+        {/* Content */}
+        <Tabs defaultValue="overview" className="flex-1 flex flex-col overflow-hidden">
+          <div className="px-4 pt-2">
+            <TabsList className="w-full justify-start h-9 bg-transparent p-0 border-b rounded-none">
+              <TabsTrigger
+                value="overview"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-2 pt-1.5"
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger
+                value="dependencies"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-2 pt-1.5"
+              >
+                Deps <span className="ml-1.5 text-xs text-muted-foreground bg-muted px-1.5 rounded-full">{outgoingEdges.length}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="dependents"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-2 pt-1.5"
+              >
+                Users <span className="ml-1.5 text-xs text-muted-foreground bg-muted px-1.5 rounded-full">{incomingEdges.length}</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="overview" className="flex-1 overflow-y-auto m-0 p-4 space-y-6">
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="p-3 bg-muted/30 rounded-lg border border-border/50 text-center">
+                <div className="text-2xl font-semibold text-foreground">{formatFileSize(nodeData.size).split(' ')[0]}</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mt-1">{formatFileSize(nodeData.size).split(' ')[1]}</div>
+              </div>
+              <div className="p-3 bg-muted/30 rounded-lg border border-border/50 text-center">
+                <div className="text-2xl font-semibold text-foreground">{indegree}</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mt-1">Users</div>
+              </div>
+              <div className="p-3 bg-muted/30 rounded-lg border border-border/50 text-center">
+                <div className="text-2xl font-semibold text-foreground">{outdegree}</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mt-1">Deps</div>
+              </div>
+            </div>
+
+            {/* Risk Analysis */}
+            {riskProfile && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-foreground">Refactor Risk</h3>
+                <div className="p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline" className={`${getRiskColor(riskProfile.category)} bg-transparent`}>
+                      {riskProfile.category}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">Score: {riskProfile.score}</span>
                   </div>
-                  <div className="text-xs text-slate-600 dark:text-slate-400">
-                    Incoming
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {outdegree}
-                  </div>
-                  <div className="text-xs text-slate-600 dark:text-slate-400">
-                    Outgoing
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">In Cycle</span>
+                      <span className={riskProfile.factors.inCycle ? 'text-destructive font-medium' : 'text-foreground'}>
+                        {riskProfile.factors.inCycle ? 'Yes' : 'No'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
 
-          {riskProfile && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">
-                  Analisis Risiko Refactor
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-center">
-                  <Badge className={`text-lg px-4 py-1 ${riskBadgeClass}`}>
-                    {riskProfile.category}
-                  </Badge>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Skor: {riskProfile.score}
-                  </p>
-                </div>
-                <div className="text-sm space-y-2 pt-2 border-t">
-                  <h4 className="font-semibold">Faktor Pemicu:</h4>
-                  <div className="flex justify-between">
-                    <span>Diimpor oleh (Indegree):</span>{' '}
-                    <span className="font-bold">
-                      {riskProfile.factors.indegree} files
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Mengimpor (Outdegree):</span>{' '}
-                    <span className="font-bold">
-                      {riskProfile.factors.outdegree} files
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Terlibat Siklus:</span>{' '}
-                    <span className="font-bold">
-                      {riskProfile.factors.inCycle ? 'Ya' : 'Tidak'}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Focus Subgraph */}
-          {onFocusSubgraph && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Focus className="h-4 w-4" />
-                  Focus Subgraph
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex gap-2">
+            {/* Actions */}
+            {onFocusSubgraph && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-foreground">Graph Actions</h3>
+                <div className="grid grid-cols-2 gap-2">
                   <Button
-                    variant={
-                      focusDirection === 'inward' ? 'default' : 'outline'
-                    }
+                    variant={focusDirection === 'inward' ? 'secondary' : 'outline'}
                     size="sm"
                     onClick={() => setFocusDirection('inward')}
-                    className="flex-1"
+                    className="w-full justify-start"
                   >
-                    <ArrowLeft className="h-3 w-3 mr-1" />
-                    Inward
+                    <ArrowLeft className="h-3 w-3 mr-2" /> Inward
                   </Button>
                   <Button
-                    variant={
-                      focusDirection === 'outward' ? 'default' : 'outline'
-                    }
+                    variant={focusDirection === 'outward' ? 'secondary' : 'outline'}
                     size="sm"
                     onClick={() => setFocusDirection('outward')}
-                    className="flex-1"
+                    className="w-full justify-start"
                   >
-                    <ArrowRight className="h-3 w-3 mr-1" />
-                    Outward
+                    Outward <ArrowRight className="h-3 w-3 ml-2" />
                   </Button>
                 </div>
                 <Button
+                  variant="default"
+                  size="sm"
                   onClick={() => onFocusSubgraph(nodeId, focusDirection)}
                   className="w-full"
-                  size="sm"
                 >
-                  Focus{' '}
-                  {focusDirection === 'inward' ? 'Dependencies' : 'Dependents'}
+                  <Focus className="h-3 w-3 mr-2" />
+                  Focus {focusDirection === 'inward' ? 'Dependencies' : 'Dependents'} Subgraph
                 </Button>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            )}
+          </TabsContent>
 
-          {/* Importers */}
-          {importers.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">
-                  Imported By ({importers.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {visibleImporters.map((imp: any) => (
-                  <div
-                    key={imp.id}
-                    className="flex items-center justify-between text-sm"
-                  >
-                    <div className="truncate flex-1">
-                      <div className="font-medium text-slate-900 dark:text-slate-100">
-                        {imp.basename}
-                      </div>
-                      <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                        {imp.label} (line: {imp.line})
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Badge
-                              variant={
-                                imp.strength >= 3 ? 'destructive' : 'secondary'
-                              }
-                            >
-                              🔗 {imp.strength}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              Coupling strength: {imp.strength} items imported
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleTracePath(imp.id)}
-                        disabled={isTracing}
-                        title={`Trace path to ${imp.basename}`}
-                      >
-                        <Map className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                      <Badge
-                        variant={
-                          imp.kind === 'dynamic' ? 'default' : 'secondary'
-                        }
-                      >
-                        {imp.kind}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-                {!showAllImporters && importers.length > PAGE_SIZE && (
-                  <Button
-                    onClick={() => setShowAllImporters(true)}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full mt-2"
-                  >
-                    Show {importers.length - PAGE_SIZE} more importers
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          )}
+          <TabsContent value="dependencies" className="flex-1 m-0">
+            {renderDependencyList(imports, 'imports')}
+          </TabsContent>
 
-          {/* Imports */}
-          {imports.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">
-                  Imports ({imports.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {visibleImports.map((imp: any) => (
-                  <div
-                    key={imp.id}
-                    className="flex items-center justify-between text-sm"
-                  >
-                    <div className="truncate flex-1">
-                      <div className="font-medium text-slate-900 dark:text-slate-100">
-                        {imp.basename}
-                      </div>
-                      <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                        {imp.label} (line: {imp.line})
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Badge
-                              variant={
-                                imp.strength >= 3 ? 'destructive' : 'secondary'
-                              }
-                            >
-                              🔗 {imp.strength}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              Coupling strength: {imp.strength} items imported
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleTracePath(imp.id)}
-                        disabled={isTracing}
-                        title={`Trace path to ${imp.basename}`}
-                      >
-                        <Map className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                      <Badge
-                        variant={
-                          imp.kind === 'dynamic' ? 'default' : 'secondary'
-                        }
-                      >
-                        {imp.kind}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-                {!showAllImports && imports.length > PAGE_SIZE && (
-                  <Button
-                    onClick={() => setShowAllImports(true)}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full mt-2"
-                  >
-                    Show {imports.length - PAGE_SIZE} more imports
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
+          <TabsContent value="dependents" className="flex-1 m-0">
+            {renderDependencyList(importers, 'importers')}
+          </TabsContent>
+        </Tabs>
 
-        {/* Modal untuk menampilkan hasil path */}
+        {/* Path Trace Modal */}
         <Dialog open={isPathModalOpen} onOpenChange={setIsPathModalOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Map className="h-5 w-5 text-blue-600" />
+                <Map className="h-5 w-5 text-muted-foreground" />
                 Dependency Path to "{traceTarget}"
               </DialogTitle>
             </DialogHeader>
@@ -545,36 +388,28 @@ const NodeDetailPanel = memo(
               {isTracing ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="text-sm text-muted-foreground">
-                    Mencari jalur dependensi...
+                    Tracing path...
                   </div>
                 </div>
               ) : tracedPath && tracedPath.length > 0 ? (
                 <div className="space-y-4">
                   <div className="text-sm text-muted-foreground mb-3">
-                    Jalur terpendek ditemukan ({tracedPath.length} langkah):
+                    Shortest path found ({tracedPath.length} steps):
                   </div>
                   <div className="flex flex-col gap-2">
                     {tracedPath.map((file, index) => (
                       <div key={index} className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-sm font-medium shrink-0">
+                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground text-xs font-medium shrink-0">
                           {index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-mono text-sm bg-muted p-3 rounded-md truncate">
-                            <div className="font-semibold text-foreground">
-                              {getBasename(file)}
-                            </div>
-                            <div
-                              className="text-xs text-muted-foreground mt-1 truncate"
-                              title={file}
-                            >
-                              {file}
-                            </div>
+                          <div className="font-mono text-sm bg-muted/50 p-2 rounded-md truncate">
+                            {getBasename(file)}
                           </div>
                         </div>
                         {index < tracedPath.length - 1 && (
                           <div className="text-muted-foreground shrink-0">
-                            <ArrowRight className="h-4 w-4" />
+                            <ArrowRight className="h-3 w-3" />
                           </div>
                         )}
                       </div>
@@ -584,12 +419,7 @@ const NodeDetailPanel = memo(
               ) : (
                 <div className="text-center py-8">
                   <div className="text-muted-foreground text-sm">
-                    Tidak ada jalur dependensi langsung yang ditemukan antara
-                    file ini dan "{traceTarget}".
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-2">
-                    File mungkin tidak terhubung secara langsung atau terdapat
-                    circular dependency.
+                    No direct dependency path found.
                   </div>
                 </div>
               )}

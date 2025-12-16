@@ -133,7 +133,9 @@ export function TopBar({
               type="single"
               value={layoutDirection}
               onValueChange={(value: string) => {
-                if (value) onLayoutDirectionChange(value as 'LR' | 'TB')
+                if (value) {
+onLayoutDirectionChange(value as 'LR' | 'TB')
+}
               }}
               size="sm"
             >
