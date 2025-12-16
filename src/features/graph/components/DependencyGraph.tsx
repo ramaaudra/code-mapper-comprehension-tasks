@@ -1,5 +1,16 @@
 import dagre from '@dagrejs/dagre'
 import {
+  CheckCircle,
+  File,
+  FileJs,
+  FileJsx,
+  FileTs,
+  FileTsx,
+  Info,
+  Lightning,
+  Warning
+} from '@phosphor-icons/react'
+import {
   Background,
   BackgroundVariant,
   ConnectionLineType,
@@ -77,6 +88,23 @@ const getBasename = (filePath: string) => {
   const normalized = normalizePath(filePath)
   const segments = normalized.split('/')
   return segments[segments.length - 1]
+}
+
+// Helper function to get icon based on file extension
+const getFileIcon = (fileName: string) => {
+  const extension = fileName.split('.').pop()?.toLowerCase()
+  switch (extension) {
+    case 'ts':
+      return FileTs
+    case 'tsx':
+      return FileTsx
+    case 'js':
+      return FileJs
+    case 'jsx':
+      return FileJsx
+    default:
+      return File
+  }
 }
 
 function layoutNodes(
@@ -161,103 +189,116 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
   const direction = (data.direction ??
     'placeholder') as DependencyNodeData['direction']
 
-  // Simplified mode for large graphs - show max 1 badge
-  const isSimplified = data.isSimplified === true
-  const maxBadges = isSimplified ? 1 : 3
-  const shouldShowAllBadges = (data.badges?.length || 0) <= maxBadges
-
   const backgroundTone: Record<DependencyNodeData['direction'], string> = {
     selected:
-      'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-400 dark:border-emerald-500',
+      'bg-[hsl(var(--node-selected-bg))] border-[hsl(var(--node-selected-border))] ring-2 ring-[hsl(var(--node-selected-ring))]',
     incoming:
-      'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-500/60',
+      'bg-[hsl(var(--node-incoming-bg))] border-[hsl(var(--node-incoming-border))] hover:border-[hsl(var(--node-incoming-hover))]',
     outgoing:
-      'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-500/60',
+      'bg-[hsl(var(--node-outgoing-bg))] border-[hsl(var(--node-outgoing-border))] hover:border-[hsl(var(--node-outgoing-hover))]',
     placeholder:
-      'bg-slate-50 dark:bg-slate-800/30 border-slate-300 dark:border-slate-700'
+      'bg-[hsl(var(--node-placeholder-bg))] border-[hsl(var(--node-placeholder-border))] hover:border-[hsl(var(--node-placeholder-hover))]'
   }
 
   const chipTone: Record<DependencyNodeData['direction'], string> = {
-    selected: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
-    incoming: 'bg-blue-500/10 text-blue-600 dark:text-blue-300',
-    outgoing: 'bg-amber-500/10 text-amber-600 dark:text-amber-300',
-    placeholder: 'bg-slate-500/10 text-slate-600 dark:text-slate-300'
+    selected:
+      'bg-[hsl(var(--chip-selected-bg))] text-[hsl(var(--chip-selected-fg))]',
+    incoming:
+      'bg-[hsl(var(--chip-incoming-bg))] text-[hsl(var(--chip-incoming-fg))]',
+    outgoing:
+      'bg-[hsl(var(--chip-outgoing-bg))] text-[hsl(var(--chip-outgoing-fg))]',
+    placeholder:
+      'bg-[hsl(var(--chip-placeholder-bg))] text-[hsl(var(--chip-placeholder-fg))]'
   }
 
   return (
     <div
       className={clsx(
-        'rounded-lg border px-4 py-3 transition-colors duration-100',
+        'relative rounded-lg border px-4 py-3 transition-all duration-200',
         'text-left min-w-[220px] max-w-[280px] flex flex-col gap-2',
         backgroundTone[direction],
-        data.isHovered &&
-          'ring-2 ring-emerald-500/70 ring-offset-2 ring-offset-slate-900/0'
+        data.isHovered && '!border-[hsl(var(--node-hover-border))] shadow-md'
       )}
       tabIndex={0}
       role="button"
-      aria-label={`Lihat detail untuk ${data.label}`}
+      aria-label={`View details for ${data.label}`}
       style={{ outline: 'none' }}
     >
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 break-words">
-            {data.label}
-          </div>
-          {data.subtitle && (
-            <div className="text-[11px] uppercase tracking-wide font-medium text-slate-500 dark:text-slate-400">
-              {data.subtitle}
+        <div className="flex items-center gap-2">
+          {(() => {
+            const FileIcon = getFileIcon(data.label)
+            return <FileIcon size={16} className="shrink-0 text-muted-foreground" />
+          })()}
+          <div>
+            <div className="text-sm font-semibold text-[hsl(var(--foreground))] break-words">
+              {data.label}
             </div>
-          )}
+            {data.subtitle && (
+              <div className="text-[11px] uppercase tracking-wide font-medium text-neutral-500 dark:text-neutral-400">
+                {data.subtitle}
+              </div>
+            )}
+          </div>
         </div>
         <div
           className={clsx(
-            'text-[11px] px-2 py-1 rounded-full font-semibold uppercase tracking-wide',
+            'text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide',
             chipTone[direction]
           )}
         >
           {direction === 'selected'
             ? 'Focus'
             : direction === 'incoming'
-              ? 'Importer'
+              ? 'In'
               : direction === 'outgoing'
-                ? 'Dependency'
+                ? 'Out'
                 : 'Info'}
         </div>
       </div>
 
-      <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+      <div className="text-xs text-muted-foreground leading-relaxed">
         <div className="truncate" title={data.fullPath}>
           {data.fullPath}
         </div>
       </div>
 
+      {/* Risk Badges */}
       {data.badges && data.badges.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {(shouldShowAllBadges ? data.badges : data.badges.slice(0, 2)).map(
-            (badge) => (
-              <span
-                key={`${badge.label}-${badge.tone}`}
+        <div className="flex flex-wrap gap-1 mt-1">
+          {data.badges.map((badge, idx) => {
+            const badgeStyles: Record<typeof badge.tone, string> = {
+              danger:
+                'bg-[hsl(var(--risk-danger))] text-white border-[hsl(var(--risk-danger))]',
+              warning:
+                'bg-[hsl(var(--risk-warning))] text-white border-[hsl(var(--risk-warning))]',
+              success:
+                'bg-[hsl(var(--risk-success))] text-white border-[hsl(var(--risk-success))]',
+              info: 'bg-neutral-500 text-white border-neutral-500'
+            }
+
+            const BadgeIcon = {
+              danger: Warning,
+              warning: Lightning,
+              success: CheckCircle,
+              info: Info
+            }[badge.tone]
+
+            return (
+              <div
+                key={`${badge.label}-${idx}`}
                 className={clsx(
-                  'text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full',
-                  badge.tone === 'danger' &&
-                    'bg-red-500/10 text-red-600 dark:text-red-300',
-                  badge.tone === 'warning' &&
-                    'bg-amber-500/10 text-amber-600 dark:text-amber-300',
-                  badge.tone === 'success' &&
-                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
-                  badge.tone === 'info' &&
-                    'bg-blue-500/10 text-blue-600 dark:text-blue-300'
+                  'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium',
+                  'border transition-all duration-200',
+                  badgeStyles[badge.tone]
                 )}
+                title={badge.label}
               >
-                {badge.label}
-              </span>
+                <BadgeIcon size={12} weight="fill" />
+                <span className="uppercase tracking-wide">{badge.label}</span>
+              </div>
             )
-          )}
-          {!shouldShowAllBadges && data.badges.length > 2 && (
-            <span className="text-[10px] text-slate-500">
-              +{data.badges.length - 2}
-            </span>
-          )}
+          })}
         </div>
       )}
 
@@ -449,7 +490,10 @@ function DependencyGraphInner({
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
         nodeTypes={nodeTypes}
-        defaultEdgeOptions={{ type: ConnectionLineType.SimpleBezier }}
+        defaultEdgeOptions={{
+          type: ConnectionLineType.SimpleBezier,
+          style: { stroke: '#737373', strokeWidth: 1.5, strokeOpacity: 0.75 }
+        }}
         fitView
         minZoom={0.1}
         maxZoom={2.5}
@@ -464,36 +508,36 @@ function DependencyGraphInner({
         panOnDrag
         panOnScroll
         selectionOnDrag={false}
-        className="bg-slate-50 dark:bg-slate-900"
+        className="bg-[hsl(var(--canvas-background))]"
       >
         <Background
           variant={BackgroundVariant.Dots}
-          gap={16}
-          size={1}
-          className="opacity-40"
+          gap={50}
+          size={5}
+          color="hsl(var(--muted-foreground) / 0.2)"
         />
         {showMiniMap && (
           <MiniMap
             pannable
             zoomable
-            className="!bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-700"
+            className="!bg-[hsl(var(--canvas-background))] border border-[hsl(var(--border))]"
             nodeStrokeColor={(n: DependencyFlowNode) =>
               n.data.direction === 'selected'
-                ? '#059669'
+                ? '#e5e5e5'
                 : n.data.direction === 'incoming'
-                  ? '#2563eb'
+                  ? '#a3a3a3'
                   : n.data.direction === 'outgoing'
-                    ? '#d97706'
-                    : '#64748b'
+                    ? '#737373'
+                    : '#525252'
             }
             nodeColor={(n: DependencyFlowNode) =>
               n.data.direction === 'selected'
-                ? '#bbf7d0'
+                ? '#fafafa'
                 : n.data.direction === 'incoming'
-                  ? '#dbeafe'
+                  ? '#d4d4d4'
                   : n.data.direction === 'outgoing'
-                    ? '#fef3c7'
-                    : '#e2e8f0'
+                    ? '#a3a3a3'
+                    : '#737373'
             }
           />
         )}
@@ -518,8 +562,8 @@ function DependencyGraphInner({
 export function DependencyGraph(props: DependencyGraphProps) {
   if (!props.nodes.length) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center gap-3 text-slate-500 dark:text-slate-400">
-        <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-100">
+      <div className="flex flex-col items-center justify-center h-full text-center gap-3 text-neutral-500 dark:text-neutral-400">
+        <h2 className="text-lg font-semibold text-[hsl(var(--foreground))]">
           Tidak ada dependensi untuk file ini
         </h2>
         <p className="text-sm max-w-md">

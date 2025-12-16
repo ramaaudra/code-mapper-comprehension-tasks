@@ -14,11 +14,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/shared/components/ui/dialog'
-import {
-  AlertCircle,
-  Puzzle,
-  ShieldCheck
-} from '@/shared/components/ui/icons'
+import { AlertCircle, Puzzle, ShieldCheck } from '@/shared/components/ui/icons'
 import {
   Tooltip,
   TooltipContent,
@@ -171,12 +167,8 @@ export default function MetricsPanel({
     )
   }
 
-  const {
-    totalFiles,
-    topImporters,
-    mostDependedOn,
-    codebaseHealth
-  } = detailedMetrics!
+  const { totalFiles, topImporters, mostDependedOn, codebaseHealth } =
+    detailedMetrics!
 
   return (
     <div className="space-y-6">

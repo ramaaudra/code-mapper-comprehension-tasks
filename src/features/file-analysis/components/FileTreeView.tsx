@@ -8,6 +8,10 @@ import {
   Bomb,
   ChevronRight,
   File,
+  FileJs,
+  FileJsx,
+  FileTs,
+  FileTsx,
   Folder,
   FolderOpen,
   Ghost,
@@ -23,6 +27,23 @@ import type { FileRiskProfile } from '@/shared/types/risk'
 
 import { useFileAnalysisContext } from '../context/FileAnalysisContext'
 
+// Helper function to get icon based on file extension
+function getFileIcon(fileName: string) {
+  const extension = fileName.split('.').pop()?.toLowerCase()
+  switch (extension) {
+    case 'ts':
+      return FileTs
+    case 'tsx':
+      return FileTsx
+    case 'js':
+      return FileJs
+    case 'jsx':
+      return FileJsx
+    default:
+      return File
+  }
+}
+
 // Node Renderer - Clean Minimalist Style
 const createNodeRenderer = (
   filesInCycle: Set<string>,
@@ -37,7 +58,11 @@ const createNodeRenderer = (
 ) =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   memo(({ node, style, dragHandle }: any) => {
-    const Icon = node.isLeaf ? File : node.isOpen ? FolderOpen : Folder
+    const Icon = node.isLeaf
+      ? getFileIcon(node.data.name)
+      : node.isOpen
+        ? FolderOpen
+        : Folder
     const isInCycle = filesInCycle.has(node.id)
     const isOrphan = orphanFilesSet.has(node.id)
     const isHovered = hoveredFile === node.id
@@ -49,7 +74,9 @@ const createNodeRenderer = (
 
     // Determine if file has any status
     const hasStatus = isInCycle || isOrphan || isBroken || isNewOrphan
-    const isHighRisk = riskProfile && (riskProfile.category === 'Kritis' || riskProfile.category === 'Tinggi')
+    const isHighRisk =
+      riskProfile &&
+      (riskProfile.category === 'Kritis' || riskProfile.category === 'Tinggi')
 
     return (
       <div
@@ -94,17 +121,28 @@ const createNodeRenderer = (
         </span>
 
         {/* Status indicators - only show on hover or if selected, except for high-risk items */}
-        <div className={`flex items-center gap-1 ${(node.isSelected || isHovered || isHighRisk || hasStatus) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-          } transition-opacity`}>
+        <div
+          className={`flex items-center gap-1 ${node.isSelected || isHovered || isHighRisk || hasStatus
+            ? 'opacity-100'
+            : 'opacity-0 group-hover:opacity-100'
+            } transition-opacity`}
+        >
           {/* Risk badge - outline style */}
           {riskProfile && (node.isSelected || isHovered || isHighRisk) && (
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
-                    {riskProfile.category === 'Kritis' ? 'K' :
-                      riskProfile.category === 'Tinggi' ? 'T' :
-                        riskProfile.category === 'Sedang' ? 'S' : 'R'}
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] px-1.5 py-0 h-4"
+                  >
+                    {riskProfile.category === 'Kritis'
+                      ? 'K'
+                      : riskProfile.category === 'Tinggi'
+                        ? 'T'
+                        : riskProfile.category === 'Sedang'
+                          ? 'S'
+                          : 'R'}
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -152,7 +190,9 @@ const createNodeRenderer = (
                   <Bomb className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent side="right">
-                  <p className="text-xs">Will break if simulated file is deleted</p>
+                  <p className="text-xs">
+                    Will break if simulated file is deleted
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -166,7 +206,9 @@ const createNodeRenderer = (
                   <Ghost className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent side="right">
-                  <p className="text-xs">Will become orphan if simulated file is deleted</p>
+                  <p className="text-xs">
+                    Will become orphan if simulated file is deleted
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

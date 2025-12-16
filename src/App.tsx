@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Suspense, lazy, useCallback } from 'react'
 
-import { FileAnalysisProvider } from '@/features/file-analysis'
+import { DashboardSkeleton } from '@/features/dashboard'
+import {
+  FileAnalysisProvider,
+  FileTreeSkeleton
+} from '@/features/file-analysis'
 import { GraphSkeleton } from '@/features/graph'
 import { SimulationDialog } from '@/features/simulation'
 import { useAppLogic } from '@/hooks/useAppLogic'
-import {
-  AppLayout,
-  Sidebar,
-  TopBar
-} from '@/shared/components/layouts'
+import { AppLayout, Sidebar, TopBar } from '@/shared/components/layouts'
 import { ThemeProvider } from '@/shared/components/providers/ThemeProvider'
 
 // Lazy load heavy components from features
@@ -95,13 +95,7 @@ function AppContent() {
       <div className="flex h-[calc(100vh-56px)] overflow-hidden w-full">
         <Sidebar isCollapsed={isTreeCollapsed}>
           {analysisData && (
-            <Suspense
-              fallback={
-                <div className="h-full flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
-                </div>
-              }
-            >
+            <Suspense fallback={<FileTreeSkeleton />}>
               <FileTreeView
                 ref={treeRef}
                 data={analysisData.fileTree}
@@ -114,7 +108,15 @@ function AppContent() {
 
         <div className="flex-1 overflow-hidden">
           {analysisData ? (
-            <Suspense fallback={<GraphSkeleton />}>
+            <Suspense
+              fallback={
+                viewMode === 'overview' ? (
+                  <DashboardSkeleton />
+                ) : (
+                  <GraphSkeleton />
+                )
+              }
+            >
               <ProjectDashboard
                 analysisData={analysisData}
                 dependencyGraph={graphElements}

@@ -88,10 +88,7 @@ export const ProjectDashboard = memo(
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {overviewCards.map(({ label, value, icon }) => (
-                <div
-                  key={label}
-                  className="rounded-lg border bg-card p-4"
-                >
+                <div key={label} className="rounded-lg border bg-card p-4">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{label}</span>
                     {icon}
@@ -141,7 +138,7 @@ export const ProjectDashboard = memo(
     if (next.viewMode === 'overview') {
       return (
         prev.analysisData?.metrics?.fileCount ===
-        next.analysisData?.metrics?.fileCount &&
+          next.analysisData?.metrics?.fileCount &&
         prev.viewMode === next.viewMode
       )
     }

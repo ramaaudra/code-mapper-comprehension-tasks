@@ -44,9 +44,9 @@ function getSimplifiedEdgeStyle(isLargeGraph: boolean) {
   if (isLargeGraph) {
     return {
       styles: {
-        strong: { strokeWidth: 2, stroke: '#ef4444' },
-        medium: { strokeWidth: 1.5, stroke: '#d97706' },
-        weak: { strokeWidth: 1, stroke: '#94a3b8' }
+        strong: { strokeWidth: 2, stroke: '#525252', strokeOpacity: 0.7 },
+        medium: { strokeWidth: 1.5, stroke: '#737373', strokeOpacity: 0.6 },
+        weak: { strokeWidth: 1, stroke: '#a3a3a3', strokeOpacity: 0.5 }
       },
       showLabels: false,
       animated: false
@@ -98,9 +98,9 @@ export function useGraphGeneration({
 
   const edgeStyles = useMemo(
     () => ({
-      strong: { strokeWidth: 5, stroke: '#ef4444' },
-      medium: { strokeWidth: 3, stroke: '#d97706' },
-      weak: { strokeWidth: 1.5, stroke: '#d97706' }
+      strong: { strokeWidth: 3, stroke: '#525252', strokeOpacity: 0.9 },
+      medium: { strokeWidth: 2, stroke: '#737373', strokeOpacity: 0.75 },
+      weak: { strokeWidth: 1.5, stroke: '#a3a3a3', strokeOpacity: 0.6 }
     }),
     []
   )
@@ -109,21 +109,21 @@ export function useGraphGeneration({
     () => ({
       strong: {
         type: MarkerType.ArrowClosed,
-        color: '#ef4444',
+        color: '#525252',
         width: 18,
         height: 18
       },
       medium: {
         type: MarkerType.ArrowClosed,
-        color: '#d97706',
-        width: 18,
-        height: 18
+        color: '#737373',
+        width: 16,
+        height: 16
       },
       weak: {
         type: MarkerType.ArrowClosed,
-        color: '#d97706',
-        width: 18,
-        height: 18
+        color: '#a3a3a3',
+        width: 14,
+        height: 14
       }
     }),
     []
@@ -131,17 +131,24 @@ export function useGraphGeneration({
 
   const labelBgStyle = useMemo(
     () => ({
-      fill: 'rgba(248, 250, 252, 0.95)',
-      stroke: 'rgba(15, 23, 42, 0.4)',
-      color: '#0f172a'
+      fill: '#18181b',
+      fillOpacity: 0.95,
+      rx: 4,
+      ry: 4
     }),
     []
   )
 
   const labelStyle = useMemo(
     () => ({
-      fontWeight: 600,
-      letterSpacing: '0.01em'
+      fontWeight: 700,
+      fontFamily: 'var(--font-sans)',
+      fontSize: 12,
+      fill: '#ffffffff',
+      paintOrder: 'stroke fill' as const,
+      stroke: '#000000',
+      strokeWidth: 0,
+      strokeLinejoin: 'round' as const
     }),
     []
   )
@@ -305,8 +312,8 @@ export function useGraphGeneration({
             markerEnd: markerEnds[styleKey],
             ...(showLabel && {
               label: dep.strength > 1 ? `${dep.strength} refs` : '1 ref',
-              labelBgPadding: [6, 2],
-              labelBgBorderRadius: 4,
+              labelBgPadding: [10, 6],
+              labelBgBorderRadius: 6,
               labelBgStyle,
               labelStyle
             })
@@ -351,8 +358,8 @@ export function useGraphGeneration({
             markerEnd: markerEnds[styleKey],
             ...(showLabel && {
               label: strength > 1 ? `${strength} refs` : '1 ref',
-              labelBgPadding: [6, 2],
-              labelBgBorderRadius: 4,
+              labelBgPadding: [10, 6],
+              labelBgBorderRadius: 6,
               labelBgStyle,
               labelStyle
             })

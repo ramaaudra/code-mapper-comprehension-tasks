@@ -1,4 +1,5 @@
 export { ProjectDashboard } from './components/ProjectDashboard'
+export { DashboardSkeleton } from './components/DashboardSkeleton'
 export { default as MetricsPanel } from './components/MetricsPanel'
 export { IssuesPanel } from './components/IssuesPanel'
 export { useViewMode } from './hooks/useViewMode'

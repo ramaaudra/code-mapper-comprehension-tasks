@@ -1,12 +1,10 @@
-// Context
+export { FileTreeView } from './components/FileTreeView'
+export { FileSearchBar } from './components/FileSearchBar'
 export {
   FileAnalysisProvider,
   useFileAnalysisContext
 } from './context/FileAnalysisContext'
-
-// Components
-export { FileTreeView } from './components/FileTreeView'
-export { FileSearchBar } from './components/FileSearchBar'
+export { FileTreeSkeleton } from './components/FileTreeSkeleton'
 
 // Hooks
 export { useFileStatus } from './hooks/useFileStatus'
