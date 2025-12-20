@@ -41,7 +41,9 @@ export function useAppLogic() {
   } = useAnalysisData()
 
   const [selectedNode, setSelectedNode] = useState<any | null>(null)
-  const [viewMode, setViewMode] = useState<'overview' | 'file'>('overview')
+  const [viewMode, setViewMode] = useState<'overview' | 'architecture'>(
+    'overview'
+  )
   const [isTreeCollapsed, setIsTreeCollapsed] = useState(false)
 
   // Graph generation hook
@@ -83,7 +85,6 @@ export function useAppLogic() {
         return
       }
 
-      setViewMode('file')
       const resolvedFileId = generateGraphForFile(fileId) || fileId
       setSelectedFileId(resolvedFileId)
 
@@ -126,6 +127,11 @@ export function useAppLogic() {
     setSelectedNode(null)
     clearGraph()
   }, [setSelectedFileId, clearGraph])
+
+  // Show architecture mode
+  const handleShowArchitecture = useCallback(() => {
+    setViewMode('architecture')
+  }, [])
 
   // Refresh analysis data
   const refreshAnalysis = useCallback(async () => {
@@ -194,6 +200,7 @@ export function useAppLogic() {
     handleFileSelect,
     navigateToFile,
     handleShowOverview,
+    handleShowArchitecture,
     handleSimulateDelete,
     getRiskProfileForFile,
     prefetchFile: prefetch

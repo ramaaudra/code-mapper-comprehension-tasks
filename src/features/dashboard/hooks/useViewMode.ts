@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 
-export type ViewMode = 'overview' | 'file'
+export type ViewMode = 'overview' | 'architecture'
 
 export function useViewMode(initialMode: ViewMode = 'overview') {
   const [viewMode, setViewMode] = useState<ViewMode>(initialMode)
@@ -9,21 +9,21 @@ export function useViewMode(initialMode: ViewMode = 'overview') {
     setViewMode('overview')
   }, [])
 
-  const switchToFile = useCallback(() => {
-    setViewMode('file')
+  const switchToArchitecture = useCallback(() => {
+    setViewMode('architecture')
   }, [])
 
   const toggleViewMode = useCallback(() => {
-    setViewMode((prev) => (prev === 'overview' ? 'file' : 'overview'))
+    setViewMode((prev) => (prev === 'overview' ? 'architecture' : 'overview'))
   }, [])
 
   return {
     viewMode,
     setViewMode,
     switchToOverview,
-    switchToFile,
+    switchToArchitecture,
     toggleViewMode,
     isOverview: viewMode === 'overview',
-    isFileView: viewMode === 'file'
+    isArchitecture: viewMode === 'architecture'
   }
 }

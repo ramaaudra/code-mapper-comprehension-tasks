@@ -1,6 +1,8 @@
 // Components
+export { ArchitecturePage } from './components/ArchitecturePage'
 export { ArchitectureStats } from './components/ArchitectureStats'
 export { ArchitectureTab } from './components/ArchitectureTab'
+export { ArchitectureTable } from './components/ArchitectureTable'
 export { CouplingBreakdown } from './components/CouplingBreakdown'
 export { CycleBadge } from './components/CycleBadge'
 export { FolderMetricsRow } from './components/FolderMetricsRow'

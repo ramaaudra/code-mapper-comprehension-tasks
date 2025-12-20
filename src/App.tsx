@@ -6,7 +6,6 @@ import {
   FileAnalysisProvider,
   FileTreeSkeleton
 } from '@/features/file-analysis'
-import { GraphSkeleton } from '@/features/graph'
 import { SimulationDialog } from '@/features/simulation'
 import { useAppLogic } from '@/hooks/useAppLogic'
 import { AppLayout, Sidebar, TopBar } from '@/shared/components/layouts'
@@ -26,6 +25,11 @@ const NodeDetailPanel = lazy(() =>
 const ProjectDashboard = lazy(() =>
   import('@/features/dashboard').then((m) => ({
     default: m.ProjectDashboard
+  }))
+)
+const ArchitecturePage = lazy(() =>
+  import('@/features/architecture').then((m) => ({
+    default: m.ArchitecturePage
   }))
 )
 
@@ -54,6 +58,7 @@ function AppContent() {
     handleFileSelect,
     navigateToFile,
     handleShowOverview,
+    handleShowArchitecture,
     handleSimulateDelete,
     getRiskProfileForFile,
     isLayoutTransitioning
@@ -82,6 +87,7 @@ function AppContent() {
         onLayoutDirectionChange={setLayoutDirection}
         viewMode={viewMode}
         onShowOverview={handleShowOverview}
+        onShowArchitecture={handleShowArchitecture}
         isTreeCollapsed={isTreeCollapsed}
         onToggleTree={toggleTreeView}
         fileCount={
@@ -108,25 +114,25 @@ function AppContent() {
 
         <div className="flex-1 overflow-hidden">
           {analysisData ? (
-            <Suspense
-              fallback={
-                viewMode === 'overview' ? (
-                  <DashboardSkeleton />
-                ) : (
-                  <GraphSkeleton />
-                )
-              }
-            >
-              <ProjectDashboard
-                analysisData={analysisData}
-                dependencyGraph={graphElements}
-                hoveredFile={hoveredFile}
-                layoutDirection={layoutDirection}
-                viewMode={viewMode}
-                onNavigateToFile={navigateToFile}
-                isLayoutTransitioning={isLayoutTransitioning}
-              />
-            </Suspense>
+            viewMode === 'architecture' ? (
+              <Suspense fallback={<DashboardSkeleton />}>
+                <ArchitecturePage />
+              </Suspense>
+            ) : (
+              <Suspense fallback={<DashboardSkeleton />}>
+                <ProjectDashboard
+                  analysisData={analysisData}
+                  dependencyGraph={graphElements}
+                  hoveredFile={hoveredFile}
+                  layoutDirection={layoutDirection}
+                  viewMode={viewMode}
+                  selectedFileId={selectedFileId}
+                  onNavigateToFile={navigateToFile}
+                  onShowArchitecture={handleShowArchitecture}
+                  isLayoutTransitioning={isLayoutTransitioning}
+                />
+              </Suspense>
+            )
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
@@ -148,7 +154,7 @@ function AppContent() {
           )}
         </div>
 
-        {analysisData && viewMode === 'file' && selectedNode && (
+        {analysisData && selectedNode && viewMode === 'overview' && (
           <div className="w-96 border-l border-border overflow-hidden">
             <Suspense
               fallback={

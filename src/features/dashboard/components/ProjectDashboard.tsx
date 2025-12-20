@@ -1,6 +1,7 @@
 import type { Edge, Node } from '@xyflow/react'
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 
+import { useArchitectureFolders } from '@/features/architecture'
 import {
   type DependencyEdgeData,
   DependencyGraph,
@@ -9,8 +10,11 @@ import {
 import { FileText, Network, TrendingUp } from '@/shared/components/ui/icons'
 import type { AnalysisData } from '@/shared/types/analysis'
 
+import { ActionableInsights } from './ActionableInsights'
+import { ArchitectureHealthScore } from './ArchitectureHealthScore'
+import { CouplingDistribution } from './CouplingDistribution'
+import { HighRiskModules } from './HighRiskModules'
 import { IssuesPanel } from './IssuesPanel'
-import MetricsPanel from './MetricsPanel'
 
 interface ProjectDashboardProps {
   analysisData: AnalysisData | null
@@ -21,8 +25,10 @@ interface ProjectDashboardProps {
   }
   hoveredFile: string | null
   layoutDirection: 'LR' | 'TB'
-  viewMode: 'overview' | 'file'
+  viewMode: 'overview' | 'architecture'
+  selectedFileId: string | null
   onNavigateToFile: (fileId: string) => void
+  onShowArchitecture?: () => void
   isLayoutTransitioning?: boolean
 }
 
@@ -33,10 +39,115 @@ export const ProjectDashboard = memo(
     hoveredFile,
     layoutDirection,
     viewMode,
+    selectedFileId,
     onNavigateToFile,
+    onShowArchitecture,
     isLayoutTransitioning
   }: ProjectDashboardProps) {
-    if (viewMode === 'overview') {
+    const { data: architectureData } = useArchitectureFolders()
+
+    // Calculate health breakdown
+    const healthBreakdown = useMemo(() => {
+      if (!architectureData?.folders) {
+        return { stabilityScore: 0, cycleCount: 0, orphanCount: 0 }
+      }
+
+      const folders = architectureData.folders
+      const avgInstability =
+        folders.reduce((sum, f) => sum + f.instability, 0) / folders.length
+      const cycleCount = folders.filter((f) => f.hasCycle).length
+
+      return {
+        stabilityScore: avgInstability,
+        cycleCount,
+        orphanCount: analysisData?.issues?.orphans?.length ?? 0
+      }
+    }, [architectureData, analysisData])
+
+    // Calculate high risk modules
+    const highRiskModules = useMemo(() => {
+      if (!architectureData?.folders) {
+        return []
+      }
+
+      const maxCa = Math.max(...architectureData.folders.map((x) => x.ca), 1)
+
+      return architectureData.folders
+        .filter((f) => f.instability > 0.5 && f.ca > 0)
+        .map((f) => ({
+          path: f.folderPath,
+          instability: f.instability,
+          fanIn: f.ca,
+          riskScore: f.instability * (f.ca / maxCa)
+        }))
+        .sort((a, b) => b.riskScore - a.riskScore)
+        .slice(0, 5)
+    }, [architectureData])
+
+    // Calculate coupling distribution
+    const couplingDistribution = useMemo(() => {
+      if (!analysisData?.dependencyMap) {
+        return {
+          avgDependencies: 0,
+          distribution: [],
+          mostCoupledFile: undefined
+        }
+      }
+
+      const depCounts = Object.entries(analysisData.dependencyMap).map(
+        ([path, deps]) => ({
+          path,
+          count: deps.length
+        })
+      )
+
+      const total = depCounts.length
+      const loose = depCounts.filter((d) => d.count <= 2).length
+      const medium = depCounts.filter((d) => d.count > 2 && d.count <= 6).length
+      const tight = depCounts.filter((d) => d.count > 6 && d.count <= 10).length
+      const heavy = depCounts.filter((d) => d.count > 10).length
+
+      const avgDeps =
+        depCounts.reduce((sum, d) => sum + d.count, 0) / Math.max(total, 1)
+      const mostCoupled = depCounts.sort((a, b) => b.count - a.count)[0]
+
+      return {
+        avgDependencies: avgDeps,
+        distribution: [
+          {
+            label: 'Loose',
+            range: '0-2',
+            count: loose,
+            percentage: (loose / total) * 100,
+            color: 'bg-green-500'
+          },
+          {
+            label: 'Medium',
+            range: '3-6',
+            count: medium,
+            percentage: (medium / total) * 100,
+            color: 'bg-yellow-500'
+          },
+          {
+            label: 'Tight',
+            range: '7-10',
+            count: tight,
+            percentage: (tight / total) * 100,
+            color: 'bg-orange-500'
+          },
+          {
+            label: 'Heavy',
+            range: '10+',
+            count: heavy,
+            percentage: (heavy / total) * 100,
+            color: 'bg-red-500'
+          }
+        ],
+        mostCoupledFile: mostCoupled
+      }
+    }, [analysisData])
+
+    if (viewMode === 'overview' && !selectedFileId) {
       const snapshot = {
         totalFiles:
           analysisData?.detailedMetrics?.totalFiles ??
@@ -86,7 +197,7 @@ export const ProjectDashboard = memo(
               </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {overviewCards.map(({ label, value, icon }) => (
                 <div key={label} className="rounded-lg border bg-card p-4">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -100,14 +211,34 @@ export const ProjectDashboard = memo(
               ))}
             </div>
 
+            {/* Health Score - Full Width */}
+            <ArchitectureHealthScore
+              breakdown={healthBreakdown}
+              totalFiles={snapshot.totalFiles}
+            />
+
             <div className="grid gap-6 lg:grid-cols-2">
-              <div className="space-y-6 min-w-0">
-                <MetricsPanel
-                  data={analysisData}
-                  onSelectFile={onNavigateToFile}
+              {/* Left Column */}
+              <div className="space-y-6">
+                <HighRiskModules
+                  modules={highRiskModules}
+                  onViewArchitecture={onShowArchitecture}
                 />
+                <CouplingDistribution {...couplingDistribution} />
               </div>
-              <div className="space-y-6 min-w-0">
+
+              {/* Right Column */}
+              <div className="space-y-6">
+                <ActionableInsights
+                  cycleCount={healthBreakdown.cycleCount}
+                  orphanCount={healthBreakdown.orphanCount}
+                  unstableModules={highRiskModules}
+                  heavilyCoupledFiles={
+                    couplingDistribution.mostCoupledFile
+                      ? [couplingDistribution.mostCoupledFile]
+                      : []
+                  }
+                />
                 <IssuesPanel
                   data={analysisData}
                   onNavigateToFile={onNavigateToFile}
@@ -135,19 +266,21 @@ export const ProjectDashboard = memo(
   },
   (prev, next) => {
     // Overview mode: only re-render if data changed
-    if (next.viewMode === 'overview') {
+    if (next.viewMode === 'overview' && !next.selectedFileId) {
       return (
         prev.analysisData?.metrics?.fileCount ===
           next.analysisData?.metrics?.fileCount &&
-        prev.viewMode === next.viewMode
+        prev.viewMode === next.viewMode &&
+        prev.selectedFileId === next.selectedFileId
       )
     }
 
-    // File mode: re-render if graph changed
+    // Graph mode: re-render if graph changed
     return (
       prev.dependencyGraph.focusNodeId === next.dependencyGraph.focusNodeId &&
       prev.dependencyGraph.nodes.length === next.dependencyGraph.nodes.length &&
       prev.viewMode === next.viewMode &&
+      prev.selectedFileId === next.selectedFileId &&
       prev.layoutDirection === next.layoutDirection &&
       prev.isLayoutTransitioning === next.isLayoutTransitioning
     )

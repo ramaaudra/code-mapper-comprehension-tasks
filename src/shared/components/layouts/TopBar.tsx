@@ -28,8 +28,9 @@ interface TopBarProps {
   onQueryChange: (value: string) => void
   layoutDirection: 'LR' | 'TB'
   onLayoutDirectionChange: (direction: 'LR' | 'TB') => void
-  viewMode: 'overview' | 'file'
+  viewMode: 'overview' | 'architecture'
   onShowOverview: () => void
+  onShowArchitecture: () => void
   isTreeCollapsed: boolean
   onToggleTree: () => void
   // New props from StatsBar
@@ -47,6 +48,7 @@ export function TopBar({
   onLayoutDirectionChange,
   viewMode,
   onShowOverview,
+  onShowArchitecture,
   isTreeCollapsed,
   onToggleTree,
   fileCount,
@@ -90,24 +92,26 @@ export function TopBar({
         </div>
       </div>
 
-      {/* Center: Mode Switch (Dashboard | Graph) */}
+      {/* Center: Mode Switch (Overview | Architecture) */}
       {hasData && (
         <div className="absolute left-1/2 transform -translate-x-1/2">
           <ToggleGroup
             type="single"
-            value={viewMode === 'overview' ? 'dashboard' : 'graph'}
+            value={viewMode}
             onValueChange={(value: string) => {
-              if (value === 'dashboard') {
+              if (value === 'overview') {
                 onShowOverview()
+              } else if (value === 'architecture') {
+                onShowArchitecture()
               }
             }}
             size="sm"
           >
-            <ToggleGroupItem value="dashboard" size="sm">
-              Dashboard
+            <ToggleGroupItem value="overview" size="sm">
+              Overview
             </ToggleGroupItem>
-            <ToggleGroupItem value="graph" size="sm">
-              Graph
+            <ToggleGroupItem value="architecture" size="sm">
+              Architecture
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
