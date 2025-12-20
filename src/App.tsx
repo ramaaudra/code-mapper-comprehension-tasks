@@ -32,6 +32,11 @@ const ArchitecturePage = lazy(() =>
     default: m.ArchitecturePage
   }))
 )
+const SetupGuidePage = lazy(() =>
+  import('@/features/setup-guide').then((m) => ({
+    default: m.SetupGuidePage
+  }))
+)
 
 function AppContent() {
   const {
@@ -59,6 +64,7 @@ function AppContent() {
     navigateToFile,
     handleShowOverview,
     handleShowArchitecture,
+    handleShowSetupGuide,
     handleSimulateDelete,
     getRiskProfileForFile,
     isLayoutTransitioning
@@ -90,6 +96,10 @@ function AppContent() {
         onShowArchitecture={handleShowArchitecture}
         isTreeCollapsed={isTreeCollapsed}
         onToggleTree={toggleTreeView}
+        onShowSetupGuide={handleShowSetupGuide}
+        hasUnresolvedImports={
+          (analysisData?.warnings?.unresolvedImports?.length ?? 0) > 0
+        }
         fileCount={
           analysisData
             ? Object.keys(analysisData.dependencyMap).length
@@ -117,6 +127,13 @@ function AppContent() {
             viewMode === 'architecture' ? (
               <Suspense fallback={<DashboardSkeleton />}>
                 <ArchitecturePage />
+              </Suspense>
+            ) : viewMode === 'setup-guide' ? (
+              <Suspense fallback={<DashboardSkeleton />}>
+                <SetupGuidePage
+                  warnings={analysisData.warnings}
+                  onBack={handleShowOverview}
+                />
               </Suspense>
             ) : (
               <Suspense fallback={<DashboardSkeleton />}>

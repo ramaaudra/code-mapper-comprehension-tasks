@@ -1,5 +1,18 @@
 import type { FileRiskProfile } from '@/types/risk'
 
+export interface UnresolvedImport {
+  specifier: string
+  pattern: string
+  files: string[]
+  count: number
+}
+
+export interface AnalysisWarnings {
+  hasPathMappings: boolean
+  unresolvedImports: UnresolvedImport[]
+  totalUnresolvedCount: number
+}
+
 export interface DependencyInfo {
   target: string
   strength: number
@@ -49,4 +62,5 @@ export interface AnalysisData {
   issues: AnalysisIssues
   metrics: AnalysisMetrics
   detailedMetrics?: DetailedMetrics
+  warnings?: AnalysisWarnings
 }

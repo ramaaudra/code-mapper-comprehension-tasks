@@ -41,9 +41,9 @@ export function useAppLogic() {
   } = useAnalysisData()
 
   const [selectedNode, setSelectedNode] = useState<any | null>(null)
-  const [viewMode, setViewMode] = useState<'overview' | 'architecture'>(
-    'overview'
-  )
+  const [viewMode, setViewMode] = useState<
+    'overview' | 'architecture' | 'setup-guide'
+  >('overview')
   const [isTreeCollapsed, setIsTreeCollapsed] = useState(false)
 
   // Graph generation hook
@@ -133,6 +133,11 @@ export function useAppLogic() {
     setViewMode('architecture')
   }, [])
 
+  // Show setup guide mode
+  const handleShowSetupGuide = useCallback(() => {
+    setViewMode('setup-guide')
+  }, [])
+
   // Refresh analysis data
   const refreshAnalysis = useCallback(async () => {
     const result = await fetchAnalysis()
@@ -201,6 +206,7 @@ export function useAppLogic() {
     navigateToFile,
     handleShowOverview,
     handleShowArchitecture,
+    handleShowSetupGuide,
     handleSimulateDelete,
     getRiskProfileForFile,
     prefetchFile: prefetch

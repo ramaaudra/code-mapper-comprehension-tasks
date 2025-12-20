@@ -1,5 +1,6 @@
 import { Button } from '@/shared/components/ui/button'
 import {
+  AlertTriangle,
   ArrowDown,
   ArrowRight,
   PanelLeftClose,
@@ -28,11 +29,13 @@ interface TopBarProps {
   onQueryChange: (value: string) => void
   layoutDirection: 'LR' | 'TB'
   onLayoutDirectionChange: (direction: 'LR' | 'TB') => void
-  viewMode: 'overview' | 'architecture'
+  viewMode: 'overview' | 'architecture' | 'setup-guide'
   onShowOverview: () => void
   onShowArchitecture: () => void
   isTreeCollapsed: boolean
   onToggleTree: () => void
+  onShowSetupGuide: () => void
+  hasUnresolvedImports: boolean
   // New props from StatsBar
   fileCount?: number
   analysisLoadedAt?: number | string | null
@@ -51,6 +54,8 @@ export function TopBar({
   onShowArchitecture,
   isTreeCollapsed,
   onToggleTree,
+  onShowSetupGuide,
+  hasUnresolvedImports,
   fileCount,
   analysisLoadedAt
 }: TopBarProps) {
@@ -103,6 +108,8 @@ export function TopBar({
                 onShowOverview()
               } else if (value === 'architecture') {
                 onShowArchitecture()
+              } else if (value === 'setup-guide') {
+                onShowSetupGuide()
               }
             }}
             size="sm"
@@ -112,6 +119,14 @@ export function TopBar({
             </ToggleGroupItem>
             <ToggleGroupItem value="architecture" size="sm">
               Architecture
+            </ToggleGroupItem>
+            <ToggleGroupItem value="setup-guide" size="sm">
+              <span className="flex items-center gap-1.5">
+                Setup
+                {hasUnresolvedImports && (
+                  <AlertTriangle className="h-3 w-3 text-yellow-500" />
+                )}
+              </span>
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
