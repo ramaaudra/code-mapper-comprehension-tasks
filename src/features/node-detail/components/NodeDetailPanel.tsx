@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { memo, useMemo, useState } from 'react'
 
+import {
+  ArchitectureStats,
+  useFileArchitectureMetrics
+} from '@/features/architecture'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -67,6 +71,9 @@ const NodeDetailPanel = memo(
     // Handle both old node object format and new node ID format
     const nodeId = typeof node === 'string' ? node : node.id
     const nodeData = data?.nodes?.find((n: any) => n.id === nodeId)
+
+    // Architecture metrics
+    const { data: archMetrics } = useFileArchitectureMetrics(nodeId)
 
     // Calculate indegree and outdegree
     const incomingEdges = useMemo(() => {
@@ -393,6 +400,16 @@ const NodeDetailPanel = memo(
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Architecture Metrics */}
+            {archMetrics && (
+              <ArchitectureStats
+                ca={archMetrics.ca}
+                ce={archMetrics.ce}
+                instability={archMetrics.instability}
+                hasCycle={archMetrics.hasCycle}
+              />
             )}
 
             {/* Actions */}

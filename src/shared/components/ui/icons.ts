@@ -6,6 +6,9 @@ export {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
+  CaretDown,
+  CaretRight,
+  CaretUp,
   ChartBar as BarChart3,
   Bomb,
   CaretRight as ChevronRight,
@@ -40,6 +43,7 @@ export {
   Sun,
   Trash as Trash2,
   TrendUp as TrendingUp,
+  WarningCircle,
   X,
   MagnifyingGlassPlus as ZoomIn,
   MagnifyingGlassMinus as ZoomOut
