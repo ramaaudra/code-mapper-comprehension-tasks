@@ -52,6 +52,7 @@ function AppContent() {
     isLoading,
     loadError,
     refreshAnalysis,
+    changesStatus,
     selectedNode,
     viewMode,
     isTreeCollapsed,
@@ -106,6 +107,8 @@ function AppContent() {
             : undefined
         }
         analysisLoadedAt={analysisLoadedAt}
+        hasChanges={changesStatus?.hasChanges ?? false}
+        totalChanges={changesStatus?.totalChanges ?? 0}
       />
 
       <div className="flex h-[calc(100vh-56px)] overflow-hidden w-full">
