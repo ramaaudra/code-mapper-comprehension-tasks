@@ -37,7 +37,6 @@ export function useAppLogic() {
     analysisLoadedAt,
     isLoading,
     loadError,
-    loadAnalysis: fetchAnalysis,
     reanalyze,
     changesStatus,
     checkChanges
@@ -160,7 +159,9 @@ export function useAppLogic() {
 
   // Poll changes status every 10 seconds when analysis is loaded
   useEffect(() => {
-    if (!analysisData) return
+    if (!analysisData) {
+      return
+    }
 
     // Initial check
     checkChanges()
