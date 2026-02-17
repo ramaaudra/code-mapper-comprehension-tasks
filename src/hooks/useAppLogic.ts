@@ -37,7 +37,10 @@ export function useAppLogic() {
     analysisLoadedAt,
     isLoading,
     loadError,
-    loadAnalysis: fetchAnalysis
+    loadAnalysis: fetchAnalysis,
+    reanalyze,
+    changesStatus,
+    checkChanges
   } = useAnalysisData()
 
   const [selectedNode, setSelectedNode] = useState<any | null>(null)
@@ -138,9 +141,9 @@ export function useAppLogic() {
     setViewMode('setup-guide')
   }, [])
 
-  // Refresh analysis data
+  // Refresh analysis data - triggers real reanalysis via POST /api/reanalyze
   const refreshAnalysis = useCallback(async () => {
-    const result = await fetchAnalysis()
+    const result = await reanalyze()
     setSelectedFileId(null)
     setSelectedNode(null)
     setHoveredFile(null)
@@ -153,7 +156,22 @@ export function useAppLogic() {
       )
     }
     return result
-  }, [fetchAnalysis, setSelectedFileId, setHoveredFile, clearGraph])
+  }, [reanalyze, setSelectedFileId, setHoveredFile, clearGraph])
+
+  // Poll changes status every 10 seconds when analysis is loaded
+  useEffect(() => {
+    if (!analysisData) return
+
+    // Initial check
+    checkChanges()
+
+    // Poll every 10 seconds
+    const interval = setInterval(() => {
+      checkChanges()
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [analysisData, checkChanges])
 
   // Handle simulation
   const handleSimulateDelete = useCallback(
@@ -194,6 +212,7 @@ export function useAppLogic() {
     isLoading,
     loadError,
     refreshAnalysis,
+    changesStatus,
     selectedNode,
     viewMode,
     isTreeCollapsed,
