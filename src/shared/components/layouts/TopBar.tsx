@@ -39,6 +39,9 @@ interface TopBarProps {
   // New props from StatsBar
   fileCount?: number
   analysisLoadedAt?: number | string | null
+  // Props for file changes indicator
+  hasChanges?: boolean
+  totalChanges?: number
 }
 
 export function TopBar({
@@ -57,7 +60,9 @@ export function TopBar({
   onShowSetupGuide,
   hasUnresolvedImports,
   fileCount,
-  analysisLoadedAt
+  analysisLoadedAt,
+  hasChanges = false,
+  totalChanges = 0
 }: TopBarProps) {
   return (
     <header className="h-14 bg-background border-b border-border px-4 flex items-center justify-between">
@@ -190,20 +195,31 @@ export function TopBar({
         <TooltipProvider delayDuration={300}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onRefresh}
-                disabled={isLoading}
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              >
-                <RotateCcw
-                  className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
-                />
-              </Button>
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onRefresh}
+                  disabled={isLoading}
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                >
+                  <RotateCcw
+                    className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
+                  />
+                </Button>
+                {hasChanges && totalChanges > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-medium rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
+                    {totalChanges > 9 ? '9+' : totalChanges}
+                  </span>
+                )}
+              </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              {isLoading ? 'Loading...' : 'Reload analysis'}
+              {isLoading
+                ? 'Loading...'
+                : hasChanges
+                  ? `${totalChanges} file${totalChanges !== 1 ? 's' : ''} changed - click to reload`
+                  : 'Reload analysis'}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
