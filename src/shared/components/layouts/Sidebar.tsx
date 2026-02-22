@@ -29,9 +29,6 @@ export function Sidebar({ isCollapsed, children }: SidebarProps) {
     >
       {!isCollapsed && (
         <div className="h-full flex flex-col">
-          <div className="p-3 border-b border-border shrink-0">
-            <h2 className="text-sm font-medium text-foreground">Files</h2>
-          </div>
           <div className="flex-1 overflow-hidden">
             <Suspense fallback={<FileTreeSkeleton />}>{children}</Suspense>
           </div>

@@ -38,6 +38,7 @@ import {
 
 import '@xyflow/react/dist/style.css'
 
+import { getRelativePath } from '@/shared/lib/utils'
 import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
 
 import { useAdaptiveQuality } from '../hooks/useAdaptiveQuality'
@@ -217,12 +218,12 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
         'relative rounded-lg border px-4 py-3 transition-all duration-200',
         'text-left min-w-[220px] max-w-[280px] flex flex-col gap-2',
         backgroundTone[direction],
-        data.isHovered && '!border-[hsl(var(--node-hover-border))] shadow-md'
+        data.isHovered && '!border-[hsl(var(--node-hover-border))] shadow-md',
+        'focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2'
       )}
       tabIndex={0}
       role="button"
       aria-label={`View details for ${data.label}`}
-      style={{ outline: 'none' }}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
@@ -261,7 +262,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
 
       <div className="text-xs text-muted-foreground leading-relaxed">
         <div className="truncate" title={data.fullPath}>
-          {data.fullPath}
+          {getRelativePath(data.fullPath)}
         </div>
       </div>
 
@@ -494,21 +495,26 @@ function DependencyGraphInner({
         nodeTypes={nodeTypes}
         defaultEdgeOptions={{
           type: ConnectionLineType.SimpleBezier,
-          style: { stroke: '#737373', strokeWidth: 1.5, strokeOpacity: 0.75 }
+          style: {
+            stroke: 'hsl(var(--muted-foreground))',
+            strokeWidth: 1.5,
+            strokeOpacity: 0.75
+          }
         }}
         fitView
         minZoom={0.1}
         maxZoom={2.5}
         nodesDraggable={false}
-        nodesFocusable={false}
+        nodesFocusable={true}
         elementsSelectable={false}
         nodesConnectable={false}
         edgesFocusable={false}
         onlyRenderVisibleElements={true}
         selectNodesOnDrag={false}
         preventScrolling={false}
-        panOnDrag
-        panOnScroll
+        panOnDrag={true}
+        panOnScroll={false}
+        zoomOnScroll={true}
         selectionOnDrag={false}
         className="bg-[hsl(var(--canvas-background))]"
       >
@@ -525,21 +531,13 @@ function DependencyGraphInner({
             className="!bg-[hsl(var(--canvas-background))] border border-[hsl(var(--border))]"
             nodeStrokeColor={(n: DependencyFlowNode) =>
               n.data.direction === 'selected'
-                ? '#e5e5e5'
-                : n.data.direction === 'incoming'
-                  ? '#a3a3a3'
-                  : n.data.direction === 'outgoing'
-                    ? '#737373'
-                    : '#525252'
+                ? 'hsl(var(--foreground))'
+                : 'hsl(var(--muted-foreground))'
             }
             nodeColor={(n: DependencyFlowNode) =>
               n.data.direction === 'selected'
-                ? '#fafafa'
-                : n.data.direction === 'incoming'
-                  ? '#d4d4d4'
-                  : n.data.direction === 'outgoing'
-                    ? '#a3a3a3'
-                    : '#737373'
+                ? 'hsl(var(--card))'
+                : 'hsl(var(--muted))'
             }
           />
         )}

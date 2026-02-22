@@ -2,10 +2,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useState } from 'react'
 
 import {
+  type ChangesStatus,
   fetchAnalysisData,
   fetchChangesStatus,
-  reanalyzeProject,
-  type ChangesStatus
+  reanalyzeProject
 } from '@/shared/lib/api/analysis'
 import type { AnalysisData } from '@/shared/types/analysis'
 import type { FileRiskProfile } from '@/shared/types/risk'
@@ -53,17 +53,19 @@ export function useAnalysisData(): UseAnalysisDataResult {
   const reanalyze = useCallback(async () => {
     try {
       const result = await reanalyzeProject()
-      // Update the analysis cache
+      // Update the analysis cache with fresh data from backend
       queryClient.setQueryData(['analysis'], result)
       // Clear changes status after reanalysis
-      setChangesStatus({ hasChanges: false, lastChangeAt: null, totalChanges: 0 })
-      // Refetch to ensure data is fresh
-      await refetch()
+      setChangesStatus({
+        hasChanges: false,
+        lastChangeAt: null,
+        totalChanges: 0
+      })
       return result
     } catch {
       return null
     }
-  }, [queryClient, refetch])
+  }, [queryClient])
 
   return {
     analysisData: data || null,

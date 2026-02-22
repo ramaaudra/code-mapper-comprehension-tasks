@@ -5,10 +5,8 @@ import {
   ArrowRight,
   PanelLeftClose,
   PanelLeftOpen,
-  RotateCcw,
-  Search
+  RotateCcw
 } from '@/shared/components/ui/icons'
-import { Input } from '@/shared/components/ui/input'
 import {
   ToggleGroup,
   ToggleGroupItem
@@ -25,21 +23,18 @@ interface TopBarProps {
   loadError: string | null
   hasData: boolean
   onRefresh: () => void
-  query: string
-  onQueryChange: (value: string) => void
   layoutDirection: 'LR' | 'TB'
   onLayoutDirectionChange: (direction: 'LR' | 'TB') => void
-  viewMode: 'overview' | 'architecture' | 'setup-guide'
+  viewMode: 'overview' | 'graph' | 'architecture' | 'setup-guide'
   onShowOverview: () => void
+  onShowGraph: () => void
   onShowArchitecture: () => void
   isTreeCollapsed: boolean
   onToggleTree: () => void
   onShowSetupGuide: () => void
   hasUnresolvedImports: boolean
-  // New props from StatsBar
   fileCount?: number
   analysisLoadedAt?: number | string | null
-  // Props for file changes indicator
   hasChanges?: boolean
   totalChanges?: number
 }
@@ -48,12 +43,11 @@ export function TopBar({
   isLoading,
   hasData,
   onRefresh,
-  query,
-  onQueryChange,
   layoutDirection,
   onLayoutDirectionChange,
   viewMode,
   onShowOverview,
+  onShowGraph,
   onShowArchitecture,
   isTreeCollapsed,
   onToggleTree,
@@ -102,7 +96,7 @@ export function TopBar({
         </div>
       </div>
 
-      {/* Center: Mode Switch (Overview | Architecture) */}
+      {/* Center: Mode Switch (Overview | Graph | Architecture) */}
       {hasData && (
         <div className="absolute left-1/2 transform -translate-x-1/2">
           <ToggleGroup
@@ -111,6 +105,8 @@ export function TopBar({
             onValueChange={(value: string) => {
               if (value === 'overview') {
                 onShowOverview()
+              } else if (value === 'graph') {
+                onShowGraph()
               } else if (value === 'architecture') {
                 onShowArchitecture()
               } else if (value === 'setup-guide') {
@@ -121,6 +117,9 @@ export function TopBar({
           >
             <ToggleGroupItem value="overview" size="sm">
               Overview
+            </ToggleGroupItem>
+            <ToggleGroupItem value="graph" size="sm">
+              Graph
             </ToggleGroupItem>
             <ToggleGroupItem value="architecture" size="sm">
               Architecture
@@ -137,21 +136,10 @@ export function TopBar({
         </div>
       )}
 
-      {/* Right: Search + Layout + Actions */}
+      {/* Right: Layout + Actions */}
       <div className="flex items-center gap-2">
         {hasData && (
           <>
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(e) => onQueryChange(e.target.value)}
-                placeholder="Search..."
-                className="pl-8 h-8 w-40 text-sm"
-              />
-            </div>
-
             {/* Layout Direction Toggle */}
             <ToggleGroup
               type="single"

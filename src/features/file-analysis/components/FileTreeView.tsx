@@ -26,6 +26,7 @@ import {
 import type { FileRiskProfile } from '@/shared/types/risk'
 
 import { useFileAnalysisContext } from '../context/FileAnalysisContext'
+import { FileSearchBar } from './FileSearchBar'
 
 // Helper function to get icon based on file extension
 function getFileIcon(fileName: string) {
@@ -308,11 +309,16 @@ export const FileTreeView = forwardRef<
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Section Label */}
-      <div className="px-4 py-3">
+      {/* Header: Label */}
+      <div className="px-4 py-3 border-b border-border shrink-0">
         <span className="text-xs font-medium text-muted-foreground tracking-wider uppercase">
           File Explorer
         </span>
+      </div>
+
+      {/* Searchbar */}
+      <div className="px-3 py-2 shrink-0">
+        <FileSearchBar />
       </div>
 
       {/* Tree */}

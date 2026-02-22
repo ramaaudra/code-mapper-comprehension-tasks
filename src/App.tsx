@@ -6,6 +6,7 @@ import {
   FileAnalysisProvider,
   FileTreeSkeleton
 } from '@/features/file-analysis'
+import { DependencyGraph } from '@/features/graph'
 import { SimulationDialog } from '@/features/simulation'
 import { useAppLogic } from '@/hooks/useAppLogic'
 import { AppLayout, Sidebar, TopBar } from '@/shared/components/layouts'
@@ -45,8 +46,6 @@ function AppContent() {
     treeRef,
     selectedFileId,
     hoveredFile,
-    searchQuery,
-    setSearchQuery,
     analysisData,
     analysisLoadedAt,
     isLoading,
@@ -64,6 +63,7 @@ function AppContent() {
     handleFileSelect,
     navigateToFile,
     handleShowOverview,
+    handleShowGraph,
     handleShowArchitecture,
     handleShowSetupGuide,
     handleSimulateDelete,
@@ -88,12 +88,11 @@ function AppContent() {
         loadError={loadError}
         hasData={!!analysisData}
         onRefresh={refreshAnalysis}
-        query={searchQuery}
-        onQueryChange={setSearchQuery}
         layoutDirection={layoutDirection}
         onLayoutDirectionChange={setLayoutDirection}
         viewMode={viewMode}
         onShowOverview={handleShowOverview}
+        onShowGraph={handleShowGraph}
         onShowArchitecture={handleShowArchitecture}
         isTreeCollapsed={isTreeCollapsed}
         onToggleTree={toggleTreeView}
@@ -127,7 +126,19 @@ function AppContent() {
 
         <div className="flex-1 overflow-hidden">
           {analysisData ? (
-            viewMode === 'architecture' ? (
+            viewMode === 'graph' ? (
+              <div className="h-full bg-background">
+                <DependencyGraph
+                  nodes={graphElements.nodes}
+                  edges={graphElements.edges}
+                  focusNodeId={graphElements.focusNodeId}
+                  hoveredFile={hoveredFile}
+                  layoutDirection={layoutDirection}
+                  onNodeClick={navigateToFile}
+                  isLayoutTransitioning={isLayoutTransitioning}
+                />
+              </div>
+            ) : viewMode === 'architecture' ? (
               <Suspense fallback={<DashboardSkeleton />}>
                 <ArchitecturePage />
               </Suspense>
@@ -174,24 +185,26 @@ function AppContent() {
           )}
         </div>
 
-        {analysisData && selectedNode && viewMode === 'overview' && (
-          <div className="w-96 border-l border-border overflow-hidden">
-            <Suspense
-              fallback={
-                <div className="h-full flex items-center justify-center bg-background">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
-                </div>
-              }
-            >
-              <NodeDetailPanel
-                node={selectedNode}
-                data={analysisData}
-                onClose={handleDetailClose}
-                riskProfile={getRiskProfileForFile(selectedFileId)}
-              />
-            </Suspense>
-          </div>
-        )}
+        {analysisData &&
+          selectedNode &&
+          (viewMode === 'overview' || viewMode === 'graph') && (
+            <div className="w-96 border-l border-border overflow-hidden">
+              <Suspense
+                fallback={
+                  <div className="h-full flex items-center justify-center bg-background">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+                  </div>
+                }
+              >
+                <NodeDetailPanel
+                  node={selectedNode}
+                  data={analysisData}
+                  onClose={handleDetailClose}
+                  riskProfile={getRiskProfileForFile(selectedFileId)}
+                />
+              </Suspense>
+            </div>
+          )}
       </div>
 
       <SimulationDialog

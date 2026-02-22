@@ -18,8 +18,6 @@ export function useAppLogic() {
     selectedFileId,
     setSelectedFileId,
     setHoveredFile,
-    searchQuery,
-    setSearchQuery,
     filesInCycle,
     orphanFilesSet,
     riskProfileMap,
@@ -44,7 +42,7 @@ export function useAppLogic() {
 
   const [selectedNode, setSelectedNode] = useState<any | null>(null)
   const [viewMode, setViewMode] = useState<
-    'overview' | 'architecture' | 'setup-guide'
+    'overview' | 'graph' | 'architecture' | 'setup-guide'
   >('overview')
   const [isTreeCollapsed, setIsTreeCollapsed] = useState(false)
 
@@ -56,7 +54,8 @@ export function useAppLogic() {
       orphanFilesSet,
       riskProfileMap,
       brokenFilesSet,
-      newOrphansSet
+      newOrphansSet,
+      dataUpdatedAt: analysisLoadedAt
     })
 
   const { prefetch, clearPrefetchCache } = usePrefetch(
@@ -86,6 +85,9 @@ export function useAppLogic() {
         clearGraph()
         return
       }
+
+      // Switch to graph view when file is selected
+      setViewMode('graph')
 
       const resolvedFileId = generateGraphForFile(fileId) || fileId
       setSelectedFileId(resolvedFileId)
@@ -135,6 +137,11 @@ export function useAppLogic() {
     setViewMode('architecture')
   }, [])
 
+  // Show graph-only mode
+  const handleShowGraph = useCallback(() => {
+    setViewMode('graph')
+  }, [])
+
   // Show setup guide mode
   const handleShowSetupGuide = useCallback(() => {
     setViewMode('setup-guide')
@@ -143,11 +150,19 @@ export function useAppLogic() {
   // Refresh analysis data - triggers real reanalysis via POST /api/reanalyze
   const refreshAnalysis = useCallback(async () => {
     const result = await reanalyze()
-    setSelectedFileId(null)
-    setSelectedNode(null)
-    setHoveredFile(null)
-    clearGraph()
-    setViewMode('overview')
+    // Clear cache and regenerate graph with new data
+    if (result) {
+      clearGraph() // Clear graph state and cache
+      if (selectedFileId) {
+        // Regenerate graph for currently selected file with new data
+        generateGraphForFile(selectedFileId, result)
+      } else {
+        // No file selected, show overview
+        setSelectedNode(null)
+        setHoveredFile(null)
+        setViewMode('overview')
+      }
+    }
     if (result?.issues?.circularDependencies?.length) {
       console.info(
         'Circular Dependencies Found:',
@@ -155,7 +170,14 @@ export function useAppLogic() {
       )
     }
     return result
-  }, [reanalyze, setSelectedFileId, setHoveredFile, clearGraph])
+  }, [
+    reanalyze,
+    selectedFileId,
+    generateGraphForFile,
+    clearGraph,
+    setSelectedNode,
+    setHoveredFile
+  ])
 
   // Poll changes status every 10 seconds when analysis is loaded
   useEffect(() => {
@@ -191,11 +213,6 @@ export function useAppLogic() {
     }
   }, [simulationResult, setSimulationResult, setIsSimulating])
 
-  // Load analysis on mount
-  useEffect(() => {
-    refreshAnalysis()
-  }, [refreshAnalysis])
-
   // Toggle handlers
   const toggleTreeView = () => setIsTreeCollapsed((prev) => !prev)
 
@@ -206,8 +223,6 @@ export function useAppLogic() {
     treeRef,
     selectedFileId,
     hoveredFile,
-    searchQuery,
-    setSearchQuery,
     analysisData,
     analysisLoadedAt,
     isLoading,
@@ -225,6 +240,7 @@ export function useAppLogic() {
     handleFileSelect,
     navigateToFile,
     handleShowOverview,
+    handleShowGraph,
     handleShowArchitecture,
     handleShowSetupGuide,
     handleSimulateDelete,

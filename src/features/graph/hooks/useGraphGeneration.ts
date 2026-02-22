@@ -34,6 +34,7 @@ interface UseGraphGenerationOptions {
   riskProfileMap: Map<string, FileRiskProfile>
   brokenFilesSet: Set<string>
   newOrphansSet: Set<string>
+  dataUpdatedAt?: number | null
 }
 
 const BATCH_THRESHOLD = 100 // Nodes - use batching if more than this (increased for SWC speed)
@@ -86,7 +87,8 @@ export function useGraphGeneration({
   orphanFilesSet,
   riskProfileMap,
   brokenFilesSet,
-  newOrphansSet
+  newOrphansSet,
+  dataUpdatedAt
 }: UseGraphGenerationOptions) {
   const [graphElements, setGraphElements] = useState<GraphElements>({
     nodes: [],
@@ -142,7 +144,7 @@ export function useGraphGeneration({
   const labelStyle = useMemo(
     () => ({
       fontWeight: 700,
-      fontFamily: 'var(--font-sans)',
+      fontFamily: 'JetBrains Mono, monospace',
       fontSize: 12,
       fill: '#ffffffff',
       paintOrder: 'stroke fill' as const,
@@ -462,13 +464,14 @@ export function useGraphGeneration({
 
   const clearGraph = useCallback(() => {
     setGraphElements({ nodes: [], edges: [], focusNodeId: null })
+    graphCache.current.clear()
   }, [])
 
   useEffect(() => {
     // Clear cache when analysis data changes
     badgeCache.clear()
     graphCache.current.clear()
-  }, [analysisData])
+  }, [analysisData, dataUpdatedAt])
 
   return {
     graphElements,

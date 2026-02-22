@@ -30,7 +30,7 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
   const hasIssues = warnings && warnings.unresolvedImports.length > 0
 
   return (
-    <ScrollArea className="h-full">
+    <ScrollArea className="h-full bg-background">
       <div className="max-w-3xl mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="space-y-2">
