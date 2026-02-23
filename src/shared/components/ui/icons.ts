@@ -31,6 +31,7 @@ export {
   FolderOpen,
   FolderSimple as FolderTree,
   Ghost,
+  Info,
   Stack as Layers,
   Lightbulb,
   MapTrifold as Map,

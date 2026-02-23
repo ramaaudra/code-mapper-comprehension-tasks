@@ -1,7 +1,6 @@
 import { forwardRef, memo } from 'react'
 import { Tree, TreeApi } from 'react-arborist'
 
-import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
   AlertTriangle,
@@ -75,7 +74,9 @@ const createNodeRenderer = (
 
     // Determine if file has any status
     const hasStatus = isInCycle || isOrphan || isBroken || isNewOrphan
-    const isHighRisk =
+
+    // Check if file has high risk (always show indicators for Critical/High)
+    const hasHighRisk =
       riskProfile &&
       (riskProfile.category === 'Kritis' || riskProfile.category === 'Tinggi')
 
@@ -123,39 +124,22 @@ const createNodeRenderer = (
           {node.data.name}
         </span>
 
-        {/* Status indicators - only show on hover or if selected, except for high-risk items */}
+        {/* Status indicators - show if selected, hovered, has status, or has high risk */}
         <div
           className={`flex items-center gap-1 ${
-            node.isSelected || isHovered || isHighRisk || hasStatus
+            node.isSelected || isHovered || hasStatus || hasHighRisk
               ? 'opacity-100'
               : 'opacity-0 group-hover:opacity-100'
           } transition-opacity`}
         >
-          {/* Risk badge - outline style */}
-          {riskProfile && (node.isSelected || isHovered || isHighRisk) && (
-            <TooltipProvider delayDuration={300}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] px-1.5 py-0 h-4"
-                  >
-                    {riskProfile.category === 'Kritis'
-                      ? 'K'
-                      : riskProfile.category === 'Tinggi'
-                        ? 'T'
-                        : riskProfile.category === 'Sedang'
-                          ? 'S'
-                          : 'R'}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p className="text-xs">
-                    Risk: {riskProfile.category} (Score: {riskProfile.score})
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+          {/* Risk indicator dot */}
+          {riskProfile && (
+            <RiskIndicator
+              category={riskProfile.category}
+              score={riskProfile.score}
+              isSelected={node.isSelected}
+              isHovered={isHovered}
+            />
           )}
 
           {/* Orphan indicator */}
@@ -252,6 +236,79 @@ const createNodeRenderer = (
       </div>
     )
   })
+
+// Helper component for risk indicator dots
+interface RiskIndicatorProps {
+  category: string
+  score: number
+  isSelected: boolean
+  isHovered: boolean
+}
+
+function RiskIndicator({
+  category,
+  score,
+  isSelected,
+  isHovered
+}: RiskIndicatorProps) {
+  // Always show for Critical and High risk
+  const alwaysShow = category === 'Kritis' || category === 'Tinggi'
+
+  // Don't show if not always visible and not hovered/selected
+  if (!alwaysShow && !isSelected && !isHovered) {
+    return null
+  }
+
+  const getColor = (cat: string): string => {
+    switch (cat) {
+      case 'Kritis':
+        return 'bg-red-500'
+      case 'Tinggi':
+        return 'bg-orange-500'
+      case 'Sedang':
+        return 'bg-yellow-500'
+      case 'Rendah':
+        return 'bg-green-500'
+      default:
+        return 'bg-gray-500'
+    }
+  }
+
+  const getLabel = (cat: string): string => {
+    switch (cat) {
+      case 'Kritis':
+        return 'Critical Risk'
+      case 'Tinggi':
+        return 'High Risk'
+      case 'Sedang':
+        return 'Medium Risk'
+      case 'Rendah':
+        return 'Low Risk'
+      default:
+        return 'Unknown Risk'
+    }
+  }
+
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            className={`inline-block w-2 h-2 rounded-full ${getColor(category)} cursor-help`}
+          />
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          <div className="space-y-1">
+            <p className="font-medium">{getLabel(category)}</p>
+            <p className="text-xs text-muted-foreground">
+              Risk Score: {score.toFixed(1)}
+            </p>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
 
 interface FileTreeViewProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

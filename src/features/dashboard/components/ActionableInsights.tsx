@@ -115,12 +115,12 @@ export function ActionableInsights(props: ActionableInsightsProps) {
         {insights.map((insight, index) => (
           <div
             key={index}
-            className={`p-3 rounded-lg border ${
+            className={`p-4 rounded-lg ${
               insight.type === 'success'
-                ? 'bg-green-500/5 border-green-500/20'
+                ? 'bg-green-500/5'
                 : insight.type === 'warning'
-                  ? 'bg-orange-500/5 border-orange-500/20'
-                  : 'bg-muted/30 border-border'
+                  ? 'bg-orange-500/5'
+                  : 'bg-muted/20'
             }`}
           >
             <div className="flex items-start gap-2">

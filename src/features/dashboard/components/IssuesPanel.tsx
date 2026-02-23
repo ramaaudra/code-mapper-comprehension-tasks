@@ -29,15 +29,17 @@ interface IssuesPanelProps {
   onNavigateToFile?: (file: string) => void
 }
 
-// Helper function to get severity color
-const getSeverityColor = (severity: 'high' | 'medium' | 'low'): string => {
+// Helper function to get severity badge variant
+const getSeverityBadgeVariant = (
+  severity: 'high' | 'medium' | 'low'
+): 'destructive' | 'default' | 'outline' => {
   switch (severity) {
     case 'high':
-      return 'bg-muted text-muted-foreground border-border'
+      return 'destructive'
     case 'medium':
-      return 'bg-muted text-muted-foreground border-border'
+      return 'default'
     case 'low':
-      return 'bg-muted text-muted-foreground border-border'
+      return 'outline'
   }
 }
 
@@ -62,7 +64,7 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
     )
   }
 
-  const { circularDependencies, orphans, summary } = data.issues
+  const { circularDependencies, orphans } = data.issues
 
   // Count by severity
   const severityCounts = circularDependencies.reduce(
@@ -75,23 +77,6 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
 
   return (
     <div className="space-y-4 overflow-x-hidden">
-      {/* Summary Card */}
-      {summary && (
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              <AlertTriangle className="h-4 w-4" />
-              Analysis Summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="whitespace-pre-line text-xs text-muted-foreground">
-              {summary}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Circular Dependencies */}
       <Card className="overflow-hidden">
         <CardHeader className="pb-3">
@@ -100,142 +85,8 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
               <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">Circular Dependencies</span>
             </div>
-            <Dialog
-              open={circularDialogOpen}
-              onOpenChange={setCircularDialogOpen}
-            >
-              <DialogTrigger asChild>
-                <Badge
-                  variant={
-                    circularDependencies.length > 0
-                      ? 'destructive'
-                      : 'secondary'
-                  }
-                  className="cursor-pointer hover:opacity-80"
-                >
-                  {circularDependencies.length}
-                </Badge>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh]">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-orange-500" />
-                    Circular Dependencies ({circularDependencies.length})
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 overflow-y-auto p-2">
-                  {circularDependencies.length === 0 ? (
-                    <div className="py-8 text-center text-muted-foreground">
-                      <AlertTriangle className="mx-auto h-12 w-12 opacity-50" />
-                      <p>✅ No circular dependencies found!</p>
-                      <p className="mt-1 text-xs">
-                        Your codebase has a clean dependency structure.
-                      </p>
-                    </div>
-                  ) : (
-                    circularDependencies.map((depInfo, index) => (
-                      <div
-                        key={index}
-                        className="space-y-3 rounded-lg border p-4"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold">
-                              Cycle #{index + 1}
-                            </span>
-                            <Badge
-                              className={`px-2 py-1 text-xs ${getSeverityColor(depInfo.severity)}`}
-                              variant="outline"
-                            >
-                              {depInfo.severity.toUpperCase()}
-                            </Badge>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Length: {depInfo.length} • Files:{' '}
-                            {depInfo.files.length}
-                          </div>
-                        </div>
-
-                        <div className="rounded-md bg-muted/50 p-3">
-                          <p className="mb-2 text-xs font-medium text-muted-foreground">
-                            Dependency Flow:
-                          </p>
-                          <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-                            {depInfo.cycle.map((file, fileIndex) => (
-                              <React.Fragment key={fileIndex}>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          onNavigateToFile?.(file)
-                                          setCircularDialogOpen(false)
-                                        }}
-                                        className="rounded border bg-background px-2 py-1 text-left text-xs transition hover:border-primary/50 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                                      >
-                                        <span className="truncate">
-                                          {getBasename(file)}
-                                        </span>
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className="max-w-xs whitespace-pre-line text-xs">
-                                        {file}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                                {fileIndex < depInfo.cycle.length - 1 && (
-                                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                                )}
-                              </React.Fragment>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div>
-                          <p className="mb-2 text-xs font-medium text-muted-foreground">
-                            Files Involved:
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            {depInfo.files.map((file, fileIndex) => (
-                              <TooltipProvider key={fileIndex}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Badge
-                                      variant="outline"
-                                      className="cursor-pointer text-xs hover:border-primary/50 hover:text-primary"
-                                      onClick={() => {
-                                        onNavigateToFile?.(file)
-                                        setCircularDialogOpen(false)
-                                      }}
-                                    >
-                                      {getBasename(file)}
-                                    </Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="max-w-xs whitespace-pre-line text-xs">
-                                      {file}
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardHeader>
-
-        {circularDependencies.length > 0 && (
-          <CardContent>
-            <div className="flex flex-wrap gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              {/* Severity badges in header */}
               {(['high', 'medium', 'low'] as const).map((severity) => {
                 const count = severityCounts[severity] || 0
                 if (count === 0) {
@@ -244,16 +95,148 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                 return (
                   <Badge
                     key={severity}
-                    className={`${getSeverityColor(severity)} text-xs`}
-                    variant="outline"
+                    variant={getSeverityBadgeVariant(severity)}
+                    className="text-[10px] px-1.5 py-0"
                   >
                     {count} {severity}
                   </Badge>
                 )
               })}
+              <Dialog
+                open={circularDialogOpen}
+                onOpenChange={setCircularDialogOpen}
+              >
+                <DialogTrigger asChild>
+                  <Badge
+                    variant={
+                      circularDependencies.length > 0
+                        ? 'destructive'
+                        : 'secondary'
+                    }
+                    className="cursor-pointer hover:opacity-80"
+                  >
+                    {circularDependencies.length}
+                  </Badge>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[80vh]">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-orange-500" />
+                      Circular Dependencies ({circularDependencies.length})
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 overflow-y-auto p-2">
+                    {circularDependencies.length === 0 ? (
+                      <div className="py-8 text-center text-muted-foreground">
+                        <AlertTriangle className="mx-auto h-12 w-12 opacity-50" />
+                        <p>✅ No circular dependencies found!</p>
+                        <p className="mt-1 text-xs">
+                          Your codebase has a clean dependency structure.
+                        </p>
+                      </div>
+                    ) : (
+                      circularDependencies.map((depInfo, index) => (
+                        <div
+                          key={index}
+                          className="space-y-3 rounded-lg bg-muted/20 p-4"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold">
+                                Cycle #{index + 1}
+                              </span>
+                              <Badge
+                                variant={getSeverityBadgeVariant(
+                                  depInfo.severity
+                                )}
+                                className="px-2 py-1 text-xs"
+                              >
+                                {depInfo.severity.toUpperCase()}
+                              </Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Length: {depInfo.length} • Files:{' '}
+                              {depInfo.files.length}
+                            </div>
+                          </div>
+
+                          <div className="rounded-md bg-muted/50 p-3">
+                            <p className="mb-2 text-xs font-medium text-muted-foreground">
+                              Dependency Flow:
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+                              {depInfo.cycle.map((file, fileIndex) => (
+                                <React.Fragment key={fileIndex}>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            onNavigateToFile?.(file)
+                                            setCircularDialogOpen(false)
+                                          }}
+                                          className="rounded bg-muted/30 px-2 py-1 text-left text-xs transition hover:bg-muted/50 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                                        >
+                                          <span className="truncate">
+                                            {getBasename(file)}
+                                          </span>
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="max-w-xs whitespace-pre-line text-xs">
+                                          {file}
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                  {fileIndex < depInfo.cycle.length - 1 && (
+                                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                  )}
+                                </React.Fragment>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="mb-2 text-xs font-medium text-muted-foreground">
+                              Files Involved:
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {depInfo.files.map((file, fileIndex) => (
+                                <TooltipProvider key={fileIndex}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge
+                                        variant="outline"
+                                        className="cursor-pointer text-xs hover:border-primary/50 hover:text-primary"
+                                        onClick={() => {
+                                          onNavigateToFile?.(file)
+                                          setCircularDialogOpen(false)
+                                        }}
+                                      >
+                                        {getBasename(file)}
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="max-w-xs whitespace-pre-line text-xs">
+                                        {file}
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
-          </CardContent>
-        )}
+          </div>
+        </CardHeader>
       </Card>
 
       <div className="space-y-4">
@@ -304,12 +287,12 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                                   onNavigateToFile?.(file)
                                   setOrphansDialogOpen(false)
                                 }}
-                                className="w-full rounded-lg border px-3 py-3 text-left transition hover:border-primary/50 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                                className="w-full rounded-lg bg-muted/20 px-3 py-3 text-left transition hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                               >
                                 <span className="block truncate text-sm font-medium mb-1">
                                   {getBasename(file)}
                                 </span>
-                                <span className="block break-all font-mono text-xs text-muted-foreground leading-tight">
+                                <span className="block break-all font-mono text-xs text-foreground/70 leading-tight">
                                   {getRelativePath(file)}
                                 </span>
                               </button>
@@ -338,12 +321,12 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                         <button
                           type="button"
                           onClick={() => onNavigateToFile?.(file)}
-                          className="w-full rounded-md border bg-background px-3 py-2 text-left text-sm transition hover:border-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                          className="w-full rounded-md bg-muted/20 px-3 py-2 text-left text-sm transition hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                         >
                           <span className="block truncate font-medium">
                             {getBasename(file)}
                           </span>
-                          <span className="block break-all font-mono text-xs text-muted-foreground leading-tight">
+                          <span className="block break-all font-mono text-xs text-foreground/70 leading-tight">
                             {getRelativePath(file)}
                           </span>
                         </button>

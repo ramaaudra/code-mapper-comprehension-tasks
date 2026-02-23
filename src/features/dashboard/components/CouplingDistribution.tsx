@@ -61,7 +61,7 @@ export function CouplingDistribution({
                         {bucket.count} files ({bucket.percentage.toFixed(0)}%)
                       </span>
                     </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
                       <div
                         className={`h-full transition-all ${bucket.color}`}
                         style={{ width: `${bucket.percentage}%` }}

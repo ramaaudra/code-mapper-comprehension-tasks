@@ -64,13 +64,13 @@ export const ProjectDashboard = memo(
       }
     }, [architectureData, analysisData])
 
-    // Calculate high risk modules
+    // Calculate high risk modules using scientific formula: RiskScore = Ca × I
+    // Based on Robert C. Martin's dependency metrics: Risk = Impact × Probability
+    // Impact = Afferent Coupling (Ca/Dependents), Probability = Instability (I)
     const highRiskModules = useMemo(() => {
       if (!architectureData?.folders) {
         return []
       }
-
-      const maxCa = Math.max(...architectureData.folders.map((x) => x.ca), 1)
 
       return architectureData.folders
         .filter((f) => f.instability > 0.5 && f.ca > 0)
@@ -78,7 +78,7 @@ export const ProjectDashboard = memo(
           path: f.folderPath,
           instability: f.instability,
           fanIn: f.ca,
-          riskScore: f.instability * (f.ca / maxCa)
+          riskScore: f.ca * f.instability
         }))
         .sort((a, b) => b.riskScore - a.riskScore)
         .slice(0, 5)
@@ -184,6 +184,31 @@ export const ProjectDashboard = memo(
         }
       ]
 
+      // Generate critical insights for Health Card
+      const criticalInsights = []
+      if (healthBreakdown.cycleCount > 0) {
+        criticalInsights.push({
+          type: 'critical' as const,
+          message: `${healthBreakdown.cycleCount} circular ${healthBreakdown.cycleCount === 1 ? 'dependency' : 'dependencies'} need attention`
+        })
+      }
+      // High risk = Risk Score >= 25 (scientific threshold from Ca × I formula)
+      const highRiskCount = highRiskModules.filter(
+        (m) => m.riskScore >= 25
+      ).length
+      if (highRiskCount > 0) {
+        criticalInsights.push({
+          type: 'warning' as const,
+          message: `${highRiskCount} unstable module${highRiskCount > 1 ? 's' : ''} with many dependents detected`
+        })
+      }
+      if (criticalInsights.length === 0) {
+        criticalInsights.push({
+          type: 'success' as const,
+          message: 'Architecture is in excellent shape'
+        })
+      }
+
       return (
         <div className="h-full overflow-y-auto overflow-x-hidden bg-background w-full">
           <div className="max-w-full mx-auto px-6 md:px-8 lg:px-12 py-6 pb-12 space-y-8">
@@ -197,24 +222,28 @@ export const ProjectDashboard = memo(
               </p>
             </div>
 
+            {/* Top Metrics - Minimalist Developer Style */}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {overviewCards.map(({ label, value, icon }) => (
-                <div key={label} className="rounded-lg border bg-card p-4">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{label}</span>
-                    {icon}
+                <div key={label} className="rounded-lg bg-muted/20 p-6">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+                      {label}
+                    </span>
+                    <span className="text-muted-foreground">{icon}</span>
                   </div>
-                  <div className="mt-3 text-2xl font-semibold text-foreground">
+                  <div className="mt-3 text-5xl font-semibold tabular-nums text-foreground tracking-tight">
                     {value}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Health Score - Full Width */}
+            {/* Health Score - Full Width with Critical Insights */}
             <ArchitectureHealthScore
               breakdown={healthBreakdown}
               totalFiles={snapshot.totalFiles}
+              criticalInsights={criticalInsights}
             />
 
             <div className="grid gap-6 lg:grid-cols-2">
