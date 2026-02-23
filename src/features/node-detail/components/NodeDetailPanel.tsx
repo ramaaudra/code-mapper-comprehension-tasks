@@ -5,7 +5,6 @@ import {
   ArchitectureStats,
   useFileArchitectureMetrics
 } from '@/features/architecture'
-import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -14,10 +13,11 @@ import {
   DialogTitle
 } from '@/shared/components/ui/dialog'
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  CheckCircle,
   Copy,
-  FileText,
   Focus,
   Map,
   X
@@ -36,16 +36,20 @@ import {
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
 import { findDependencyPath } from '@/shared/lib/api/pathfinding'
-import { getBasename, getRelativePath } from '@/shared/lib/utils'
-import { getRiskColor } from '@/shared/lib/utils/risk'
-import type { FileRiskProfile } from '@/shared/types/risk'
+import { getBasename, getFileIcon, getRelativePath } from '@/shared/lib/utils'
+import {
+  calculateCostOfChange,
+  getCostOfChangeLevel,
+  getRiskLabel,
+  getRiskTextClass
+} from '@/shared/lib/utils/risk'
+import type { RiskLevel } from '@/shared/types/risk'
 
 interface NodeDetailPanelProps {
   node: any
   data: any
   onClose: () => void
   onFocusSubgraph?: (nodeId: string, direction: 'inward' | 'outward') => void
-  riskProfile?: FileRiskProfile | null
 }
 
 const NodeDetailPanel = memo(
@@ -53,8 +57,7 @@ const NodeDetailPanel = memo(
     node,
     data,
     onClose,
-    onFocusSubgraph,
-    riskProfile
+    onFocusSubgraph
   }: NodeDetailPanelProps) {
     const [focusDirection, setFocusDirection] = useState<'inward' | 'outward'>(
       'outward'
@@ -75,6 +78,22 @@ const NodeDetailPanel = memo(
     // Architecture metrics
     const { data: archMetrics } = useFileArchitectureMetrics(nodeId)
 
+    // Calculate Cost of Change (Blast Radius): Ca + (Ce × 0.5)
+    const riskAssessment = useMemo(() => {
+      if (!archMetrics) {
+        return null
+      }
+
+      const cocScore = calculateCostOfChange(archMetrics.ca, archMetrics.ce)
+      const level = getCostOfChangeLevel(cocScore, archMetrics.hasCycle)
+
+      return {
+        riskScore: cocScore,
+        level: level,
+        isInCycle: archMetrics.hasCycle
+      }
+    }, [archMetrics])
+
     // Calculate indegree and outdegree
     const incomingEdges = useMemo(() => {
       if (!data?.edges || !nodeId) {
@@ -89,9 +108,6 @@ const NodeDetailPanel = memo(
       }
       return data.edges.filter((e: any) => e.source === nodeId)
     }, [data?.edges, nodeId])
-
-    const indegree = incomingEdges.length
-    const outdegree = outgoingEdges.length
 
     // Get importers (files that import this file)
     const importers = useMemo(
@@ -153,7 +169,7 @@ const NodeDetailPanel = memo(
         setTracedPath(pathResult)
         setIsPathModalOpen(true)
       } catch (error) {
-        console.error('Gagal melacak path:', error)
+        console.error('Failed to trace path:', error)
       } finally {
         setIsTracing(false)
       }
@@ -184,45 +200,52 @@ const NodeDetailPanel = memo(
       return (
         <ScrollArea className="h-[calc(100vh-200px)] lg:h-[calc(100vh-220px)] w-full">
           <div className="p-4 space-y-1">
-            {items.map((item: any) => (
-              <div
-                key={item.id}
-                className="group flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex-1 min-w-0 pr-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium truncate">
-                      {item.basename}
-                    </span>
-                    {item.strength > 1 && (
-                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                        x{item.strength}
+            {items.map((item: any) => {
+              const ItemFileIcon = getFileIcon(item.basename)
+              return (
+                <div
+                  key={item.id}
+                  className="group flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="flex items-center gap-2">
+                      <ItemFileIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm font-medium truncate">
+                        {item.basename}
                       </span>
-                    )}
+                      {item.strength > 1 && (
+                        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          x{item.strength}
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      className="text-xs text-muted-foreground truncate pl-6"
+                      title={item.label}
+                    >
+                      {item.label}
+                    </div>
                   </div>
-                  <div
-                    className="text-xs text-muted-foreground truncate"
-                    title={item.label}
-                  >
-                    {item.label}
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleTracePath(item.id)}
+                      disabled={isTracing}
+                      className="p-1.5 rounded-md hover:bg-background border border-transparent hover:border-border text-muted-foreground hover:text-foreground"
+                      title="Trace path"
+                      aria-label={`Trace path to ${item.basename}`}
+                    >
+                      <Map className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => handleTracePath(item.id)}
-                    disabled={isTracing}
-                    className="p-1.5 rounded-md hover:bg-background border border-transparent hover:border-border text-muted-foreground hover:text-foreground"
-                    title="Trace path"
-                  >
-                    <Map className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </ScrollArea>
       )
     }
+
+    const FileIcon = getFileIcon(nodeData.basename)
 
     return (
       <div className="h-full w-full bg-background flex flex-col">
@@ -231,7 +254,7 @@ const NodeDetailPanel = memo(
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3 overflow-hidden">
               <div className="mt-1 p-1.5 bg-muted rounded-md shrink-0">
-                <FileText className="h-5 w-5 text-muted-foreground" />
+                <FileIcon className="h-5 w-5 text-muted-foreground" />
               </div>
               <div className="min-w-0">
                 <h2
@@ -242,11 +265,14 @@ const NodeDetailPanel = memo(
                 </h2>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <p
-                    className="text-xs text-muted-foreground truncate max-w-[240px]"
+                    className="text-xs text-muted-foreground truncate max-w-[180px]"
                     title={nodeData.id}
                   >
                     {getRelativePath(nodeData.id)}
                   </p>
+                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">
+                    {formatFileSize(nodeData.size)}
+                  </span>
                   <TooltipProvider>
                     <Tooltip open={showCopyMenu || copiedType !== null}>
                       <TooltipTrigger asChild>
@@ -265,19 +291,21 @@ const NodeDetailPanel = memo(
                       >
                         {copiedType ? (
                           <div className="px-2 py-1 text-xs text-green-600">
-                            ✓ Copied!
+                            Copied!
                           </div>
                         ) : (
                           <div className="flex flex-col gap-1">
                             <button
                               onClick={() => copyPath('full')}
                               className="px-2 py-1 text-xs text-left hover:bg-accent rounded"
+                              aria-label="Copy full path"
                             >
                               Copy full path
                             </button>
                             <button
                               onClick={() => copyPath('relative')}
                               className="px-2 py-1 text-xs text-left hover:bg-accent rounded"
+                              aria-label="Copy relative path"
                             >
                               Copy relative path
                             </button>
@@ -317,7 +345,7 @@ const NodeDetailPanel = memo(
                 value="dependencies"
                 className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-2 pt-1.5"
               >
-                Deps{' '}
+                Imports{' '}
                 <span className="ml-1.5 text-xs text-muted-foreground bg-muted px-1.5 rounded-full">
                   {outgoingEdges.length}
                 </span>
@@ -326,7 +354,7 @@ const NodeDetailPanel = memo(
                 value="dependents"
                 className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-2 pt-1.5"
               >
-                Users{' '}
+                Used By{' '}
                 <span className="ml-1.5 text-xs text-muted-foreground bg-muted px-1.5 rounded-full">
                   {incomingEdges.length}
                 </span>
@@ -338,78 +366,114 @@ const NodeDetailPanel = memo(
             value="overview"
             className="flex-1 overflow-y-auto m-0 p-4 space-y-6"
           >
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-3 bg-muted/30 rounded-lg border border-border/50 text-center">
-                <div className="text-2xl font-semibold text-foreground">
-                  {formatFileSize(nodeData.size).split(' ')[0]}
-                </div>
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mt-1">
-                  {formatFileSize(nodeData.size).split(' ')[1]}
-                </div>
-              </div>
-              <div className="p-3 bg-muted/30 rounded-lg border border-border/50 text-center">
-                <div className="text-2xl font-semibold text-foreground">
-                  {indegree}
-                </div>
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mt-1">
-                  Users
-                </div>
-              </div>
-              <div className="p-3 bg-muted/30 rounded-lg border border-border/50 text-center">
-                <div className="text-2xl font-semibold text-foreground">
-                  {outdegree}
-                </div>
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mt-1">
-                  Deps
-                </div>
-              </div>
-            </div>
-
-            {/* Risk Analysis */}
-            {riskProfile && (
+            {/* Risk Assessment: The Verdict */}
+            {riskAssessment && (
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-foreground">
-                  Refactor Risk
+                  Cost of Change
                 </h3>
-                <div className="p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge
-                      variant="outline"
-                      className={`${getRiskColor(riskProfile.category)} bg-transparent`}
-                    >
-                      {riskProfile.category}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      Score: {riskProfile.score}
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">In Cycle</span>
-                      <span
-                        className={
-                          riskProfile.factors.inCycle
-                            ? 'text-destructive font-medium'
-                            : 'text-foreground'
-                        }
-                      >
-                        {riskProfile.factors.inCycle ? 'Yes' : 'No'}
+                {riskAssessment.isInCycle ? (
+                  // Cycle Override: Critical Warning
+                  <div className="p-4 rounded-lg border-2 border-red-500 bg-red-500/5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                      <span className="font-semibold text-red-500">
+                        CRITICAL: Circular Dependency
                       </span>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      This file is part of a circular dependency chain. Changes
+                      may cause infinite loops or compilation errors.
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  // Normal Risk Assessment
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={`p-4 rounded-lg border ${getRiskBorderClass(riskAssessment.level)} ${getRiskBgClass(riskAssessment.level)} cursor-help`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {riskAssessment.level === 'low' ? (
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <AlertTriangle
+                                  className={`h-4 w-4 ${getRiskTextClass(riskAssessment.level)}`}
+                                />
+                              )}
+                              <span
+                                className={`font-semibold ${getRiskTextClass(riskAssessment.level)}`}
+                              >
+                                {getRiskLabel(riskAssessment.level)} Cost of
+                                Change
+                              </span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              Score: {riskAssessment.riskScore.toFixed(1)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {getRiskDescription(riskAssessment.level)}
+                          </p>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="top"
+                        className="max-w-xs bg-popover border-border"
+                      >
+                        <div className="space-y-2">
+                          <p className="font-semibold text-popover-foreground">
+                            Risk Score: {riskAssessment.riskScore.toFixed(1)}
+                          </p>
+                          <p className="text-xs text-popover-foreground/80">
+                            Measures <strong>blast radius</strong>: how many
+                            files might break if you edit this file
+                          </p>
+                          {archMetrics && (
+                            <div className="text-xs space-y-1 pt-1 border-t border-border">
+                              <p className="text-popover-foreground/80">
+                                • <strong>Dependents (Ca):</strong>{' '}
+                                {archMetrics.ca}
+                              </p>
+                              <p className="text-popover-foreground/80">
+                                • <strong>Dependencies (Ce):</strong>{' '}
+                                {archMetrics.ce}
+                              </p>
+                              <p className="text-popover-foreground/80 pt-1">
+                                Calculation: {archMetrics.ca} + (
+                                {archMetrics.ce} × 0.5) ={' '}
+                                {riskAssessment.riskScore.toFixed(1)}
+                              </p>
+                            </div>
+                          )}
+                          <div className="text-xs pt-1 border-t border-border">
+                            <p className="text-popover-foreground/80">
+                              Higher score = more files affected when modifying
+                            </p>
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
               </div>
             )}
 
-            {/* Architecture Metrics */}
+            {/* Architecture Metrics: The Evidence */}
             {archMetrics && (
-              <ArchitectureStats
-                ca={archMetrics.ca}
-                ce={archMetrics.ce}
-                instability={archMetrics.instability}
-                hasCycle={archMetrics.hasCycle}
-              />
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-foreground">
+                  Architecture Metrics
+                </h3>
+                <ArchitectureStats
+                  ca={archMetrics.ca}
+                  ce={archMetrics.ce}
+                  instability={archMetrics.instability}
+                  hasCycle={archMetrics.hasCycle}
+                />
+              </div>
             )}
 
             {/* Actions */}
@@ -528,12 +592,40 @@ const NodeDetailPanel = memo(
         : prevProps.node?.id) ===
       (typeof nextProps.node === 'string' ? nextProps.node : nextProps.node?.id)
 
-    const riskEqual =
-      prevProps.riskProfile?.score === nextProps.riskProfile?.score
-
-    // Only re-render if node or risk actually changed
-    return nodeIdEqual && riskEqual
+    // Only re-render if node actually changed
+    return nodeIdEqual
   }
 )
+
+// Helper functions for risk styling
+function getRiskBorderClass(level: string): string {
+  const borders: Record<string, string> = {
+    critical: 'border-red-500',
+    high: 'border-orange-500',
+    medium: 'border-yellow-500',
+    low: 'border-green-500'
+  }
+  return borders[level] || 'border-gray-300'
+}
+
+function getRiskBgClass(level: string): string {
+  const bgs: Record<string, string> = {
+    critical: 'bg-red-500/5',
+    high: 'bg-orange-500/5',
+    medium: 'bg-yellow-500/5',
+    low: 'bg-green-500/5'
+  }
+  return bgs[level] || 'bg-gray-500/5'
+}
+
+function getRiskDescription(level: RiskLevel): string {
+  const descriptions: Record<RiskLevel, string> = {
+    critical: 'CRITICAL - highly unstable core module OR part of a cycle.',
+    high: 'High impact - careful testing required after modification.',
+    medium: 'Exercise caution - affects a handful of dependents.',
+    low: 'Safe to modify - minimal collateral damage.'
+  }
+  return descriptions[level]
+}
 
 export default NodeDetailPanel

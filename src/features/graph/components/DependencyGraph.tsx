@@ -71,6 +71,7 @@ export interface DependencyGraphProps {
   focusNodeId: string | null
   hoveredFile?: string | null
   layoutDirection: 'LR' | 'TB'
+  onLayoutDirectionChange?: (direction: 'LR' | 'TB') => void
   onNodeClick?: (fileId: string) => void
   isLayoutTransitioning?: boolean
 }
@@ -341,6 +342,7 @@ function DependencyGraphInner({
   focusNodeId,
   hoveredFile,
   layoutDirection,
+  onLayoutDirectionChange,
   onNodeClick,
   isLayoutTransitioning = false
 }: DependencyGraphProps) {
@@ -421,10 +423,14 @@ function DependencyGraphInner({
   }, [layoutedNodes, reactFlow])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Derived state needed for React Flow drag/drop updates
     setNodes(nodesWithHover)
   }, [nodesWithHover, setNodes])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Derived state needed for React Flow drag/drop updates
     setEdges(edges)
   }, [edges, setEdges])
 
@@ -479,7 +485,10 @@ function DependencyGraphInner({
   if (isLayoutTransitioning || layoutedNodes.length === 0) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent" />
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"
+          aria-label="Loading…"
+        />
       </div>
     )
   }
@@ -517,6 +526,7 @@ function DependencyGraphInner({
         zoomOnScroll={true}
         selectionOnDrag={false}
         className="bg-[hsl(var(--canvas-background))]"
+        proOptions={{ hideAttribution: true }}
       >
         <Background
           variant={BackgroundVariant.Dots}
@@ -554,6 +564,8 @@ function DependencyGraphInner({
         onFitToScreen={() => reactFlow.fitView({ padding: 0.2, duration: 200 })}
         showMiniMap={showMiniMap}
         onToggleMiniMap={() => setShowMiniMap((prev) => !prev)}
+        layoutDirection={layoutDirection}
+        onLayoutDirectionChange={onLayoutDirectionChange}
       />
     </div>
   )
@@ -564,11 +576,11 @@ export function DependencyGraph(props: DependencyGraphProps) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center gap-3 text-neutral-500 dark:text-neutral-400">
         <h2 className="text-lg font-semibold text-[hsl(var(--foreground))]">
-          Tidak ada dependensi untuk file ini
+          No dependencies for this file
         </h2>
         <p className="text-sm max-w-md">
-          Pilih file lain dari tree untuk melihat hubungan import/export yang
-          lebih kompleks.
+          Select another file from the tree to see more complex import/export
+          relationships.
         </p>
       </div>
     )

@@ -89,3 +89,6 @@ export {
   hasMatchInSet,
   getValueFromMap
 } from './file-status'
+
+// Re-export file icon utilities
+export { getFileIcon } from './file-icons'

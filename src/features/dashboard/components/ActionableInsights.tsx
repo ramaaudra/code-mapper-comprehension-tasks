@@ -11,61 +11,109 @@ import {
   Lightbulb,
   RefreshCw
 } from '@/shared/components/ui/icons'
+import { getRiskBgOpacityClass } from '@/shared/lib/utils/risk'
+import type { RiskLevel } from '@/shared/types/risk'
 
-interface Insight {
-  type: 'success' | 'warning' | 'info'
-  icon: React.ReactNode
-  message: string
-  action?: string
+interface RiskItem {
+  path: string
+  riskScore: number
+  instability: number
+  fanIn: number
+}
+
+interface GodObjectItem {
+  path: string
+  dependencyCount: number
 }
 
 interface ActionableInsightsProps {
   cycleCount: number
   orphanCount: number
-  unstableModules: { path: string; instability: number; fanIn: number }[]
-  heavilyCoupledFiles: { path: string; count: number }[]
+  criticalRisks: RiskItem[] // Risk score >= 50
+  warningRisks: RiskItem[] // Risk score 25-49
+  godObjects: GodObjectItem[] // Files with >15 dependencies
 }
 
+interface Insight {
+  priority: number
+  type: 'critical' | 'warning' | 'info' | 'success'
+  icon: React.ReactNode
+  message: string
+  action?: string
+  level: RiskLevel
+}
+
+/**
+ * Triage Priority Order (highest to lowest):
+ * 1. Circular Dependencies (BLOCKER - system integrity)
+ * 2. Critical Risk Modules (score >= 50 - Zone of Pain)
+ * 3. God Objects (architectural smell)
+ * 4. Warning Risk Modules (score 25-49)
+ * 5. Orphans (cleanup)
+ */
 function generateInsights(props: ActionableInsightsProps): Insight[] {
-  const { cycleCount, orphanCount, unstableModules, heavilyCoupledFiles } =
+  const { cycleCount, orphanCount, criticalRisks, warningRisks, godObjects } =
     props
   const insights: Insight[] = []
 
-  // Cycle insights
-  if (cycleCount === 0) {
+  // 1. BLOCKER: Circular Dependencies
+  if (cycleCount > 0) {
     insights.push({
-      type: 'success',
-      icon: <CheckCircle className="h-4 w-4 text-green-500" />,
-      message: 'No circular dependencies detected',
-      action: 'Maintain this clean structure'
-    })
-  } else {
-    insights.push({
-      type: 'warning',
-      icon: <RefreshCw className="h-4 w-4 text-red-500" />,
+      priority: 1,
+      type: 'critical',
+      level: 'critical',
+      icon: <RefreshCw className="h-4 w-4 text-red-600" />,
       message: `${cycleCount} circular ${cycleCount === 1 ? 'dependency' : 'dependencies'} detected`,
-      action: 'Review and break cycles to improve maintainability'
+      action:
+        'Break cycles immediately to prevent memory leaks and compilation issues'
     })
   }
 
-  // Unstable modules insight
-  const highRiskModules = unstableModules.filter(
-    (m) => m.instability > 0.7 && m.fanIn >= 3
-  )
-  if (highRiskModules.length > 0) {
-    const top = highRiskModules[0]
+  // 2. CRITICAL: Risk Score >= 50 (Zone of Pain)
+  if (criticalRisks.length > 0) {
+    const top = criticalRisks[0]
     insights.push({
-      type: 'warning',
-      icon: <AlertTriangle className="h-4 w-4 text-orange-500" />,
-      message: `${top.path} is unstable (I=${top.instability.toFixed(2)}) but has ${top.fanIn} dependents`,
-      action: 'Consider refactoring interfaces to reduce breaking change risk'
+      priority: 2,
+      type: 'critical',
+      level: 'critical',
+      icon: <AlertTriangle className="h-4 w-4 text-red-500" />,
+      message: `${top.path} is in the Zone of Pain (Risk: ${top.riskScore.toFixed(1)})`,
+      action: `Has ${top.fanIn} dependents with ${(top.instability * 100).toFixed(0)}% instability - changes will cause cascading failures`
     })
   }
 
-  // Orphan insight
+  // 3. WARNING: God Objects (>15 dependencies)
+  if (godObjects.length > 0) {
+    const top = godObjects[0]
+    insights.push({
+      priority: 3,
+      type: 'warning',
+      level: 'high',
+      icon: <Lightbulb className="h-4 w-4 text-orange-500" />,
+      message: `${top.path.split('/').pop()} has ${top.dependencyCount} dependencies`,
+      action: 'Potential God Object - consider splitting responsibilities'
+    })
+  }
+
+  // 4. WARNING: Risk Score 25-49
+  if (warningRisks.length > 0) {
+    const top = warningRisks[0]
+    insights.push({
+      priority: 4,
+      type: 'warning',
+      level: 'high',
+      icon: <AlertTriangle className="h-4 w-4 text-orange-500" />,
+      message: `${top.path} has elevated risk (Score: ${top.riskScore.toFixed(1)})`,
+      action: 'Review dependencies before making changes'
+    })
+  }
+
+  // 5. INFO: Orphans
   if (orphanCount > 0) {
     insights.push({
+      priority: 5,
       type: 'info',
+      level: 'low',
       icon: <Ghost className="h-4 w-4 text-muted-foreground" />,
       message: `${orphanCount} orphan files detected`,
       action:
@@ -75,29 +123,20 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
     })
   }
 
-  // Heavily coupled insight
-  const godObjects = heavilyCoupledFiles.filter((f) => f.count > 15)
-  if (godObjects.length > 0) {
-    const top = godObjects[0]
+  // Success state: only if no actionable items
+  if (insights.length === 0) {
     insights.push({
-      type: 'warning',
-      icon: <Lightbulb className="h-4 w-4 text-yellow-500" />,
-      message: `${top.path.split('/').pop()} has ${top.count} dependencies`,
-      action: 'Potential God Object - consider splitting responsibilities'
-    })
-  }
-
-  // If everything is clean
-  if (insights.length === 1 && insights[0].type === 'success') {
-    insights.push({
+      priority: 0,
       type: 'success',
+      level: 'low',
       icon: <CheckCircle className="h-4 w-4 text-green-500" />,
-      message: 'Architecture is in good shape',
-      action: 'Keep up the good work!'
+      message: 'Architecture is in excellent shape',
+      action: 'No critical risks detected - keep up the good work!'
     })
   }
 
-  return insights.slice(0, 4)
+  // Sort by priority and take top 4
+  return insights.sort((a, b) => a.priority - b.priority).slice(0, 4)
 }
 
 export function ActionableInsights(props: ActionableInsightsProps) {
@@ -115,13 +154,7 @@ export function ActionableInsights(props: ActionableInsightsProps) {
         {insights.map((insight, index) => (
           <div
             key={index}
-            className={`p-4 rounded-lg ${
-              insight.type === 'success'
-                ? 'bg-green-500/5'
-                : insight.type === 'warning'
-                  ? 'bg-orange-500/5'
-                  : 'bg-muted/20'
-            }`}
+            className={`p-4 rounded-lg ${getRiskBgOpacityClass(insight.level, 5)}`}
           >
             <div className="flex items-start gap-2">
               <div className="shrink-0 mt-0.5">{insight.icon}</div>

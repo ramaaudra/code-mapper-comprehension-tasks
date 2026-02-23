@@ -8,6 +8,8 @@ import {
   type DependencyNodeData
 } from '@/features/graph'
 import { FileText, Network, TrendingUp } from '@/shared/components/ui/icons'
+import { MetricCard } from '@/shared/components/ui/metric-card'
+import { RISK_THRESHOLDS } from '@/shared/lib/utils/risk'
 import type { AnalysisData } from '@/shared/types/analysis'
 
 import { ActionableInsights } from './ActionableInsights'
@@ -25,6 +27,7 @@ interface ProjectDashboardProps {
   }
   hoveredFile: string | null
   layoutDirection: 'LR' | 'TB'
+  onLayoutDirectionChange?: (direction: 'LR' | 'TB') => void
   viewMode: 'overview' | 'architecture'
   selectedFileId: string | null
   onNavigateToFile: (fileId: string) => void
@@ -38,6 +41,7 @@ export const ProjectDashboard = memo(
     dependencyGraph,
     hoveredFile,
     layoutDirection,
+    onLayoutDirectionChange,
     viewMode,
     selectedFileId,
     onNavigateToFile,
@@ -64,25 +68,42 @@ export const ProjectDashboard = memo(
       }
     }, [architectureData, analysisData])
 
-    // Calculate high risk modules using scientific formula: RiskScore = Ca × I
-    // Based on Robert C. Martin's dependency metrics: Risk = Impact × Probability
-    // Impact = Afferent Coupling (Ca/Dependents), Probability = Instability (I)
-    const highRiskModules = useMemo(() => {
+    // Calculate risk profiles for all folders using unified formula: RiskScore = Ca × I
+    const allRiskProfiles = useMemo(() => {
       if (!architectureData?.folders) {
         return []
       }
 
       return architectureData.folders
-        .filter((f) => f.instability > 0.5 && f.ca > 0)
         .map((f) => ({
           path: f.folderPath,
           instability: f.instability,
           fanIn: f.ca,
-          riskScore: f.ca * f.instability
+          riskScore: f.ca * f.instability,
+          hasCycle: f.hasCycle
         }))
         .sort((a, b) => b.riskScore - a.riskScore)
-        .slice(0, 5)
     }, [architectureData])
+
+    // Top 5 for High Risk Modules display (diagnostic view)
+    const highRiskModules = useMemo(() => {
+      return allRiskProfiles.slice(0, 5)
+    }, [allRiskProfiles])
+
+    // Segmented risk lists for Actionable Insights (triage view)
+    const criticalRisks = useMemo(() => {
+      return allRiskProfiles.filter(
+        (r) => r.riskScore >= RISK_THRESHOLDS.CRITICAL
+      )
+    }, [allRiskProfiles])
+
+    const warningRisks = useMemo(() => {
+      return allRiskProfiles.filter(
+        (r) =>
+          r.riskScore >= RISK_THRESHOLDS.HIGH &&
+          r.riskScore < RISK_THRESHOLDS.CRITICAL
+      )
+    }, [allRiskProfiles])
 
     // Calculate coupling distribution
     const couplingDistribution = useMemo(() => {
@@ -90,7 +111,8 @@ export const ProjectDashboard = memo(
         return {
           avgDependencies: 0,
           distribution: [],
-          mostCoupledFile: undefined
+          mostCoupledFile: undefined,
+          godObjects: []
         }
       }
 
@@ -111,8 +133,17 @@ export const ProjectDashboard = memo(
         depCounts.reduce((sum, d) => sum + d.count, 0) / Math.max(total, 1)
       const mostCoupled = depCounts.sort((a, b) => b.count - a.count)[0]
 
+      // Identify God Objects (files with >15 dependencies)
+      const godObjects = depCounts
+        .filter((d) => d.count > 15)
+        .map((d) => ({
+          path: d.path,
+          dependencyCount: d.count
+        }))
+
       return {
         avgDependencies: avgDeps,
+        godObjects,
         distribution: [
           {
             label: 'Loose',
@@ -193,13 +224,11 @@ export const ProjectDashboard = memo(
         })
       }
       // High risk = Risk Score >= 25 (scientific threshold from Ca × I formula)
-      const highRiskCount = highRiskModules.filter(
-        (m) => m.riskScore >= 25
-      ).length
+      const highRiskCount = criticalRisks.length + warningRisks.length
       if (highRiskCount > 0) {
         criticalInsights.push({
           type: 'warning' as const,
-          message: `${highRiskCount} unstable module${highRiskCount > 1 ? 's' : ''} with many dependents detected`
+          message: `${highRiskCount} module${highRiskCount > 1 ? 's' : ''} with elevated risk detected`
         })
       }
       if (criticalInsights.length === 0) {
@@ -225,24 +254,24 @@ export const ProjectDashboard = memo(
             {/* Top Metrics - Minimalist Developer Style */}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {overviewCards.map(({ label, value, icon }) => (
-                <div key={label} className="rounded-lg bg-muted/20 p-6">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
-                      {label}
-                    </span>
-                    <span className="text-muted-foreground">{icon}</span>
-                  </div>
-                  <div className="mt-3 text-5xl font-semibold tabular-nums text-foreground tracking-tight">
-                    {value}
-                  </div>
-                </div>
+                <MetricCard
+                  key={label}
+                  label={label}
+                  value={value}
+                  icon={icon}
+                  variant="minimal"
+                />
               ))}
             </div>
 
             {/* Health Score - Full Width with Critical Insights */}
             <ArchitectureHealthScore
               breakdown={healthBreakdown}
-              totalFiles={snapshot.totalFiles}
+              riskMetrics={{
+                criticalCount: criticalRisks.length,
+                warningCount: warningRisks.length,
+                godObjectCount: couplingDistribution.godObjects.length
+              }}
               criticalInsights={criticalInsights}
             />
 
@@ -261,12 +290,9 @@ export const ProjectDashboard = memo(
                 <ActionableInsights
                   cycleCount={healthBreakdown.cycleCount}
                   orphanCount={healthBreakdown.orphanCount}
-                  unstableModules={highRiskModules}
-                  heavilyCoupledFiles={
-                    couplingDistribution.mostCoupledFile
-                      ? [couplingDistribution.mostCoupledFile]
-                      : []
-                  }
+                  criticalRisks={criticalRisks}
+                  warningRisks={warningRisks}
+                  godObjects={couplingDistribution.godObjects}
                 />
                 <IssuesPanel
                   data={analysisData}
@@ -287,6 +313,7 @@ export const ProjectDashboard = memo(
           focusNodeId={dependencyGraph.focusNodeId}
           hoveredFile={hoveredFile}
           layoutDirection={layoutDirection}
+          onLayoutDirectionChange={onLayoutDirectionChange}
           onNodeClick={onNavigateToFile}
           isLayoutTransitioning={isLayoutTransitioning}
         />

@@ -67,7 +67,6 @@ function AppContent() {
     handleShowArchitecture,
     handleShowSetupGuide,
     handleSimulateDelete,
-    getRiskProfileForFile,
     isLayoutTransitioning
   } = useAppLogic()
 
@@ -88,8 +87,6 @@ function AppContent() {
         loadError={loadError}
         hasData={!!analysisData}
         onRefresh={refreshAnalysis}
-        layoutDirection={layoutDirection}
-        onLayoutDirectionChange={setLayoutDirection}
         viewMode={viewMode}
         onShowOverview={handleShowOverview}
         onShowGraph={handleShowGraph}
@@ -134,6 +131,7 @@ function AppContent() {
                   focusNodeId={graphElements.focusNodeId}
                   hoveredFile={hoveredFile}
                   layoutDirection={layoutDirection}
+                  onLayoutDirectionChange={setLayoutDirection}
                   onNodeClick={navigateToFile}
                   isLayoutTransitioning={isLayoutTransitioning}
                 />
@@ -156,6 +154,7 @@ function AppContent() {
                   dependencyGraph={graphElements}
                   hoveredFile={hoveredFile}
                   layoutDirection={layoutDirection}
+                  onLayoutDirectionChange={setLayoutDirection}
                   viewMode={viewMode}
                   selectedFileId={selectedFileId}
                   onNavigateToFile={navigateToFile}
@@ -171,14 +170,14 @@ function AppContent() {
                   <div className="w-12 h-12 bg-primary/50 rounded-full" />
                 </div>
                 <h2 className="text-xl font-semibold text-foreground mb-2">
-                  Menunggu data analisis
+                  Waiting for analysis data
                 </h2>
                 <p className="text-muted-foreground max-w-md mx-auto">
-                  Jalankan perintah{' '}
+                  Run the command{' '}
                   <code className="px-1 py-0.5 bg-muted rounded">
-                    code-mapper analyze &lt;path-proyek&gt;
+                    code-mapper analyze &lt;project-path&gt;
                   </code>{' '}
-                  di terminal Anda.
+                  in your terminal.
                 </p>
               </div>
             </div>
@@ -200,7 +199,6 @@ function AppContent() {
                   node={selectedNode}
                   data={analysisData}
                   onClose={handleDetailClose}
-                  riskProfile={getRiskProfileForFile(selectedFileId)}
                 />
               </Suspense>
             </div>

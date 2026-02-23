@@ -38,11 +38,11 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
             onClick={onBack}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            &larr; Kembali ke Overview
+            &larr; Back to Overview
           </button>
           <h1 className="text-2xl font-bold">Setup Guide</h1>
           <p className="text-muted-foreground">
-            Konfigurasi path aliases untuk hasil analisis yang lengkap.
+            Configure path aliases for complete analysis results.
           </p>
         </div>
 
@@ -55,12 +55,12 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
               {hasIssues ? (
                 <>
                   <span className="h-2 w-2 rounded-full bg-yellow-500" />
-                  Path Mappings Tidak Ditemukan
+                  Path Mappings Not Found
                 </>
               ) : (
                 <>
                   <span className="h-2 w-2 rounded-full bg-green-500" />
-                  Konfigurasi Sudah Benar
+                  Configuration Correct
                 </>
               )}
             </CardTitle>
@@ -68,15 +68,15 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
           <CardContent className="text-sm text-muted-foreground">
             {hasIssues ? (
               <p>
-                Code Mapper tidak menemukan path mappings di tsconfig.json atau
-                jsconfig.json. Import dengan alias seperti{' '}
-                <code className="text-foreground">@/components</code> tidak akan
-                ter-resolve.
+                Code Mapper could not find path mappings in tsconfig.json or
+                jsconfig.json. Imports with aliases like{' '}
+                <code className="text-foreground">@/components</code> will not
+                be resolved.
               </p>
             ) : (
               <p>
-                Path mappings terdeteksi. Semua import seharusnya ter-resolve
-                dengan benar.
+                Path mappings detected. All imports should be resolved
+                correctly.
               </p>
             )}
           </CardContent>
@@ -94,12 +94,12 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
         {hasIssues && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Cara Mengatasi</CardTitle>
+              <CardTitle className="text-base">How to Fix</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <h4 className="font-medium text-sm">
-                  1. Buat atau edit tsconfig.json di root project
+                  1. Create or edit tsconfig.json in project root
                 </h4>
                 <pre className="p-4 bg-muted rounded-lg text-xs overflow-x-auto">
                   <code>{TSCONFIG_EXAMPLE}</code>
@@ -107,22 +107,20 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-medium text-sm">
-                  2. Jalankan ulang analisis
-                </h4>
+                <h4 className="font-medium text-sm">2. Re-run analysis</h4>
                 <p className="text-sm text-muted-foreground">
-                  Setelah menambahkan path mappings, jalankan ulang{' '}
+                  After adding path mappings, re-run{' '}
                   <code className="px-1 py-0.5 bg-muted rounded">
                     code-mapper analyze .
                   </code>{' '}
-                  atau klik tombol refresh di UI.
+                  or click the refresh button in the UI.
                 </p>
               </div>
 
               <div className="space-y-2">
                 <h4 className="font-medium text-sm">3. Untuk Vite users</h4>
                 <p className="text-sm text-muted-foreground">
-                  Jika menggunakan Vite, pastikan path mappings ada di{' '}
+                  If using Vite, make sure path mappings are in{' '}
                   <code className="px-1 py-0.5 bg-muted rounded">
                     tsconfig.json
                   </code>{' '}
@@ -130,7 +128,7 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
                   <code className="px-1 py-0.5 bg-muted rounded">
                     tsconfig.app.json
                   </code>
-                  , bukan hanya di{' '}
+                  , not just in{' '}
                   <code className="px-1 py-0.5 bg-muted rounded">
                     vite.config.ts
                   </code>

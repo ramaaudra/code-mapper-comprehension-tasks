@@ -13,7 +13,7 @@ import App from './App.tsx'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+      <TooltipProvider delayDuration={200}>
         <App />
       </TooltipProvider>
       <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />

@@ -1,30 +1,21 @@
 import { Button } from '@/shared/components/ui/button'
 import {
   AlertTriangle,
-  ArrowDown,
-  ArrowRight,
   PanelLeftClose,
   PanelLeftOpen,
   RotateCcw
 } from '@/shared/components/ui/icons'
+import { SimpleTooltip } from '@/shared/components/ui/simple-tooltip'
 import {
   ToggleGroup,
   ToggleGroupItem
 } from '@/shared/components/ui/toggle-group'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/shared/components/ui/tooltip'
 
 interface TopBarProps {
   isLoading: boolean
   loadError: string | null
   hasData: boolean
   onRefresh: () => void
-  layoutDirection: 'LR' | 'TB'
-  onLayoutDirectionChange: (direction: 'LR' | 'TB') => void
   viewMode: 'overview' | 'graph' | 'architecture' | 'setup-guide'
   onShowOverview: () => void
   onShowGraph: () => void
@@ -43,8 +34,6 @@ export function TopBar({
   isLoading,
   hasData,
   onRefresh,
-  layoutDirection,
-  onLayoutDirectionChange,
   viewMode,
   onShowOverview,
   onShowGraph,
@@ -62,27 +51,24 @@ export function TopBar({
     <header className="h-14 bg-background border-b border-border px-4 flex items-center justify-between">
       {/* Left: Toggle Sidebar + Brand */}
       <div className="flex items-center gap-3">
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onToggleTree}
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              >
-                {isTreeCollapsed ? (
-                  <PanelLeftOpen className="h-4 w-4" />
-                ) : (
-                  <PanelLeftClose className="h-4 w-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {isTreeCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <SimpleTooltip
+          content={isTreeCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+          side="bottom"
+          asChild
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleTree}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          >
+            {isTreeCollapsed ? (
+              <PanelLeftOpen className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </Button>
+        </SimpleTooltip>
 
         <div className="flex items-center gap-2">
           <h1 className="text-base font-semibold text-foreground">
@@ -136,86 +122,48 @@ export function TopBar({
         </div>
       )}
 
-      {/* Right: Layout + Actions */}
+      {/* Right: Actions */}
       <div className="flex items-center gap-2">
         {hasData && (
-          <>
-            {/* Layout Direction Toggle */}
-            <ToggleGroup
-              type="single"
-              value={layoutDirection}
-              onValueChange={(value: string) => {
-                if (value) {
-                  onLayoutDirectionChange(value as 'LR' | 'TB')
-                }
-              }}
-              size="sm"
-            >
-              <TooltipProvider delayDuration={300}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <ToggleGroupItem value="LR" size="sm">
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </ToggleGroupItem>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    Left to Right layout
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider delayDuration={300}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <ToggleGroupItem value="TB" size="sm">
-                      <ArrowDown className="h-3.5 w-3.5" />
-                    </ToggleGroupItem>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    Top to Bottom layout
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </ToggleGroup>
-          </>
-        )}
-
-        {/* Reload Button */}
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onRefresh}
-                  disabled={isLoading}
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                >
-                  <RotateCcw
-                    className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
-                  />
-                </Button>
-                {hasChanges && totalChanges > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-medium rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
-                    {totalChanges > 9 ? '9+' : totalChanges}
-                  </span>
-                )}
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {isLoading
+          <SimpleTooltip
+            content={
+              isLoading
                 ? 'Loading...'
                 : hasChanges
                   ? `${totalChanges} file${totalChanges !== 1 ? 's' : ''} changed - click to reload`
-                  : 'Reload analysis'}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+                  : 'Reload analysis'
+            }
+            side="bottom"
+            asChild
+          >
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onRefresh}
+                disabled={isLoading}
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              >
+                <RotateCcw
+                  className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
+                />
+              </Button>
+              {hasChanges && totalChanges > 0 && (
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-medium rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
+                  {totalChanges > 9 ? '9+' : totalChanges}
+                </span>
+              )}
+            </div>
+          </SimpleTooltip>
+        )}
 
         {/* Timestamp (subtle) */}
         {analysisLoadedAt && (
           <span className="text-xs text-muted-foreground hidden lg:inline">
-            {new Date(analysisLoadedAt).toLocaleTimeString()}
+            {new Intl.DateTimeFormat(undefined, {
+              hour: '2-digit',
+              minute: '2-digit'
+            }).format(new Date(analysisLoadedAt))}
           </span>
         )}
       </div>

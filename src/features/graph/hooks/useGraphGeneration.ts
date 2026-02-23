@@ -11,6 +11,7 @@ import {
 } from '@/shared/lib/utils'
 import { LRUCache } from '@/shared/lib/utils/lruCache'
 import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
+import { getRiskLabel, getRiskLevel } from '@/shared/lib/utils/risk'
 import type { AnalysisData, DependencyInfo } from '@/shared/types/analysis'
 import type { FileRiskProfile } from '@/shared/types/risk'
 
@@ -235,15 +236,20 @@ export function useGraphGeneration({
 
             const riskProfile = getValueFromMap(riskProfileMap, normalizedPath)
             if (riskProfile) {
+              // Calculate risk level from score for unified styling
+              const level = getRiskLevel(riskProfile.score)
               const tone: BadgeInfo['tone'] =
-                riskProfile.category === 'Kritis'
+                level === 'critical'
                   ? 'danger'
-                  : riskProfile.category === 'Tinggi'
+                  : level === 'high'
                     ? 'warning'
-                    : riskProfile.category === 'Sedang'
+                    : level === 'medium'
                       ? 'info'
                       : 'success'
-              badges.push({ label: `Risiko ${riskProfile.category}`, tone })
+              badges.push({
+                label: `${getRiskLabel(level)} Risk`,
+                tone
+              })
             }
 
             // Cache for future

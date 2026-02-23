@@ -14,7 +14,7 @@ export function CouplingBreakdown({
 
   return (
     <div className="grid grid-cols-2 gap-4 text-xs">
-      {/* Efferent: folder ini import dari... */}
+      {/* Efferent: this folder imports from... */}
       <div>
         <h4 className="text-muted-foreground mb-2 flex items-center gap-1">
           <ArrowRight size={12} />
@@ -41,7 +41,7 @@ export function CouplingBreakdown({
         )}
       </div>
 
-      {/* Afferent: folder ini diimport oleh... */}
+      {/* Afferent: this folder is imported by... */}
       <div>
         <h4 className="text-muted-foreground mb-2 flex items-center gap-1">
           <ArrowLeft size={12} />

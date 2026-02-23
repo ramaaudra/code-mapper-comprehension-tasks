@@ -25,7 +25,7 @@ function resolveBaseURL(): string {
       }
     } catch (error) {
       console.warn(
-        'Gagal mem-parsing VITE_API_URL, fallback ke origin saat ini:',
+        'Failed to parse VITE_API_URL, fallback to current origin:',
         error
       )
     }

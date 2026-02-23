@@ -43,7 +43,7 @@ export function ArchitectureTab() {
   if (error) {
     return (
       <div className="p-4 text-center text-muted-foreground">
-        <p className="text-sm">Gagal memuat data arsitektur</p>
+        <p className="text-sm">Failed to load architecture data</p>
         <p className="text-xs mt-1">{(error as Error).message}</p>
       </div>
     )
@@ -52,7 +52,7 @@ export function ArchitectureTab() {
   if (!data || data.folders.length === 0) {
     return (
       <div className="p-4 text-center text-muted-foreground">
-        <p className="text-sm">Tidak ada data folder</p>
+        <p className="text-sm">No folder data</p>
       </div>
     )
   }

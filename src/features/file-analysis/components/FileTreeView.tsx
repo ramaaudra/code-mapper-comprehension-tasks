@@ -6,11 +6,6 @@ import {
   AlertTriangle,
   Bomb,
   ChevronRight,
-  File,
-  FileJs,
-  FileJsx,
-  FileTs,
-  FileTsx,
   Folder,
   FolderOpen,
   Ghost,
@@ -22,27 +17,12 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
-import type { FileRiskProfile } from '@/shared/types/risk'
+import { getFileIcon } from '@/shared/lib/utils'
+import { getRiskColorClass, getRiskLevel } from '@/shared/lib/utils/risk'
+import type { FileRiskProfile, RiskLevel } from '@/shared/types/risk'
 
 import { useFileAnalysisContext } from '../context/FileAnalysisContext'
 import { FileSearchBar } from './FileSearchBar'
-
-// Helper function to get icon based on file extension
-function getFileIcon(fileName: string) {
-  const extension = fileName.split('.').pop()?.toLowerCase()
-  switch (extension) {
-    case 'ts':
-      return FileTs
-    case 'tsx':
-      return FileTsx
-    case 'js':
-      return FileJs
-    case 'jsx':
-      return FileJsx
-    default:
-      return File
-  }
-}
 
 // Node Renderer - Clean Minimalist Style
 const createNodeRenderer = (
@@ -76,9 +56,11 @@ const createNodeRenderer = (
     const hasStatus = isInCycle || isOrphan || isBroken || isNewOrphan
 
     // Check if file has high risk (always show indicators for Critical/High)
-    const hasHighRisk =
-      riskProfile &&
-      (riskProfile.category === 'Kritis' || riskProfile.category === 'Tinggi')
+    // Calculate risk level from score (backend now uses Ca × I formula)
+    const riskLevel: RiskLevel | null = riskProfile
+      ? getRiskLevel(riskProfile.score)
+      : null
+    const hasHighRisk = riskLevel === 'critical' || riskLevel === 'high'
 
     return (
       <div
@@ -133,9 +115,9 @@ const createNodeRenderer = (
           } transition-opacity`}
         >
           {/* Risk indicator dot */}
-          {riskProfile && (
+          {riskProfile && riskLevel && (
             <RiskIndicator
-              category={riskProfile.category}
+              level={riskLevel}
               score={riskProfile.score}
               isSelected={node.isSelected}
               isHovered={isHovered}
@@ -239,54 +221,34 @@ const createNodeRenderer = (
 
 // Helper component for risk indicator dots
 interface RiskIndicatorProps {
-  category: string
+  level: RiskLevel
   score: number
   isSelected: boolean
   isHovered: boolean
 }
 
 function RiskIndicator({
-  category,
+  level,
   score,
   isSelected,
   isHovered
 }: RiskIndicatorProps) {
   // Always show for Critical and High risk
-  const alwaysShow = category === 'Kritis' || category === 'Tinggi'
+  const alwaysShow = level === 'critical' || level === 'high'
 
   // Don't show if not always visible and not hovered/selected
   if (!alwaysShow && !isSelected && !isHovered) {
     return null
   }
 
-  const getColor = (cat: string): string => {
-    switch (cat) {
-      case 'Kritis':
-        return 'bg-red-500'
-      case 'Tinggi':
-        return 'bg-orange-500'
-      case 'Sedang':
-        return 'bg-yellow-500'
-      case 'Rendah':
-        return 'bg-green-500'
-      default:
-        return 'bg-gray-500'
+  const getLabel = (lvl: RiskLevel): string => {
+    const labels: Record<RiskLevel, string> = {
+      critical: 'Critical Risk',
+      high: 'High Risk',
+      medium: 'Medium Risk',
+      low: 'Low Risk'
     }
-  }
-
-  const getLabel = (cat: string): string => {
-    switch (cat) {
-      case 'Kritis':
-        return 'Critical Risk'
-      case 'Tinggi':
-        return 'High Risk'
-      case 'Sedang':
-        return 'Medium Risk'
-      case 'Rendah':
-        return 'Low Risk'
-      default:
-        return 'Unknown Risk'
-    }
+    return labels[lvl]
   }
 
   return (
@@ -294,12 +256,12 @@ function RiskIndicator({
       <Tooltip>
         <TooltipTrigger asChild>
           <span
-            className={`inline-block w-2 h-2 rounded-full ${getColor(category)} cursor-help`}
+            className={`inline-block w-2 h-2 rounded-full ${getRiskColorClass(level)} cursor-help`}
           />
         </TooltipTrigger>
         <TooltipContent side="right">
           <div className="space-y-1">
-            <p className="font-medium">{getLabel(category)}</p>
+            <p className="font-medium">{getLabel(level)}</p>
             <p className="text-xs text-muted-foreground">
               Risk Score: {score.toFixed(1)}
             </p>
@@ -379,8 +341,8 @@ export const FileTreeView = forwardRef<
       </div>
 
       {/* Tree */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="px-2 pb-4">
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full px-2 pb-4">
           <Tree
             ref={ref}
             data={data}

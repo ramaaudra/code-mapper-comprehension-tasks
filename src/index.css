@@ -140,11 +140,13 @@
   * {
     /* Tailwind v4 may not allow @apply for border-color tokens here */
     border-color: hsl(var(--border));
+    -webkit-tap-highlight-color: transparent;
   }
 
   html,
   body {
     height: 100%;
+    touch-action: manipulation;
   }
 
   body {
@@ -282,4 +284,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-spin {
+    animation: none !important;
+  }
 }

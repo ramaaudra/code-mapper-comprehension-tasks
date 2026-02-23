@@ -15,6 +15,7 @@ import {
   TrendingUp
 } from '@/shared/components/ui/icons'
 import { Input } from '@/shared/components/ui/input'
+import { MetricCard } from '@/shared/components/ui/metric-card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 
 import { useArchitectureFolders } from '../hooks/useArchitectureMetrics'
@@ -110,14 +111,14 @@ export function ArchitecturePage() {
     value: number | string
     subValue: string
     icon: React.ReactNode
-    variant: 'default' | 'warning' | 'destructive'
+    status: 'default' | 'warning' | 'destructive'
   }> = [
     {
       label: 'Total Modules',
       value: totalModules,
       subValue: `${totalFiles} files`,
       icon: <FolderTree className="h-4 w-4" />,
-      variant: 'default'
+      status: 'default'
     },
     {
       label: 'Avg Instability',
@@ -125,21 +126,21 @@ export function ArchitecturePage() {
       subValue:
         avgInstability > 0.6 ? 'High' : avgInstability > 0.4 ? 'Medium' : 'Low',
       icon: <TrendingUp className="h-4 w-4" />,
-      variant: avgInstability > 0.6 ? 'warning' : 'default'
+      status: avgInstability > 0.6 ? 'warning' : 'default'
     },
     {
       label: 'Unstable Modules',
       value: unstableModules,
       subValue: unstableModules > 0 ? 'Need attention' : 'All stable',
       icon: <AlertTriangle className="h-4 w-4" />,
-      variant: unstableModules > 0 ? 'warning' : 'default'
+      status: unstableModules > 0 ? 'warning' : 'default'
     },
     {
       label: 'With Cycles',
       value: modulesWithCycles,
       subValue: modulesWithCycles > 0 ? 'Circular deps' : 'No cycles',
       icon: <AlertTriangle className="h-4 w-4" />,
-      variant: modulesWithCycles > 0 ? 'destructive' : 'default'
+      status: modulesWithCycles > 0 ? 'destructive' : 'default'
     }
   ]
 
@@ -158,32 +159,17 @@ export function ArchitecturePage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {summaryCards.map(({ label, value, subValue, icon, variant }) => (
-            <Card key={label}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">{label}</p>
-                    <p className="text-2xl font-semibold mt-1">{value}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {subValue}
-                    </p>
-                  </div>
-                  <div
-                    className={`p-2 rounded-full ${
-                      variant === 'destructive'
-                        ? 'bg-destructive/10 text-destructive'
-                        : variant === 'warning'
-                          ? 'bg-orange-500/10 text-orange-500'
-                          : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {icon}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {summaryCards.map(({ label, value, subValue, icon, status }) => (
+            <MetricCard
+              key={label}
+              label={label}
+              value={value}
+              subValue={subValue}
+              icon={icon}
+              variant="detailed"
+              status={status}
+            />
           ))}
         </div>
 

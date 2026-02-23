@@ -24,7 +24,7 @@ export function UnresolvedImportsList({
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          Import yang Tidak Ter-resolve
+          Unresolved Imports
           <Badge variant="secondary">{totalCount} total</Badge>
         </CardTitle>
       </CardHeader>
@@ -40,7 +40,7 @@ export function UnresolvedImportsList({
                   {item.pattern}
                 </code>
                 <p className="text-xs text-muted-foreground">
-                  {item.count} imports dari {item.files.length} files
+                  {item.count} imports from {item.files.length} files
                 </p>
               </div>
               <Badge variant="outline" className="shrink-0">

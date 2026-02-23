@@ -19,19 +19,19 @@ export function SimulationDialog({ result, onClose }: SimulationDialogProps) {
     <Dialog open={!!result} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Hasil Simulasi Penghapusan</DialogTitle>
+          <DialogTitle>Deletion Simulation Result</DialogTitle>
         </DialogHeader>
         <div className="mt-4 space-y-6">
           {/* Broken Files Section */}
           <div>
             <h3 className="font-semibold flex items-center gap-2">
               <FileWarning className="h-5 w-5 text-red-500" />
-              File yang Akan Rusak ({result?.brokenFiles.length || 0})
+              Files That Will Break ({result?.brokenFiles.length || 0})
             </h3>
             <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
               {result?.brokenFiles.length === 0 ? (
                 <p className="text-sm text-muted-foreground italic">
-                  Tidak ada file yang akan rusak
+                  No files will break
                 </p>
               ) : (
                 result?.brokenFiles.map((file) => (
@@ -50,12 +50,12 @@ export function SimulationDialog({ result, onClose }: SimulationDialogProps) {
           <div>
             <h3 className="font-semibold flex items-center gap-2">
               <FileX className="h-5 w-5 text-yellow-500" />
-              Orphan Baru ({result?.newOrphans.length || 0})
+              New Orphans ({result?.newOrphans.length || 0})
             </h3>
             <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
               {result?.newOrphans.length === 0 ? (
                 <p className="text-sm text-muted-foreground italic">
-                  Tidak ada file yang akan menjadi orphan
+                  No files will become orphans
                 </p>
               ) : (
                 result?.newOrphans.map((file) => (
