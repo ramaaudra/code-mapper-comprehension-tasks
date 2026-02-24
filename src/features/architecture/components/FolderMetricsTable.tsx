@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 
 import { CaretDown, CaretUp } from '@/shared/components/ui/icons'
+import { calculateRiskScore } from '@/shared/lib/utils/risk'
 
 import type {
   FolderArchitectureMetrics,
@@ -17,10 +18,10 @@ interface Column {
 
 const columns: Column[] = [
   { key: 'folderPath', label: 'Module', className: 'text-left' },
-  { key: 'fileCount', label: 'Files', className: 'text-center w-16' },
   { key: 'ca', label: 'Ca', className: 'text-center w-14' },
   { key: 'ce', label: 'Ce', className: 'text-center w-14' },
-  { key: 'instability', label: 'Instability', className: 'text-center w-28' }
+  { key: 'instability', label: 'I', className: 'text-center w-20' },
+  { key: 'riskScore', label: 'Risk', className: 'text-center w-20' }
 ]
 
 interface FolderMetricsTableProps {
@@ -36,6 +37,13 @@ export function FolderMetricsTable({
 }: FolderMetricsTableProps) {
   const sortedFolders = useMemo(() => {
     return [...folders].sort((a, b) => {
+      // Handle riskScore as computed field
+      if (sortConfig.key === 'riskScore') {
+        const aRisk = calculateRiskScore(a.ca, a.instability)
+        const bRisk = calculateRiskScore(b.ca, b.instability)
+        return sortConfig.direction === 'asc' ? aRisk - bRisk : bRisk - aRisk
+      }
+
       const aVal = a[sortConfig.key]
       const bVal = b[sortConfig.key]
 

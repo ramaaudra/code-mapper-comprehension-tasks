@@ -1,6 +1,11 @@
 import { useState } from 'react'
 
 import { CaretRight } from '@/shared/components/ui/icons'
+import {
+  calculateRiskScore,
+  getRiskColorClass,
+  getRiskLevel
+} from '@/shared/lib/utils/risk'
 
 import type { FolderArchitectureMetrics } from '../types/architecture'
 import { CouplingBreakdown } from './CouplingBreakdown'
@@ -11,8 +16,18 @@ interface FolderMetricsRowProps {
   folder: FolderArchitectureMetrics
 }
 
+/**
+ * Get color class for Risk Score dot based on risk level.
+ * Uses same scheme as HighRiskModules panel.
+ */
+function getRiskDotColor(score: number): string {
+  const level = getRiskLevel(score)
+  return getRiskColorClass(level)
+}
+
 export function FolderMetricsRow({ folder }: FolderMetricsRowProps) {
   const [expanded, setExpanded] = useState(false)
+  const riskScore = calculateRiskScore(folder.ca, folder.instability)
 
   return (
     <>
@@ -32,13 +47,19 @@ export function FolderMetricsRow({ folder }: FolderMetricsRowProps) {
             {folder.hasCycle && <CycleBadge />}
           </span>
         </td>
-        <td className="px-3 py-2 text-muted-foreground text-center">
-          {folder.fileCount}
-        </td>
         <td className="px-3 py-2 font-mono text-center">{folder.ca}</td>
         <td className="px-3 py-2 font-mono text-center">{folder.ce}</td>
         <td className="px-3 py-2 text-center">
           <InstabilityBadge value={folder.instability} />
+        </td>
+        <td className="px-3 py-2">
+          <div className="flex items-center justify-center gap-2">
+            <span className="font-mono text-sm">{riskScore.toFixed(1)}</span>
+            <span
+              className={`w-2 h-2 rounded-full ${getRiskDotColor(riskScore)}`}
+              title={`Risk Score: ${riskScore.toFixed(1)}`}
+            />
+          </div>
         </td>
       </tr>
 

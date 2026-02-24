@@ -2,17 +2,14 @@ interface InstabilityBadgeProps {
   value: number
 }
 
-function getInstabilityColor(value: number): string {
-  if (value >= 0.8) {
-    return 'bg-red-500/20 text-red-400'
-  }
-  if (value >= 0.6) {
-    return 'bg-orange-500/20 text-orange-400'
-  }
-  if (value >= 0.4) {
-    return 'bg-yellow-500/20 text-yellow-400'
-  }
-  return 'bg-green-500/20 text-green-400'
+/**
+ * Neutral color scheme for Instability metric.
+ * Instability is a structural property, not a danger indicator.
+ * High instability in UI components (Ca=0, Ce>0) is natural, not problematic.
+ */
+function getInstabilityColor(_value: number): string {
+  // Using neutral slate colors - no red/orange/yellow/green warning colors
+  return 'bg-slate-600/20 text-slate-400'
 }
 
 export function InstabilityBadge({ value }: InstabilityBadgeProps) {

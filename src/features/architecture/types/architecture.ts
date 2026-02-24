@@ -22,7 +22,7 @@ export interface FolderDetailResponse {
   files: FileArchitectureMetrics[]
 }
 
-export type SortKey = keyof FolderArchitectureMetrics
+export type SortKey = keyof FolderArchitectureMetrics | 'riskScore'
 export type SortDirection = 'asc' | 'desc'
 
 export interface SortConfig {

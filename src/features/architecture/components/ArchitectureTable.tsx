@@ -6,8 +6,12 @@ import {
   CollapsibleTrigger
 } from '@/shared/components/ui/collapsible'
 import { CaretDown, CaretRight, CaretUp } from '@/shared/components/ui/icons'
-import { Progress } from '@/shared/components/ui/progress'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import {
+  calculateRiskScore,
+  getRiskColorClass,
+  getRiskLevel
+} from '@/shared/lib/utils/risk'
 
 import { useFolderDetail } from '../hooks/useArchitectureMetrics'
 import type {
@@ -26,10 +30,10 @@ interface Column {
 
 const columns: Column[] = [
   { key: 'folderPath', label: 'Module', className: 'text-left' },
-  { key: 'fileCount', label: 'Files', className: 'text-center w-20' },
   { key: 'ca', label: 'Ca (Fan-in)', className: 'text-center w-24' },
   { key: 'ce', label: 'Ce (Fan-out)', className: 'text-center w-24' },
-  { key: 'instability', label: 'Instability', className: 'text-center w-40' }
+  { key: 'instability', label: 'Instability', className: 'text-center w-32' },
+  { key: 'riskScore', label: 'Risk Score', className: 'text-center w-32' }
 ]
 
 interface ArchitectureTableProps {
@@ -83,11 +87,13 @@ function ExpandedRow({ folderPath }: { folderPath: string }) {
               <td className="py-2 text-center">{file.ce}</td>
               <td className="py-2">
                 <div className="flex items-center gap-2 justify-center">
-                  <Progress
-                    value={file.instability * 100}
-                    className="h-1.5 w-16"
-                  />
-                  <span className="text-xs w-8">
+                  <div className="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-slate-600"
+                      style={{ width: `${file.instability * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-xs w-8 text-slate-400">
                     {file.instability.toFixed(2)}
                   </span>
                 </div>
@@ -109,6 +115,13 @@ export function ArchitectureTable({
 
   const sortedFolders = useMemo(() => {
     return [...folders].sort((a, b) => {
+      // Handle riskScore as computed field
+      if (sortConfig.key === 'riskScore') {
+        const aRisk = calculateRiskScore(a.ca, a.instability)
+        const bRisk = calculateRiskScore(b.ca, b.instability)
+        return sortConfig.direction === 'asc' ? aRisk - bRisk : bRisk - aRisk
+      }
+
       const aVal = a[sortConfig.key]
       const bVal = b[sortConfig.key]
 
@@ -138,17 +151,21 @@ export function ArchitectureTable({
     })
   }
 
-  const getInstabilityColor = (value: number) => {
-    if (value >= 0.8) {
-      return 'bg-red-500'
-    }
-    if (value >= 0.6) {
-      return 'bg-orange-500'
-    }
-    if (value >= 0.4) {
-      return 'bg-yellow-500'
-    }
-    return 'bg-green-500'
+  /**
+   * Neutral color for Instability bar.
+   * Instability is a structural property, not a danger indicator.
+   */
+  const getInstabilityBarColor = () => {
+    return 'bg-slate-600'
+  }
+
+  /**
+   * Get color class for Risk Score dot based on risk level.
+   * Uses same scheme as HighRiskModules panel.
+   */
+  const getRiskDotColor = (score: number) => {
+    const level = getRiskLevel(score)
+    return getRiskColorClass(level)
   }
 
   return (
@@ -214,9 +231,6 @@ export function ArchitectureTable({
                           {folder.hasCycle && <CycleBadge />}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center text-muted-foreground">
-                        {folder.fileCount}
-                      </td>
                       <td className="px-4 py-3 text-center font-mono">
                         {folder.ca}
                       </td>
@@ -225,14 +239,33 @@ export function ArchitectureTable({
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 justify-center">
-                          <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                          <div className="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                             <div
-                              className={`h-full transition-all ${getInstabilityColor(folder.instability)}`}
+                              className={`h-full transition-all ${getInstabilityBarColor()}`}
                               style={{ width: `${folder.instability * 100}%` }}
                             />
                           </div>
                           <InstabilityBadge value={folder.instability} />
                         </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {(() => {
+                          const riskScore = calculateRiskScore(
+                            folder.ca,
+                            folder.instability
+                          )
+                          return (
+                            <div className="flex items-center justify-center gap-2">
+                              <span className="font-mono text-sm">
+                                {riskScore.toFixed(1)}
+                              </span>
+                              <span
+                                className={`w-2.5 h-2.5 rounded-full ${getRiskDotColor(riskScore)}`}
+                                title={`Risk Score: ${riskScore.toFixed(1)}`}
+                              />
+                            </div>
+                          )
+                        })()}
                       </td>
                     </tr>
                   </CollapsibleTrigger>

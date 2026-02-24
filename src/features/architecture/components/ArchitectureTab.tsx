@@ -25,8 +25,8 @@ function ArchitectureSkeleton() {
 export function ArchitectureTab() {
   const { data, isLoading, error } = useArchitectureFolders()
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: 'instability',
-    direction: 'desc' // Default: tunjukkan yang paling "berdosa"
+    key: 'riskScore',
+    direction: 'desc' // Default: show highest risk first (Ca × I formula)
   })
 
   const handleSort = (key: SortKey) => {

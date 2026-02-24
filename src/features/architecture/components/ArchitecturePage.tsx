@@ -46,7 +46,7 @@ export function ArchitecturePage() {
   const { data, isLoading, error } = useArchitectureFolders()
   const [searchQuery, setSearchQuery] = useState('')
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: 'instability',
+    key: 'riskScore',
     direction: 'desc'
   })
 
