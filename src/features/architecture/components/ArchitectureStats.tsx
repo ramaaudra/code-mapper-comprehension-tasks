@@ -34,7 +34,7 @@ function StackedMetricBox({
         {isBadge && children ? (
           <div className="mt-1">{children}</div>
         ) : (
-          <span className="text-lg font-mono font-semibold mt-1">{value}</span>
+          <span className="text-2xl font-mono font-semibold mt-1">{value}</span>
         )}
       </div>
     </SimpleTooltip>

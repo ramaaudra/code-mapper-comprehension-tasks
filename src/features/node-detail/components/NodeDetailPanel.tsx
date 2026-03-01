@@ -18,8 +18,12 @@ import {
   ArrowRight,
   CheckCircle,
   Copy,
+  Cube,
   Focus,
+  Ghost,
+  Lightbulb,
   Map,
+  Target,
   X
 } from '@/shared/components/ui/icons'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
@@ -93,6 +97,14 @@ const NodeDetailPanel = memo(
         isInCycle: archMetrics.hasCycle
       }
     }, [archMetrics])
+
+    // Check if this file is an orphan (not imported by any file and not an entry point)
+    const isOrphan = useMemo(() => {
+      if (!data?.issues?.orphans || !nodeId) {
+        return false
+      }
+      return data.issues.orphans.includes(nodeId)
+    }, [data?.issues?.orphans, nodeId])
 
     // Calculate indegree and outdegree
     const incomingEdges = useMemo(() => {
@@ -367,98 +379,170 @@ const NodeDetailPanel = memo(
             className="flex-1 overflow-y-auto m-0 p-4 space-y-6"
           >
             {/* Risk Assessment: The Verdict */}
-            {riskAssessment && (
+            {isOrphan ? (
+              // Orphan File Status (replaces normal risk assessment)
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-foreground">
-                  Cost of Change
+                  File Status
                 </h3>
-                {riskAssessment.isInCycle ? (
-                  // Cycle Override: Critical Warning
-                  <div className="p-4 rounded-lg border-2 border-red-500 bg-red-500/5">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertTriangle className="h-4 w-4 text-red-500" />
-                      <span className="font-semibold text-red-500">
-                        CRITICAL: Circular Dependency
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      This file is part of a circular dependency chain. Changes
-                      may cause infinite loops or compilation errors.
+                <div className="p-4 rounded-lg border border-muted bg-muted/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Ghost
+                      className="h-4 w-4 text-muted-foreground"
+                      weight="fill"
+                    />
+                    <span className="font-semibold text-muted-foreground">
+                      Orphaned File (Unused)
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    This file has 0 dependents and is not an entry point. Safe
+                    to delete to reduce bundle size.
+                  </p>
+                  <div className="flex items-start gap-1.5 mt-2">
+                    <Lightbulb
+                      className="h-3 w-3 text-muted-foreground/60 mt-0.5 shrink-0"
+                      weight="fill"
+                    />
+                    <p className="text-xs text-muted-foreground/60 italic">
+                      Tip: Check if this is a test file, script, or dynamic
+                      import before deleting. False positives may occur.
                     </p>
                   </div>
-                ) : (
-                  // Normal Risk Assessment
-                  <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div
-                          className={`p-4 rounded-lg border ${getRiskBorderClass(riskAssessment.level)} ${getRiskBgClass(riskAssessment.level)} cursor-help`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              {riskAssessment.level === 'low' ? (
-                                <CheckCircle className="h-4 w-4 text-green-500" />
-                              ) : (
-                                <AlertTriangle
-                                  className={`h-4 w-4 ${getRiskTextClass(riskAssessment.level)}`}
-                                />
-                              )}
-                              <span
-                                className={`font-semibold ${getRiskTextClass(riskAssessment.level)}`}
-                              >
-                                {getRiskLabel(riskAssessment.level)} Cost of
-                                Change
+                </div>
+              </div>
+            ) : (
+              riskAssessment && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium text-foreground">
+                    Cost of Change
+                  </h3>
+                  {riskAssessment.isInCycle ? (
+                    // Cycle Override: Critical Warning
+                    <div className="p-4 rounded-lg border-2 border-red-500 bg-red-500/5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                        <span className="font-semibold text-red-500">
+                          CRITICAL: Circular Dependency
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        This file is part of a circular dependency chain.
+                        Changes may cause infinite loops or compilation errors.
+                      </p>
+                    </div>
+                  ) : (
+                    // Normal Risk Assessment
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`p-4 rounded-lg border ${getRiskBorderClass(riskAssessment.level)} ${getRiskBgClass(riskAssessment.level)} cursor-help`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                {riskAssessment.level === 'low' ? (
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <AlertTriangle
+                                    className={`h-4 w-4 ${getRiskTextClass(riskAssessment.level)}`}
+                                  />
+                                )}
+                                <span
+                                  className={`font-semibold ${getRiskTextClass(riskAssessment.level)}`}
+                                >
+                                  {getRiskLabel(riskAssessment.level)} Risk
+                                </span>
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                Score: {riskAssessment.riskScore.toFixed(1)}
                               </span>
                             </div>
-                            <span className="text-xs text-muted-foreground">
-                              Score: {riskAssessment.riskScore.toFixed(1)}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {getRiskDescription(riskAssessment.level)}
-                          </p>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="top"
-                        className="max-w-xs bg-popover border-border"
-                      >
-                        <div className="space-y-2">
-                          <p className="font-semibold text-popover-foreground">
-                            Risk Score: {riskAssessment.riskScore.toFixed(1)}
-                          </p>
-                          <p className="text-xs text-popover-foreground/80">
-                            Measures <strong>blast radius</strong>: how many
-                            files might break if you edit this file
-                          </p>
-                          {archMetrics && (
-                            <div className="text-xs space-y-1 pt-1 border-t border-border">
-                              <p className="text-popover-foreground/80">
-                                • <strong>Dependents (Ca):</strong>{' '}
-                                {archMetrics.ca}
-                              </p>
-                              <p className="text-popover-foreground/80">
-                                • <strong>Dependencies (Ce):</strong>{' '}
-                                {archMetrics.ce}
-                              </p>
-                              <p className="text-popover-foreground/80 pt-1">
-                                Calculation: {archMetrics.ca} + (
-                                {archMetrics.ce} × 0.5) ={' '}
-                                {riskAssessment.riskScore.toFixed(1)}
-                              </p>
-                            </div>
-                          )}
-                          <div className="text-xs pt-1 border-t border-border">
-                            <p className="text-popover-foreground/80">
-                              Higher score = more files affected when modifying
+                            <p className="text-xs text-muted-foreground">
+                              {getRiskDescription(riskAssessment.level)}
                             </p>
                           </div>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="top"
+                          className="max-w-xs bg-popover border-border"
+                        >
+                          <div className="space-y-2">
+                            <p className="font-semibold text-popover-foreground">
+                              Risk Score: {riskAssessment.riskScore.toFixed(1)}
+                            </p>
+                            <p className="text-xs text-popover-foreground/80">
+                              Measures <strong>blast radius</strong>: how many
+                              files might break if you edit this file
+                            </p>
+                            {archMetrics && (
+                              <div className="text-xs space-y-1 pt-1 border-t border-border">
+                                <p className="text-popover-foreground/80">
+                                  • <strong>Dependents (Ca):</strong>{' '}
+                                  {archMetrics.ca}
+                                </p>
+                                <p className="text-popover-foreground/80">
+                                  • <strong>Dependencies (Ce):</strong>{' '}
+                                  {archMetrics.ce}
+                                </p>
+                                <p className="text-popover-foreground/80 pt-1">
+                                  Calculation: {archMetrics.ca} + (
+                                  {archMetrics.ce} × 0.5) ={' '}
+                                  {riskAssessment.riskScore.toFixed(1)}
+                                </p>
+                              </div>
+                            )}
+                            <div className="text-xs pt-1 border-t border-border">
+                              <p className="text-popover-foreground/80">
+                                Higher score = more files affected when
+                                modifying
+                              </p>
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+
+                  {/* God Object Warning: Ce > 15 */}
+                  {archMetrics && archMetrics.ce > 15 && (
+                    <div className="mt-3 p-3 rounded-lg border border-yellow-500/50 bg-yellow-500/10">
+                      <div className="flex items-center gap-2">
+                        <Cube
+                          className="h-4 w-4 text-yellow-500"
+                          weight="fill"
+                        />
+                        <span className="text-sm font-medium text-yellow-500">
+                          God Object Detected
+                        </span>
+                      </div>
+                      <p className="text-xs text-yellow-400/80 mt-1">
+                        This file depends on {archMetrics.ce} other files.
+                        Consider breaking it down.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Bottleneck Warning: Ca > 20 */}
+                  {archMetrics && archMetrics.ca > 20 && (
+                    <div className="mt-3 p-3 rounded-lg border border-orange-500/50 bg-orange-500/10">
+                      <div className="flex items-center gap-2">
+                        <Target
+                          className="h-4 w-4 text-orange-500"
+                          weight="fill"
+                        />
+                        <span className="text-sm font-medium text-orange-500">
+                          Core Bottleneck
+                        </span>
+                      </div>
+                      <p className="text-xs text-orange-400/80 mt-1">
+                        {archMetrics.ca} files depend on this. Changes will
+                        break dozens of other components.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )
             )}
 
             {/* Architecture Metrics: The Evidence */}

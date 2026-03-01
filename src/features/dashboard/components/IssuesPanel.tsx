@@ -14,7 +14,12 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/shared/components/ui/dialog'
-import { AlertTriangle, ArrowRight, Ghost } from '@/shared/components/ui/icons'
+import {
+  AlertTriangle,
+  ArrowRight,
+  Ghost,
+  WarningCircle
+} from '@/shared/components/ui/icons'
 import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
 import { getBasename, getRelativePath } from '@/shared/lib/utils'
 import type { AnalysisData } from '@/shared/types/analysis'
@@ -303,23 +308,41 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                 <InfoTooltip title="What are Orphaned Files?" side="top">
                   <div className="space-y-2">
                     <p className="text-xs text-popover-foreground">
-                      Orphaned files are files that exist in your codebase but
-                      are not imported or referenced by any other file.
+                      Orphaned files are files that are not reachable from any
+                      entry point. They are not imported by other files and are
+                      not application entry points.
                     </p>
                     <div className="text-xs space-y-1 pt-1 border-t border-border">
                       <p className="font-semibold text-popover-foreground">
                         Why should you care?
                       </p>
                       <p className="text-popover-foreground/80">
-                        • May be dead code that's no longer used
-                        <br />• Can confuse developers about codebase structure
-                        <br />• Increases bundle size unnecessarily
-                        <br />• May indicate incomplete refactoring
+                        • Increases bundle size without being used
+                        <br />• Confuses developers about codebase structure
+                        <br />• May be dead code that was forgotten
+                      </p>
+                    </div>
+                    <div className="text-xs space-y-1 pt-1 border-t border-border">
+                      <div className="flex items-center gap-1">
+                        <WarningCircle
+                          className="h-3 w-3 text-yellow-500"
+                          weight="fill"
+                        />
+                        <p className="font-semibold text-popover-foreground">
+                          False Positives (check before deleting!)
+                        </p>
+                      </div>
+                      <p className="text-popover-foreground/80">
+                        • Test files (*.test.ts, *.spec.tsx)
+                        <br />• Scripts (build, deploy, migration)
+                        <br />• Dynamic imports (import('./module'))
+                        <br />• Config files (vite.config.ts, etc.)
+                        <br />• Type definition files (*.d.ts)
                       </p>
                     </div>
                     <p className="text-xs text-popover-foreground/80 pt-1">
-                      Review orphaned files to clean up dead code or restore
-                      missing imports.
+                      Review before deleting - make sure it's not a test file or
+                      script that is intentionally standalone.
                     </p>
                   </div>
                 </InfoTooltip>

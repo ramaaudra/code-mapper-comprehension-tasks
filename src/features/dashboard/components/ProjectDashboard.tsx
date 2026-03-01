@@ -7,7 +7,13 @@ import {
   DependencyGraph,
   type DependencyNodeData
 } from '@/features/graph'
-import { FileText, Network, TrendingUp } from '@/shared/components/ui/icons'
+import {
+  CaretRight,
+  FileText,
+  Lightbulb,
+  Network,
+  TrendingUp
+} from '@/shared/components/ui/icons'
 import { MetricCard } from '@/shared/components/ui/metric-card'
 import { RISK_THRESHOLDS } from '@/shared/lib/utils/risk'
 import type { AnalysisData } from '@/shared/types/analysis'
@@ -300,6 +306,42 @@ export const ProjectDashboard = memo(
                 />
               </div>
             </div>
+
+            {/* Instability Teaser Card */}
+            {onShowArchitecture && (
+              <button
+                onClick={onShowArchitecture}
+                className="w-full group relative overflow-hidden rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 transition-all duration-300 hover:border-blue-500/40 hover:shadow-lg dark:from-blue-950/30 dark:to-cyan-950/20"
+              >
+                <div className="absolute inset-0 bg-blue-400/5 dark:bg-blue-400/10" />
+                <div className="relative p-4 flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 dark:from-blue-500/30 dark:to-cyan-500/30 group-hover:scale-110 transition-transform duration-300">
+                    <Lightbulb className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <h3 className="text-base font-semibold text-foreground mb-0.5">
+                      New to Instability Metrics?
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Learn why{' '}
+                      <span className="text-blue-600 dark:text-blue-400 font-medium">
+                        Unstable
+                      </span>{' '}
+                      doesn't mean broken — and why high instability is often a
+                      good thing for UI code.
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 flex items-center gap-2">
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                      Read Guide
+                    </span>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/20 group-hover:bg-blue-500/20 dark:group-hover:bg-blue-500/30 transition-colors">
+                      <CaretRight className="h-4 w-4 text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </button>
+            )}
           </div>
         </div>
       )

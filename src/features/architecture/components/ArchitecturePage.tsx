@@ -9,10 +9,15 @@ import {
 } from '@/shared/components/ui/card'
 import {
   AlertTriangle,
+  CaretDown,
+  CaretRight,
   FolderTree,
   Layers,
+  Lightbulb,
   Search,
-  TrendingUp
+  ShieldCheck,
+  TrendingUp,
+  Wind
 } from '@/shared/components/ui/icons'
 import { Input } from '@/shared/components/ui/input'
 import { MetricCard } from '@/shared/components/ui/metric-card'
@@ -49,6 +54,7 @@ export function ArchitecturePage() {
     key: 'riskScore',
     direction: 'desc'
   })
+  const [isReadingGuideExpanded, setIsReadingGuideExpanded] = useState(false)
 
   const handleSort = (key: SortKey) => {
     setSortConfig((prev) => ({
@@ -171,6 +177,115 @@ export function ArchitecturePage() {
               status={status}
             />
           ))}
+        </div>
+
+        {/* Reading Guide: Instability Education Card */}
+        <div
+          className={`relative overflow-hidden rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 transition-all duration-300 dark:from-blue-950/30 dark:to-cyan-950/20 ${
+            isReadingGuideExpanded
+              ? ''
+              : 'hover:border-blue-500/40 cursor-pointer'
+          }`}
+          onClick={() =>
+            !isReadingGuideExpanded && setIsReadingGuideExpanded(true)
+          }
+        >
+          <div className="absolute inset-0 bg-blue-400/5 dark:bg-blue-400/10" />
+          <div className="relative">
+            {isReadingGuideExpanded ? (
+              <div className="p-5">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/20">
+                      <Lightbulb className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-foreground mb-2">
+                      Understanding the Instability (I) Metric
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                      Don't be alarmed by the <strong>Unstable</strong> label.
+                      In software architecture, this metric is not a bug
+                      indicator, but rather an indicator of how safe a file is
+                      to completely refactor.
+                    </p>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          <span className="text-sm font-medium text-foreground">
+                            0.00 — Stable (Rigid)
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground pl-7 leading-relaxed">
+                          Difficult to change because many other files depend on
+                          it. If changed, it can trigger a domino effect.
+                        </p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400 pl-7 font-medium">
+                          Ideal for: Core Logic, utils/, lib/, configuration
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Wind className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                          <span className="text-sm font-medium text-foreground">
+                            1.00 — Unstable (Flexible)
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground pl-7 leading-relaxed">
+                          Completely safe to change at any time because no other
+                          files depend on it.
+                        </p>
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 pl-7 font-medium">
+                          Ideal for: UI Components, app/page.tsx, visual
+                          elements
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsReadingGuideExpanded(false)
+                    }}
+                    className="flex-shrink-0 p-1.5 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-background/80 transition-colors"
+                    aria-label="Collapse reading guide"
+                  >
+                    <CaretDown className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 dark:from-blue-500/30 dark:to-cyan-500/30">
+                  <Lightbulb className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold text-foreground mb-0.5">
+                    New to Instability Metrics?
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    <span className="text-blue-600 dark:text-blue-400 font-medium">
+                      Click to learn
+                    </span>{' '}
+                    why <strong>Unstable</strong> doesn't mean broken — and why
+                    it's often a good thing for UI code.
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setIsReadingGuideExpanded(true)
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-sm font-medium hover:bg-blue-500/20 dark:hover:bg-blue-500/30 transition-colors"
+                >
+                  Read Guide
+                  <CaretRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Search & Filter */}
