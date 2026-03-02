@@ -1,17 +1,13 @@
-// REUSE types dari existing
-import type { Edge, Node } from '@xyflow/react'
-import { Suspense, lazy, useMemo, useState } from 'react'
+import { Suspense, lazy, useCallback, useState } from 'react'
 
 import { ArchitecturePage } from '@/features/architecture/components/ArchitecturePage'
 import { DashboardSkeleton } from '@/features/dashboard'
-// REUSE existing components - tidak bikin baru!
 import { ProjectDashboard } from '@/features/dashboard/components/ProjectDashboard'
-import { FileTreeSkeleton } from '@/features/file-analysis'
-import { DependencyGraph } from '@/features/graph/components/DependencyGraph'
-import type {
-  DependencyEdgeData,
-  DependencyNodeData
-} from '@/features/graph/components/DependencyGraph'
+import {
+  FileTreeSkeleton,
+  useFileAnalysisContext
+} from '@/features/file-analysis'
+import { DependencyGraph, useGraphGeneration } from '@/features/graph'
 import { Button } from '@/shared/components/ui/button'
 import { PanelLeftClose, PanelLeftOpen } from '@/shared/components/ui/icons'
 import { SimpleTooltip } from '@/shared/components/ui/simple-tooltip'
@@ -20,6 +16,7 @@ import {
   ToggleGroupItem
 } from '@/shared/components/ui/toggle-group'
 import { useDataContext } from '@/shared/context/DataContext'
+import { matchesFile } from '@/shared/lib/utils'
 
 // Lazy load FileTreeView untuk reduce bundle size
 const FileTreeView = lazy(() =>
@@ -28,64 +25,90 @@ const FileTreeView = lazy(() =>
   }))
 )
 
+const NodeDetailPanel = lazy(() =>
+  import('@/features/node-detail').then((m) => ({
+    default: m.NodeDetailPanel
+  }))
+)
+
 type ViewMode = 'overview' | 'graph' | 'architecture'
+
+interface AnalysisNode {
+  id: string
+  label?: string
+  [key: string]: unknown
+}
 
 export function ReportShell() {
   const [viewMode, setViewMode] = useState<ViewMode>('overview')
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
-  const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
   const [isTreeCollapsed, setIsTreeCollapsed] = useState(false)
+  const [selectedNode, setSelectedNode] = useState<AnalysisNode | null>(null)
+
   const { analysisData } = useDataContext()
+  const {
+    selectedFileId,
+    setSelectedFileId,
+    filesInCycle,
+    orphanFilesSet,
+    riskProfileMap,
+    brokenFilesSet,
+    newOrphansSet
+  } = useFileAnalysisContext()
 
-  const handleFileSelect = (fileId: string | null) => {
-    setSelectedFileId(fileId)
-    setSelectedNodeId(fileId)
-    if (fileId) {
-      setViewMode('graph')
-    }
-  }
+  // Graph generation hook - generates graph for focused file only
+  const { graphElements, generateGraphForFile, clearGraph } =
+    useGraphGeneration({
+      analysisData,
+      filesInCycle,
+      orphanFilesSet,
+      riskProfileMap,
+      brokenFilesSet,
+      newOrphansSet
+    })
 
-  const handleShowOverview = () => setViewMode('overview')
-  const handleShowGraph = () => setViewMode('graph')
-  const handleShowArchitecture = () => setViewMode('architecture')
-  const toggleTreeView = () => setIsTreeCollapsed(!isTreeCollapsed)
-
-  // Convert analysis data to graph format
-  const graphElements = useMemo(() => {
-    if (!analysisData) {
-      return { nodes: [], edges: [], focusNodeId: null }
-    }
-
-    const nodes: Node<DependencyNodeData>[] = analysisData.nodes.map((n) => ({
-      id: n.id,
-      type: 'dependency',
-      position: { x: 0, y: 0 },
-      data: {
-        label: n.label || n.id.split('/').pop() || n.id,
-        fullPath: n.id,
-        direction:
-          n.id === selectedNodeId
-            ? ('selected' as const)
-            : ('incoming' as const)
+  const handleFileSelect = useCallback(
+    (fileId: string | null) => {
+      if (!fileId || !analysisData) {
+        setSelectedFileId(null)
+        setSelectedNode(null)
+        setViewMode('overview')
+        clearGraph()
+        return
       }
-    }))
 
-    const edges: Edge<DependencyEdgeData>[] = analysisData.edges.map(
-      (e, index) => ({
-        id: `${e.source}-${e.target}-${index}`,
-        source: e.source,
-        target: e.target,
-        type: 'simplebezier',
-        data: { strength: 1, direction: 'outgoing' as const }
-      })
-    )
+      // Switch to graph view when file is selected
+      setViewMode('graph')
 
-    return {
-      nodes,
-      edges,
-      focusNodeId: selectedNodeId
-    }
-  }, [analysisData, selectedNodeId])
+      const resolvedFileId = generateGraphForFile(fileId) || fileId
+      setSelectedFileId(resolvedFileId)
+
+      const nodeData =
+        analysisData.nodes?.find((n: AnalysisNode) =>
+          matchesFile(n.id, resolvedFileId)
+        ) ||
+        analysisData.nodes?.find((n: AnalysisNode) => matchesFile(n.id, fileId))
+
+      setSelectedNode(nodeData || null)
+    },
+    [analysisData, generateGraphForFile, clearGraph, setSelectedFileId]
+  )
+
+  const handleShowOverview = useCallback(() => {
+    setViewMode('overview')
+    setSelectedFileId(null)
+    setSelectedNode(null)
+    clearGraph()
+  }, [setSelectedFileId, clearGraph])
+
+  const handleShowGraph = useCallback(() => {
+    setViewMode('graph')
+  }, [])
+
+  const handleShowArchitecture = useCallback(() => {
+    setViewMode('architecture')
+  }, [])
+
+  const toggleTreeView = () => setIsTreeCollapsed(!isTreeCollapsed)
 
   const fileCount = analysisData
     ? Object.keys(analysisData.dependencyMap).length
@@ -136,12 +159,12 @@ export function ReportShell() {
               value={viewMode}
               onValueChange={(value: string) => {
                 if (value === 'overview') {
-handleShowOverview()
-} else if (value === 'graph') {
-handleShowGraph()
-} else if (value === 'architecture') {
-handleShowArchitecture()
-}
+                  handleShowOverview()
+                } else if (value === 'graph') {
+                  handleShowGraph()
+                } else if (value === 'architecture') {
+                  handleShowArchitecture()
+                }
               }}
               size="sm"
             >
@@ -184,17 +207,30 @@ handleShowArchitecture()
         <div className="flex-1 overflow-hidden">
           {analysisData ? (
             viewMode === 'graph' ? (
-              <div className="h-full bg-background">
-                <DependencyGraph
-                  nodes={graphElements.nodes}
-                  edges={graphElements.edges}
-                  focusNodeId={graphElements.focusNodeId}
-                  hoveredFile={null}
-                  layoutDirection="LR"
-                  onLayoutDirectionChange={() => {}}
-                  onNodeClick={handleFileSelect}
-                  isLayoutTransitioning={false}
-                />
+              <div className="flex h-full bg-background">
+                <div className="flex-1">
+                  <DependencyGraph
+                    nodes={graphElements.nodes}
+                    edges={graphElements.edges}
+                    focusNodeId={graphElements.focusNodeId}
+                    hoveredFile={null}
+                    layoutDirection="LR"
+                    onLayoutDirectionChange={() => {}}
+                    onNodeClick={handleFileSelect}
+                    isLayoutTransitioning={false}
+                  />
+                </div>
+                {selectedNode && (
+                  <div className="w-96 border-l border-border">
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <NodeDetailPanel
+                        node={selectedNode}
+                        data={analysisData}
+                        onClose={() => handleFileSelect(null)}
+                      />
+                    </Suspense>
+                  </div>
+                )}
               </div>
             ) : viewMode === 'architecture' ? (
               <Suspense fallback={<DashboardSkeleton />}>

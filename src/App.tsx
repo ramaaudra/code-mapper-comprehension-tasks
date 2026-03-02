@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Suspense, lazy, useCallback } from 'react'
+import { DotsThreeVertical } from '@phosphor-icons/react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 
 import { DashboardSkeleton } from '@/features/dashboard'
 import {
@@ -69,6 +70,53 @@ function AppContent() {
     handleSimulateDelete,
     isLayoutTransitioning
   } = useAppLogic()
+
+  // Resizable panel state and refs
+  const [panelWidth, setPanelWidth] = useState(448) // Default 448px (w-[28rem])
+  const [isResizing, setIsResizing] = useState(false)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  // Resize handlers
+  const startResizing = useCallback(() => {
+    setIsResizing(true)
+  }, [])
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(false)
+  }, [])
+
+  const resize = useCallback(
+    (mouseMoveEvent: MouseEvent) => {
+      if (isResizing && panelRef.current) {
+        const newWidth = window.innerWidth - mouseMoveEvent.clientX
+        // Constrain between 300px and 800px
+        setPanelWidth(Math.max(300, Math.min(800, newWidth)))
+      }
+    },
+    [isResizing]
+  )
+
+  // Mouse events effect for resizing
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', resize)
+      window.addEventListener('mouseup', stopResizing)
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+    } else {
+      window.removeEventListener('mousemove', resize)
+      window.removeEventListener('mouseup', stopResizing)
+      document.body.style.cursor = 'default'
+      document.body.style.userSelect = 'auto'
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', resize)
+      window.removeEventListener('mouseup', stopResizing)
+      document.body.style.cursor = 'default'
+      document.body.style.userSelect = 'auto'
+    }
+  }, [isResizing, resize, stopResizing])
 
   // Stable callbacks to prevent child re-renders
   const handleDetailClose = useCallback(() => {
@@ -187,7 +235,27 @@ function AppContent() {
         {analysisData &&
           selectedNode &&
           (viewMode === 'overview' || viewMode === 'graph') && (
-            <div className="w-[28rem] border-l border-border overflow-hidden">
+            <div
+              ref={panelRef}
+              className="relative border-l border-border overflow-hidden flex-shrink-0"
+              style={{ width: `${panelWidth}px` }}
+            >
+              {/* Drag handle */}
+              <div
+                onMouseDown={startResizing}
+                className="absolute left-0 top-0 bottom-0 w-4 cursor-col-resize z-50 -ml-2 flex items-center justify-center group"
+                title="Drag to resize"
+              >
+                {/* Visible grip indicator */}
+                <div className="flex flex-col items-center justify-center py-2 rounded bg-border/50 group-hover:bg-primary/20 transition-colors">
+                  <DotsThreeVertical
+                    className="h-4 w-4 text-muted-foreground group-hover:text-primary"
+                    weight="bold"
+                  />
+                </div>
+                {/* Active resize line */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 bg-primary/0 group-hover:bg-primary/50 active:bg-primary transition-colors" />
+              </div>
               <Suspense
                 fallback={
                   <div className="h-full flex items-center justify-center bg-background">
