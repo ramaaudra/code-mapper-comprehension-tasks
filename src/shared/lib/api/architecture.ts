@@ -1,5 +1,6 @@
 import type {
   FileArchitectureMetrics,
+  FileContentResponse,
   FolderArchitectureMetrics,
   FolderDetailResponse
 } from '@/features/architecture/types/architecture'
@@ -30,6 +31,12 @@ export const architectureApi = {
   ): Promise<FolderDetailResponse> => {
     const encoded = encodeURIComponent(folderPath)
     const response = await api.get(`/api/architecture/folder?path=${encoded}`)
+    return response.data
+  },
+
+  getFileContent: async (filePath: string): Promise<FileContentResponse> => {
+    const encoded = encodeURIComponent(filePath)
+    const response = await api.get(`/api/file/content?path=${encoded}`)
     return response.data
   }
 }

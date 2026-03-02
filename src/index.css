@@ -1,14 +1,9 @@
+/* Import JetBrains Mono from Google Fonts for better portability */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@font-face {
-  font-family: 'JetBrains Mono';
-  src: url('/JetBrainsMono-VariableFont_wght.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
 
 @layer base {
   :root {

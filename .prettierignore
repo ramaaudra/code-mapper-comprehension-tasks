@@ -5,5 +5,6 @@ node_modules
 .vscode
 public
 coverage
+pnpm-lock.yaml
 *.config.ts
 *.config.js

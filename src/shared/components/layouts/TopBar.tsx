@@ -1,3 +1,4 @@
+import { ReportDownloadButton } from '@/features/report/components/ReportDownloadButton'
 import { Button } from '@/shared/components/ui/button'
 import {
   AlertTriangle,
@@ -124,6 +125,8 @@ export function TopBar({
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2">
+        {hasData && <ReportDownloadButton />}
+
         {hasData && (
           <SimpleTooltip
             content={

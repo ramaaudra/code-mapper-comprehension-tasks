@@ -187,7 +187,7 @@ function AppContent() {
         {analysisData &&
           selectedNode &&
           (viewMode === 'overview' || viewMode === 'graph') && (
-            <div className="w-96 border-l border-border overflow-hidden">
+            <div className="w-[28rem] border-l border-border overflow-hidden">
               <Suspense
                 fallback={
                   <div className="h-full flex items-center justify-center bg-background">

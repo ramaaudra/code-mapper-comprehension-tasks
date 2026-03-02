@@ -49,14 +49,14 @@ export function InfoTooltip({
         {asChild ? (
           children
         ) : (
-          <button
+          <span
             className={cn(
-              'text-muted-foreground hover:text-foreground transition-colors',
+              'text-muted-foreground hover:text-foreground transition-colors cursor-help',
               iconClassName
             )}
           >
             <Info className="h-4 w-4" />
-          </button>
+          </span>
         )}
       </TooltipTrigger>
       <TooltipContent

@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useState } from 'react'
+import { useCallback, useContext, useState } from 'react'
 
+import { DataContext } from '@/shared/context/DataContext'
 import {
   type ChangesStatus,
   fetchAnalysisData,
@@ -25,16 +26,22 @@ interface UseAnalysisDataResult {
 const EMPTY_RISK_ANALYSIS: FileRiskProfile[] = []
 
 export function useAnalysisData(): UseAnalysisDataResult {
+  const context = useContext(DataContext)
   const queryClient = useQueryClient()
   const [changesStatus, setChangesStatus] = useState<ChangesStatus | null>(null)
 
-  const { data, isLoading, error, refetch, dataUpdatedAt } = useQuery({
+  // Always call hooks unconditionally
+  const queryResult = useQuery({
     queryKey: ['analysis'],
     queryFn: fetchAnalysisData,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1
+    retry: 1,
+    enabled: !context?.analysisData // Only fetch in live mode
   })
 
+  const { data, isLoading, error, refetch, dataUpdatedAt } = queryResult
+
+  // Live mode: use callbacks for data operations
   const loadAnalysis = useCallback(async () => {
     const { data: result } = await refetch()
     return result || null
@@ -66,6 +73,25 @@ export function useAnalysisData(): UseAnalysisDataResult {
       return null
     }
   }, [queryClient])
+
+  // Report mode: data dari context (return after all hooks)
+  if (context?.analysisData) {
+    return {
+      analysisData: context.analysisData,
+      riskAnalysis: context.analysisData.riskAnalysis || EMPTY_RISK_ANALYSIS,
+      analysisLoadedAt: Date.now(),
+      isLoading: false,
+      loadError: null,
+      loadAnalysis: async () => context.analysisData!,
+      reanalyze: async () => context.analysisData!,
+      changesStatus: { hasChanges: false, lastChangeAt: null, totalChanges: 0 },
+      checkChanges: async () => ({
+        hasChanges: false,
+        lastChangeAt: null,
+        totalChanges: 0
+      })
+    }
+  }
 
   return {
     analysisData: data || null,

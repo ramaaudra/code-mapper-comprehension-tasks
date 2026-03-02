@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useQuery } from '@tanstack/react-query'
 import { memo, useMemo, useState } from 'react'
 
 import {
@@ -39,6 +40,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
+import { architectureApi } from '@/shared/lib/api/architecture'
 import { findDependencyPath } from '@/shared/lib/api/pathfinding'
 import { getBasename, getFileIcon, getRelativePath } from '@/shared/lib/utils'
 import {
@@ -48,6 +50,8 @@ import {
   getRiskTextClass
 } from '@/shared/lib/utils/risk'
 import type { RiskLevel } from '@/shared/types/risk'
+
+import { SourceCodeViewer } from './SourceCodeViewer'
 
 interface NodeDetailPanelProps {
   node: any
@@ -74,6 +78,7 @@ const NodeDetailPanel = memo(
     const [copiedType, setCopiedType] = useState<'full' | 'relative' | null>(
       null
     )
+    const [activeTab, setActiveTab] = useState('overview')
 
     // Handle both old node object format and new node ID format
     const nodeId = typeof node === 'string' ? node : node.id
@@ -81,6 +86,20 @@ const NodeDetailPanel = memo(
 
     // Architecture metrics
     const { data: archMetrics } = useFileArchitectureMetrics(nodeId)
+
+    // File content query - only fetch when Source tab is active
+    const fileContentQuery = useQuery({
+      queryKey: ['fileContent', nodeId],
+      queryFn: () => architectureApi.getFileContent(nodeId),
+      enabled: activeTab === 'source' && !!nodeId,
+      staleTime: 5 * 60 * 1000
+    })
+
+    const {
+      data: fileContent,
+      isLoading: isLoadingContent,
+      error: contentError
+    } = fileContentQuery
 
     // Calculate Cost of Change (Blast Radius): Ca + (Ce × 0.5)
     const riskAssessment = useMemo(() => {
@@ -257,6 +276,107 @@ const NodeDetailPanel = memo(
       )
     }
 
+    const detectLanguage = (filename: string): string => {
+      if (filename.endsWith('.tsx')) {
+        return 'tsx'
+      }
+      if (filename.endsWith('.ts')) {
+        return 'typescript'
+      }
+      if (filename.endsWith('.jsx')) {
+        return 'jsx'
+      }
+      if (filename.endsWith('.js')) {
+        return 'javascript'
+      }
+      if (filename.endsWith('.json')) {
+        return 'json'
+      }
+      if (filename.endsWith('.css')) {
+        return 'css'
+      }
+      return 'text'
+    }
+
+    const renderSourceContent = () => {
+      if (isLoadingContent) {
+        return (
+          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4" />
+            <p className="text-sm">Loading file content...</p>
+          </div>
+        )
+      }
+
+      if (contentError) {
+        return (
+          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground p-4">
+            <AlertTriangle className="h-8 w-8 text-destructive mb-4" />
+            <p className="text-sm font-medium text-destructive">
+              Failed to load file content
+            </p>
+            <p className="text-xs mt-2 text-center">
+              {(contentError as Error)?.message || 'Unknown error occurred'}
+            </p>
+          </div>
+        )
+      }
+
+      if (!fileContent) {
+        return (
+          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground p-4">
+            <p className="text-sm">No content available</p>
+          </div>
+        )
+      }
+
+      const MAX_LINES = 1000
+      const hasMoreLines = fileContent.lines > MAX_LINES
+
+      return (
+        <div className="flex flex-col h-full">
+          {/* File info header */}
+          <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span
+                className="font-mono truncate max-w-[200px]"
+                title={fileContent.path}
+              >
+                {getRelativePath(fileContent.path)}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span>{formatFileSize(fileContent.size)}</span>
+              <span>{fileContent.lines.toLocaleString()} lines</span>
+            </div>
+          </div>
+
+          {/* Warning for large files */}
+          {hasMoreLines && (
+            <div className="px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/20 text-xs text-yellow-600 flex items-center gap-2">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              <span>
+                Large file detected. Showing first {MAX_LINES} of{' '}
+                {fileContent.lines.toLocaleString()} lines.
+              </span>
+            </div>
+          )}
+
+          {/* Code content with syntax highlighting */}
+          <div className="flex-1 min-h-0">
+            <SourceCodeViewer
+              code={fileContent.content}
+              language={detectLanguage(nodeData.basename)}
+              theme="auto"
+              showLineNumbers={true}
+              maxLines={MAX_LINES}
+              className="h-full rounded-none border-0"
+            />
+          </div>
+        </div>
+      )
+    }
+
     const FileIcon = getFileIcon(nodeData.basename)
 
     return (
@@ -342,10 +462,11 @@ const NodeDetailPanel = memo(
 
         {/* Content */}
         <Tabs
-          defaultValue="overview"
+          value={activeTab}
+          onValueChange={setActiveTab}
           className="flex-1 flex flex-col overflow-hidden"
         >
-          <div className="px-4 pt-2">
+          <div className="px-4 pt-2 overflow-x-auto">
             <TabsList className="w-full justify-start h-9 bg-transparent p-0 border-b rounded-none">
               <TabsTrigger
                 value="overview"
@@ -369,6 +490,18 @@ const NodeDetailPanel = memo(
                 Used By{' '}
                 <span className="ml-1.5 text-xs text-muted-foreground bg-muted px-1.5 rounded-full">
                   {incomingEdges.length}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="source"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-2 pt-1.5"
+              >
+                Source
+                <span className="ml-1.5 text-xs text-muted-foreground bg-muted px-1.5 rounded-full">
+                  {fileContent?.lines?.toLocaleString() ??
+                    (nodeData?.size
+                      ? Math.ceil(nodeData.size / 40).toLocaleString()
+                      : '0')}
                 </span>
               </TabsTrigger>
             </TabsList>
@@ -611,6 +744,10 @@ const NodeDetailPanel = memo(
 
           <TabsContent value="dependents" className="flex-1 m-0">
             {renderDependencyList(importers, 'importers')}
+          </TabsContent>
+
+          <TabsContent value="source" className="flex-1 m-0 overflow-hidden">
+            {renderSourceContent()}
           </TabsContent>
         </Tabs>
 
