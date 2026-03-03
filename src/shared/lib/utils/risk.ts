@@ -227,6 +227,31 @@ export function filterActionableRisks(profiles: RiskProfile[]): RiskProfile[] {
   return profiles.filter((p) => isActionableRisk(p.level))
 }
 
+/**
+ * Get description text for risk level
+ * Used in tooltips and detail panels
+ */
+export function getRiskDescription(level: RiskLevel): string {
+  const descriptions: Record<RiskLevel, string> = {
+    critical:
+      'CRITICAL - highly unstable core module OR part of a circular dependency.',
+    high: 'High impact - careful testing required after modification.',
+    medium: 'Exercise caution - affects a handful of dependents.',
+    low: 'Safe to modify - minimal collateral damage.'
+  }
+  return descriptions[level]
+}
+
+/**
+ * Architecture metric thresholds for code smells
+ */
+export const ARCHITECTURE_THRESHOLDS = {
+  /** God Object: file depends on too many other files (Ce > threshold) */
+  GOD_OBJECT_CE: 15,
+  /** Bottleneck: too many files depend on this file (Ca > threshold) */
+  BOTTLENECK_CA: 20
+} as const
+
 // ============================================================================
 // LEGACY FUNCTIONS - Maintained for backward compatibility during migration
 // @deprecated Use unified functions above instead

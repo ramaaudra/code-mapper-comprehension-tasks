@@ -4,6 +4,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
+import { ArrowLeft } from '@/shared/components/ui/icons'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import type { AnalysisWarnings } from '@/shared/types/analysis'
 
@@ -14,20 +15,29 @@ interface SetupGuidePageProps {
   onBack: () => void
 }
 
+// Reusable inline code component to avoid repetition
+function InlineCode({ children }: { children: React.ReactNode }) {
+  return (
+    <code className="px-1.5 py-0.5 bg-muted rounded font-mono text-xs">
+      {children}
+    </code>
+  )
+}
+
+// Static content defined outside component to avoid re-creation on render
 const TSCONFIG_EXAMPLE = `{
-   "compilerOptions": {
-     "baseUrl": ".",
-     "paths": {
-       "@/*": ["./src/*"],
-       "@/components/*": ["./src/components/*"],
-       "@/utils/*": ["./src/utils/*"],
-       "@/hooks/*": ["./src/hooks/*"]
-     }
-   }
- }`
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/utils/*": ["./src/utils/*"]
+    }
+  }
+}`
 
 export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
-  const hasIssues = warnings && warnings.unresolvedImports.length > 0
+  const hasUnresolvedImports = warnings && warnings.unresolvedImports.length > 0
 
   return (
     <ScrollArea className="h-full bg-background">
@@ -36,26 +46,31 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
         <div className="space-y-2">
           <button
             onClick={onBack}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            &larr; Back to Overview
+            <ArrowLeft className="h-4 w-4" />
+            Back to Overview
           </button>
           <h1 className="text-2xl font-bold">Setup Guide</h1>
           <p className="text-muted-foreground">
-            Configure path aliases for complete analysis results.
+            Configure path aliases for accurate analysis results.
           </p>
         </div>
 
         {/* Status Card */}
         <Card
-          className={hasIssues ? 'border-yellow-500/50' : 'border-green-500/50'}
+          className={
+            hasUnresolvedImports
+              ? 'border-yellow-500/50'
+              : 'border-green-500/50'
+          }
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              {hasIssues ? (
+              {hasUnresolvedImports ? (
                 <>
                   <span className="h-2 w-2 rounded-full bg-yellow-500" />
-                  Path Mappings Not Found
+                  Unresolved Imports Detected
                 </>
               ) : (
                 <>
@@ -66,17 +81,18 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            {hasIssues ? (
+            {hasUnresolvedImports ? (
               <p>
-                Code Mapper could not find path mappings in tsconfig.json or
-                jsconfig.json. Imports with aliases like{' '}
-                <code className="text-foreground">@/components</code> will not
-                be resolved.
+                Some imports with aliases like{' '}
+                <code className="text-foreground">@/components</code> could not
+                be resolved. This usually happens because the path mapping
+                configuration is incomplete or the referenced file does not
+                exist.
               </p>
             ) : (
               <p>
-                Path mappings detected. All imports should be resolved
-                correctly.
+                Path mappings detected successfully. All imports should be
+                resolved correctly.
               </p>
             )}
           </CardContent>
@@ -91,16 +107,21 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
         )}
 
         {/* Instructions */}
-        {hasIssues && (
+        {hasUnresolvedImports && (
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">How to Fix</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
                 <h4 className="font-medium text-sm">
-                  1. Create or edit tsconfig.json in project root
+                  1. Create or edit configuration file
                 </h4>
+                <p className="text-sm text-muted-foreground">
+                  Make sure one of the following files exists in your project
+                  root with the correct path mappings (priority:
+                  tsconfig.app.json {'>'} tsconfig.json {'>'} jsconfig.json):
+                </p>
                 <pre className="p-4 bg-muted rounded-lg text-xs overflow-x-auto">
                   <code>{TSCONFIG_EXAMPLE}</code>
                 </pre>
@@ -109,31 +130,37 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm">2. Re-run analysis</h4>
                 <p className="text-sm text-muted-foreground">
-                  After adding path mappings, re-run{' '}
-                  <code className="px-1 py-0.5 bg-muted rounded">
-                    code-mapper analyze .
-                  </code>{' '}
-                  or click the refresh button in the UI.
+                  After adding path mappings, re-run the{' '}
+                  <InlineCode>analyze .</InlineCode> command or click the
+                  refresh button in the UI.
                 </p>
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-medium text-sm">3. Untuk Vite users</h4>
+                <h4 className="font-medium text-sm">3. For Vite projects</h4>
                 <p className="text-sm text-muted-foreground">
-                  If using Vite, make sure path mappings are in{' '}
-                  <code className="px-1 py-0.5 bg-muted rounded">
-                    tsconfig.json
-                  </code>{' '}
-                  atau{' '}
-                  <code className="px-1 py-0.5 bg-muted rounded">
-                    tsconfig.app.json
-                  </code>
-                  , not just in{' '}
-                  <code className="px-1 py-0.5 bg-muted rounded">
-                    vite.config.ts
-                  </code>
-                  .
+                  Make sure path mappings are in{' '}
+                  <InlineCode>tsconfig.json</InlineCode> or{' '}
+                  <InlineCode>tsconfig.app.json</InlineCode>, not just in{' '}
+                  <InlineCode>vite.config.ts</InlineCode>. Code Mapper reads
+                  configuration from tsconfig/jsconfig files, not from Vite
+                  config.
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">4. Troubleshooting tips</h4>
+                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>
+                    Ensure <code>baseUrl</code> is set relative to the tsconfig
+                    file location
+                  </li>
+                  <li>Verify that the imported file actually exists</li>
+                  <li>
+                    For monorepos, run analysis from the subdirectories
+                    (frontend/backend), not from the root
+                  </li>
+                </ul>
               </div>
             </CardContent>
           </Card>

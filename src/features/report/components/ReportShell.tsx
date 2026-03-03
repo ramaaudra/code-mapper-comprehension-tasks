@@ -8,7 +8,10 @@ import {
   useFileAnalysisContext
 } from '@/features/file-analysis'
 import { DependencyGraph, useGraphGeneration } from '@/features/graph'
+import { SimulationDialog } from '@/features/simulation'
+import { useSimulation } from '@/features/simulation/hooks/useSimulation'
 import { Button } from '@/shared/components/ui/button'
+import { AlertTriangle } from '@/shared/components/ui/icons'
 import { PanelLeftClose, PanelLeftOpen } from '@/shared/components/ui/icons'
 import { SimpleTooltip } from '@/shared/components/ui/simple-tooltip'
 import {
@@ -18,7 +21,7 @@ import {
 import { useDataContext } from '@/shared/context/DataContext'
 import { matchesFile } from '@/shared/lib/utils'
 
-// Lazy load FileTreeView untuk reduce bundle size
+// Lazy load heavy components
 const FileTreeView = lazy(() =>
   import('@/features/file-analysis').then((m) => ({
     default: m.FileTreeView
@@ -31,7 +34,13 @@ const NodeDetailPanel = lazy(() =>
   }))
 )
 
-type ViewMode = 'overview' | 'graph' | 'architecture'
+const SetupGuidePage = lazy(() =>
+  import('@/features/setup-guide').then((m) => ({
+    default: m.SetupGuidePage
+  }))
+)
+
+type ViewMode = 'overview' | 'graph' | 'architecture' | 'setup-guide'
 
 interface AnalysisNode {
   id: string
@@ -43,6 +52,7 @@ export function ReportShell() {
   const [viewMode, setViewMode] = useState<ViewMode>('overview')
   const [isTreeCollapsed, setIsTreeCollapsed] = useState(false)
   const [selectedNode, setSelectedNode] = useState<AnalysisNode | null>(null)
+  const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR'>('LR')
 
   const { analysisData } = useDataContext()
   const {
@@ -52,10 +62,12 @@ export function ReportShell() {
     orphanFilesSet,
     riskProfileMap,
     brokenFilesSet,
-    newOrphansSet
+    newOrphansSet,
+    setIsSimulating,
+    setSimulationResult
   } = useFileAnalysisContext()
 
-  // Graph generation hook - generates graph for focused file only
+  // Graph generation hook
   const { graphElements, generateGraphForFile, clearGraph } =
     useGraphGeneration({
       analysisData,
@@ -65,6 +77,9 @@ export function ReportShell() {
       brokenFilesSet,
       newOrphansSet
     })
+
+  // Simulation hook (disabled for report - just for state management)
+  const { result: simulationResult, reset: closeSimulation } = useSimulation()
 
   const handleFileSelect = useCallback(
     (fileId: string | null) => {
@@ -108,11 +123,35 @@ export function ReportShell() {
     setViewMode('architecture')
   }, [])
 
+  const handleShowSetupGuide = useCallback(() => {
+    setViewMode('setup-guide')
+  }, [])
+
   const toggleTreeView = () => setIsTreeCollapsed(!isTreeCollapsed)
+
+  // Handle simulation (disabled in report - just show alert)
+  const handleSimulateDelete = useCallback(
+    (fileId: string) => {
+      setIsSimulating(true)
+      // In report, we can't actually simulate since it's static
+      // Just show a placeholder result
+      const mockResult = {
+        brokenFiles: [],
+        newOrphans: [],
+        fileToRemove: fileId
+      }
+      setSimulationResult(mockResult)
+      setIsSimulating(false)
+    },
+    [setIsSimulating, setSimulationResult]
+  )
 
   const fileCount = analysisData
     ? Object.keys(analysisData.dependencyMap).length
     : 0
+
+  const hasUnresolvedImports =
+    (analysisData?.warnings?.unresolvedImports?.length ?? 0) > 0
 
   return (
     <div className="min-h-screen bg-background">
@@ -151,7 +190,7 @@ export function ReportShell() {
           </div>
         </div>
 
-        {/* Center: Mode Switch (Overview | Graph | Architecture) */}
+        {/* Center: Mode Switch */}
         {analysisData && (
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <ToggleGroup
@@ -164,6 +203,8 @@ export function ReportShell() {
                   handleShowGraph()
                 } else if (value === 'architecture') {
                   handleShowArchitecture()
+                } else if (value === 'setup-guide') {
+                  handleShowSetupGuide()
                 }
               }}
               size="sm"
@@ -176,6 +217,12 @@ export function ReportShell() {
               </ToggleGroupItem>
               <ToggleGroupItem value="architecture" size="sm">
                 Architecture
+              </ToggleGroupItem>
+              <ToggleGroupItem value="setup-guide" size="sm" className="gap-1">
+                Setup
+                {hasUnresolvedImports && (
+                  <AlertTriangle className="h-3 w-3 text-yellow-500" />
+                )}
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
@@ -197,7 +244,7 @@ export function ReportShell() {
               <FileTreeView
                 data={analysisData.fileTree}
                 onFileSelect={handleFileSelect}
-                onSimulateDelete={() => {}} // Disable simulation di report
+                onSimulateDelete={handleSimulateDelete}
               />
             </Suspense>
           </div>
@@ -214,8 +261,8 @@ export function ReportShell() {
                     edges={graphElements.edges}
                     focusNodeId={graphElements.focusNodeId}
                     hoveredFile={null}
-                    layoutDirection="LR"
-                    onLayoutDirectionChange={() => {}}
+                    layoutDirection={layoutDirection}
+                    onLayoutDirectionChange={setLayoutDirection}
                     onNodeClick={handleFileSelect}
                     isLayoutTransitioning={false}
                   />
@@ -236,14 +283,22 @@ export function ReportShell() {
               <Suspense fallback={<DashboardSkeleton />}>
                 <ArchitecturePage />
               </Suspense>
+            ) : viewMode === 'setup-guide' ? (
+              <Suspense fallback={<DashboardSkeleton />}>
+                <SetupGuidePage
+                  warnings={analysisData.warnings}
+                  onBack={handleShowOverview}
+                />
+              </Suspense>
             ) : (
               <Suspense fallback={<DashboardSkeleton />}>
                 <ProjectDashboard
                   analysisData={analysisData}
                   dependencyGraph={graphElements}
                   hoveredFile={null}
-                  layoutDirection="LR"
-                  viewMode="overview"
+                  layoutDirection={layoutDirection}
+                  onLayoutDirectionChange={setLayoutDirection}
+                  viewMode={viewMode}
                   selectedFileId={selectedFileId}
                   onNavigateToFile={handleFileSelect}
                   onShowArchitecture={handleShowArchitecture}
@@ -263,6 +318,9 @@ export function ReportShell() {
           )}
         </div>
       </div>
+
+      {/* Simulation Dialog */}
+      <SimulationDialog result={simulationResult} onClose={closeSimulation} />
     </div>
   )
 }

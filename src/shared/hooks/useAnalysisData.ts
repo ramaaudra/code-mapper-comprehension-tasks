@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useContext, useState } from 'react'
+import { useCallback, useContext, useMemo, useState } from 'react'
 
 import { DataContext } from '@/shared/context/DataContext'
 import {
@@ -30,24 +30,47 @@ export function useAnalysisData(): UseAnalysisDataResult {
   const queryClient = useQueryClient()
   const [changesStatus, setChangesStatus] = useState<ChangesStatus | null>(null)
 
-  // Always call hooks unconditionally
+  // Check if we're in report mode (static data available)
+  const isReportMode = context?.analysisData != null
+
+  // In report mode: use static data, no fetching
+  // In live mode: use React Query
   const queryResult = useQuery({
     queryKey: ['analysis'],
     queryFn: fetchAnalysisData,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
-    enabled: !context?.analysisData // Only fetch in live mode
+    enabled: !isReportMode // Only fetch in live mode
   })
 
   const { data, isLoading, error, refetch, dataUpdatedAt } = queryResult
 
-  // Live mode: use callbacks for data operations
+  // Use memoized data based on mode
+  const analysisData = useMemo(() => {
+    return isReportMode ? context.analysisData : data || null
+  }, [isReportMode, context?.analysisData, data])
+
+  const riskAnalysis = useMemo(() => {
+    // In report mode, extract risk analysis from analysisData if available
+    if (isReportMode) {
+      // Report data may have risk analysis embedded or we compute it
+      return EMPTY_RISK_ANALYSIS // For now, report doesn't have separate risk analysis
+    }
+    return EMPTY_RISK_ANALYSIS
+  }, [isReportMode])
+
   const loadAnalysis = useCallback(async () => {
+    if (isReportMode) {
+      return context.analysisData
+    }
     const { data: result } = await refetch()
     return result || null
-  }, [refetch])
+  }, [isReportMode, context?.analysisData, refetch])
 
   const checkChanges = useCallback(async () => {
+    if (isReportMode) {
+      return null // No changes checking in report mode
+    }
     try {
       const status = await fetchChangesStatus()
       setChangesStatus(status)
@@ -55,53 +78,32 @@ export function useAnalysisData(): UseAnalysisDataResult {
     } catch {
       return null
     }
-  }, [])
+  }, [isReportMode])
 
   const reanalyze = useCallback(async () => {
+    if (isReportMode) {
+      return context.analysisData // Cannot reanalyze in report mode
+    }
     try {
       const result = await reanalyzeProject()
-      // Update the analysis cache with fresh data from backend
-      queryClient.setQueryData(['analysis'], result)
-      // Clear changes status after reanalysis
-      setChangesStatus({
-        hasChanges: false,
-        lastChangeAt: null,
-        totalChanges: 0
-      })
+      // Invalidate and refetch
+      await queryClient.invalidateQueries({ queryKey: ['analysis'] })
       return result
-    } catch {
+    } catch (err) {
+      console.error('Reanalysis failed:', err)
       return null
     }
-  }, [queryClient])
-
-  // Report mode: data dari context (return after all hooks)
-  if (context?.analysisData) {
-    return {
-      analysisData: context.analysisData,
-      riskAnalysis: context.analysisData.riskAnalysis || EMPTY_RISK_ANALYSIS,
-      analysisLoadedAt: Date.now(),
-      isLoading: false,
-      loadError: null,
-      loadAnalysis: async () => context.analysisData!,
-      reanalyze: async () => context.analysisData!,
-      changesStatus: { hasChanges: false, lastChangeAt: null, totalChanges: 0 },
-      checkChanges: async () => ({
-        hasChanges: false,
-        lastChangeAt: null,
-        totalChanges: 0
-      })
-    }
-  }
+  }, [isReportMode, context?.analysisData, queryClient])
 
   return {
-    analysisData: data || null,
-    riskAnalysis: data?.riskAnalysis || EMPTY_RISK_ANALYSIS,
-    analysisLoadedAt: data ? dataUpdatedAt : null,
-    isLoading,
-    loadError: error?.message || null,
+    analysisData,
+    riskAnalysis,
+    analysisLoadedAt: isReportMode ? Date.now() : dataUpdatedAt,
+    isLoading: isReportMode ? false : isLoading,
+    loadError: isReportMode ? null : error?.message || null,
     loadAnalysis,
     reanalyze,
-    changesStatus,
+    changesStatus: isReportMode ? null : changesStatus,
     checkChanges
   }
 }

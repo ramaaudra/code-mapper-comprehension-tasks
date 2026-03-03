@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from '@tanstack/react-query'
-import { memo, useMemo, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   ArchitectureStats,
@@ -23,7 +23,7 @@ import {
   Focus,
   Ghost,
   Lightbulb,
-  Map,
+  Map as MapIcon,
   Target,
   X
 } from '@/shared/components/ui/icons'
@@ -44,12 +44,15 @@ import { architectureApi } from '@/shared/lib/api/architecture'
 import { findDependencyPath } from '@/shared/lib/api/pathfinding'
 import { getBasename, getFileIcon, getRelativePath } from '@/shared/lib/utils'
 import {
+  ARCHITECTURE_THRESHOLDS,
   calculateCostOfChange,
   getCostOfChangeLevel,
+  getRiskBgOpacityClass,
+  getRiskBorderClass,
+  getRiskDescription,
   getRiskLabel,
   getRiskTextClass
 } from '@/shared/lib/utils/risk'
-import type { RiskLevel } from '@/shared/types/risk'
 
 import { SourceCodeViewer } from './SourceCodeViewer'
 
@@ -79,6 +82,20 @@ const NodeDetailPanel = memo(
       null
     )
     const [activeTab, setActiveTab] = useState('overview')
+    const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    // Cleanup timeout on unmount to prevent memory leaks
+    useEffect(() => {
+      return () => {
+        if (copyTimeoutRef.current) {
+          clearTimeout(copyTimeoutRef.current)
+        }
+      }
+    }, [])
+
+    // Check if in report mode (static HTML) - disable API calls to prevent CORS errors
+    const isReportMode =
+      typeof window !== 'undefined' && !!(window as any).__CODE_MAPPER_DATA__
 
     // Handle both old node object format and new node ID format
     const nodeId = typeof node === 'string' ? node : node.id
@@ -87,11 +104,11 @@ const NodeDetailPanel = memo(
     // Architecture metrics
     const { data: archMetrics } = useFileArchitectureMetrics(nodeId)
 
-    // File content query - only fetch when Source tab is active
+    // File content query - only fetch when Source tab is active and not in report mode
     const fileContentQuery = useQuery({
       queryKey: ['fileContent', nodeId],
       queryFn: () => architectureApi.getFileContent(nodeId),
-      enabled: activeTab === 'source' && !!nodeId,
+      enabled: activeTab === 'source' && !!nodeId && !isReportMode,
       staleTime: 5 * 60 * 1000
     })
 
@@ -140,11 +157,18 @@ const NodeDetailPanel = memo(
       return data.edges.filter((e: any) => e.source === nodeId)
     }, [data?.edges, nodeId])
 
+    // Create node map for O(1) lookup - fixes N+1 pattern
+    const nodeMap = useMemo(() => {
+      const map = new Map()
+      data?.nodes?.forEach((n: any) => map.set(n.id, n))
+      return map
+    }, [data?.nodes])
+
     // Get importers (files that import this file)
     const importers = useMemo(
       () =>
         incomingEdges.map((e: any) => {
-          const sourceNode = data?.nodes?.find((n: any) => n.id === e.source)
+          const sourceNode = nodeMap.get(e.source)
           return {
             id: e.source,
             label: sourceNode?.label || e.source,
@@ -154,14 +178,14 @@ const NodeDetailPanel = memo(
             line: e.line || 0
           }
         }),
-      [incomingEdges, data?.nodes]
+      [incomingEdges, nodeMap]
     )
 
     // Get imports (files that this file imports)
     const imports = useMemo(
       () =>
         outgoingEdges.map((e: any) => {
-          const targetNode = data?.nodes?.find((n: any) => n.id === e.target)
+          const targetNode = nodeMap.get(e.target)
           return {
             id: e.target,
             label: targetNode?.label || e.target,
@@ -171,7 +195,7 @@ const NodeDetailPanel = memo(
             line: e.line || 0
           }
         }),
-      [outgoingEdges, data?.nodes]
+      [outgoingEdges, nodeMap]
     )
 
     if (!node || !data || !nodeData) {
@@ -183,7 +207,10 @@ const NodeDetailPanel = memo(
         type === 'full' ? nodeData.id : getRelativePath(nodeData.id)
       navigator.clipboard.writeText(pathToCopy)
       setCopiedType(type)
-      setTimeout(() => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current)
+      }
+      copyTimeoutRef.current = setTimeout(() => {
         setCopiedType(null)
         setShowCopyMenu(false)
       }, 2000)
@@ -265,7 +292,7 @@ const NodeDetailPanel = memo(
                       title="Trace path"
                       aria-label={`Trace path to ${item.basename}`}
                     >
-                      <Map className="h-3.5 w-3.5" />
+                      <MapIcon className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
@@ -570,7 +597,7 @@ const NodeDetailPanel = memo(
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div
-                            className={`p-4 rounded-lg border ${getRiskBorderClass(riskAssessment.level)} ${getRiskBgClass(riskAssessment.level)} cursor-help`}
+                            className={`p-4 rounded-lg border ${getRiskBorderClass(riskAssessment.level)} ${getRiskBgOpacityClass(riskAssessment.level, 5)} cursor-help`}
                           >
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
@@ -637,43 +664,45 @@ const NodeDetailPanel = memo(
                     </TooltipProvider>
                   )}
 
-                  {/* God Object Warning: Ce > 15 */}
-                  {archMetrics && archMetrics.ce > 15 && (
-                    <div className="mt-3 p-3 rounded-lg border border-yellow-500/50 bg-yellow-500/10">
-                      <div className="flex items-center gap-2">
-                        <Cube
-                          className="h-4 w-4 text-yellow-500"
-                          weight="fill"
-                        />
-                        <span className="text-sm font-medium text-yellow-500">
-                          God Object Detected
-                        </span>
+                  {/* God Object Warning: Ce > threshold */}
+                  {archMetrics &&
+                    archMetrics.ce > ARCHITECTURE_THRESHOLDS.GOD_OBJECT_CE && (
+                      <div className="mt-3 p-3 rounded-lg border border-yellow-500/50 bg-yellow-500/10">
+                        <div className="flex items-center gap-2">
+                          <Cube
+                            className="h-4 w-4 text-yellow-500"
+                            weight="fill"
+                          />
+                          <span className="text-sm font-medium text-yellow-500">
+                            God Object Detected
+                          </span>
+                        </div>
+                        <p className="text-xs text-yellow-400/80 mt-1">
+                          This file depends on {archMetrics.ce} other files.
+                          Consider breaking it down.
+                        </p>
                       </div>
-                      <p className="text-xs text-yellow-400/80 mt-1">
-                        This file depends on {archMetrics.ce} other files.
-                        Consider breaking it down.
-                      </p>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Bottleneck Warning: Ca > 20 */}
-                  {archMetrics && archMetrics.ca > 20 && (
-                    <div className="mt-3 p-3 rounded-lg border border-orange-500/50 bg-orange-500/10">
-                      <div className="flex items-center gap-2">
-                        <Target
-                          className="h-4 w-4 text-orange-500"
-                          weight="fill"
-                        />
-                        <span className="text-sm font-medium text-orange-500">
-                          Core Bottleneck
-                        </span>
+                  {/* Bottleneck Warning: Ca > threshold */}
+                  {archMetrics &&
+                    archMetrics.ca > ARCHITECTURE_THRESHOLDS.BOTTLENECK_CA && (
+                      <div className="mt-3 p-3 rounded-lg border border-orange-500/50 bg-orange-500/10">
+                        <div className="flex items-center gap-2">
+                          <Target
+                            className="h-4 w-4 text-orange-500"
+                            weight="fill"
+                          />
+                          <span className="text-sm font-medium text-orange-500">
+                            Core Bottleneck
+                          </span>
+                        </div>
+                        <p className="text-xs text-orange-400/80 mt-1">
+                          {archMetrics.ca} files depend on this. Changes will
+                          break dozens of other components.
+                        </p>
                       </div>
-                      <p className="text-xs text-orange-400/80 mt-1">
-                        {archMetrics.ca} files depend on this. Changes will
-                        break dozens of other components.
-                      </p>
-                    </div>
-                  )}
+                    )}
                 </div>
               )
             )}
@@ -747,7 +776,15 @@ const NodeDetailPanel = memo(
           </TabsContent>
 
           <TabsContent value="source" className="flex-1 m-0 overflow-hidden">
-            {renderSourceContent()}
+            {isReportMode ? (
+              <div className="flex flex-col items-center justify-center h-64 text-muted-foreground p-4">
+                <p className="text-sm">
+                  Source code viewer is not available in static report mode.
+                </p>
+              </div>
+            ) : (
+              renderSourceContent()
+            )}
           </TabsContent>
         </Tabs>
 
@@ -756,7 +793,7 @@ const NodeDetailPanel = memo(
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Map className="h-5 w-5 text-muted-foreground" />
+                <MapIcon className="h-5 w-5 text-muted-foreground" />
                 Dependency Path to "{traceTarget}"
               </DialogTitle>
             </DialogHeader>
@@ -817,36 +854,5 @@ const NodeDetailPanel = memo(
     return nodeIdEqual
   }
 )
-
-// Helper functions for risk styling
-function getRiskBorderClass(level: string): string {
-  const borders: Record<string, string> = {
-    critical: 'border-red-500',
-    high: 'border-orange-500',
-    medium: 'border-yellow-500',
-    low: 'border-green-500'
-  }
-  return borders[level] || 'border-gray-300'
-}
-
-function getRiskBgClass(level: string): string {
-  const bgs: Record<string, string> = {
-    critical: 'bg-red-500/5',
-    high: 'bg-orange-500/5',
-    medium: 'bg-yellow-500/5',
-    low: 'bg-green-500/5'
-  }
-  return bgs[level] || 'bg-gray-500/5'
-}
-
-function getRiskDescription(level: RiskLevel): string {
-  const descriptions: Record<RiskLevel, string> = {
-    critical: 'CRITICAL - highly unstable core module OR part of a cycle.',
-    high: 'High impact - careful testing required after modification.',
-    medium: 'Exercise caution - affects a handful of dependents.',
-    low: 'Safe to modify - minimal collateral damage.'
-  }
-  return descriptions[level]
-}
 
 export default NodeDetailPanel
