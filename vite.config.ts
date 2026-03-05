@@ -28,9 +28,6 @@ export default defineConfig({
           'react-flow': ['@xyflow/react', '@dagrejs/dagre'],
           'ui-components': [
             '@radix-ui/react-dialog',
-            '@radix-ui/react-label',
-            '@radix-ui/react-slider',
-            '@radix-ui/react-switch',
             '@radix-ui/react-tooltip'
           ],
           'tree-view': ['react-arborist'],

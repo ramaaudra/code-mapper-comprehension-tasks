@@ -281,6 +281,12 @@
   justify-content: center;
 }
 
+/* Resizable panel styles */
+body.resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   *,

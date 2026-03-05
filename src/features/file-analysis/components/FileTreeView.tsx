@@ -1,5 +1,5 @@
-import { forwardRef, memo } from 'react'
-import { Tree, TreeApi } from 'react-arborist'
+import { forwardRef, memo, useImperativeHandle, useRef } from 'react'
+import { Tree } from 'react-arborist'
 
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -22,9 +22,8 @@ import { getRiskColorClass, getRiskLevel } from '@/shared/lib/utils/risk'
 import type { FileRiskProfile, RiskLevel } from '@/shared/types/risk'
 
 import { useFileAnalysisContext } from '../context/FileAnalysisContext'
-import { FileSearchBar } from './FileSearchBar'
+import { FileSearchBar, type FileSearchBarRef } from './FileSearchBar'
 
-// Node Renderer - Clean Minimalist Style
 const createNodeRenderer = (
   filesInCycle: Set<string>,
   orphanFilesSet: Set<string>,
@@ -52,11 +51,7 @@ const createNodeRenderer = (
     const riskProfile =
       riskProfileMap.get(normalizedNodeId) || riskProfileMap.get(node.id)
 
-    // Determine if file has any status
     const hasStatus = isInCycle || isOrphan || isBroken || isNewOrphan
-
-    // Check if file has high risk (always show indicators for Critical/High)
-    // Calculate risk level from score (backend now uses Ca × I formula)
     const riskLevel: RiskLevel | null = riskProfile
       ? getRiskLevel(riskProfile.score)
       : null
@@ -64,18 +59,29 @@ const createNodeRenderer = (
 
     return (
       <div
+        role="treeitem"
+        aria-selected={node.isSelected}
+        tabIndex={0}
         style={style}
         ref={dragHandle}
         className={`group flex items-center gap-2 cursor-pointer rounded-md transition-colors h-8 px-2 ${
-          node.isSelected
-            ? 'bg-primary/5 border-l-2 border-primary'
-            : 'hover:bg-muted border-l-2 border-transparent'
+          node.isSelected ? 'bg-primary/5' : 'hover:bg-muted'
         } ${isHovered && !node.isSelected ? 'bg-muted' : ''}`}
         onClick={() => {
           if (node.isLeaf) {
             node.select()
           } else {
             node.toggle()
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            if (node.isLeaf) {
+              node.select()
+            } else {
+              node.toggle()
+            }
           }
         }}
         onMouseEnter={() => {
@@ -280,94 +286,109 @@ interface FileTreeViewProps {
   onFileHover?: (fileId: string) => void
 }
 
-export const FileTreeView = forwardRef<
+export interface FileTreeViewRef {
+  focusSearch: () => void
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TreeApi<any> | undefined,
-  FileTreeViewProps
->(({ data, onFileSelect, onSimulateDelete = () => {}, onFileHover }, ref) => {
-  // Get all status data from context
-  const {
-    hoveredFile,
-    setHoveredFile,
-    searchQuery,
-    filesInCycle,
-    orphanFilesSet,
-    riskProfileMap,
-    brokenFilesSet,
-    newOrphansSet,
-    isSimulating
-  } = useFileAnalysisContext()
+  select: (id: string, opts?: { focus?: boolean }) => void
+}
 
-  const NodeRenderer = createNodeRenderer(
-    filesInCycle,
-    orphanFilesSet,
-    riskProfileMap,
-    hoveredFile,
-    (id) => {
-      setHoveredFile(id)
-      if (id) {
-        onFileHover?.(id)
+export const FileTreeView = forwardRef<FileTreeViewRef, FileTreeViewProps>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ({ data, onFileSelect, onSimulateDelete = () => {}, onFileHover }, ref) => {
+    const searchBarRef = useRef<FileSearchBarRef>(null)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const treeRef = useRef<any>(null)
+
+    useImperativeHandle(ref, () => ({
+      focusSearch: () => {
+        searchBarRef.current?.focus()
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      select: (id: string, opts?: { focus?: boolean }) => {
+        treeRef.current?.select(id, opts)
       }
-    },
-    onSimulateDelete,
-    brokenFilesSet,
-    newOrphansSet,
-    isSimulating
-  )
+    }))
 
-  if (!data || data.length === 0) {
+    const {
+      hoveredFile,
+      setHoveredFile,
+      searchQuery,
+      filesInCycle,
+      orphanFilesSet,
+      riskProfileMap,
+      brokenFilesSet,
+      newOrphansSet,
+      isSimulating
+    } = useFileAnalysisContext()
+
+    const NodeRenderer = createNodeRenderer(
+      filesInCycle,
+      orphanFilesSet,
+      riskProfileMap,
+      hoveredFile,
+      (id) => {
+        setHoveredFile(id)
+        if (id) {
+          onFileHover?.(id)
+        }
+      },
+      onSimulateDelete,
+      brokenFilesSet,
+      newOrphansSet,
+      isSimulating
+    )
+
+    if (!data || data.length === 0) {
+      return (
+        <div className="h-full flex items-center justify-center text-muted-foreground">
+          <div className="text-center">
+            <Folder className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No files to display</p>
+          </div>
+        </div>
+      )
+    }
+
     return (
-      <div className="h-full flex items-center justify-center text-muted-foreground">
-        <div className="text-center">
-          <Folder className="h-12 w-12 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">No files to display</p>
+      <div className="h-full flex flex-col bg-background">
+        <div className="px-4 py-3 border-b border-border shrink-0">
+          <span className="text-xs font-medium text-muted-foreground tracking-wider uppercase">
+            File Explorer
+          </span>
+        </div>
+
+        <div className="px-3 py-2 shrink-0">
+          <FileSearchBar ref={searchBarRef} />
+        </div>
+
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full px-2 pb-4">
+            <Tree
+              ref={treeRef}
+              data={data}
+              width="100%"
+              height={800}
+              rowHeight={32}
+              indent={16}
+              openByDefault={false}
+              searchTerm={searchQuery}
+              onSelect={(nodes) => {
+                const selectedNode = nodes[0]
+                if (!selectedNode) {
+                  return
+                }
+                if (selectedNode?.isLeaf) {
+                  onFileSelect(selectedNode.id)
+                } else {
+                  onFileSelect(null)
+                }
+              }}
+            >
+              {NodeRenderer}
+            </Tree>
+          </div>
         </div>
       </div>
     )
   }
-
-  return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header: Label */}
-      <div className="px-4 py-3 border-b border-border shrink-0">
-        <span className="text-xs font-medium text-muted-foreground tracking-wider uppercase">
-          File Explorer
-        </span>
-      </div>
-
-      {/* Searchbar */}
-      <div className="px-3 py-2 shrink-0">
-        <FileSearchBar />
-      </div>
-
-      {/* Tree */}
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full px-2 pb-4">
-          <Tree
-            ref={ref}
-            data={data}
-            width="100%"
-            height={800}
-            rowHeight={32}
-            indent={16}
-            openByDefault={false}
-            searchTerm={searchQuery}
-            onSelect={(nodes) => {
-              const selectedNode = nodes[0]
-              if (!selectedNode) {
-                return
-              }
-              if (selectedNode?.isLeaf) {
-                onFileSelect(selectedNode.id)
-              } else {
-                onFileSelect(null)
-              }
-            }}
-          >
-            {NodeRenderer}
-          </Tree>
-        </div>
-      </div>
-    </div>
-  )
-})
+)

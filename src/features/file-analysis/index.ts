@@ -1,4 +1,5 @@
 export { FileTreeView } from './components/FileTreeView'
+export type { FileTreeViewRef } from './components/FileTreeView'
 export { FileSearchBar } from './components/FileSearchBar'
 export {
   FileAnalysisProvider,

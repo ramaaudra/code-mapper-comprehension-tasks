@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DotsThreeVertical } from '@phosphor-icons/react'
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback } from 'react'
 
 import { DashboardSkeleton } from '@/features/dashboard'
 import {
@@ -12,8 +12,9 @@ import { SimulationDialog } from '@/features/simulation'
 import { useAppLogic } from '@/hooks/useAppLogic'
 import { AppLayout, Sidebar, TopBar } from '@/shared/components/layouts'
 import { ThemeProvider } from '@/shared/components/providers/ThemeProvider'
+import { useKeyboardShortcut } from '@/shared/hooks/useKeyboardShortcut'
+import { useResizablePanel } from '@/shared/hooks/useResizablePanel'
 
-// Lazy load heavy components from features
 const FileTreeView = lazy(() =>
   import('@/features/file-analysis').then((m) => ({
     default: m.FileTreeView
@@ -71,52 +72,11 @@ function AppContent() {
     isLayoutTransitioning
   } = useAppLogic()
 
-  // Resizable panel state and refs
-  const [panelWidth, setPanelWidth] = useState(448) // Default 448px (w-[28rem])
-  const [isResizing, setIsResizing] = useState(false)
-  const panelRef = useRef<HTMLDivElement>(null)
+  useKeyboardShortcut({ key: 'f', meta: true, preventDefault: true }, () => {
+    treeRef.current?.focusSearch()
+  })
 
-  // Resize handlers
-  const startResizing = useCallback(() => {
-    setIsResizing(true)
-  }, [])
-
-  const stopResizing = useCallback(() => {
-    setIsResizing(false)
-  }, [])
-
-  const resize = useCallback(
-    (mouseMoveEvent: MouseEvent) => {
-      if (isResizing && panelRef.current) {
-        const newWidth = window.innerWidth - mouseMoveEvent.clientX
-        // Constrain between 300px and 800px
-        setPanelWidth(Math.max(300, Math.min(800, newWidth)))
-      }
-    },
-    [isResizing]
-  )
-
-  // Mouse events effect for resizing
-  useEffect(() => {
-    if (isResizing) {
-      window.addEventListener('mousemove', resize)
-      window.addEventListener('mouseup', stopResizing)
-      document.body.style.cursor = 'col-resize'
-      document.body.style.userSelect = 'none'
-    } else {
-      window.removeEventListener('mousemove', resize)
-      window.removeEventListener('mouseup', stopResizing)
-      document.body.style.cursor = 'default'
-      document.body.style.userSelect = 'auto'
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', resize)
-      window.removeEventListener('mouseup', stopResizing)
-      document.body.style.cursor = 'default'
-      document.body.style.userSelect = 'auto'
-    }
-  }, [isResizing, resize, stopResizing])
+  const { panelWidth, panelRef, resizeHandleProps } = useResizablePanel()
 
   // Stable callbacks to prevent child re-renders
   const handleDetailClose = useCallback(() => {
@@ -240,9 +200,8 @@ function AppContent() {
               className="relative border-l border-border overflow-hidden flex-shrink-0"
               style={{ width: `${panelWidth}px` }}
             >
-              {/* Drag handle */}
               <div
-                onMouseDown={startResizing}
+                {...resizeHandleProps}
                 className="absolute left-0 top-0 bottom-0 w-4 cursor-col-resize z-50 -ml-2 flex items-center justify-center group"
                 title="Drag to resize"
               >

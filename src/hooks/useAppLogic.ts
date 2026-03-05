@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { TreeApi } from 'react-arborist'
 
+import type { FileTreeViewRef } from '@/features/file-analysis'
 import { useFileAnalysisContext } from '@/features/file-analysis'
 import { useGraphGeneration, usePrefetch } from '@/features/graph'
 import { useSimulation } from '@/features/simulation'
@@ -11,7 +11,7 @@ import { matchesFile } from '@/shared/lib/utils'
 export function useAppLogic() {
   const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR'>('LR')
   const isLayoutTransitioning = false
-  const treeRef = useRef<TreeApi<any> | null>(null)
+  const treeRef = useRef<FileTreeViewRef | null>(null)
 
   // Get context data
   const {

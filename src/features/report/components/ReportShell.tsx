@@ -1,10 +1,12 @@
-import { Suspense, lazy, useCallback, useState } from 'react'
+import { DotsThreeVertical } from '@phosphor-icons/react'
+import { Suspense, lazy, useCallback, useRef, useState } from 'react'
 
 import { ArchitecturePage } from '@/features/architecture/components/ArchitecturePage'
 import { DashboardSkeleton } from '@/features/dashboard'
 import { ProjectDashboard } from '@/features/dashboard/components/ProjectDashboard'
 import {
   FileTreeSkeleton,
+  type FileTreeViewRef,
   useFileAnalysisContext
 } from '@/features/file-analysis'
 import { DependencyGraph, useGraphGeneration } from '@/features/graph'
@@ -19,9 +21,10 @@ import {
   ToggleGroupItem
 } from '@/shared/components/ui/toggle-group'
 import { useDataContext } from '@/shared/context/DataContext'
+import { useKeyboardShortcut } from '@/shared/hooks/useKeyboardShortcut'
+import { useResizablePanel } from '@/shared/hooks/useResizablePanel'
 import { matchesFile } from '@/shared/lib/utils'
 
-// Lazy load heavy components
 const FileTreeView = lazy(() =>
   import('@/features/file-analysis').then((m) => ({
     default: m.FileTreeView
@@ -53,6 +56,14 @@ export function ReportShell() {
   const [isTreeCollapsed, setIsTreeCollapsed] = useState(false)
   const [selectedNode, setSelectedNode] = useState<AnalysisNode | null>(null)
   const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR'>('LR')
+
+  const fileTreeRef = useRef<FileTreeViewRef>(null)
+
+  useKeyboardShortcut({ key: 'f', meta: true, preventDefault: true }, () => {
+    fileTreeRef.current?.focusSearch()
+  })
+
+  const { panelWidth, panelRef, resizeHandleProps } = useResizablePanel()
 
   const { analysisData } = useDataContext()
   const {
@@ -242,6 +253,7 @@ export function ReportShell() {
           <div className="w-80 border-r border-border overflow-hidden">
             <Suspense fallback={<FileTreeSkeleton />}>
               <FileTreeView
+                ref={fileTreeRef}
                 data={analysisData.fileTree}
                 onFileSelect={handleFileSelect}
                 onSimulateDelete={handleSimulateDelete}
@@ -268,7 +280,26 @@ export function ReportShell() {
                   />
                 </div>
                 {selectedNode && (
-                  <div className="w-96 border-l border-border">
+                  <div
+                    ref={panelRef}
+                    className="relative border-l border-border overflow-hidden flex-shrink-0"
+                    style={{ width: `${panelWidth}px` }}
+                  >
+                    <div
+                      {...resizeHandleProps}
+                      className="absolute left-0 top-0 bottom-0 w-4 cursor-col-resize z-50 -ml-2 flex items-center justify-center group"
+                      title="Drag to resize"
+                    >
+                      {/* Visible grip indicator */}
+                      <div className="flex flex-col items-center justify-center py-2 rounded bg-border/50 group-hover:bg-primary/20 transition-colors">
+                        <DotsThreeVertical
+                          className="h-4 w-4 text-muted-foreground group-hover:text-primary"
+                          weight="bold"
+                        />
+                      </div>
+                      {/* Active resize line */}
+                      <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 bg-primary/0 group-hover:bg-primary/50 active:bg-primary transition-colors" />
+                    </div>
                     <Suspense fallback={<div>Loading...</div>}>
                       <NodeDetailPanel
                         node={selectedNode}

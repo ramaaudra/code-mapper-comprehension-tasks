@@ -120,15 +120,12 @@ export function HighRiskModules({
           <div className="w-20 text-right">Dependents</div>
         </div>
         {sortedModules.map((module) => {
-          const isCriticalRisk = module.riskScore >= 50
           const barWidth = (module.riskScore / maxRiskScore) * 100
 
           return (
             <div
               key={module.path}
-              className={`p-4 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors ${
-                isCriticalRisk ? 'border-l-2 border-red-500' : ''
-              }`}
+              className="p-4 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
             >
               <div className="mb-3">
                 <span
