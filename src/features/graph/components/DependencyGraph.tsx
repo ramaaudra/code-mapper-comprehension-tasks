@@ -19,8 +19,6 @@ import {
   Position,
   ReactFlow,
   ReactFlowProvider,
-  useEdgesState,
-  useNodesState,
   useReactFlow,
   useStore
 } from '@xyflow/react'
@@ -396,20 +394,16 @@ function DependencyGraphInner({
     [layoutedNodes, hoveredFile]
   )
 
-  const [flowNodes, setNodes, onNodesChange] =
-    useNodesState<DependencyFlowNode>(nodesWithHover)
-  const [flowEdges, setEdges, onEdgesChange] =
-    useEdgesState<DependencyFlowEdge>(edges)
   const reactFlow = useReactFlow()
 
-  // Apply to edges
+  // Apply animation quality to edges
   const qualityAdjustedEdges = useMemo(
     () =>
-      flowEdges.map((edge) => ({
+      edges.map((edge) => ({
         ...edge,
         animated: quality.enableAnimations && edge.animated
       })),
-    [flowEdges, quality.enableAnimations]
+    [edges, quality.enableAnimations]
   )
 
   const fitViewToGraph = useCallback(() => {
@@ -421,18 +415,6 @@ function DependencyGraphInner({
       duration: 400
     })
   }, [layoutedNodes, reactFlow])
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // Derived state needed for React Flow drag/drop updates
-    setNodes(nodesWithHover)
-  }, [nodesWithHover, setNodes])
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // Derived state needed for React Flow drag/drop updates
-    setEdges(edges)
-  }, [edges, setEdges])
 
   useEffect(() => {
     fitViewToGraph()
@@ -496,10 +478,8 @@ function DependencyGraphInner({
   return (
     <div className="relative w-full h-full graph-container">
       <ReactFlow<DependencyFlowNode, DependencyFlowEdge>
-        nodes={flowNodes}
+        nodes={nodesWithHover}
         edges={qualityAdjustedEdges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={{
@@ -588,7 +568,10 @@ export function DependencyGraph(props: DependencyGraphProps) {
 
   return (
     <ReactFlowProvider>
-      <DependencyGraphInner {...props} />
+      <DependencyGraphInner
+        {...props}
+        key={props.nodes.length + props.edges.length}
+      />
     </ReactFlowProvider>
   )
 }
