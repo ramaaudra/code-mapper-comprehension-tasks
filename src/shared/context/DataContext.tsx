@@ -29,16 +29,12 @@ export interface ArchitectureData {
 }
 
 export interface DataContextValue {
-  // Untuk ProjectDashboard dan DependencyGraph
   analysisData: AnalysisData | null
-  // Untuk ArchitecturePage
   architectureData: ArchitectureData | null
-  // Loading state (false untuk report)
   isLoading: boolean
-  // Error state (null untuk report)
   error: Error | null
-  // Refetch function (no-op untuk report)
   refetch: () => void
+  generatedAt?: string
 }
 
 export const DataContext = createContext<DataContextValue | undefined>(

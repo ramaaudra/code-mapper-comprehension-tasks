@@ -35,7 +35,8 @@ export function StaticProvider({ children }: StaticProviderProps) {
     architectureData: data.architectureData,
     isLoading: false,
     error: null,
-    refetch: () => {} // No-op for static report
+    refetch: () => {},
+    generatedAt: data.generatedAt
   }
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

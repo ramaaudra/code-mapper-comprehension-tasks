@@ -221,7 +221,7 @@ export function ActionTooltip({
         <div className="flex items-center gap-2">
           <span>{label}</span>
           {shortcut && (
-            <kbd className="ml-1 px-1.5 py-0.5 text-[10px] bg-muted rounded">
+            <kbd className="ml-1 px-1.5 py-0.5 text-[10px] font-mono bg-primary-foreground/20 text-primary-foreground border border-primary-foreground/30 rounded">
               {shortcut}
             </kbd>
           )}

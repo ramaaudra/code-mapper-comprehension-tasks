@@ -44,6 +44,13 @@ export function useAppLogic() {
   const [viewMode, setViewMode] = useState<
     'overview' | 'graph' | 'architecture' | 'setup-guide'
   >('overview')
+  const [graphViewMode, setGraphViewMode] = useState<'file' | 'module'>('file')
+  const [highlightedModule, setHighlightedModule] = useState<string | null>(
+    null
+  )
+  const [focusedModulePath, setFocusedModulePath] = useState<string | null>(
+    null
+  )
   const [isTreeCollapsed, setIsTreeCollapsed] = useState(false)
 
   // Graph generation hook
@@ -86,8 +93,10 @@ export function useAppLogic() {
         return
       }
 
-      // Switch to graph view when file is selected
+      // Switch to graph view with file mode when file is selected
       setViewMode('graph')
+      setGraphViewMode('file')
+      setFocusedModulePath(null)
 
       const resolvedFileId = generateGraphForFile(fileId) || fileId
       setSelectedFileId(resolvedFileId)
@@ -99,7 +108,14 @@ export function useAppLogic() {
 
       setSelectedNode(nodeData || null)
     },
-    [analysisData, generateGraphForFile, clearGraph, setSelectedFileId]
+    [
+      analysisData,
+      generateGraphForFile,
+      clearGraph,
+      setSelectedFileId,
+      setGraphViewMode,
+      setFocusedModulePath
+    ]
   )
 
   // Navigate to file (from dashboard/graph)
@@ -140,6 +156,24 @@ export function useAppLogic() {
   // Show graph-only mode
   const handleShowGraph = useCallback(() => {
     setViewMode('graph')
+    setGraphViewMode('file')
+    setHighlightedModule(null)
+  }, [])
+
+  // Show graph with module view and highlighted module
+  const handleShowModuleGraph = useCallback((modulePath: string) => {
+    setViewMode('graph')
+    setGraphViewMode('module')
+    setFocusedModulePath(modulePath)
+    setHighlightedModule(modulePath)
+    // Clear highlight after 5 seconds
+    setTimeout(() => {
+      setHighlightedModule(null)
+    }, 5000)
+  }, [])
+
+  const clearFocusedModule = useCallback(() => {
+    setFocusedModulePath(null)
   }, [])
 
   // Show setup guide mode
@@ -241,8 +275,15 @@ export function useAppLogic() {
     navigateToFile,
     handleShowOverview,
     handleShowGraph,
+    handleShowModuleGraph,
     handleShowArchitecture,
     handleShowSetupGuide,
+    graphViewMode,
+    setGraphViewMode,
+    highlightedModule,
+    focusedModulePath,
+    setFocusedModulePath,
+    clearFocusedModule,
     handleSimulateDelete,
     getRiskProfileForFile,
     prefetchFile: prefetch

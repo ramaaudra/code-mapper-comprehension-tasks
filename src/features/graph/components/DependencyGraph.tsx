@@ -36,10 +36,15 @@ import {
 
 import '@xyflow/react/dist/style.css'
 
+import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
 import { getRelativePath } from '@/shared/lib/utils'
 import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
 
 import { useAdaptiveQuality } from '../hooks/useAdaptiveQuality'
+import { useModuleGraph } from '../hooks/useModuleGraph'
+import { AggregatedEdge } from './AggregatedEdge'
+import { ModuleNodeComponent } from './ModuleNode'
+import { type ViewMode, ViewModeToggle } from './ViewModeToggle'
 import { ZoomControls } from './ZoomControls'
 
 export interface DependencyNodeData extends Record<string, unknown> {
@@ -72,6 +77,15 @@ export interface DependencyGraphProps {
   onLayoutDirectionChange?: (direction: 'LR' | 'TB') => void
   onNodeClick?: (fileId: string) => void
   isLayoutTransitioning?: boolean
+  // New props for module view
+  initialViewMode?: ViewMode
+  highlightedModule?: string | null
+  initialFocusedModuleId?: string | null
+  onViewModeChange?: (mode: ViewMode) => void
+  onModuleSelect?: (
+    modulePath: string | null,
+    moduleData?: FolderArchitectureMetrics
+  ) => void
 }
 
 const dagreDefaults = {
@@ -82,16 +96,17 @@ const dagreDefaults = {
   marginy: 60
 }
 
-const normalizePath = (value: string) => value.replace(/\\/g, '/')
+function normalizePath(value: string): string {
+  return value.replace(/\\/g, '/')
+}
 
-const getBasename = (filePath: string) => {
+function getBasename(filePath: string): string {
   const normalized = normalizePath(filePath)
   const segments = normalized.split('/')
   return segments[segments.length - 1]
 }
 
-// Helper function to get icon based on file extension
-const getFileIcon = (fileName: string) => {
+function getFileIcon(fileName: string) {
   const extension = fileName.split('.').pop()?.toLowerCase()
   switch (extension) {
     case 'ts':
@@ -154,6 +169,63 @@ function layoutNodes(
   })
 }
 
+const moduleLayoutDefaults = {
+  overview: {
+    ranksep: 180,
+    nodesep: 100,
+    edgesep: 60,
+    marginx: 80,
+    marginy: 80
+  },
+  focused: { ranksep: 120, nodesep: 80, edgesep: 40, marginx: 60, marginy: 60 }
+}
+
+function layoutModuleNodes(
+  nodes: Node[],
+  edges: Edge[],
+  layoutDirection: 'LR' | 'TB',
+  isFocused: boolean
+): Node[] {
+  if (nodes.length === 0) {
+    return nodes
+  }
+
+  const dagreGraph = new dagre.graphlib.Graph()
+  dagreGraph.setDefaultEdgeLabel(() => ({}))
+  const config = isFocused
+    ? moduleLayoutDefaults.focused
+    : moduleLayoutDefaults.overview
+  dagreGraph.setGraph({ rankdir: layoutDirection, ...config })
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: 300, height: 140 })
+  })
+
+  edges.forEach((edge) => {
+    if (dagreGraph.hasNode(edge.source) && dagreGraph.hasNode(edge.target)) {
+      dagreGraph.setEdge(edge.source, edge.target)
+    }
+  })
+
+  dagre.layout(dagreGraph)
+
+  return nodes.map((node) => {
+    const nodeWithPos = dagreGraph.node(node.id) as
+      | { x: number; y: number }
+      | undefined
+    if (!nodeWithPos) {
+      return node
+    }
+    return {
+      ...node,
+      position: { x: nodeWithPos.x, y: nodeWithPos.y },
+      sourcePosition:
+        layoutDirection === 'LR' ? Position.Right : Position.Bottom,
+      targetPosition: layoutDirection === 'LR' ? Position.Left : Position.Top
+    }
+  })
+}
+
 function ZoomIndicator() {
   const zoom = useStore((state) => state.transform[2])
   const [visible, setVisible] = useState(false)
@@ -174,8 +246,14 @@ function ZoomIndicator() {
   }
 
   const percentage = Math.round(zoom * 100)
-  const label =
-    percentage < 75 ? 'Wide view' : percentage > 175 ? 'Close view' : 'Normal'
+  let label: string
+  if (percentage < 75) {
+    label = 'Wide view'
+  } else if (percentage > 175) {
+    label = 'Close view'
+  } else {
+    label = 'Normal'
+  }
 
   return (
     <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-md text-sm font-mono z-20 shadow-lg">
@@ -211,6 +289,15 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
       'bg-[hsl(var(--chip-placeholder-bg))] text-[hsl(var(--chip-placeholder-fg))]'
   }
 
+  const chipLabel: Record<DependencyNodeData['direction'], string> = {
+    selected: 'Focus',
+    incoming: 'In',
+    outgoing: 'Out',
+    placeholder: 'Info'
+  }
+
+  const FileIcon = getFileIcon(data.label)
+
   return (
     <div
       className={clsx(
@@ -226,12 +313,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {(() => {
-            const FileIcon = getFileIcon(data.label)
-            return (
-              <FileIcon size={16} className="shrink-0 text-muted-foreground" />
-            )
-          })()}
+          <FileIcon size={16} className="shrink-0 text-muted-foreground" />
           <div>
             <div className="text-sm font-semibold text-[hsl(var(--foreground))] break-words">
               {data.label}
@@ -249,13 +331,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
             chipTone[direction]
           )}
         >
-          {direction === 'selected'
-            ? 'Focus'
-            : direction === 'incoming'
-              ? 'In'
-              : direction === 'outgoing'
-                ? 'Out'
-                : 'Info'}
+          {chipLabel[direction]}
         </div>
       </div>
 
@@ -331,35 +407,214 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
 const dependencyNode = memo(DependencyNodeComponent)
 
 const nodeTypes: NodeTypes = {
-  dependency: dependencyNode as unknown as ComponentType<NodeProps>
+  dependency: dependencyNode as unknown as ComponentType<NodeProps>,
+  module: ModuleNodeComponent as unknown as ComponentType<NodeProps>
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const edgeTypes: any = {
+  aggregated: AggregatedEdge
 }
 
 function DependencyGraphInner({
-  nodes,
-  edges,
+  nodes: fileNodes,
+  edges: fileEdges,
   focusNodeId,
   hoveredFile,
   layoutDirection,
   onLayoutDirectionChange,
   onNodeClick,
-  isLayoutTransitioning = false
+  isLayoutTransitioning = false,
+  initialViewMode = 'file',
+  highlightedModule,
+  initialFocusedModuleId = null,
+  onViewModeChange,
+  onModuleSelect
 }: DependencyGraphProps) {
-  const quality = useAdaptiveQuality(nodes.length)
+  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode)
+  const [selectedModule, setSelectedModule] = useState<string | null>(null)
+  // isSidePanelOpen digunakan sebagai internal tracking state
+  const [, setIsSidePanelOpen] = useState(false)
+  const [focusedModuleId, setFocusedModuleId] = useState<string | null>(null)
+
+  const {
+    nodes: moduleNodes,
+    edges: moduleEdges,
+    isLoading: isModuleLoading,
+    folders
+  } = useModuleGraph()
+
+  // Sync internal viewMode ketika parent me-reset (misal: user klik file dari file tree)
+  useEffect(() => {
+    setViewMode(initialViewMode)
+    if (initialViewMode !== 'module') {
+      setFocusedModuleId(null)
+      setSelectedModule(null)
+      setIsSidePanelOpen(false)
+    }
+  }, [initialViewMode])
+
+  // Sync initialFocusedModuleId prop to internal state
+  useEffect(() => {
+    if (initialViewMode !== 'module') {
+      return
+    }
+
+    setFocusedModuleId(initialFocusedModuleId)
+    setSelectedModule(initialFocusedModuleId)
+    setIsSidePanelOpen(Boolean(initialFocusedModuleId))
+
+    if (!initialFocusedModuleId) {
+      onModuleSelect?.(null)
+      return
+    }
+
+    setViewMode('module')
+    const moduleData = folders.find(
+      (f) => f.folderPath === initialFocusedModuleId
+    )
+    onModuleSelect?.(initialFocusedModuleId, moduleData)
+  }, [initialFocusedModuleId, initialViewMode, folders, onModuleSelect])
+
+  // selectedModuleData tidak lagi dirender di sini (dipindah ke App.tsx)
+  // isSidePanelOpen tetap ada untuk internal state tracking
+
+  // Filter module nodes/edges based on focus (for cleaner visualization)
+  const filteredModuleNodes = useMemo(() => {
+    if (!focusedModuleId) {
+      return moduleNodes
+    }
+
+    // Get directly connected modules (1 level depth)
+    const connectedModuleIds = new Set<string>([focusedModuleId])
+
+    moduleEdges.forEach((edge) => {
+      if (edge.source === focusedModuleId) {
+        connectedModuleIds.add(edge.target)
+      } else if (edge.target === focusedModuleId) {
+        connectedModuleIds.add(edge.source)
+      }
+    })
+
+    return moduleNodes.filter((node) => connectedModuleIds.has(node.id))
+  }, [moduleNodes, moduleEdges, focusedModuleId])
+
+  const filteredModuleEdges = useMemo(() => {
+    if (!focusedModuleId) {
+      return moduleEdges
+    }
+
+    const visibleNodeIds = new Set(filteredModuleNodes.map((n) => n.id))
+
+    // Only show edges between visible nodes
+    return moduleEdges.filter(
+      (edge) =>
+        visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target)
+    )
+  }, [moduleEdges, filteredModuleNodes, focusedModuleId])
+
+  // Apply dagre layout to module nodes for proper positioning
+  const layoutedModuleNodes = useMemo(() => {
+    if (viewMode !== 'module' || isModuleLoading) {
+      return filteredModuleNodes
+    }
+    const endMeasure = perfMonitor.startMeasure('module-layout')
+    try {
+      return layoutModuleNodes(
+        filteredModuleNodes,
+        filteredModuleEdges,
+        layoutDirection,
+        !!focusedModuleId
+      )
+    } finally {
+      endMeasure()
+    }
+  }, [
+    filteredModuleNodes,
+    filteredModuleEdges,
+    layoutDirection,
+    focusedModuleId,
+    viewMode,
+    isModuleLoading
+  ])
+
+  // Use appropriate nodes/edges based on view mode
+  const activeNodes = viewMode === 'file' ? fileNodes : layoutedModuleNodes
+
+  // Update nodes with selection/highlight state
+  const nodesWithState = useMemo(() => {
+    if (viewMode !== 'module') {
+      return activeNodes
+    }
+
+    return activeNodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        isSelected: node.id === selectedModule,
+        isHighlighted: node.id === highlightedModule
+      }
+    }))
+  }, [activeNodes, selectedModule, highlightedModule, viewMode])
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode)
+    setIsSidePanelOpen(false)
+    setSelectedModule(null)
+    setFocusedModuleId(null)
+
+    if (mode !== 'module') {
+      onModuleSelect?.(null)
+      onViewModeChange?.(mode)
+      return
+    }
+
+    onViewModeChange?.(mode)
+  }
+
+  const handleModuleClick = useCallback(
+    (_: unknown, node: Node) => {
+      const moduleData = folders.find((f) => f.folderPath === node.id)
+      setSelectedModule(node.id)
+      setFocusedModuleId(node.id)
+      setIsSidePanelOpen(true)
+      onModuleSelect?.(node.id, moduleData)
+    },
+    [folders, onModuleSelect]
+  )
+
+  const handleShowAllModules = useCallback(() => {
+    setSelectedModule(null)
+    setFocusedModuleId(null)
+    setIsSidePanelOpen(false)
+    onModuleSelect?.(null)
+    onViewModeChange?.('module')
+  }, [onModuleSelect, onViewModeChange])
+
+  const quality = useAdaptiveQuality(fileNodes.length)
   const [showMiniMap, setShowMiniMap] = useState(false)
 
   const layoutedNodes = useMemo(() => {
-    if (isLayoutTransitioning) {
-      return [] // Empty during transition
+    if (isLayoutTransitioning || viewMode === 'module') {
+      return [] // Empty during transition or in module view
     }
 
     const endMeasure = perfMonitor.startMeasure('graph-layout')
 
     try {
-      return layoutNodes(nodes, edges, layoutDirection, focusNodeId)
+      return layoutNodes(fileNodes, fileEdges, layoutDirection, focusNodeId)
     } finally {
       endMeasure()
     }
-  }, [nodes, edges, layoutDirection, focusNodeId, isLayoutTransitioning])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    fileNodes,
+    fileEdges,
+    layoutDirection,
+    focusNodeId,
+    isLayoutTransitioning,
+    viewMode
+  ])
 
   const nodesWithHover = useMemo(
     () =>
@@ -396,14 +651,15 @@ function DependencyGraphInner({
 
   const reactFlow = useReactFlow()
 
-  // Apply animation quality to edges
+  // Apply animation quality to edges (only for file view)
   const qualityAdjustedEdges = useMemo(
     () =>
-      edges.map((edge) => ({
+      fileEdges.map((edge) => ({
         ...edge,
         animated: quality.enableAnimations && edge.animated
       })),
-    [edges, quality.enableAnimations]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fileEdges, quality.enableAnimations]
   )
 
   const fitViewToGraph = useCallback(() => {
@@ -419,6 +675,21 @@ function DependencyGraphInner({
   useEffect(() => {
     fitViewToGraph()
   }, [fitViewToGraph])
+
+  const fitViewToModuleGraph = useCallback(() => {
+    if (viewMode !== 'module') {
+      return
+    }
+    setTimeout(() => {
+      reactFlow.fitView({ padding: 0.25, duration: 400 })
+    }, 50)
+  }, [viewMode, reactFlow])
+
+  useEffect(() => {
+    if (viewMode === 'module' && !isModuleLoading) {
+      fitViewToModuleGraph()
+    }
+  }, [layoutedModuleNodes, viewMode, isModuleLoading, fitViewToModuleGraph])
 
   // Keyboard shortcuts for zoom controls
   useEffect(() => {
@@ -463,8 +734,11 @@ function DependencyGraphInner({
     [onNodeClick]
   )
 
-  // Show skeleton during transition
-  if (isLayoutTransitioning || layoutedNodes.length === 0) {
+  // Show skeleton during transition (only for file view)
+  if (
+    viewMode === 'file' &&
+    (isLayoutTransitioning || layoutedNodes.length === 0)
+  ) {
     return (
       <div className="h-full flex items-center justify-center">
         <div
@@ -477,11 +751,64 @@ function DependencyGraphInner({
 
   return (
     <div className="relative w-full h-full graph-container">
+      {/* View Mode Toggle */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100]">
+        <ViewModeToggle mode={viewMode} onChange={handleViewModeChange} />
+      </div>
+
+      {/* Focus Mode Indicator & Reset */}
+      {viewMode === 'module' && focusedModuleId && (
+        <div className="absolute top-4 right-4 z-[100] flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[hsl(var(--primary))]/10 border border-[hsl(var(--primary))]/30">
+            <span className="text-xs font-medium text-[hsl(var(--primary))]">
+              ● Focus Mode
+            </span>
+          </div>
+          <button
+            onClick={handleShowAllModules}
+            className="flex items-center gap-1.5 text-xs bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border border-[hsl(var(--border))] px-3 py-1.5 rounded-md hover:bg-[hsl(var(--muted))] transition-colors font-medium"
+          >
+            Global Map
+          </button>
+        </div>
+      )}
+
+      {/* Global Map View Label */}
+      {viewMode === 'module' && !focusedModuleId && (
+        <div className="absolute top-4 right-4 z-[100]">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[hsl(var(--muted))] border border-[hsl(var(--border))]">
+            <span className="text-xs text-[hsl(var(--muted-foreground))]">
+              Global Map
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Side Panel dipindah ke App.tsx - dirender di luar komponen ini */}
+
+      {/* Loading state untuk module view */}
+      {viewMode === 'module' && isModuleLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[hsl(var(--background))]/80 z-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-[hsl(var(--primary))] border-t-transparent" />
+        </div>
+      )}
+
       <ReactFlow<DependencyFlowNode, DependencyFlowEdge>
-        nodes={nodesWithHover}
-        edges={qualityAdjustedEdges}
-        onNodeClick={handleNodeClick}
+        nodes={
+          viewMode === 'file'
+            ? nodesWithHover
+            : (nodesWithState as DependencyFlowNode[])
+        }
+        edges={
+          viewMode === 'file'
+            ? qualityAdjustedEdges
+            : (filteredModuleEdges as DependencyFlowEdge[])
+        }
+        onNodeClick={
+          viewMode === 'module' ? handleModuleClick : handleNodeClick
+        }
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         defaultEdgeOptions={{
           type: ConnectionLineType.SimpleBezier,
           style: {
@@ -552,7 +879,13 @@ function DependencyGraphInner({
 }
 
 export function DependencyGraph(props: DependencyGraphProps) {
-  if (!props.nodes.length) {
+  // Only show empty state for file view when there are no nodes
+  // Module view uses its own data from useModuleGraph hook
+  const isEmpty =
+    props.initialViewMode !== 'module' &&
+    (!props.nodes || props.nodes.length === 0)
+
+  if (isEmpty) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center gap-3 text-neutral-500 dark:text-neutral-400">
         <h2 className="text-lg font-semibold text-[hsl(var(--foreground))]">
@@ -568,10 +901,7 @@ export function DependencyGraph(props: DependencyGraphProps) {
 
   return (
     <ReactFlowProvider>
-      <DependencyGraphInner
-        {...props}
-        key={props.nodes.length + props.edges.length}
-      />
+      <DependencyGraphInner {...props} />
     </ReactFlowProvider>
   )
 }

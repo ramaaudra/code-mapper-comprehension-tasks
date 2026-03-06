@@ -38,6 +38,7 @@ interface ProjectDashboardProps {
   selectedFileId: string | null
   onNavigateToFile: (fileId: string) => void
   onShowArchitecture?: () => void
+  onShowModuleGraph?: (modulePath: string) => void
   isLayoutTransitioning?: boolean
 }
 
@@ -52,6 +53,7 @@ export const ProjectDashboard = memo(
     selectedFileId,
     onNavigateToFile,
     onShowArchitecture,
+    onShowModuleGraph,
     isLayoutTransitioning
   }: ProjectDashboardProps) {
     const { data: architectureData } = useArchitectureFolders()
@@ -90,11 +92,6 @@ export const ProjectDashboard = memo(
         }))
         .sort((a, b) => b.riskScore - a.riskScore)
     }, [architectureData])
-
-    // Top 5 for High Risk Modules display (diagnostic view)
-    const highRiskModules = useMemo(() => {
-      return allRiskProfiles.slice(0, 5)
-    }, [allRiskProfiles])
 
     // Segmented risk lists for Actionable Insights (triage view)
     const criticalRisks = useMemo(() => {
@@ -285,7 +282,8 @@ export const ProjectDashboard = memo(
               {/* Left Column */}
               <div className="space-y-6">
                 <HighRiskModules
-                  modules={highRiskModules}
+                  modules={allRiskProfiles.slice(0, 5)}
+                  onViewModule={onShowModuleGraph}
                   onViewArchitecture={onShowArchitecture}
                 />
                 <CouplingDistribution {...couplingDistribution} />

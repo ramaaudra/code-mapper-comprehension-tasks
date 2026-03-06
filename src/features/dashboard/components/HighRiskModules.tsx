@@ -1,3 +1,5 @@
+import { cn } from '@/lib/utils'
+
 import {
   Card,
   CardContent,
@@ -17,6 +19,7 @@ interface RiskModule {
 
 interface HighRiskModulesProps {
   modules: RiskModule[]
+  onViewModule?: (modulePath: string) => void
   onViewArchitecture?: () => void
 }
 
@@ -27,6 +30,7 @@ function getRiskScoreColor(score: number): string {
 
 export function HighRiskModules({
   modules,
+  onViewModule,
   onViewArchitecture
 }: HighRiskModulesProps) {
   // Sort by risk score (Ca × I formula - Robert C. Martin's Risk Metric)
@@ -125,7 +129,12 @@ export function HighRiskModules({
           return (
             <div
               key={module.path}
-              className="p-4 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
+              onClick={() => onViewModule?.(module.path)}
+              className={cn(
+                'p-4 rounded-lg bg-muted/20',
+                'hover:bg-muted/30 hover:ring-2 hover:ring-[hsl(var(--primary))]/50',
+                'transition-all cursor-pointer'
+              )}
             >
               <div className="mb-3">
                 <span

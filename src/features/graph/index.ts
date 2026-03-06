@@ -6,6 +6,8 @@ export { useGraphGeneration } from './hooks/useGraphGeneration'
 export { usePrefetch } from './hooks/usePrefetch'
 export { useAdaptiveQuality } from './hooks/useAdaptiveQuality'
 export type { QualitySettings } from './hooks/useAdaptiveQuality'
+export { useModuleGraph } from './hooks/useModuleGraph'
+export type { ModuleGraphNode, ModuleGraphEdge } from './hooks/useModuleGraph'
 export type {
   DependencyNodeData,
   DependencyEdgeData,
