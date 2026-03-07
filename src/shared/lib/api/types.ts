@@ -1,10 +1,16 @@
 export interface ApiErrorResponse {
+  success: false
   error: string
 }
 
 export interface ApiSuccessResponse<T> {
   success: true
   data: T
+  message?: string
+}
+
+export function unwrapApiResponse<T>(response: ApiSuccessResponse<T>): T {
+  return response.data
 }
 
 export interface PathfindingResponse {

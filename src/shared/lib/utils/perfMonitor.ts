@@ -1,4 +1,10 @@
-/* eslint-disable no-console, @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
+
+interface PerfDebugWindow extends Window {
+  __perfReport?: () => void
+  __perfClear?: () => void
+}
+
 export class PerformanceMonitor {
   private metrics: Map<string, number[]> = new Map()
   private enabled: boolean
@@ -81,6 +87,6 @@ export const perfMonitor = new PerformanceMonitor()
 
 // Expose to window for debugging
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  ;(window as any).__perfReport = () => perfMonitor.report()
-  ;(window as any).__perfClear = () => perfMonitor.clear()
+  ;(window as PerfDebugWindow).__perfReport = () => perfMonitor.report()
+  ;(window as PerfDebugWindow).__perfClear = () => perfMonitor.clear()
 }

@@ -1,6 +1,7 @@
 import type { AnalysisData } from '@/shared/types/analysis'
 
 import { api } from './client'
+import { unwrapApiResponse } from './types'
 import type { ApiSuccessResponse } from './types'
 
 export interface ChangesStatus {
@@ -10,19 +11,19 @@ export interface ChangesStatus {
 }
 
 export async function fetchChangesStatus(): Promise<ChangesStatus> {
-  const { data } = await api.get<{ success: boolean; data: ChangesStatus }>(
+  const { data } = await api.get<ApiSuccessResponse<ChangesStatus>>(
     '/api/changes-status'
   )
-  return data.data
+  return unwrapApiResponse(data)
 }
 
 export async function reanalyzeProject(): Promise<AnalysisData> {
   const { data } =
     await api.post<ApiSuccessResponse<AnalysisData>>('/api/reanalyze')
-  return data.data
+  return unwrapApiResponse(data)
 }
 
 export async function fetchAnalysisData(): Promise<AnalysisData> {
-  const { data } = await api.get<AnalysisData>('/api/data')
-  return data
+  const { data } = await api.get<ApiSuccessResponse<AnalysisData>>('/api/data')
+  return unwrapApiResponse(data)
 }

@@ -24,7 +24,7 @@ export function ReportDownloadButton() {
     const contentType = response.headers.get('content-type') || ''
 
     if (contentType.includes('application/json')) {
-      const data = (await response.json()) as Partial<ApiErrorResponse>
+      const data = (await response.json()) as ApiErrorResponse
       return data.error || 'Failed to generate report'
     }
 
