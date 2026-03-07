@@ -51,13 +51,9 @@ export function useAnalysisData(): UseAnalysisDataResult {
   }, [isReportMode, context?.analysisData, data])
 
   const riskAnalysis = useMemo(() => {
-    // In report mode, extract risk analysis from analysisData if available
-    if (isReportMode) {
-      // Report data may have risk analysis embedded or we compute it
-      return EMPTY_RISK_ANALYSIS // For now, report doesn't have separate risk analysis
-    }
-    return EMPTY_RISK_ANALYSIS
-  }, [isReportMode])
+    const embeddedRiskAnalysis = analysisData?.riskAnalysis
+    return embeddedRiskAnalysis ?? EMPTY_RISK_ANALYSIS
+  }, [analysisData?.riskAnalysis])
 
   const loadAnalysis = useCallback(async () => {
     if (isReportMode) {

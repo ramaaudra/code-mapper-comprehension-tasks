@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from '@tanstack/react-query'
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -6,6 +5,7 @@ import {
   ArchitectureStats,
   useFileArchitectureMetrics
 } from '@/features/architecture'
+import type { ReportData } from '@/features/report/types'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -53,14 +53,24 @@ import {
   getRiskLabel,
   getRiskTextClass
 } from '@/shared/lib/utils/risk'
+import type {
+  AnalysisData,
+  AnalysisEdge,
+  AnalysisNode,
+  DependencyReference
+} from '@/shared/types/analysis'
 
 import { SourceCodeViewer } from './SourceCodeViewer'
 
 interface NodeDetailPanelProps {
-  node: any
-  data: any
+  node: AnalysisNode | string | null
+  data: AnalysisData | null
   onClose: () => void
   onFocusSubgraph?: (nodeId: string, direction: 'inward' | 'outward') => void
+}
+
+interface CodeMapperWindow extends Window {
+  __CODE_MAPPER_DATA__?: ReportData
 }
 
 const NodeDetailPanel = memo(
@@ -95,19 +105,21 @@ const NodeDetailPanel = memo(
 
     // Check if in report mode (static HTML) - disable API calls to prevent CORS errors
     const isReportMode =
-      typeof window !== 'undefined' && !!(window as any).__CODE_MAPPER_DATA__
+      typeof window !== 'undefined' &&
+      !!(window as CodeMapperWindow).__CODE_MAPPER_DATA__
 
     // Handle both old node object format and new node ID format
-    const nodeId = typeof node === 'string' ? node : node.id
-    const nodeData = data?.nodes?.find((n: any) => n.id === nodeId)
+    const nodeId = typeof node === 'string' ? node : node?.id
+    const nodeData = data?.nodes?.find((n) => n.id === nodeId)
+    const resolvedNodeId = nodeId ?? ''
 
     // Architecture metrics
-    const { data: archMetrics } = useFileArchitectureMetrics(nodeId)
+    const { data: archMetrics } = useFileArchitectureMetrics(nodeId ?? null)
 
     // File content query - only fetch when Source tab is active and not in report mode
     const fileContentQuery = useQuery({
       queryKey: ['fileContent', nodeId],
-      queryFn: () => architectureApi.getFileContent(nodeId),
+      queryFn: () => architectureApi.getFileContent(nodeId ?? ''),
       enabled: activeTab === 'source' && !!nodeId && !isReportMode,
       staleTime: 5 * 60 * 1000
     })
@@ -147,27 +159,27 @@ const NodeDetailPanel = memo(
       if (!data?.edges || !nodeId) {
         return []
       }
-      return data.edges.filter((e: any) => e.target === nodeId)
+      return data.edges.filter((e) => e.target === nodeId)
     }, [data?.edges, nodeId])
 
     const outgoingEdges = useMemo(() => {
       if (!data?.edges || !nodeId) {
         return []
       }
-      return data.edges.filter((e: any) => e.source === nodeId)
+      return data.edges.filter((e) => e.source === nodeId)
     }, [data?.edges, nodeId])
 
     // Create node map for O(1) lookup - fixes N+1 pattern
     const nodeMap = useMemo(() => {
-      const map = new Map()
-      data?.nodes?.forEach((n: any) => map.set(n.id, n))
+      const map = new Map<string, AnalysisNode>()
+      data?.nodes?.forEach((n) => map.set(n.id, n))
       return map
     }, [data?.nodes])
 
     // Get importers (files that import this file)
-    const importers = useMemo(
+    const importers = useMemo<DependencyReference[]>(
       () =>
-        incomingEdges.map((e: any) => {
+        incomingEdges.map((e: AnalysisEdge) => {
           const sourceNode = nodeMap.get(e.source)
           return {
             id: e.source,
@@ -182,9 +194,9 @@ const NodeDetailPanel = memo(
     )
 
     // Get imports (files that this file imports)
-    const imports = useMemo(
+    const imports = useMemo<DependencyReference[]>(
       () =>
-        outgoingEdges.map((e: any) => {
+        outgoingEdges.map((e: AnalysisEdge) => {
           const targetNode = nodeMap.get(e.target)
           return {
             id: e.target,
@@ -221,10 +233,10 @@ const NodeDetailPanel = memo(
       setTraceTarget(getBasename(targetFile))
       try {
         const pathResult = await findDependencyPath({
-          startNode: nodeId,
+          startNode: resolvedNodeId,
           endNode: targetFile
         })
-        setTracedPath(pathResult)
+        setTracedPath(pathResult ?? [])
         setIsPathModalOpen(true)
       } catch (error) {
         console.error('Failed to trace path:', error)
@@ -244,7 +256,7 @@ const NodeDetailPanel = memo(
     }
 
     const renderDependencyList = (
-      items: any[],
+      items: DependencyReference[],
       type: 'imports' | 'importers'
     ) => {
       if (items.length === 0) {
@@ -258,7 +270,7 @@ const NodeDetailPanel = memo(
       return (
         <ScrollArea className="h-[calc(100vh-200px)] lg:h-[calc(100vh-220px)] w-full">
           <div className="p-4 space-y-1">
-            {items.map((item: any) => {
+            {items.map((item) => {
               const ItemFileIcon = getFileIcon(item.basename)
               return (
                 <div
@@ -393,7 +405,7 @@ const NodeDetailPanel = memo(
           <div className="flex-1 min-h-0">
             <SourceCodeViewer
               code={fileContent.content}
-              language={detectLanguage(nodeData.basename)}
+              language={detectLanguage(nodeData.basename ?? nodeData.id)}
               theme="auto"
               showLineNumbers={true}
               maxLines={MAX_LINES}
@@ -404,7 +416,9 @@ const NodeDetailPanel = memo(
       )
     }
 
-    const FileIcon = getFileIcon(nodeData.basename)
+    const displayBasename = nodeData.basename ?? getBasename(nodeData.id)
+    const displaySize = nodeData.size ?? 0
+    const FileIcon = getFileIcon(displayBasename)
 
     return (
       <div className="h-full w-full bg-background flex flex-col">
@@ -418,9 +432,9 @@ const NodeDetailPanel = memo(
               <div className="min-w-0">
                 <h2
                   className="text-lg font-semibold truncate"
-                  title={nodeData.basename}
+                  title={displayBasename}
                 >
-                  {nodeData.basename}
+                  {displayBasename}
                 </h2>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <p
@@ -430,7 +444,7 @@ const NodeDetailPanel = memo(
                     {getRelativePath(nodeData.id)}
                   </p>
                   <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">
-                    {formatFileSize(nodeData.size)}
+                    {formatFileSize(displaySize)}
                   </span>
                   <TooltipProvider>
                     <Tooltip open={showCopyMenu || copiedType !== null}>
@@ -753,7 +767,9 @@ const NodeDetailPanel = memo(
                 <Button
                   variant="default"
                   size="sm"
-                  onClick={() => onFocusSubgraph(nodeId, focusDirection)}
+                  onClick={() =>
+                    onFocusSubgraph(resolvedNodeId, focusDirection)
+                  }
                   className="w-full"
                 >
                   <Focus className="h-3 w-3 mr-2" />

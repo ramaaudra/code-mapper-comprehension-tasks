@@ -1,6 +1,7 @@
 import type { AnalysisData } from '@/shared/types/analysis'
 
 import { api } from './client'
+import type { ApiSuccessResponse } from './types'
 
 export interface ChangesStatus {
   hasChanges: boolean
@@ -16,13 +17,12 @@ export async function fetchChangesStatus(): Promise<ChangesStatus> {
 }
 
 export async function reanalyzeProject(): Promise<AnalysisData> {
-  const { data } = await api.post<{ success: boolean; data: AnalysisData }>(
-    '/api/reanalyze'
-  )
+  const { data } =
+    await api.post<ApiSuccessResponse<AnalysisData>>('/api/reanalyze')
   return data.data
 }
 
-export async function fetchAnalysisData() {
-  const { data } = await api.get('/api/data')
+export async function fetchAnalysisData(): Promise<AnalysisData> {
+  const { data } = await api.get<AnalysisData>('/api/data')
   return data
 }

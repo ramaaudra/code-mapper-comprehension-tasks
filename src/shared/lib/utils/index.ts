@@ -82,6 +82,21 @@ export function getBasename(filePath: string): string {
   return filePath.split('/').pop() || filePath.split('\\').pop() || filePath
 }
 
+export function getModulePathFromNodeLabel(label?: string): string | null {
+  if (!label) {
+    return null
+  }
+
+  const normalizedLabel = label.replace(/\\/g, '/')
+  const lastSlashIndex = normalizedLabel.lastIndexOf('/')
+
+  if (lastSlashIndex === -1) {
+    return '(root)'
+  }
+
+  return normalizedLabel.slice(0, lastSlashIndex)
+}
+
 // Re-export file status utilities
 export {
   normalizePath,

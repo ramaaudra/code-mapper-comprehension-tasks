@@ -11,6 +11,7 @@ import {
 
 import { useAnalysisData } from '@/shared/hooks/useAnalysisData'
 import { getValueFromMap, normalizePath } from '@/shared/lib/utils'
+import type { AnalysisNode } from '@/shared/types/analysis'
 import type { FileRiskProfile } from '@/shared/types/risk'
 
 // Helper functions for stable hashing
@@ -154,8 +155,7 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
     // Build node path lookup for label mapping
     const nodePathLookup = new Map<string, string>()
     if (analysisData?.nodes) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      analysisData.nodes.forEach((node: any) => {
+      analysisData.nodes.forEach((node: AnalysisNode) => {
         if (!node?.id) {
           return
         }

@@ -22,7 +22,7 @@ import {
   useReactFlow,
   useStore
 } from '@xyflow/react'
-import type { Edge, Node, NodeProps, NodeTypes } from '@xyflow/react'
+import type { Edge, EdgeTypes, Node, NodeProps, NodeTypes } from '@xyflow/react'
 import clsx from 'clsx'
 import {
   type ComponentType,
@@ -411,8 +411,7 @@ const nodeTypes: NodeTypes = {
   module: ModuleNodeComponent as unknown as ComponentType<NodeProps>
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const edgeTypes: any = {
+const edgeTypes: EdgeTypes = {
   aggregated: AggregatedEdge
 }
 

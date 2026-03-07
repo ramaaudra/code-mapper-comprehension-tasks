@@ -28,7 +28,7 @@ interface GraphElements {
   focusNodeId: string | null
 }
 
-interface UseGraphGenerationOptions {
+export interface UseGraphGenerationOptions {
   analysisData: AnalysisData | null
   filesInCycle: Set<string>
   orphanFilesSet: Set<string>

@@ -1,31 +1,14 @@
 import { createContext, useContext } from 'react'
 
+import type {
+  FileArchitectureMetrics,
+  FolderArchitectureMetrics
+} from '@/features/architecture/types/architecture'
 import type { AnalysisData } from '@/shared/types/analysis'
 
-// Architecture types (mirror dari backend)
-export interface FolderMetrics {
-  folderPath: string
-  instability: number
-  ca: number
-  ce: number
-  fileCount: number
-  hasCycle: boolean
-  couplingTo: Record<string, number>
-  couplingFrom: Record<string, number>
-}
-
-export interface FileMetrics {
-  filePath: string
-  instability: number
-  ca: number
-  ce: number
-  moduleKey: string
-  hasCycle: boolean
-}
-
 export interface ArchitectureData {
-  folders: FolderMetrics[]
-  files: FileMetrics[]
+  folders: FolderArchitectureMetrics[]
+  files: FileArchitectureMetrics[]
 }
 
 export interface DataContextValue {

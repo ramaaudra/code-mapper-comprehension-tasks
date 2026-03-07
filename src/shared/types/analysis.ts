@@ -1,4 +1,4 @@
-import type { FileRiskProfile } from '@/types/risk'
+import type { FileRiskProfile } from '@/shared/types/risk'
 
 export interface UnresolvedImport {
   specifier: string
@@ -50,13 +50,43 @@ export interface AnalysisIssues {
   summary: string
 }
 
+export interface AnalysisNode {
+  id: string
+  label?: string
+  basename?: string
+  size?: number
+  [key: string]: unknown
+}
+
+export interface AnalysisEdge {
+  source: string
+  target: string
+  kind: 'static' | 'dynamic'
+  strength: number
+  line: number
+}
+
+export interface FileTreeNode {
+  id: string
+  name: string
+  children?: FileTreeNode[]
+  isDirectory: boolean
+  size?: number
+}
+
+export interface DependencyReference {
+  id: string
+  label: string
+  basename: string
+  kind: AnalysisEdge['kind']
+  strength: number
+  line: number
+}
+
 export interface AnalysisData {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  nodes: any[]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  edges: any[]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fileTree: any[]
+  nodes: AnalysisNode[]
+  edges: AnalysisEdge[]
+  fileTree: FileTreeNode[]
   dependencyMap: Record<string, DependencyInfo[]>
   riskAnalysis?: FileRiskProfile[]
   issues: AnalysisIssues

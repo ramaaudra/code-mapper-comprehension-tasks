@@ -1,19 +1,34 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 
-import type { FileTreeViewRef } from '@/features/file-analysis'
 import { useFileAnalysisContext } from '@/features/file-analysis'
 import { useGraphGeneration, usePrefetch } from '@/features/graph'
 import { useSimulation } from '@/features/simulation'
 import { useAnalysisData } from '@/shared/hooks/useAnalysisData'
+import { useExplorerUiState } from '@/shared/hooks/useExplorerUiState'
 import { matchesFile } from '@/shared/lib/utils'
 
 export function useAppLogic() {
-  const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR'>('LR')
-  const isLayoutTransitioning = false
-  const treeRef = useRef<FileTreeViewRef | null>(null)
+  const explorerUi = useExplorerUiState()
+  const {
+    treeRef,
+    layoutDirection,
+    setLayoutDirection,
+    selectedNode,
+    setSelectedNode,
+    viewMode,
+    setViewMode,
+    graphViewMode,
+    setGraphViewMode,
+    highlightedModule,
+    setHighlightedModule,
+    focusedModulePath,
+    setFocusedModulePath,
+    isTreeCollapsed,
+    setIsTreeCollapsed,
+    toggleTreeView,
+    isLayoutTransitioning
+  } = explorerUi
 
-  // Get context data
   const {
     selectedFileId,
     setSelectedFileId,
@@ -29,7 +44,6 @@ export function useAppLogic() {
     hoveredFile
   } = useFileAnalysisContext()
 
-  // Analysis data from React Query
   const {
     analysisData,
     analysisLoadedAt,
@@ -40,20 +54,6 @@ export function useAppLogic() {
     checkChanges
   } = useAnalysisData()
 
-  const [selectedNode, setSelectedNode] = useState<any | null>(null)
-  const [viewMode, setViewMode] = useState<
-    'overview' | 'graph' | 'architecture' | 'setup-guide'
-  >('overview')
-  const [graphViewMode, setGraphViewMode] = useState<'file' | 'module'>('file')
-  const [highlightedModule, setHighlightedModule] = useState<string | null>(
-    null
-  )
-  const [focusedModulePath, setFocusedModulePath] = useState<string | null>(
-    null
-  )
-  const [isTreeCollapsed, setIsTreeCollapsed] = useState(false)
-
-  // Graph generation hook
   const { graphElements, generateGraphForFile, clearGraph } =
     useGraphGeneration({
       analysisData,
@@ -70,19 +70,16 @@ export function useAppLogic() {
     generateGraphForFile
   )
 
-  // Clear prefetch cache when analysis changes
   useEffect(() => {
     clearPrefetchCache()
   }, [analysisData, clearPrefetchCache])
 
-  // Simulation hook
   const {
     result: simulationResult,
     reset: closeSimulation,
     simulate
   } = useSimulation()
 
-  // Handle file selection
   const handleFileSelect = useCallback(
     (fileId: string | null) => {
       if (!fileId || !analysisData) {
@@ -93,7 +90,6 @@ export function useAppLogic() {
         return
       }
 
-      // Switch to graph view with file mode when file is selected
       setViewMode('graph')
       setGraphViewMode('file')
       setFocusedModulePath(null)
@@ -102,33 +98,39 @@ export function useAppLogic() {
       setSelectedFileId(resolvedFileId)
 
       const nodeData =
-        analysisData.nodes?.find((n: any) =>
-          matchesFile(n.id, resolvedFileId)
-        ) || analysisData.nodes?.find((n: any) => matchesFile(n.id, fileId))
+        analysisData.nodes?.find((node) =>
+          matchesFile(node.id, resolvedFileId)
+        ) ||
+        analysisData.nodes?.find((node) => matchesFile(node.id, fileId)) ||
+        null
 
-      setSelectedNode(nodeData || null)
+      setSelectedNode(nodeData)
     },
     [
       analysisData,
-      generateGraphForFile,
       clearGraph,
-      setSelectedFileId,
+      generateGraphForFile,
+      setFocusedModulePath,
       setGraphViewMode,
-      setFocusedModulePath
+      setSelectedFileId,
+      setSelectedNode,
+      setViewMode
     ]
   )
 
-  // Navigate to file (from dashboard/graph)
   const navigateToFile = useCallback(
     (fileId: string) => {
       if (!analysisData) {
         return
       }
+
       const dependencyMap = analysisData.dependencyMap ?? {}
       const allFiles = Object.keys(dependencyMap)
       const matchedFile =
         allFiles.find((candidate) => matchesFile(candidate, fileId)) || fileId
+
       handleFileSelect(matchedFile)
+
       if (treeRef.current) {
         try {
           treeRef.current.select(matchedFile, { focus: true })
@@ -137,92 +139,88 @@ export function useAppLogic() {
         }
       }
     },
-    [analysisData, handleFileSelect]
+    [analysisData, handleFileSelect, treeRef]
   )
 
-  // Show overview mode
   const handleShowOverview = useCallback(() => {
     setViewMode('overview')
     setSelectedFileId(null)
     setSelectedNode(null)
     clearGraph()
-  }, [setSelectedFileId, clearGraph])
+  }, [clearGraph, setSelectedFileId, setSelectedNode, setViewMode])
 
-  // Show architecture mode
   const handleShowArchitecture = useCallback(() => {
     setViewMode('architecture')
-  }, [])
+  }, [setViewMode])
 
-  // Show graph-only mode
   const handleShowGraph = useCallback(() => {
     setViewMode('graph')
     setGraphViewMode('file')
     setHighlightedModule(null)
-  }, [])
+  }, [setGraphViewMode, setHighlightedModule, setViewMode])
 
-  // Show graph with module view and highlighted module
-  const handleShowModuleGraph = useCallback((modulePath: string) => {
-    setViewMode('graph')
-    setGraphViewMode('module')
-    setFocusedModulePath(modulePath)
-    setHighlightedModule(modulePath)
-    // Clear highlight after 5 seconds
-    setTimeout(() => {
-      setHighlightedModule(null)
-    }, 5000)
-  }, [])
+  const handleShowModuleGraph = useCallback(
+    (modulePath: string) => {
+      setViewMode('graph')
+      setGraphViewMode('module')
+      setFocusedModulePath(modulePath)
+      setHighlightedModule(modulePath)
+
+      setTimeout(() => {
+        setHighlightedModule(null)
+      }, 5000)
+    },
+    [setFocusedModulePath, setGraphViewMode, setHighlightedModule, setViewMode]
+  )
 
   const clearFocusedModule = useCallback(() => {
     setFocusedModulePath(null)
-  }, [])
+  }, [setFocusedModulePath])
 
-  // Show setup guide mode
   const handleShowSetupGuide = useCallback(() => {
     setViewMode('setup-guide')
-  }, [])
+  }, [setViewMode])
 
-  // Refresh analysis data - triggers real reanalysis via POST /api/reanalyze
   const refreshAnalysis = useCallback(async () => {
     const result = await reanalyze()
-    // Clear cache and regenerate graph with new data
+
     if (result) {
-      clearGraph() // Clear graph state and cache
+      clearGraph()
+
       if (selectedFileId) {
-        // Regenerate graph for currently selected file with new data
         generateGraphForFile(selectedFileId, result)
       } else {
-        // No file selected, show overview
         setSelectedNode(null)
         setHoveredFile(null)
         setViewMode('overview')
       }
     }
+
     if (result?.issues?.circularDependencies?.length) {
       console.info(
         'Circular Dependencies Found:',
         result.issues.circularDependencies
       )
     }
+
     return result
   }, [
+    clearGraph,
+    generateGraphForFile,
     reanalyze,
     selectedFileId,
-    generateGraphForFile,
-    clearGraph,
+    setHoveredFile,
     setSelectedNode,
-    setHoveredFile
+    setViewMode
   ])
 
-  // Poll changes status every 10 seconds when analysis is loaded
   useEffect(() => {
     if (!analysisData) {
       return
     }
 
-    // Initial check
     checkChanges()
 
-    // Poll every 10 seconds
     const interval = setInterval(() => {
       checkChanges()
     }, 10000)
@@ -230,25 +228,20 @@ export function useAppLogic() {
     return () => clearInterval(interval)
   }, [analysisData, checkChanges])
 
-  // Handle simulation
   const handleSimulateDelete = useCallback(
     (fileId: string) => {
       setIsSimulating(true)
       simulate({ fileToRemove: fileId })
     },
-    [simulate, setIsSimulating]
+    [setIsSimulating, simulate]
   )
 
-  // Sync simulation result to context
   useEffect(() => {
     if (simulationResult) {
       setSimulationResult(simulationResult)
       setIsSimulating(false)
     }
-  }, [simulationResult, setSimulationResult, setIsSimulating])
-
-  // Toggle handlers
-  const toggleTreeView = () => setIsTreeCollapsed((prev) => !prev)
+  }, [setIsSimulating, setSimulationResult, simulationResult])
 
   return {
     layoutDirection,
@@ -286,6 +279,18 @@ export function useAppLogic() {
     clearFocusedModule,
     handleSimulateDelete,
     getRiskProfileForFile,
-    prefetchFile: prefetch
+    prefetchFile: prefetch,
+    filesInCycle,
+    orphanFilesSet,
+    riskProfileMap,
+    brokenFilesSet,
+    newOrphansSet,
+    generateGraphForFile,
+    clearGraph,
+    setSelectedFileId,
+    setSelectedNode,
+    setViewMode,
+    setHighlightedModule,
+    setIsTreeCollapsed
   }
 }

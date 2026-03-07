@@ -1,10 +1,11 @@
 import { api } from './client'
+import type { AllPathfindingResponse, PathfindingResponse } from './types'
 
 export async function findDependencyPath(payload: {
   startNode: string
   endNode: string
-}) {
-  const { data } = await api.post('/find-path', payload)
+}): Promise<string[] | null> {
+  const { data } = await api.post<PathfindingResponse>('/find-path', payload)
   return data.path
 }
 
@@ -12,7 +13,10 @@ export async function findAllDependencyPaths(payload: {
   startNode: string
   endNode: string
   maxDepth?: number
-}) {
-  const { data } = await api.post('/find-all-paths', payload)
+}): Promise<string[][]> {
+  const { data } = await api.post<AllPathfindingResponse>(
+    '/find-all-paths',
+    payload
+  )
   return data.paths
 }

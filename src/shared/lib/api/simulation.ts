@@ -1,10 +1,15 @@
+import type { DependencyInfo } from '@/shared/types/analysis'
+
 import { api } from './client'
+import type { SimulationResponse } from './types'
 
 export async function simulateRemoval(payload: {
   fileToRemove: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dependencyMap?: Record<string, any>
-}) {
-  const { data } = await api.post('/api/simulate-removal', payload)
+  dependencyMap?: Record<string, DependencyInfo[]>
+}): Promise<SimulationResponse> {
+  const { data } = await api.post<SimulationResponse>(
+    '/api/simulate-removal',
+    payload
+  )
   return data
 }

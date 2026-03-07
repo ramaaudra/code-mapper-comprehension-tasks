@@ -1,26 +1,21 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { simulateRemoval } from '@/shared/lib/api/simulation'
+import type { SimulationResponse } from '@/shared/lib/api/types'
+import type { DependencyInfo } from '@/shared/types/analysis'
 
 interface SimulatePayload {
   fileToRemove: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dependencyMap?: Record<string, any>
+  dependencyMap?: Record<string, DependencyInfo[]>
 }
 
-export interface SimulationResult {
-  brokenFiles: string[]
-  newOrphans: string[]
-}
+export type SimulationResult = SimulationResponse
 
 export function useSimulation() {
   const queryClient = useQueryClient()
 
   const mutation = useMutation<SimulationResult, Error, SimulatePayload>({
-    mutationFn: async (payload) => {
-      const result = await simulateRemoval(payload)
-      return result as SimulationResult
-    },
+    mutationFn: simulateRemoval,
     onSuccess: () => {
       // Invalidate analysis data to trigger refetch after simulation
       queryClient.invalidateQueries({ queryKey: ['analysis'] })

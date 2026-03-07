@@ -1,3 +1,6 @@
 export { AppLayout } from './AppLayout'
+export { ExplorerRightPanels } from './ExplorerRightPanels'
+export { ExplorerShell } from './ExplorerShell'
+export { ResizeGrip } from './ResizeGrip'
 export { TopBar } from './TopBar'
 export { Sidebar } from './Sidebar'

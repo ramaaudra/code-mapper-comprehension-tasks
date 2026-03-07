@@ -11,13 +11,18 @@ import {
   ToggleGroup,
   ToggleGroupItem
 } from '@/shared/components/ui/toggle-group'
+import type {
+  ExplorerRuntimeMode,
+  ExplorerViewMode
+} from '@/shared/types/explorer'
 
 interface TopBarProps {
+  runtimeMode: ExplorerRuntimeMode
   isLoading: boolean
   loadError: string | null
   hasData: boolean
   onRefresh: () => void
-  viewMode: 'overview' | 'graph' | 'architecture' | 'setup-guide'
+  viewMode: ExplorerViewMode
   onShowOverview: () => void
   onShowGraph: () => void
   onShowArchitecture: () => void
@@ -32,7 +37,9 @@ interface TopBarProps {
 }
 
 export function TopBar({
+  runtimeMode,
   isLoading,
+  loadError,
   hasData,
   onRefresh,
   viewMode,
@@ -48,6 +55,16 @@ export function TopBar({
   hasChanges = false,
   totalChanges = 0
 }: TopBarProps) {
+  const timestampLabel =
+    runtimeMode === 'report'
+      ? `Generated: ${analysisLoadedAt}`
+      : analysisLoadedAt
+        ? new Intl.DateTimeFormat(undefined, {
+            hour: '2-digit',
+            minute: '2-digit'
+          }).format(new Date(analysisLoadedAt))
+        : null
+
   return (
     <header className="h-14 bg-background border-b border-border px-4 flex items-center justify-between">
       {/* Left: Toggle Sidebar + Brand */}
@@ -125,9 +142,17 @@ export function TopBar({
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2">
-        {hasData && <ReportDownloadButton />}
+        {loadError && runtimeMode === 'live' && (
+          <SimpleTooltip content={loadError} side="bottom" asChild>
+            <div className="flex h-8 w-8 items-center justify-center text-amber-500">
+              <AlertTriangle className="h-4 w-4" />
+            </div>
+          </SimpleTooltip>
+        )}
 
-        {hasData && (
+        {hasData && runtimeMode === 'live' && <ReportDownloadButton />}
+
+        {hasData && runtimeMode === 'live' && (
           <SimpleTooltip
             content={
               isLoading
@@ -161,12 +186,9 @@ export function TopBar({
         )}
 
         {/* Timestamp (subtle) */}
-        {analysisLoadedAt && (
+        {timestampLabel && (
           <span className="text-xs text-muted-foreground hidden lg:inline">
-            {new Intl.DateTimeFormat(undefined, {
-              hour: '2-digit',
-              minute: '2-digit'
-            }).format(new Date(analysisLoadedAt))}
+            {timestampLabel}
           </span>
         )}
       </div>

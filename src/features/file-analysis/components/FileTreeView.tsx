@@ -1,5 +1,8 @@
 import { forwardRef, memo, useImperativeHandle, useRef } from 'react'
 import { Tree } from 'react-arborist'
+import type { NodeApi } from 'react-arborist'
+import type { NodeRendererProps } from 'react-arborist'
+import type { TreeApi } from 'react-arborist'
 
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -19,6 +22,7 @@ import {
 } from '@/shared/components/ui/tooltip'
 import { getFileIcon } from '@/shared/lib/utils'
 import { getRiskColorClass, getRiskLevel } from '@/shared/lib/utils/risk'
+import type { FileTreeNode } from '@/shared/types/analysis'
 import type { FileRiskProfile, RiskLevel } from '@/shared/types/risk'
 
 import { useFileAnalysisContext } from '../context/FileAnalysisContext'
@@ -35,8 +39,7 @@ const createNodeRenderer = (
   newOrphansSet: Set<string>,
   isSimulating?: boolean
 ) =>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  memo(({ node, style, dragHandle }: any) => {
+  memo(({ node, style, dragHandle }: NodeRendererProps<FileTreeNode>) => {
     const Icon = node.isLeaf
       ? getFileIcon(node.data.name)
       : node.isOpen
@@ -279,8 +282,7 @@ function RiskIndicator({
 }
 
 interface FileTreeViewProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any[] // Data dari backend (fileTree)
+  data: FileTreeNode[]
   onFileSelect: (fileId: string | null) => void
   onSimulateDelete?: (fileId: string) => void
   onFileHover?: (fileId: string) => void
@@ -288,22 +290,18 @@ interface FileTreeViewProps {
 
 export interface FileTreeViewRef {
   focusSearch: () => void
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   select: (id: string, opts?: { focus?: boolean }) => void
 }
 
 export const FileTreeView = forwardRef<FileTreeViewRef, FileTreeViewProps>(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ({ data, onFileSelect, onSimulateDelete = () => {}, onFileHover }, ref) => {
     const searchBarRef = useRef<FileSearchBarRef>(null)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const treeRef = useRef<any>(null)
+    const treeRef = useRef<TreeApi<FileTreeNode> | null>(null)
 
     useImperativeHandle(ref, () => ({
       focusSearch: () => {
         searchBarRef.current?.focus()
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       select: (id: string, opts?: { focus?: boolean }) => {
         treeRef.current?.select(id, opts)
       }
@@ -373,7 +371,7 @@ export const FileTreeView = forwardRef<FileTreeViewRef, FileTreeViewProps>(
               openByDefault={false}
               searchTerm={searchQuery}
               onSelect={(nodes) => {
-                const selectedNode = nodes[0]
+                const selectedNode: NodeApi<FileTreeNode> | undefined = nodes[0]
                 if (!selectedNode) {
                   return
                 }
