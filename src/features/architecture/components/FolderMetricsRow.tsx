@@ -17,7 +17,7 @@ interface FolderMetricsRowProps {
 }
 
 /**
- * Get color class for Risk Score dot based on risk level.
+ * Get color class for change-risk dot based on risk level.
  * Uses same scheme as HighRiskModules panel.
  */
 function getRiskDotColor(score: number): string {
@@ -57,7 +57,7 @@ export function FolderMetricsRow({ folder }: FolderMetricsRowProps) {
             <span className="font-mono text-sm">{riskScore.toFixed(1)}</span>
             <span
               className={`w-2 h-2 rounded-full ${getRiskDotColor(riskScore)}`}
-              title={`Risk Score: ${riskScore.toFixed(1)}`}
+              title={`Change Risk: ${riskScore.toFixed(1)}`}
             />
           </div>
         </td>

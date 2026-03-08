@@ -33,7 +33,7 @@ const columns: Column[] = [
   { key: 'ca', label: 'Ca (Fan-in)', className: 'text-center w-24' },
   { key: 'ce', label: 'Ce (Fan-out)', className: 'text-center w-24' },
   { key: 'instability', label: 'Instability', className: 'text-center w-32' },
-  { key: 'riskScore', label: 'Risk Score', className: 'text-center w-32' }
+  { key: 'riskScore', label: 'Change Risk', className: 'text-center w-32' }
 ]
 
 interface ArchitectureTableProps {
@@ -160,7 +160,7 @@ export function ArchitectureTable({
   }
 
   /**
-   * Get color class for Risk Score dot based on risk level.
+   * Get color class for change-risk dot based on risk level.
    * Uses same scheme as HighRiskModules panel.
    */
   const getRiskDotColor = (score: number) => {
@@ -261,7 +261,7 @@ export function ArchitectureTable({
                               </span>
                               <span
                                 className={`w-2.5 h-2.5 rounded-full ${getRiskDotColor(riskScore)}`}
-                                title={`Risk Score: ${riskScore.toFixed(1)}`}
+                                title={`Change Risk: ${riskScore.toFixed(1)}`}
                               />
                             </div>
                           )

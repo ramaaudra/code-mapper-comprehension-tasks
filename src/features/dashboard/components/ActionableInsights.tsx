@@ -29,8 +29,8 @@ interface GodObjectItem {
 interface ActionableInsightsProps {
   cycleCount: number
   orphanCount: number
-  criticalRisks: RiskItem[] // Risk score >= 50
-  warningRisks: RiskItem[] // Risk score 25-49
+  criticalRisks: RiskItem[]
+  warningRisks: RiskItem[]
   godObjects: GodObjectItem[] // Files with >15 dependencies
 }
 
@@ -46,9 +46,9 @@ interface Insight {
 /**
  * Triage Priority Order (highest to lowest):
  * 1. Circular Dependencies (BLOCKER - system integrity)
- * 2. Critical Risk Modules (score >= 50 - Zone of Pain)
+ * 2. Critical Change-Risk Modules (Zone of Pain)
  * 3. God Objects (architectural smell)
- * 4. Warning Risk Modules (score 25-49)
+ * 4. High Change-Risk Modules
  * 5. Orphans (cleanup)
  */
 function generateInsights(props: ActionableInsightsProps): Insight[] {
@@ -69,7 +69,7 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
     })
   }
 
-  // 2. CRITICAL: Risk Score >= 50 (Zone of Pain)
+  // 2. CRITICAL: Zone of Pain
   if (criticalRisks.length > 0) {
     const top = criticalRisks[0]
     insights.push({
@@ -77,8 +77,8 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       type: 'critical',
       level: 'critical',
       icon: <AlertTriangle className="h-4 w-4 text-red-500" />,
-      message: `${top.path} is in the Zone of Pain (Risk: ${top.riskScore.toFixed(1)})`,
-      action: `Has ${top.fanIn} dependents with ${(top.instability * 100).toFixed(0)}% instability - changes will cause cascading failures`
+      message: `${top.path} is in the Zone of Pain (Change Risk: ${top.riskScore.toFixed(1)})`,
+      action: `Ca=${top.fanIn}, I=${top.instability.toFixed(2)}. Many dependents plus outward dependencies can propagate failures widely.`
     })
   }
 
@@ -95,7 +95,7 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
     })
   }
 
-  // 4. WARNING: Risk Score 25-49
+  // 4. WARNING: High change risk
   if (warningRisks.length > 0) {
     const top = warningRisks[0]
     insights.push({
@@ -103,8 +103,8 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       type: 'warning',
       level: 'high',
       icon: <AlertTriangle className="h-4 w-4 text-orange-500" />,
-      message: `${top.path} has elevated risk (Score: ${top.riskScore.toFixed(1)})`,
-      action: 'Review dependencies before making changes'
+      message: `${top.path} has high change risk (Score: ${top.riskScore.toFixed(1)})`,
+      action: 'Review dependents and regression-test before making changes'
     })
   }
 

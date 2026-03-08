@@ -15,7 +15,7 @@ import {
   TrendingUp
 } from '@/shared/components/ui/icons'
 import { MetricCard } from '@/shared/components/ui/metric-card'
-import { RISK_THRESHOLDS } from '@/shared/lib/utils/risk'
+import { RISK_THRESHOLDS, calculateRiskScore } from '@/shared/lib/utils/risk'
 import type { AnalysisData } from '@/shared/types/analysis'
 
 import { ActionableInsights } from './ActionableInsights'
@@ -87,7 +87,7 @@ export const ProjectDashboard = memo(
           path: f.folderPath,
           instability: f.instability,
           fanIn: f.ca,
-          riskScore: f.ca * f.instability,
+          riskScore: calculateRiskScore(f.ca, f.instability),
           hasCycle: f.hasCycle
         }))
         .sort((a, b) => b.riskScore - a.riskScore)
@@ -226,12 +226,11 @@ export const ProjectDashboard = memo(
           message: `${healthBreakdown.cycleCount} circular ${healthBreakdown.cycleCount === 1 ? 'dependency' : 'dependencies'} need attention`
         })
       }
-      // High risk = Risk Score >= 25 (scientific threshold from Ca × I formula)
       const highRiskCount = criticalRisks.length + warningRisks.length
       if (highRiskCount > 0) {
         criticalInsights.push({
           type: 'warning' as const,
-          message: `${highRiskCount} module${highRiskCount > 1 ? 's' : ''} with elevated risk detected`
+          message: `${highRiskCount} module${highRiskCount > 1 ? 's' : ''} with elevated change risk detected`
         })
       }
       if (criticalInsights.length === 0) {

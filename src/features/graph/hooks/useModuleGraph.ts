@@ -2,6 +2,7 @@ import type { Edge, Node } from '@xyflow/react'
 import { useMemo } from 'react'
 
 import { useArchitectureFolders } from '@/features/architecture/hooks/useArchitectureMetrics'
+import { RISK_THRESHOLDS, calculateRiskScore } from '@/shared/lib/utils/risk'
 
 import type { ModuleEdgeData, ModuleNodeData } from '../utils/moduleAggregation'
 
@@ -22,23 +23,27 @@ export function useModuleGraph() {
     }
 
     // Transform folder metrics into graph nodes
-    const graphNodes: ModuleGraphNode[] = data.folders.map((folder, index) => ({
-      id: folder.folderPath,
-      type: 'module',
-      position: { x: 0, y: index * 150 }, // Initial position, will be layouted
-      data: {
+    const graphNodes: ModuleGraphNode[] = data.folders.map((folder, index) => {
+      const riskScore = calculateRiskScore(folder.ca, folder.instability)
+
+      return {
         id: folder.folderPath,
-        folderPath: folder.folderPath,
-        fileCount: folder.fileCount,
-        totalIncoming: folder.ca,
-        totalOutgoing: folder.ce,
-        incomingModules: Object.keys(folder.couplingFrom || {}),
-        outgoingModules: Object.keys(folder.couplingTo || {}),
-        riskScore: folder.ca * folder.instability,
-        instability: folder.instability,
-        isZoneOfPain: folder.ca * folder.instability >= 50
+        type: 'module',
+        position: { x: 0, y: index * 150 }, // Initial position, will be layouted
+        data: {
+          id: folder.folderPath,
+          folderPath: folder.folderPath,
+          fileCount: folder.fileCount,
+          totalIncoming: folder.ca,
+          totalOutgoing: folder.ce,
+          incomingModules: Object.keys(folder.couplingFrom || {}),
+          outgoingModules: Object.keys(folder.couplingTo || {}),
+          riskScore,
+          instability: folder.instability,
+          isZoneOfPain: riskScore >= RISK_THRESHOLDS.CRITICAL
+        }
       }
-    }))
+    })
 
     // Create aggregated edges
     const graphEdges: ModuleGraphEdge[] = []

@@ -105,7 +105,7 @@ export function ArchitecturePage() {
   const avgInstability =
     folders.reduce((sum, f) => sum + f.instability, 0) / totalModules
   const modulesWithCycles = folders.filter((f) => f.hasCycle).length
-  const unstableModules = folders.filter((f) => f.instability > 0.7).length
+  const unstableModules = folders.filter((f) => f.instability >= 0.7).length
 
   // Filter folders by search query
   const filteredFolders = folders.filter((f) =>
@@ -127,24 +127,31 @@ export function ArchitecturePage() {
       status: 'default'
     },
     {
-      label: 'Avg Instability',
+      label: 'Average Instability',
       value: avgInstability.toFixed(2),
       subValue:
-        avgInstability > 0.6 ? 'High' : avgInstability > 0.4 ? 'Medium' : 'Low',
+        avgInstability > 0.6
+          ? 'Flexible overall'
+          : avgInstability > 0.4
+            ? 'Balanced overall'
+            : 'More rigid overall',
       icon: <TrendingUp className="h-4 w-4" />,
-      status: avgInstability > 0.6 ? 'warning' : 'default'
+      status: 'default'
     },
     {
-      label: 'Unstable Modules',
+      label: 'Flexible Modules',
       value: unstableModules,
-      subValue: unstableModules > 0 ? 'Need attention' : 'All stable',
-      icon: <AlertTriangle className="h-4 w-4" />,
-      status: unstableModules > 0 ? 'warning' : 'default'
+      subValue: unstableModules > 0 ? 'I >= 0.70' : 'None at I >= 0.70',
+      icon: <Wind className="h-4 w-4" />,
+      status: 'default'
     },
     {
-      label: 'With Cycles',
+      label: 'Modules in Cycles',
       value: modulesWithCycles,
-      subValue: modulesWithCycles > 0 ? 'Circular deps' : 'No cycles',
+      subValue:
+        modulesWithCycles > 0
+          ? 'Circular dependencies detected'
+          : 'No circular dependencies',
       icon: <AlertTriangle className="h-4 w-4" />,
       status: modulesWithCycles > 0 ? 'destructive' : 'default'
     }
@@ -159,8 +166,10 @@ export function ArchitecturePage() {
             Architecture Analysis
           </h1>
           <p className="text-sm text-muted-foreground">
-            Module-level coupling metrics and stability analysis. Identify
-            high-risk dependencies.
+            Module-level coupling metrics, structural profile, and
+            change-propagation analysis. Use Change Risk to identify hotspots,
+            and read Instability as a structural position rather than a danger
+            score.
           </p>
         </div>
 
@@ -205,12 +214,14 @@ export function ArchitecturePage() {
                       Understanding the Instability (I) Metric
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                      Don't be alarmed by the <strong>Unstable</strong> label.
-                      In software architecture, this metric is not a bug
-                      indicator, but rather an indicator of how safe a file is
-                      to completely refactor.
+                      Do not treat the <strong>Unstable</strong> label as a
+                      defect. In dependency metrics, instability describes a
+                      module's structural position in the dependency graph, not
+                      code quality or direct change risk. Use{' '}
+                      <strong>Change Risk</strong> to estimate how widely a
+                      modification may propagate.
                     </p>
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-3">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <ShieldCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -219,11 +230,30 @@ export function ArchitecturePage() {
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground pl-7 leading-relaxed">
-                          Difficult to change because many other files depend on
-                          it. If changed, it can trigger a domino effect.
+                          At this extreme, other modules depend on this module
+                          more than it depends on them. Changes here often
+                          deserve careful regression testing.
                         </p>
                         <p className="text-xs text-blue-600 dark:text-blue-400 pl-7 font-medium">
-                          Ideal for: Core Logic, utils/, lib/, configuration
+                          Common in: shared foundations, domain logic,
+                          configuration, and utility layers
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Layers className="h-5 w-5 text-slate-500 dark:text-slate-300" />
+                          <span className="text-sm font-medium text-foreground">
+                            0.40 to &lt; 0.70 - Balanced
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground pl-7 leading-relaxed">
+                          Incoming and outgoing coupling are both significant.
+                          These modules often sit between foundational layers
+                          and UI-facing layers.
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-300 pl-7 font-medium">
+                          Common in: orchestration layers, feature modules, and
+                          shared application services
                         </p>
                       </div>
                       <div className="space-y-2">
@@ -234,12 +264,13 @@ export function ArchitecturePage() {
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground pl-7 leading-relaxed">
-                          Completely safe to change at any time because no other
-                          files depend on it.
+                          At this extreme, the module depends on others while no
+                          other modules depend on it directly. These modules are
+                          often easier to replace or refactor.
                         </p>
                         <p className="text-xs text-emerald-600 dark:text-emerald-400 pl-7 font-medium">
-                          Ideal for: UI Components, app/page.tsx, visual
-                          elements
+                          Common in: presentation layers, route modules, UI
+                          shells, and adapters
                         </p>
                       </div>
                     </div>
@@ -269,8 +300,8 @@ export function ArchitecturePage() {
                     <span className="text-blue-600 dark:text-blue-400 font-medium">
                       Click to learn
                     </span>{' '}
-                    why <strong>Unstable</strong> doesn't mean broken — and why
-                    it's often a good thing for UI code.
+                    why instability is a structural metric, not a defect or a
+                    direct danger score.
                   </p>
                 </div>
                 <button

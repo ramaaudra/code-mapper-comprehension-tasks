@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
+import { RISK_THRESHOLDS } from '@/shared/lib/utils/risk'
 
 interface HealthBreakdown {
   stabilityScore: number
@@ -91,17 +92,14 @@ export function ArchitectureHealthScore({
     riskMetrics
   )
 
-  const getStabilityLabel = (value: number) => {
+  const getStructuralProfileLabel = (value: number) => {
     if (value <= 0.3) {
-      return 'Stable'
+      return 'Rigid'
     }
-    if (value <= 0.5) {
+    if (value <= 0.6) {
       return 'Balanced'
     }
-    if (value <= 0.7) {
-      return 'Moderate'
-    }
-    return 'Unstable'
+    return 'Flexible'
   }
 
   const getInsightIcon = (type: CriticalInsight['type']) => {
@@ -170,7 +168,7 @@ export function ArchitectureHealthScore({
                     {prisk > 0 && (
                       <div className="flex justify-between text-orange-500">
                         <span className="text-popover-foreground">
-                          High Risk Modules ({riskMetrics.criticalCount}×5 +{' '}
+                          Change-Risk Modules ({riskMetrics.criticalCount}×5 +{' '}
                           {riskMetrics.warningCount}×2):
                         </span>
                         <span className="text-orange-500">-{prisk}</span>
@@ -201,15 +199,13 @@ export function ArchitectureHealthScore({
           <div className="flex-1 grid grid-cols-2 gap-x-8 gap-y-4">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                {breakdown.stabilityScore <= 0.5 ? (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                ) : (
-                  <AlertTriangle className="h-4 w-4 text-orange-500" />
-                )}
+                <Lightbulb className="h-4 w-4 text-blue-500" />
                 <span className="text-sm">
-                  <span className="text-muted-foreground">Stability:</span>{' '}
+                  <span className="text-muted-foreground">
+                    Structural Profile:
+                  </span>{' '}
                   <span className="font-medium">
-                    {getStabilityLabel(breakdown.stabilityScore)}
+                    {getStructuralProfileLabel(breakdown.stabilityScore)}
                   </span>
                 </span>
               </div>
@@ -277,10 +273,8 @@ export function ArchitectureHealthScore({
                             detected in your codebase
                           </li>
                           <li>
-                            <strong>
-                              Unstable modules with many dependents:
-                            </strong>{' '}
-                            Modules with Instability {'>'} 0.7 AND ≥3 dependents
+                            <strong>High change-risk modules:</strong> Modules
+                            with Ca × I ≥ {RISK_THRESHOLDS.HIGH}
                           </li>
                           <li>
                             <strong>God objects:</strong> Files with 15+

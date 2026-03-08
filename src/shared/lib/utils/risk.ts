@@ -7,14 +7,13 @@ import type {
 } from '@/shared/types/risk'
 
 /**
- * Unified Risk Thresholds (Ca × I formula)
- * Based on Robert C. Martin's dependency risk analysis
- * Stricter thresholds for file-level risk assessment
+ * Unified Change Risk Thresholds (Ca × I formula)
+ * Based on Robert C. Martin's dependency risk analysis.
  */
 export const RISK_THRESHOLDS: RiskThresholds = {
-  CRITICAL: 30, // Zone of Pain - OR circular dependency
-  HIGH: 15, // Core hooks/shared components
-  MEDIUM: 5 // Moderate risk
+  CRITICAL: 30, // Zone of Pain
+  HIGH: 15, // Elevated change risk
+  MEDIUM: 5 // Moderate change risk
 } as const
 
 /**
@@ -228,16 +227,43 @@ export function filterActionableRisks(profiles: RiskProfile[]): RiskProfile[] {
 }
 
 /**
- * Get description text for risk level
- * Used in tooltips and detail panels
+ * Get description text for change-risk level.
  */
 export function getRiskDescription(level: RiskLevel): string {
   const descriptions: Record<RiskLevel, string> = {
     critical:
-      'CRITICAL - highly unstable core module OR part of a circular dependency.',
-    high: 'High impact - careful testing required after modification.',
-    medium: 'Exercise caution - affects a handful of dependents.',
-    low: 'Safe to modify - minimal collateral damage.'
+      'Critical change risk. Many dependents rely on this item and failures can propagate widely.',
+    high: 'High change risk. Review dependents carefully and test before merging.',
+    medium: 'Moderate change risk. Changes may affect several dependents.',
+    low: 'Low change risk. Few or no dependents are likely to be affected.'
+  }
+  return descriptions[level]
+}
+
+/**
+ * Get human-readable label for blast-radius level.
+ */
+export function getBlastRadiusLabel(level: RiskLevel): string {
+  const labels: Record<RiskLevel, string> = {
+    critical: 'Critical Blast Radius',
+    high: 'High Blast Radius',
+    medium: 'Medium Blast Radius',
+    low: 'Low Blast Radius'
+  }
+  return labels[level]
+}
+
+/**
+ * Get description text for blast-radius level.
+ */
+export function getBlastRadiusDescription(level: RiskLevel): string {
+  const descriptions: Record<RiskLevel, string> = {
+    critical:
+      'Very large blast radius. Editing this file can affect many connected files.',
+    high: 'High blast radius. Plan targeted regression checks after editing.',
+    medium:
+      'Moderate blast radius. Review nearby dependencies before refactoring.',
+    low: 'Low blast radius. Effects should stay localized.'
   }
   return descriptions[level]
 }

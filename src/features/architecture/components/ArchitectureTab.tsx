@@ -52,7 +52,7 @@ export function ArchitectureTab() {
   if (!data || data.folders.length === 0) {
     return (
       <div className="p-4 text-center text-muted-foreground">
-        <p className="text-sm">No folder data</p>
+        <p className="text-sm">No module data available</p>
       </div>
     )
   }
@@ -73,14 +73,14 @@ export function ArchitectureTab() {
       {/* Header dengan summary stats */}
       <div className="p-4 border-b border-border shrink-0">
         <h2 className="text-sm font-medium text-foreground">
-          Architecture Audit
+          Architecture Overview
         </h2>
         <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
           <span>{totalFolders} modules</span>
-          <span>Avg I: {avgInstability.toFixed(2)}</span>
+          <span>Average Instability: {avgInstability.toFixed(2)}</span>
           {foldersWithCycles > 0 && (
             <span className="text-red-400">
-              {foldersWithCycles} with cycles
+              {foldersWithCycles} modules in cycles
             </span>
           )}
         </div>

@@ -1,12 +1,12 @@
 /**
- * Unified Risk System - Based on Robert C. Martin's Dependency Metrics
+ * Unified Change Risk System - Based on Robert C. Martin's dependency metrics
  * Risk Score = Ca × I (Afferent Coupling × Instability)
  *
  * Thresholds:
- * - Critical (≥50): Zone of Pain - changes cause cascading failures
- * - High (25-49): Elevated risk - careful refactoring needed
- * - Medium (10-24): Moderate risk - monitor closely
- * - Low (<10): Safe to modify
+ * - Critical (≥30): Zone of Pain - changes can propagate widely
+ * - High (15 to <30): Elevated change risk - test carefully
+ * - Medium (5 to <15): Moderate change risk - review before refactoring
+ * - Low (<5): Low change risk - effects should stay localized
  */
 
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical'

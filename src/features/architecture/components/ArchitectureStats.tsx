@@ -62,19 +62,19 @@ export function ArchitectureStats({
           primaryLabel="Dependents"
           symbol="Ca"
           value={ca}
-          tooltip="How many files depend on this file"
+          tooltip="Afferent Coupling. Number of incoming dependencies targeting this file. Higher Ca usually means more files may be affected by a change here."
         />
         <StackedMetricBox
           primaryLabel="Dependencies"
           symbol="Ce"
           value={ce}
-          tooltip="How many files this file depends on"
+          tooltip="Efferent Coupling. Number of outgoing dependencies from this file to other files. Higher Ce means this file relies on more external code."
         />
         <StackedMetricBox
           primaryLabel="Instability"
           symbol="I"
           value={instability.toFixed(2)}
-          tooltip="Ratio of vulnerability to change. 1.0 = Highly unstable"
+          tooltip="Structural metric calculated as I = Ce / (Ca + Ce). Values near 0 indicate a rigid or stable position; values near 1 indicate a flexible or unstable position."
           isBadge={true}
         >
           <InstabilityBadge value={instability} />

@@ -56,9 +56,12 @@ export function TopBar({
   totalChanges = 0
 }: TopBarProps) {
   const timestampLabel =
-    runtimeMode === 'report'
-      ? `Generated: ${analysisLoadedAt}`
-      : analysisLoadedAt
+    runtimeMode === 'report' && analysisLoadedAt
+      ? `Generated: ${new Date(analysisLoadedAt).toLocaleString(undefined, {
+          dateStyle: 'long',
+          timeStyle: 'short'
+        })}`
+      : runtimeMode === 'live' && analysisLoadedAt
         ? new Intl.DateTimeFormat(undefined, {
             hour: '2-digit',
             minute: '2-digit'

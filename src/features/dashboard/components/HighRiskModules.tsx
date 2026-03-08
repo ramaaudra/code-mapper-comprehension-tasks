@@ -8,7 +8,11 @@ import {
 } from '@/shared/components/ui/card'
 import { AlertTriangle } from '@/shared/components/ui/icons'
 import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
-import { getRiskColorClass, getRiskLevel } from '@/shared/lib/utils/risk'
+import {
+  RISK_THRESHOLDS,
+  getRiskColorClass,
+  getRiskLevel
+} from '@/shared/lib/utils/risk'
 
 interface RiskModule {
   path: string
@@ -48,14 +52,16 @@ export function HighRiskModules({
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base font-medium">
             <AlertTriangle className="h-4 w-4" />
-            High Risk Modules
+            Top Change-Risk Modules
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-4 text-muted-foreground">
             <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No high-risk modules detected</p>
-            <p className="text-xs mt-1">Your architecture looks healthy!</p>
+            <p className="text-sm">No module data available</p>
+            <p className="text-xs mt-1">
+              Run analysis to see change-risk hotspots
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -68,26 +74,27 @@ export function HighRiskModules({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base font-medium">
             <AlertTriangle className="h-4 w-4 text-orange-500" />
-            High Risk Modules
+            Top Change-Risk Modules
             <span className="text-xs text-muted-foreground font-normal">
               ({sortedModules.length})
             </span>
           </CardTitle>
-          <InfoTooltip title="What is Risk Score?" side="top">
+          <InfoTooltip title="What is Change Risk?" side="top">
             <div className="space-y-2">
               <p className="text-xs text-popover-foreground">
-                Scientific metric based on Robert C. Martin's dependency risk
-                formula.
+                Change Risk is a derived architectural metric based on Robert C.
+                Martin's dependency model. It estimates how widely a module
+                change may propagate.
               </p>
               <div className="text-xs space-y-1 pt-1 border-t border-border">
                 <p className="text-popover-foreground">
-                  <strong>Formula:</strong> Risk = Dependents × Instability
+                  <strong>Formula:</strong> Change Risk = Ca × I
                 </p>
                 <p className="text-popover-foreground/80">
-                  • <strong>Dependents (Ca):</strong> Afferent coupling — how
-                  many modules import this
-                  <br />• <strong>Instability (I):</strong> I = Ce/(Ca+Ce),
-                  where 0.0 = stable, 1.0 = unstable
+                  • <strong>Ca:</strong> Number of incoming cross-module
+                  dependencies
+                  <br />• <strong>I:</strong> Instability, calculated as
+                  Ce/(Ca+Ce)
                 </p>
               </div>
               <div className="text-xs space-y-1 pt-1 border-t border-border">
@@ -95,22 +102,31 @@ export function HighRiskModules({
                   Risk Zones:
                 </p>
                 <p className="text-popover-foreground/80">
-                  • <span className="text-red-500 font-medium">≥50</span>:
-                  Critical — The "Zone of Pain"
+                  •{' '}
+                  <span className="text-red-500 font-medium">
+                    ≥{RISK_THRESHOLDS.CRITICAL}
+                  </span>
+                  : Critical — The "Zone of Pain"
                   <br />•{' '}
-                  <span className="text-orange-500 font-medium">25-49</span>
-                  : High risk
+                  <span className="text-orange-500 font-medium">
+                    {RISK_THRESHOLDS.HIGH} to &lt;{RISK_THRESHOLDS.CRITICAL}
+                  </span>
+                  : High change risk
                   <br />•{' '}
-                  <span className="text-yellow-500 font-medium">10-24</span>
-                  : Medium risk
+                  <span className="text-yellow-500 font-medium">
+                    {RISK_THRESHOLDS.MEDIUM} to &lt;{RISK_THRESHOLDS.HIGH}
+                  </span>
+                  : Medium change risk
                   <br />•{' '}
-                  <span className="text-green-500 font-medium">&lt;10</span>:
-                  Low risk
+                  <span className="text-green-500 font-medium">
+                    &lt;{RISK_THRESHOLDS.MEDIUM}
+                  </span>
+                  : Low change risk
                 </p>
               </div>
               <p className="text-xs text-popover-foreground/80 pt-1">
-                High score = Module has many dependents AND is unstable (depends
-                on others). Changes here cause cascading failures.
+                A high score means many dependents combined with a dependency
+                structure that can spread change impact widely.
               </p>
             </div>
           </InfoTooltip>
@@ -119,7 +135,7 @@ export function HighRiskModules({
       <CardContent className="space-y-3">
         {/* Column Headers */}
         <div className="flex items-center gap-4 text-[10px] uppercase tracking-wider text-muted-foreground px-4">
-          <div className="flex-1">Risk Score</div>
+          <div className="flex-1">Change Risk</div>
           <div className="w-16 text-right">I Value</div>
           <div className="w-20 text-right">Dependents</div>
         </div>

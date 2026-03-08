@@ -46,11 +46,11 @@ import { getBasename, getFileIcon, getRelativePath } from '@/shared/lib/utils'
 import {
   ARCHITECTURE_THRESHOLDS,
   calculateCostOfChange,
+  getBlastRadiusDescription,
+  getBlastRadiusLabel,
   getCostOfChangeLevel,
   getRiskBgOpacityClass,
   getRiskBorderClass,
-  getRiskDescription,
-  getRiskLabel,
   getRiskTextClass
 } from '@/shared/lib/utils/risk'
 import type {
@@ -131,7 +131,7 @@ const NodeDetailPanel = memo(
     } = fileContentQuery
 
     // Calculate Cost of Change (Blast Radius): Ca + (Ce × 0.5)
-    const riskAssessment = useMemo(() => {
+    const blastRadiusAssessment = useMemo(() => {
       if (!archMetrics) {
         return null
       }
@@ -586,12 +586,12 @@ const NodeDetailPanel = memo(
                 </div>
               </div>
             ) : (
-              riskAssessment && (
+              blastRadiusAssessment && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-medium text-foreground">
-                    Cost of Change
+                    Blast Radius
                   </h3>
-                  {riskAssessment.isInCycle ? (
+                  {blastRadiusAssessment.isInCycle ? (
                     // Cycle Override: Critical Warning
                     <div className="p-4 rounded-lg border-2 border-red-500 bg-red-500/5">
                       <div className="flex items-center gap-2 mb-2">
@@ -611,29 +611,34 @@ const NodeDetailPanel = memo(
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div
-                            className={`p-4 rounded-lg border ${getRiskBorderClass(riskAssessment.level)} ${getRiskBgOpacityClass(riskAssessment.level, 5)} cursor-help`}
+                            className={`p-4 rounded-lg border ${getRiskBorderClass(blastRadiusAssessment.level)} ${getRiskBgOpacityClass(blastRadiusAssessment.level, 5)} cursor-help`}
                           >
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
-                                {riskAssessment.level === 'low' ? (
+                                {blastRadiusAssessment.level === 'low' ? (
                                   <CheckCircle className="h-4 w-4 text-green-500" />
                                 ) : (
                                   <AlertTriangle
-                                    className={`h-4 w-4 ${getRiskTextClass(riskAssessment.level)}`}
+                                    className={`h-4 w-4 ${getRiskTextClass(blastRadiusAssessment.level)}`}
                                   />
                                 )}
                                 <span
-                                  className={`font-semibold ${getRiskTextClass(riskAssessment.level)}`}
+                                  className={`font-semibold ${getRiskTextClass(blastRadiusAssessment.level)}`}
                                 >
-                                  {getRiskLabel(riskAssessment.level)} Risk
+                                  {getBlastRadiusLabel(
+                                    blastRadiusAssessment.level
+                                  )}
                                 </span>
                               </div>
                               <span className="text-xs text-muted-foreground">
-                                Score: {riskAssessment.riskScore.toFixed(1)}
+                                Score:{' '}
+                                {blastRadiusAssessment.riskScore.toFixed(1)}
                               </span>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                              {getRiskDescription(riskAssessment.level)}
+                              {getBlastRadiusDescription(
+                                blastRadiusAssessment.level
+                              )}
                             </p>
                           </div>
                         </TooltipTrigger>
@@ -643,11 +648,12 @@ const NodeDetailPanel = memo(
                         >
                           <div className="space-y-2">
                             <p className="font-semibold text-popover-foreground">
-                              Risk Score: {riskAssessment.riskScore.toFixed(1)}
+                              Blast Radius:{' '}
+                              {blastRadiusAssessment.riskScore.toFixed(1)}
                             </p>
                             <p className="text-xs text-popover-foreground/80">
-                              Measures <strong>blast radius</strong>: how many
-                              files might break if you edit this file
+                              Blast Radius estimates how many nearby files may
+                              require verification after you edit this file.
                             </p>
                             {archMetrics && (
                               <div className="text-xs space-y-1 pt-1 border-t border-border">
@@ -662,14 +668,14 @@ const NodeDetailPanel = memo(
                                 <p className="text-popover-foreground/80 pt-1">
                                   Calculation: {archMetrics.ca} + (
                                   {archMetrics.ce} × 0.5) ={' '}
-                                  {riskAssessment.riskScore.toFixed(1)}
+                                  {blastRadiusAssessment.riskScore.toFixed(1)}
                                 </p>
                               </div>
                             )}
                             <div className="text-xs pt-1 border-t border-border">
                               <p className="text-popover-foreground/80">
-                                Higher score = more files affected when
-                                modifying
+                                A higher score suggests a broader local impact
+                                and a larger verification surface after change.
                               </p>
                             </div>
                           </div>

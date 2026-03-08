@@ -21,7 +21,7 @@ const columns: Column[] = [
   { key: 'ca', label: 'Ca', className: 'text-center w-14' },
   { key: 'ce', label: 'Ce', className: 'text-center w-14' },
   { key: 'instability', label: 'I', className: 'text-center w-20' },
-  { key: 'riskScore', label: 'Risk', className: 'text-center w-20' }
+  { key: 'riskScore', label: 'Change Risk', className: 'text-center w-24' }
 ]
 
 interface FolderMetricsTableProps {

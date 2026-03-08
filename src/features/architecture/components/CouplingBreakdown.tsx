@@ -18,7 +18,7 @@ export function CouplingBreakdown({
       <div>
         <h4 className="text-muted-foreground mb-2 flex items-center gap-1">
           <ArrowRight size={12} />
-          Depends On (Ce)
+          Depends on Other Modules (Ce)
         </h4>
         {toEntries.length > 0 ? (
           <ul className="space-y-1">
@@ -36,7 +36,7 @@ export function CouplingBreakdown({
           </ul>
         ) : (
           <p className="text-muted-foreground italic">
-            No external dependencies
+            No outgoing cross-module dependencies
           </p>
         )}
       </div>
@@ -45,7 +45,7 @@ export function CouplingBreakdown({
       <div>
         <h4 className="text-muted-foreground mb-2 flex items-center gap-1">
           <ArrowLeft size={12} />
-          Used By (Ca)
+          Used by Other Modules (Ca)
         </h4>
         {fromEntries.length > 0 ? (
           <ul className="space-y-1">
@@ -62,7 +62,9 @@ export function CouplingBreakdown({
             ))}
           </ul>
         ) : (
-          <p className="text-muted-foreground italic">No external dependents</p>
+          <p className="text-muted-foreground italic">
+            No incoming cross-module dependents
+          </p>
         )}
       </div>
     </div>
