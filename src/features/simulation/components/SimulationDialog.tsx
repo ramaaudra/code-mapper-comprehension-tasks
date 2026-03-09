@@ -31,7 +31,7 @@ export function SimulationDialog({ result, onClose }: SimulationDialogProps) {
             <div className='mt-2 max-h-40 space-y-1 overflow-y-auto'>
               {result?.brokenFiles.length === 0 ? (
                 <p className='text-sm italic text-muted-foreground'>
-                  No files will break
+                  No directly affected files detected
                 </p>
               ) : (
                 result?.brokenFiles.map((file) => (

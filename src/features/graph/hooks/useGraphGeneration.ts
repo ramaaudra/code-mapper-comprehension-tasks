@@ -273,7 +273,7 @@ export function useGraphGeneration({
                       ? 'info'
                       : 'success'
               badges.push({
-                label: `${getRiskLabel(level)} Change Risk`,
+                label: `${getRiskLabel(level)} Propagation Risk`,
                 tone
               })
             }

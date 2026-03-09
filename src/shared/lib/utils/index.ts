@@ -82,6 +82,22 @@ export function getBasename(filePath: string): string {
   return filePath.split('/').pop() || filePath.split('\\').pop() || filePath
 }
 
+export function truncateMiddle(value: string, maxLength = 48): string {
+  if (!value || value.length <= maxLength) {
+    return value
+  }
+
+  if (maxLength <= 3) {
+    return value.slice(0, maxLength)
+  }
+
+  const visibleChars = maxLength - 3
+  const startLength = Math.ceil(visibleChars / 2)
+  const endLength = Math.floor(visibleChars / 2)
+
+  return `${value.slice(0, startLength)}...${value.slice(-endLength)}`
+}
+
 export function getModulePathFromNodeLabel(label?: string): string | null {
   if (!label) {
     return null

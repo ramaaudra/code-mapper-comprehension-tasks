@@ -128,7 +128,7 @@ export function ArchitecturePage() {
       status: 'default'
     },
     {
-      label: 'Average Instability',
+      label: 'Average Instability (I)',
       value: avgInstability.toFixed(2),
       subValue:
         avgInstability > 0.6
@@ -140,7 +140,7 @@ export function ArchitecturePage() {
       status: 'default'
     },
     {
-      label: 'Flexible Modules',
+      label: 'Modules with High Instability',
       value: unstableModules,
       subValue: unstableModules > 0 ? 'I >= 0.70' : 'None at I >= 0.70',
       icon: <Wind className='h-4 w-4' />,
@@ -168,9 +168,9 @@ export function ArchitecturePage() {
           </h1>
           <p className='text-sm text-muted-foreground'>
             Module-level coupling metrics, structural profile, and
-            change-propagation analysis. Use Change Risk to identify hotspots,
-            and read Instability as a structural position rather than a danger
-            score.
+            change-propagation analysis. Use Propagation Risk as a derived
+            impact indicator to identify hotspots, and read Instability as a
+            structural position rather than a danger score.
           </p>
         </div>
 
@@ -216,19 +216,19 @@ export function ArchitecturePage() {
                       Understanding the Instability (I) Metric
                     </h3>
                     <p className='mb-4 text-sm leading-relaxed text-muted-foreground'>
-                      Do not treat the <strong>Unstable</strong> label as a
-                      defect. In dependency metrics, instability describes a
-                      module's structural position in the dependency graph, not
-                      code quality or direct change risk. Use{' '}
-                      <strong>Change Risk</strong> to estimate how widely a
-                      modification may propagate.
+                      Do not treat the <strong>Flexible / Unstable</strong>{' '}
+                      label as a defect. In dependency metrics, instability
+                      describes a module's structural position in the dependency
+                      graph, not code quality or direct propagation risk. Use{' '}
+                      <strong>Propagation Risk</strong> to estimate how strongly
+                      a modification may propagate.
                     </p>
                     <div className='grid gap-4 md:grid-cols-3'>
                       <div className='space-y-2'>
                         <div className='flex items-center gap-2'>
                           <ShieldCheck className='h-5 w-5 text-blue-600 dark:text-blue-400' />
                           <span className='text-sm font-medium text-foreground'>
-                            0.00 — Stable (Rigid)
+                            0.00 — Rigid / Stable
                           </span>
                         </div>
                         <p className='pl-7 text-xs leading-relaxed text-muted-foreground'>
@@ -262,7 +262,7 @@ export function ArchitecturePage() {
                         <div className='flex items-center gap-2'>
                           <Wind className='h-5 w-5 text-emerald-600 dark:text-emerald-400' />
                           <span className='text-sm font-medium text-foreground'>
-                            1.00 — Unstable (Flexible)
+                            1.00 — Flexible / Unstable
                           </span>
                         </div>
                         <p className='pl-7 text-xs leading-relaxed text-muted-foreground'>

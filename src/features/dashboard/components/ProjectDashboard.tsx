@@ -231,7 +231,7 @@ export const ProjectDashboard = memo(
       if (highRiskCount > 0) {
         criticalInsights.push({
           type: 'warning' as const,
-          message: `${highRiskCount} module${highRiskCount > 1 ? 's' : ''} with elevated change risk detected`
+          message: `${highRiskCount} module${highRiskCount > 1 ? 's' : ''} with elevated propagation risk detected`
         })
       }
       if (criticalInsights.length === 0) {

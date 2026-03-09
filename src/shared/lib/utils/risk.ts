@@ -7,29 +7,29 @@ import type {
 } from '@/shared/types/risk'
 
 /**
- * Unified Change Risk Thresholds (Ca × I formula)
- * Based on Robert C. Martin's dependency risk analysis.
+ * Unified Propagation Risk Thresholds (Ca × I heuristic)
+ * Derived from dependency metrics inspired by Robert C. Martin's package metrics.
  */
 export const RISK_THRESHOLDS: RiskThresholds = {
-  CRITICAL: 30, // Zone of Pain
-  HIGH: 15, // Elevated change risk
-  MEDIUM: 5 // Moderate change risk
+  CRITICAL: 30,
+  HIGH: 15, // Elevated propagation risk
+  MEDIUM: 5 // Moderate propagation risk
 } as const
 
 /**
- * Cost of Change Thresholds (Ca + Ce × 0.5)
- * Measures blast radius - how many files might break if you edit this file
+ * Blast Radius Thresholds (Ca + Ce × 0.5)
+ * Heuristic estimate of blast radius / nearby verification scope
  * Used in Node Detail Panel (Micro level)
  */
-export const COC_THRESHOLDS = {
+export const BLAST_RADIUS_THRESHOLDS = {
   CRITICAL: 15, // >15: Core/backbone of the system
   HIGH: 9, // 9-15: Hooks, shared components, global UI
   MEDIUM: 4, // 4-8: Components used in several places
-  LOW: 3 // ≤3: Safe to modify
+  LOW: 3 // ≤3: Lower expected verification scope
 } as const
 
 /**
- * Calculate Cost of Change (Blast Radius)
+ * Calculate Blast Radius
  * Formula: Ca + (Ce × 0.5)
  * - Ca = Afferent Coupling (external impact - how many files depend on this)
  * - Ce = Efferent Coupling (internal impact - how many files this depends on)
@@ -37,37 +37,37 @@ export const COC_THRESHOLDS = {
  * Weights Ce × 0.5 because internal dependencies cause localized damage,
  * while external dependencies (Ca) cause cascading failures across the codebase.
  */
-export function calculateCostOfChange(ca: number, ce: number): number {
+export function calculateBlastRadius(ca: number, ce: number): number {
   return ca + ce * 0.5
 }
 
 /**
- * Determine Cost of Change level from score
+ * Determine Blast Radius level from score
  */
-export function getCostOfChangeLevel(
+export function getBlastRadiusLevel(
   score: number,
   hasCycle: boolean
 ): RiskLevel {
-  if (hasCycle || score > COC_THRESHOLDS.CRITICAL) {
+  if (hasCycle || score > BLAST_RADIUS_THRESHOLDS.CRITICAL) {
     return 'critical'
   }
-  if (score >= COC_THRESHOLDS.HIGH) {
+  if (score >= BLAST_RADIUS_THRESHOLDS.HIGH) {
     return 'high'
   }
-  if (score >= COC_THRESHOLDS.MEDIUM) {
+  if (score >= BLAST_RADIUS_THRESHOLDS.MEDIUM) {
     return 'medium'
   }
   return 'low'
 }
 
 /**
- * Calculate Risk Score using scientific formula: Risk = Ca × I
+ * Calculate a derived propagation-risk heuristic: Risk = Ca × I
  * Where:
  * - Ca = Afferent Coupling (number of dependents)
  * - I = Instability (Ce / (Ca + Ce))
  *
  * Special cases:
- * - If Ca = 0: Risk = 0 (safe to modify, no dependents)
+ * - If Ca = 0: Risk = 0 (lower expected propagation risk because there are no dependents)
  * - If hasCycle = true: Override to critical (independent of score)
  */
 export function calculateRiskScore(ca: number, instability: number): number {
@@ -227,15 +227,16 @@ export function filterActionableRisks(profiles: RiskProfile[]): RiskProfile[] {
 }
 
 /**
- * Get description text for change-risk level.
+ * Get description text for propagation-risk level.
  */
 export function getRiskDescription(level: RiskLevel): string {
   const descriptions: Record<RiskLevel, string> = {
     critical:
-      'Critical change risk. Many dependents rely on this item and failures can propagate widely.',
-    high: 'High change risk. Review dependents carefully and test before merging.',
-    medium: 'Moderate change risk. Changes may affect several dependents.',
-    low: 'Low change risk. Few or no dependents are likely to be affected.'
+      'Critical propagation risk. Dependents and outward dependency pressure can spread change impact widely.',
+    high: 'High propagation risk. Review dependents and outgoing dependency pressure before changing this item.',
+    medium:
+      'Moderate propagation risk. Changes may travel through part of the dependency graph.',
+    low: 'Low propagation risk. Outward dependency pressure is limited, but Dependents (Ca) may still require review.'
   }
   return descriptions[level]
 }
@@ -259,8 +260,8 @@ export function getBlastRadiusLabel(level: RiskLevel): string {
 export function getBlastRadiusDescription(level: RiskLevel): string {
   const descriptions: Record<RiskLevel, string> = {
     critical:
-      'Very large blast radius. Editing this file can affect many connected files.',
-    high: 'High blast radius. Plan targeted regression checks after editing.',
+      'Very large blast radius. Editing this file may require verification across many nearby connected files.',
+    high: 'High blast radius. Plan targeted regression checks after editing this file.',
     medium:
       'Moderate blast radius. Review nearby dependencies before refactoring.',
     low: 'Low blast radius. Effects should stay localized.'

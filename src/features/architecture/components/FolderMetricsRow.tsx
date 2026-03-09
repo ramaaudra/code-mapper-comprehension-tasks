@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { CaretRight } from '@/shared/components/ui/icons'
+import { truncateMiddle } from '@/shared/lib/utils'
 import {
   calculateRiskScore,
   getRiskColorClass,
@@ -18,7 +19,7 @@ interface FolderMetricsRowProps {
 }
 
 /**
- * Get color class for change-risk dot based on risk level.
+ * Get color class for propagation-risk dot based on risk level.
  * Uses same scheme as HighRiskModules panel.
  */
 function getRiskDotColor(score: number): string {
@@ -43,7 +44,7 @@ export function FolderMetricsRow({ folder }: FolderMetricsRowProps) {
               className={`shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`}
             />
             <span className='truncate' title={folder.folderPath}>
-              {folder.folderPath}
+              {truncateMiddle(folder.folderPath, 48)}
             </span>
             {folder.hasCycle && <CycleBadge />}
           </span>
@@ -58,7 +59,7 @@ export function FolderMetricsRow({ folder }: FolderMetricsRowProps) {
             <span className='font-mono text-sm'>{riskScore.toFixed(1)}</span>
             <span
               className={`h-2 w-2 rounded-full ${getRiskDotColor(riskScore)}`}
-              title={`Change Risk: ${riskScore.toFixed(1)}`}
+              title={`Propagation Risk: ${riskScore.toFixed(1)}`}
             />
           </div>
         </td>

@@ -108,7 +108,7 @@ export function ModuleNodeComponent(props: ModuleNodeComponentProps) {
         </div>
       )}
 
-      {/* Risk Badge - Zone of Pain */}
+      {/* Risk Badge - Critical Propagation Risk */}
       {data.isZoneOfPain && !showCompactRelationCard && (
         <div className='flex items-center gap-1.5 rounded-md border border-[hsl(var(--destructive))]/20 bg-[hsl(var(--destructive))]/10 px-2.5 py-1.5'>
           <Warning
@@ -117,7 +117,7 @@ export function ModuleNodeComponent(props: ModuleNodeComponentProps) {
             weight='fill'
           />
           <span className='text-xs font-medium text-[hsl(var(--destructive))]'>
-            Zone of Pain
+            Critical Propagation Risk
           </span>
           <span className='text-xs text-[hsl(var(--destructive))]/80'>
             ({Math.round(data.riskScore)})

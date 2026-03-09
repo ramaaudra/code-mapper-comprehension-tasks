@@ -35,7 +35,7 @@ import {
   useState
 } from 'react'
 
-import { getRelativePath } from '@/shared/lib/utils'
+import { getRelativePath, truncateMiddle } from '@/shared/lib/utils'
 import '@xyflow/react/dist/style.css'
 import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
 
@@ -334,7 +334,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
       aria-label={`View details for ${data.label}`}
     >
       <div className='flex items-center justify-between gap-3'>
-        <div className='flex items-center gap-2'>
+        <div className='flex min-w-0 flex-1 items-center gap-2'>
           <div
             className={clsx(
               'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
@@ -343,21 +343,24 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
           >
             <FileIcon size={18} className='shrink-0' />
           </div>
-          <div className='min-w-0'>
-            <div className='break-words text-sm font-semibold text-[hsl(var(--foreground))]'>
+          <div className='min-w-0 flex-1'>
+            <div
+              className='truncate text-sm font-semibold text-[hsl(var(--foreground))]'
+              title={data.label}
+            >
               {data.label}
             </div>
             <div
               className='truncate text-xs text-[hsl(var(--muted-foreground))]'
               title={data.fullPath}
             >
-              {getRelativePath(data.fullPath)}
+              {truncateMiddle(getRelativePath(data.fullPath), 44)}
             </div>
           </div>
         </div>
         <div
           className={clsx(
-            'rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
+            'shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
             chipTone[direction]
           )}
         >

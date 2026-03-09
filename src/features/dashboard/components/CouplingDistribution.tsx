@@ -37,8 +37,8 @@ export function CouplingDistribution({
           <InfoTooltip title='What is Coupling?' side='top'>
             <div className='space-y-2'>
               <p className='text-xs text-popover-foreground'>
-                Coupling measures how strongly a module depends on other
-                modules.
+                Coupling describes how strongly files or modules depend on one
+                another. This chart groups files by outgoing dependency count.
               </p>
               <div className='space-y-1 border-t border-border pt-1 text-xs'>
                 <p className='font-semibold text-popover-foreground'>
@@ -70,7 +70,10 @@ export function CouplingDistribution({
         <div className='text-sm'>
           <span className='text-muted-foreground'>Average: </span>
           <span className='font-semibold'>{avgDependencies.toFixed(2)}</span>
-          <span className='text-muted-foreground'> deps/file</span>
+          <span className='text-muted-foreground'>
+            {' '}
+            outgoing dependencies per file
+          </span>
         </div>
 
         {/* Distribution bars */}
@@ -99,17 +102,19 @@ export function CouplingDistribution({
           ))}
         </div>
 
-        {/* Most coupled file */}
+        {/* File with highest outgoing dependency count */}
         {mostCoupledFile && (
           <div className='border-t border-border pt-2'>
-            <p className='mb-1 text-xs text-muted-foreground'>Most coupled:</p>
+            <p className='mb-1 text-xs text-muted-foreground'>
+              Highest outgoing dependency count:
+            </p>
             <p
               className='truncate font-mono text-sm'
               title={mostCoupledFile.path}
             >
               {mostCoupledFile.path.split('/').pop()}
               <span className='ml-2 text-muted-foreground'>
-                ({mostCoupledFile.count} deps)
+                ({mostCoupledFile.count} outgoing dependencies)
               </span>
             </p>
           </div>

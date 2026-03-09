@@ -251,10 +251,10 @@ function RiskIndicator({
 
   const getLabel = (lvl: RiskLevel): string => {
     const labels: Record<RiskLevel, string> = {
-      critical: 'Critical Change Risk',
-      high: 'High Change Risk',
-      medium: 'Medium Change Risk',
-      low: 'Low Change Risk'
+      critical: 'Critical Propagation Risk',
+      high: 'High Propagation Risk',
+      medium: 'Medium Propagation Risk',
+      low: 'Low Propagation Risk'
     }
     return labels[lvl]
   }
@@ -271,7 +271,7 @@ function RiskIndicator({
           <div className='space-y-1'>
             <p className='font-medium'>{getLabel(level)}</p>
             <p className='text-xs text-muted-foreground'>
-              Change Risk: {score.toFixed(1)}
+              Propagation Risk: {score.toFixed(1)}
             </p>
           </div>
         </TooltipContent>

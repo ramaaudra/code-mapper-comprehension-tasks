@@ -7,6 +7,8 @@ import {
 } from '@/shared/components/ui/card'
 import { AlertTriangle } from '@/shared/components/ui/icons'
 import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
+import { HEURISTIC_LABELS, METRIC_LABELS } from '@/shared/lib/metric-copy'
+import { truncateMiddle } from '@/shared/lib/utils'
 import {
   RISK_THRESHOLDS,
   getRiskColorClass,
@@ -36,7 +38,7 @@ export function HighRiskModules({
   onViewModule,
   onViewArchitecture
 }: HighRiskModulesProps) {
-  // Sort by risk score (Ca × I formula - Robert C. Martin's Risk Metric)
+  // Sort by derived propagation-risk heuristic (Ca × I)
   const sortedModules = [...modules]
     .sort((a, b) => b.riskScore - a.riskScore)
     .slice(0, 5)
@@ -51,7 +53,7 @@ export function HighRiskModules({
         <CardHeader className='pb-2'>
           <CardTitle className='flex items-center gap-2 text-base font-medium'>
             <AlertTriangle className='h-4 w-4' />
-            Top Change-Risk Modules
+            Top Propagation Risk Modules
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -59,7 +61,7 @@ export function HighRiskModules({
             <AlertTriangle className='mx-auto mb-2 h-8 w-8 opacity-50' />
             <p className='text-sm'>No module data available</p>
             <p className='mt-1 text-xs'>
-              Run analysis to see change-risk hotspots
+              Run analysis to see propagation-risk hotspots
             </p>
           </div>
         </CardContent>
@@ -73,25 +75,25 @@ export function HighRiskModules({
         <div className='flex items-center justify-between'>
           <CardTitle className='flex items-center gap-2 text-base font-medium'>
             <AlertTriangle className='h-4 w-4 text-orange-500' />
-            Top Change-Risk Modules
+            Top Propagation Risk Modules
             <span className='text-xs font-normal text-muted-foreground'>
               ({sortedModules.length})
             </span>
           </CardTitle>
-          <InfoTooltip title='What is Change Risk?' side='top'>
+          <InfoTooltip title='What is Propagation Risk?' side='top'>
             <div className='space-y-2'>
               <p className='text-xs text-popover-foreground'>
-                Change Risk is a derived architectural metric based on Robert C.
-                Martin's dependency model. It estimates how widely a module
-                change may propagate.
+                Propagation Risk is a derived architectural heuristic based on
+                Robert C. Martin's dependency metrics. It estimates how widely a
+                module change may propagate.
               </p>
               <div className='space-y-1 border-t border-border pt-1 text-xs'>
                 <p className='text-popover-foreground'>
-                  <strong>Formula:</strong> Change Risk = Ca × I
+                  <strong>Heuristic:</strong> Propagation Risk = Ca × I
                 </p>
                 <p className='text-popover-foreground/80'>
-                  • <strong>Ca:</strong> Number of incoming cross-module
-                  dependencies
+                  • <strong>{METRIC_LABELS.dependentsCa}:</strong> Number of
+                  incoming cross-module dependencies
                   <br />• <strong>I:</strong> Instability, calculated as
                   Ce/(Ca+Ce)
                 </p>
@@ -105,24 +107,28 @@ export function HighRiskModules({
                   <span className='font-medium text-red-500'>
                     ≥{RISK_THRESHOLDS.CRITICAL}
                   </span>
-                  : Critical — The "Zone of Pain"
+                  : Critical — {HEURISTIC_LABELS.criticalPropagationRiskBand}
                   <br />•{' '}
                   <span className='font-medium text-orange-500'>
                     {RISK_THRESHOLDS.HIGH} to &lt;{RISK_THRESHOLDS.CRITICAL}
                   </span>
-                  : High change risk
+                  : High propagation risk
                   <br />•{' '}
                   <span className='font-medium text-yellow-500'>
                     {RISK_THRESHOLDS.MEDIUM} to &lt;{RISK_THRESHOLDS.HIGH}
                   </span>
-                  : Medium change risk
+                  : Medium propagation risk
                   <br />•{' '}
                   <span className='font-medium text-green-500'>
                     &lt;{RISK_THRESHOLDS.MEDIUM}
                   </span>
-                  : Low change risk
+                  : Low propagation risk
                 </p>
               </div>
+              <p className='border-t border-border pt-1 text-xs text-popover-foreground/80'>
+                These thresholds are product heuristics for triage, not
+                universal scientific cutoffs.
+              </p>
               <p className='pt-1 text-xs text-popover-foreground/80'>
                 A high score means many dependents combined with a dependency
                 structure that can spread change impact widely.
@@ -134,8 +140,8 @@ export function HighRiskModules({
       <CardContent className='space-y-3'>
         {/* Column Headers */}
         <div className='flex items-center gap-4 px-4 text-[10px] uppercase tracking-wider text-muted-foreground'>
-          <div className='flex-1'>Change Risk</div>
-          <div className='w-16 text-right'>I Value</div>
+          <div className='flex-1'>Propagation Risk</div>
+          <div className='w-16 text-right'>Instability</div>
           <div className='w-20 text-right'>Dependents</div>
         </div>
         {sortedModules.map((module) => {
@@ -157,7 +163,7 @@ export function HighRiskModules({
                   className='block truncate font-mono text-sm'
                   title={module.path}
                 >
-                  {module.path}
+                  {truncateMiddle(module.path, 48)}
                 </span>
               </div>
               <div className='flex items-center gap-4'>

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 
 import { CaretDown, CaretUp } from '@/shared/components/ui/icons'
+import { METRIC_LABELS } from '@/shared/lib/metric-copy'
 import { calculateRiskScore } from '@/shared/lib/utils/risk'
 
 import { FolderMetricsRow } from './FolderMetricsRow'
@@ -19,10 +20,26 @@ interface Column {
 
 const columns: Column[] = [
   { key: 'folderPath', label: 'Module', className: 'text-left' },
-  { key: 'ca', label: 'Ca', className: 'text-center w-14' },
-  { key: 'ce', label: 'Ce', className: 'text-center w-14' },
-  { key: 'instability', label: 'I', className: 'text-center w-20' },
-  { key: 'riskScore', label: 'Change Risk', className: 'text-center w-24' }
+  {
+    key: 'ca',
+    label: METRIC_LABELS.dependentsCa,
+    className: 'text-center w-24'
+  },
+  {
+    key: 'ce',
+    label: METRIC_LABELS.dependenciesCe,
+    className: 'text-center w-24'
+  },
+  {
+    key: 'instability',
+    label: METRIC_LABELS.instability,
+    className: 'text-center w-20'
+  },
+  {
+    key: 'riskScore',
+    label: METRIC_LABELS.propagationRisk,
+    className: 'text-center w-24'
+  }
 ]
 
 interface FolderMetricsTableProps {

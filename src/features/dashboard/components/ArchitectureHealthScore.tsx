@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
+import { HEURISTIC_LABELS } from '@/shared/lib/metric-copy'
 import { RISK_THRESHOLDS } from '@/shared/lib/utils/risk'
 
 interface HealthBreakdown {
@@ -119,7 +120,7 @@ export function ArchitectureHealthScore({
     <Card>
       <CardHeader className='pb-2'>
         <CardTitle className='text-base font-medium'>
-          Architecture Health
+          {HEURISTIC_LABELS.architectureHealth}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -148,7 +149,7 @@ export function ArchitectureHealthScore({
               >
                 <div className='space-y-3 text-xs'>
                   <p className='border-b border-border pb-2 font-semibold text-popover-foreground'>
-                    Score Breakdown
+                    Indicator Breakdown
                   </p>
                   <div className='space-y-1.5'>
                     <div className='flex justify-between'>
@@ -168,8 +169,8 @@ export function ArchitectureHealthScore({
                     {prisk > 0 && (
                       <div className='flex justify-between text-orange-500'>
                         <span className='text-popover-foreground'>
-                          Change-Risk Modules ({riskMetrics.criticalCount}×5 +{' '}
-                          {riskMetrics.warningCount}×2):
+                          Propagation Risk Modules ({riskMetrics.criticalCount}
+                          ×5 + {riskMetrics.warningCount}×2):
                         </span>
                         <span className='text-orange-500'>-{prisk}</span>
                       </div>
@@ -273,8 +274,8 @@ export function ArchitectureHealthScore({
                             detected in your codebase
                           </li>
                           <li>
-                            <strong>High change-risk modules:</strong> Modules
-                            with Ca × I ≥ {RISK_THRESHOLDS.HIGH}
+                            <strong>High propagation-risk modules:</strong>{' '}
+                            Modules with Ca × I ≥ {RISK_THRESHOLDS.HIGH}
                           </li>
                           <li>
                             <strong>God objects:</strong> Files with 15+

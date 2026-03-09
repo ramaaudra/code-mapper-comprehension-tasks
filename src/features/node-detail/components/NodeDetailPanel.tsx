@@ -39,13 +39,18 @@ import {
 } from '@/shared/components/ui/tooltip'
 import { architectureApi } from '@/shared/lib/api/architecture'
 import { findDependencyPath } from '@/shared/lib/api/pathfinding'
-import { getBasename, getFileIcon, getRelativePath } from '@/shared/lib/utils'
+import {
+  getBasename,
+  getFileIcon,
+  getRelativePath,
+  truncateMiddle
+} from '@/shared/lib/utils'
 import {
   ARCHITECTURE_THRESHOLDS,
-  calculateCostOfChange,
+  calculateBlastRadius,
   getBlastRadiusDescription,
   getBlastRadiusLabel,
-  getCostOfChangeLevel,
+  getBlastRadiusLevel,
   getRiskBgOpacityClass,
   getRiskBorderClass,
   getRiskTextClass
@@ -129,17 +134,20 @@ const NodeDetailPanel = memo(
       error: contentError
     } = fileContentQuery
 
-    // Calculate Cost of Change (Blast Radius): Ca + (Ce × 0.5)
+    // Calculate Blast Radius: Ca + (Ce × 0.5)
     const blastRadiusAssessment = useMemo(() => {
       if (!archMetrics) {
         return null
       }
 
-      const cocScore = calculateCostOfChange(archMetrics.ca, archMetrics.ce)
-      const level = getCostOfChangeLevel(cocScore, archMetrics.hasCycle)
+      const blastRadiusScore = calculateBlastRadius(
+        archMetrics.ca,
+        archMetrics.ce
+      )
+      const level = getBlastRadiusLevel(blastRadiusScore, archMetrics.hasCycle)
 
       return {
-        riskScore: cocScore,
+        riskScore: blastRadiusScore,
         level: level,
         isInCycle: archMetrics.hasCycle
       }
@@ -296,7 +304,7 @@ const NodeDetailPanel = memo(
                       className='truncate pl-6 text-xs text-muted-foreground'
                       title={item.label}
                     >
-                      {item.label}
+                      {truncateMiddle(item.label, 52)}
                     </div>
                   </div>
                   <div className='flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100'>
@@ -528,7 +536,7 @@ const NodeDetailPanel = memo(
                     />
                   }
                   title='Orphaned File (Unused)'
-                  description='This file has 0 dependents and is not an entry point. Safe to delete to reduce bundle size.'
+                  description='This file has 0 dependents and is not an entry point in the current analysis. It is likely unused and worth reviewing for cleanup.'
                   footer='Tip: Verify whether this is a test file, a script, or a dynamic import before deleting it. False positives may occur.'
                   tone='default'
                   className='border-muted bg-muted/10'
@@ -543,7 +551,7 @@ const NodeDetailPanel = memo(
                     <MetricInsightCard
                       icon={<AlertTriangle className='h-4 w-4 text-red-500' />}
                       title='Critical Circular Dependency'
-                      description='This file is part of a circular dependency chain. Changes may cause infinite loops or compilation errors.'
+                      description='This file is part of a circular dependency chain. Changes can increase initialization, runtime, and maintenance risks.'
                       tone='danger'
                       className='border-red-500/50 bg-red-500/5'
                     />
@@ -611,6 +619,12 @@ const NodeDetailPanel = memo(
                                 </p>
                               </div>
                             )}
+                            <div className='border-t border-border pt-1 text-xs'>
+                              <p className='text-popover-foreground/80'>
+                                These blast-radius bands are product heuristics
+                                for estimating local verification scope.
+                              </p>
+                            </div>
                             <div className='border-t border-border pt-1 text-xs'>
                               <p className='text-popover-foreground/80'>
                                 A higher score suggests a broader local impact

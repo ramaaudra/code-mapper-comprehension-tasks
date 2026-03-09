@@ -7,6 +7,7 @@ import {
 } from '@/shared/components/ui/collapsible'
 import { CaretDown, CaretRight, CaretUp } from '@/shared/components/ui/icons'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { METRIC_LABELS } from '@/shared/lib/metric-copy'
 import {
   calculateRiskScore,
   getRiskColorClass,
@@ -31,10 +32,26 @@ interface Column {
 
 const columns: Column[] = [
   { key: 'folderPath', label: 'Module', className: 'text-left' },
-  { key: 'ca', label: 'Ca (Fan-in)', className: 'text-center w-24' },
-  { key: 'ce', label: 'Ce (Fan-out)', className: 'text-center w-24' },
-  { key: 'instability', label: 'Instability', className: 'text-center w-32' },
-  { key: 'riskScore', label: 'Change Risk', className: 'text-center w-32' }
+  {
+    key: 'ca',
+    label: METRIC_LABELS.dependentsCa,
+    className: 'text-center w-24'
+  },
+  {
+    key: 'ce',
+    label: METRIC_LABELS.dependenciesCe,
+    className: 'text-center w-24'
+  },
+  {
+    key: 'instability',
+    label: METRIC_LABELS.instability,
+    className: 'text-center w-32'
+  },
+  {
+    key: 'riskScore',
+    label: METRIC_LABELS.propagationRisk,
+    className: 'text-center w-32'
+  }
 ]
 
 interface ArchitectureTableProps {
@@ -161,7 +178,7 @@ export function ArchitectureTable({
   }
 
   /**
-   * Get color class for change-risk dot based on risk level.
+   * Get color class for propagation-risk dot based on risk level.
    * Uses same scheme as HighRiskModules panel.
    */
   const getRiskDotColor = (score: number) => {
@@ -262,7 +279,7 @@ export function ArchitectureTable({
                               </span>
                               <span
                                 className={`h-2.5 w-2.5 rounded-full ${getRiskDotColor(riskScore)}`}
-                                title={`Change Risk: ${riskScore.toFixed(1)}`}
+                                title={`Propagation Risk: ${riskScore.toFixed(1)}`}
                               />
                             </div>
                           )

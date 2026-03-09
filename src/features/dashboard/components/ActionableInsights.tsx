@@ -47,9 +47,9 @@ interface Insight {
 /**
  * Triage Priority Order (highest to lowest):
  * 1. Circular Dependencies (BLOCKER - system integrity)
- * 2. Critical Change-Risk Modules (Zone of Pain)
+ * 2. Critical Propagation Risk Modules
  * 3. God Objects (architectural smell)
- * 4. High Change-Risk Modules
+ * 4. High Propagation-Risk Modules
  * 5. Orphans (cleanup)
  */
 function generateInsights(props: ActionableInsightsProps): Insight[] {
@@ -66,11 +66,11 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       icon: <RefreshCw className='h-4 w-4 text-red-600' />,
       message: `${cycleCount} circular ${cycleCount === 1 ? 'dependency' : 'dependencies'} detected`,
       action:
-        'Break cycles immediately to prevent memory leaks and compilation issues'
+        'Break cycles early to reduce initialization, testing, and maintenance risks'
     })
   }
 
-  // 2. CRITICAL: Zone of Pain
+  // 2. CRITICAL: Critical propagation-risk band
   if (criticalRisks.length > 0) {
     const top = criticalRisks[0]
     insights.push({
@@ -78,7 +78,7 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       type: 'critical',
       level: 'critical',
       icon: <AlertTriangle className='h-4 w-4 text-red-500' />,
-      message: `${top.path} is in the Zone of Pain (Change Risk: ${top.riskScore.toFixed(1)})`,
+      message: `${top.path} is in the critical propagation-risk band (Propagation Risk: ${top.riskScore.toFixed(1)})`,
       action: `Ca=${top.fanIn}, I=${top.instability.toFixed(2)}. Many dependents plus outward dependencies can propagate failures widely.`
     })
   }
@@ -96,7 +96,7 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
     })
   }
 
-  // 4. WARNING: High change risk
+  // 4. WARNING: High propagation risk
   if (warningRisks.length > 0) {
     const top = warningRisks[0]
     insights.push({
@@ -104,7 +104,7 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       type: 'warning',
       level: 'high',
       icon: <AlertTriangle className='h-4 w-4 text-orange-500' />,
-      message: `${top.path} has high change risk (Score: ${top.riskScore.toFixed(1)})`,
+      message: `${top.path} has high propagation risk (Score: ${top.riskScore.toFixed(1)})`,
       action: 'Review dependents and regression-test before making changes'
     })
   }

@@ -1,5 +1,6 @@
 import { WarningCircle } from '@/shared/components/ui/icons'
 import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
+import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
 
 import { InstabilityBadge } from './InstabilityBadge'
 
@@ -21,18 +22,18 @@ export function ArchitectureStats({
       <div className='grid grid-cols-3 gap-3'>
         <MetricValueCard
           value={ca}
-          label='Dependents (Ca)'
-          tooltip='Afferent Coupling. Number of incoming dependencies targeting this file. Higher Ca usually means more files may be affected by a change here.'
+          label={METRIC_LABELS.dependentsCa}
+          tooltip={METRIC_TOOLTIPS.dependentsCa}
         />
         <MetricValueCard
           value={ce}
-          label='Dependencies (Ce)'
-          tooltip='Efferent Coupling. Number of outgoing dependencies from this file to other files. Higher Ce means this file relies on more external code.'
+          label={METRIC_LABELS.dependenciesCe}
+          tooltip={METRIC_TOOLTIPS.dependenciesCe}
         />
         <MetricValueCard
           value={instability.toFixed(2)}
-          label='Instability (I)'
-          tooltip='Structural metric calculated as I = Ce / (Ca + Ce). Values near 0 indicate a rigid or stable position; values near 1 indicate a flexible or unstable position.'
+          label={METRIC_LABELS.instability}
+          tooltip={METRIC_TOOLTIPS.instability}
           helper={<InstabilityBadge value={instability} />}
         />
       </div>

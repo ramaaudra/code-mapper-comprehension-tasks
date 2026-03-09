@@ -1,12 +1,12 @@
 /**
- * Unified Change Risk System - Based on Robert C. Martin's dependency metrics
+ * Unified Propagation Risk System - Based on dependency metrics
  * Risk Score = Ca × I (Afferent Coupling × Instability)
  *
  * Thresholds:
- * - Critical (≥30): Zone of Pain - changes can propagate widely
- * - High (15 to <30): Elevated change risk - test carefully
- * - Medium (5 to <15): Moderate change risk - review before refactoring
- * - Low (<5): Low change risk - effects should stay localized
+ * - Critical (≥30): critical propagation-risk band - changes may propagate widely
+ * - High (15 to <30): elevated propagation risk - test carefully
+ * - Medium (5 to <15): moderate propagation risk - review before refactoring
+ * - Low (<5): low propagation risk - effects should stay localized
  */
 
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical'
@@ -22,7 +22,7 @@ export interface RiskThresholds {
  */
 export interface RiskMetrics {
   ca: number // Afferent Coupling (fan-in): how many depend on this
-  ce: number // Efferent Coupling (fan-out): how many this depends on
+  ce: number // Efferent Coupling: how many this item depends on
   instability: number // I = Ce / (Ca + Ce), range 0-1
   hasCycle: boolean // Override: any circular dependency = critical
 }

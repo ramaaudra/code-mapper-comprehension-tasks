@@ -1,5 +1,6 @@
 import { Button } from '@/shared/components/ui/button'
 import { X } from '@/shared/components/ui/icons'
+import { truncateMiddle } from '@/shared/lib/utils'
 
 import type { ReactNode } from 'react'
 
@@ -40,7 +41,7 @@ export function DetailPanelHeader({
               className='max-w-[220px] truncate text-xs text-muted-foreground'
               title={subtitle}
             >
-              {subtitle}
+              {truncateMiddle(subtitle, 44)}
             </p>
             {meta}
             {trailing}

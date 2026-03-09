@@ -17,6 +17,8 @@ import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Tabs, TabsContent } from '@/shared/components/ui/tabs'
 import { architectureApi } from '@/shared/lib/api'
+import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
+import { truncateMiddle } from '@/shared/lib/utils'
 import {
   RISK_THRESHOLDS,
   calculateRiskScore,
@@ -49,6 +51,18 @@ interface InstabilityConfig {
   description: string
 }
 
+type DependentImpactLevel = 'low' | 'medium' | 'high' | 'critical'
+
+interface DependentImpactConfig {
+  level: DependentImpactLevel
+  title: string
+  description: string
+  tone: 'default' | 'warning' | 'danger'
+  borderClass: string
+  bgClass: string
+  textClass: string
+}
+
 function getInstabilityBand(instability: number): InstabilityBand {
   if (instability >= 0.7) {
     return 'flexible'
@@ -71,7 +85,7 @@ function getInstabilityConfig(instability: number): InstabilityConfig {
         textClass: 'text-sky-600',
         label: 'Flexible / Unstable',
         description:
-          'This module depends on other modules more than other modules depend on it. High instability is common in UI, route, and adapter layers and does not automatically mean high change risk.'
+          'This module depends on other modules more than other modules depend on it. High instability is common in UI, route, and adapter layers and does not automatically mean high propagation risk.'
       }
     case 'balanced':
       return {
@@ -81,7 +95,7 @@ function getInstabilityConfig(instability: number): InstabilityConfig {
         textClass: 'text-slate-600',
         label: 'Balanced',
         description:
-          'This module both depends on others and is depended on by others. Use Change Risk to judge whether edits are likely to propagate widely.'
+          'This module both depends on others and is depended on by others. Review both dependents and outgoing dependencies before changing it.'
       }
     default:
       return {
@@ -119,19 +133,21 @@ function InstabilityTooltipContent({ band }: { band: InstabilityBand }) {
       </div>
       <p className='border-t border-border pt-2 text-popover-foreground/80'>
         <strong>Current interpretation:</strong> {band}. High instability does
-        not automatically mean a risky change. Use <strong>Change Risk</strong>{' '}
-        to estimate how widely a change may propagate.
+        not automatically mean a risky change. Review{' '}
+        <strong>Dependent Impact</strong> together with{' '}
+        <strong>Propagation Risk</strong>.
       </p>
     </div>
   )
 }
 
-function ChangeRiskTooltipContent({ level }: { level: RiskLevel }) {
+function PropagationRiskTooltipContent({ level }: { level: RiskLevel }) {
   return (
     <div className='space-y-2 text-xs text-popover-foreground'>
       <p>
-        Change Risk estimates how widely the impact of a module change may
-        propagate. It is calculated as <strong>Ca x I</strong>.
+        Propagation Risk is a derived heuristic that estimates how strongly
+        change pressure may travel through dependents. It is calculated as
+        <strong> Ca x I</strong>.
       </p>
       <div className='space-y-1 border-t border-border pt-2 text-popover-foreground/80'>
         <p>
@@ -160,9 +176,93 @@ function ChangeRiskTooltipContent({ level }: { level: RiskLevel }) {
         </p>
       </div>
       <p className='border-t border-border pt-2 text-popover-foreground/80'>
+        These thresholds are product heuristics for review prioritization, not
+        universal scientific cutoffs.
+      </p>
+      <p className='border-t border-border pt-2 text-popover-foreground/80'>
         <strong>Current interpretation:</strong> {getRiskLabel(level)}. A high
         score means many dependents combined with a structure that can spread
-        change impact widely.
+        change impact widely. A low score does not mean low Dependents (Ca).
+      </p>
+    </div>
+  )
+}
+
+function getDependentImpactConfig(ca: number): DependentImpactConfig {
+  if (ca >= 100) {
+    return {
+      level: 'critical',
+      title: 'Very High Dependent Impact',
+      description:
+        'Many other modules depend on this module. Even small changes may require broad review and regression testing.',
+      tone: 'danger',
+      borderClass: 'border-red-500/40',
+      bgClass: 'bg-red-500/5',
+      textClass: 'text-red-500'
+    }
+  }
+
+  if (ca >= 30) {
+    return {
+      level: 'high',
+      title: 'High Dependent Impact',
+      description:
+        'A substantial number of modules depend on this module. Plan careful verification before changing it.',
+      tone: 'warning',
+      borderClass: 'border-orange-500/40',
+      bgClass: 'bg-orange-500/5',
+      textClass: 'text-orange-500'
+    }
+  }
+
+  if (ca >= 10) {
+    return {
+      level: 'medium',
+      title: 'Moderate Dependent Impact',
+      description:
+        'Several modules depend on this module. Review likely dependents before changing it.',
+      tone: 'warning',
+      borderClass: 'border-yellow-500/40',
+      bgClass: 'bg-yellow-500/5',
+      textClass: 'text-yellow-500'
+    }
+  }
+
+  return {
+    level: 'low',
+    title: 'Low Dependent Impact',
+    description:
+      'Few other modules depend on this module, so review scope should stay relatively localized.',
+    tone: 'default',
+    borderClass: 'border-slate-500/40',
+    bgClass: 'bg-slate-500/5',
+    textClass: 'text-slate-500'
+  }
+}
+
+function DependentImpactTooltipContent({ ca }: { ca: number }) {
+  return (
+    <div className='space-y-2 text-xs text-popover-foreground'>
+      <p>
+        Dependent Impact is an interpretive indicator based on{' '}
+        <strong>Dependents (Ca)</strong>.
+      </p>
+      <div className='space-y-1 border-t border-border pt-2 text-popover-foreground/80'>
+        <p>
+          <strong>Dependents (Ca)</strong>: number of modules that depend on
+          this module.
+        </p>
+        <p>
+          Higher values mean more modules may need review after a change,
+          regardless of Instability.
+        </p>
+      </div>
+      <p className='border-t border-border pt-2 text-popover-foreground/80'>
+        The current impact bands are product heuristics chosen for readability
+        in the module panel.
+      </p>
+      <p className='border-t border-border pt-2 text-popover-foreground/80'>
+        <strong>Current value:</strong> Ca = {ca}
       </p>
     </div>
   )
@@ -170,14 +270,10 @@ function ChangeRiskTooltipContent({ level }: { level: RiskLevel }) {
 
 const metricTooltipContent: Record<string, string> = {
   Files: 'Number of files grouped into this module.',
-  'Ca (Incoming)':
-    'Afferent Coupling. Number of incoming cross-module dependencies targeting files in this module.',
-  'Ce (Outgoing)':
-    'Efferent Coupling. Number of outgoing cross-module dependencies from files in this module to files outside it.',
-  Instability:
-    'Structural metric calculated as I = Ce / (Ca + Ce). Higher values indicate stronger outgoing dependency relative to incoming dependency.',
-  'Change Risk':
-    'Derived metric calculated as Ca x I. Higher values indicate a greater chance that a change in this module will affect other modules.'
+  [METRIC_LABELS.dependentsCa]: METRIC_TOOLTIPS.dependentsCa,
+  [METRIC_LABELS.dependenciesCe]: METRIC_TOOLTIPS.dependenciesCe,
+  [METRIC_LABELS.instability]: METRIC_TOOLTIPS.instability,
+  [METRIC_LABELS.propagationRisk]: METRIC_TOOLTIPS.propagationRisk
 }
 
 function ModuleHeader({
@@ -231,11 +327,38 @@ function InstabilityCard({ moduleData }: InstabilityCardProps) {
   )
 }
 
-interface ChangeRiskCardProps {
+interface PropagationRiskCardProps {
   moduleData: FolderArchitectureMetrics
 }
 
-function ChangeRiskCard({ moduleData }: ChangeRiskCardProps) {
+function DependentImpactCard({ moduleData }: PropagationRiskCardProps) {
+  const config = getDependentImpactConfig(moduleData.ca)
+
+  return (
+    <MetricInsightCard
+      icon={<AlertTriangle className={`h-4 w-4 ${config.textClass}`} />}
+      title={config.title}
+      value={`Ca: ${moduleData.ca}`}
+      description={config.description}
+      footer='Interpretation based on Dependents (Ca). High dependent impact can coexist with low propagation risk.'
+      tone={config.tone}
+      titleSuffix={
+        <InfoTooltip
+          title='Dependent Impact'
+          side='top'
+          align='start'
+          className='max-w-sm'
+          iconClassName={config.textClass}
+        >
+          <DependentImpactTooltipContent ca={moduleData.ca} />
+        </InfoTooltip>
+      }
+      className={`${config.borderClass} ${config.bgClass}`}
+    />
+  )
+}
+
+function PropagationRiskCard({ moduleData }: PropagationRiskCardProps) {
   const riskProfile = createRiskProfile(moduleData.folderPath, {
     ca: moduleData.ca,
     ce: moduleData.ce,
@@ -245,38 +368,43 @@ function ChangeRiskCard({ moduleData }: ChangeRiskCardProps) {
   const description = moduleData.hasCycle
     ? 'This module participates in a circular dependency. Break the cycle first because changes can feed back into the same dependency chain.'
     : getRiskDescription(riskProfile.level)
+  const isLowPropagationWithHighDependents =
+    riskProfile.level === 'low' && moduleData.ca >= 30
+  const propagationDescription = isLowPropagationWithHighDependents
+    ? 'Low propagation risk. Outward dependency pressure is limited, but many dependents still rely on this module and should be reviewed before changes.'
+    : description
 
   return (
     <MetricInsightCard
       icon={
         riskProfile.level === 'low' ? (
-          <CheckCircle className='h-4 w-4 text-green-500' />
+          <CheckCircle className='h-4 w-4 text-slate-500' />
         ) : (
           <AlertTriangle
             className={`h-4 w-4 ${getRiskTextClass(riskProfile.level)}`}
           />
         )
       }
-      title={`${getRiskLabel(riskProfile.level)} Change Risk`}
+      title={`${getRiskLabel(riskProfile.level)} Propagation Risk`}
       value={riskProfile.riskScore.toFixed(1)}
-      description={description}
+      description={propagationDescription}
       footer={`Formula: Ca x I = ${moduleData.ca} x ${moduleData.instability.toFixed(2)} = ${riskProfile.riskScore.toFixed(1)}`}
       tone={
         riskProfile.level === 'low'
-          ? 'success'
+          ? 'default'
           : riskProfile.level === 'medium'
             ? 'warning'
             : 'danger'
       }
       titleSuffix={
         <InfoTooltip
-          title='Change Risk'
+          title='Propagation Risk'
           side='top'
           align='start'
           className='max-w-sm'
           iconClassName={getRiskTextClass(riskProfile.level)}
         >
-          <ChangeRiskTooltipContent level={riskProfile.level} />
+          <PropagationRiskTooltipContent level={riskProfile.level} />
         </InfoTooltip>
       }
       className={`${getRiskBorderClass(riskProfile.level)} ${getRiskBgOpacityClass(riskProfile.level, 5)}`}
@@ -294,7 +422,8 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
   return (
     <div className='space-y-4 p-4'>
       <InstabilityCard moduleData={moduleData} />
-      <ChangeRiskCard moduleData={moduleData} />
+      <DependentImpactCard moduleData={moduleData} />
+      <PropagationRiskCard moduleData={moduleData} />
       <div className='grid grid-cols-2 gap-3'>
         <MetricValueCard
           value={moduleData.fileCount}
@@ -303,23 +432,23 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
         />
         <MetricValueCard
           value={moduleData.ca}
-          label='Ca (Incoming)'
-          tooltip={metricTooltipContent['Ca (Incoming)']}
+          label={METRIC_LABELS.dependentsCa}
+          tooltip={metricTooltipContent[METRIC_LABELS.dependentsCa]}
         />
         <MetricValueCard
           value={moduleData.ce}
-          label='Ce (Outgoing)'
-          tooltip={metricTooltipContent['Ce (Outgoing)']}
+          label={METRIC_LABELS.dependenciesCe}
+          tooltip={metricTooltipContent[METRIC_LABELS.dependenciesCe]}
         />
         <MetricValueCard
           value={moduleData.instability.toFixed(2)}
-          label='Instability'
-          tooltip={metricTooltipContent.Instability}
+          label={METRIC_LABELS.instability}
+          tooltip={metricTooltipContent[METRIC_LABELS.instability]}
         />
         <MetricValueCard
           value={riskScore.toFixed(1)}
-          label='Change Risk'
-          tooltip={metricTooltipContent['Change Risk']}
+          label={METRIC_LABELS.propagationRisk}
+          tooltip={metricTooltipContent[METRIC_LABELS.propagationRisk]}
         />
       </div>
     </div>
@@ -386,7 +515,7 @@ function FilesTab({ modulePath, onViewFile }: FilesTabProps) {
               </div>
               <div className='mt-2 flex items-center justify-between pl-7'>
                 <span className='text-xs text-muted-foreground'>
-                  Change Risk: {riskScore.toFixed(1)} · Dependents (Ca):{' '}
+                  Propagation Risk: {riskScore.toFixed(1)} · Dependents (Ca):{' '}
                   {file.ca} · Instability (I): {file.instability.toFixed(2)}
                 </span>
                 <button
@@ -419,8 +548,11 @@ function ConnectionRow({ moduleName, count }: ConnectionRowProps) {
         <div className='truncate text-sm font-medium text-foreground'>
           {name}
         </div>
-        <div className='truncate text-xs text-muted-foreground'>
-          {moduleName}
+        <div
+          className='truncate text-xs text-muted-foreground'
+          title={moduleName}
+        >
+          {truncateMiddle(moduleName, 48)}
         </div>
       </div>
       <span className='ml-2 shrink-0 font-mono text-xs text-muted-foreground'>
