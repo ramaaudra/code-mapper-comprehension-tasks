@@ -3,21 +3,22 @@ import { useState } from 'react'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 
 import { useArchitectureFolders } from '../hooks/useArchitectureMetrics'
+import { FolderMetricsTable } from './FolderMetricsTable'
+
 import type {
   FolderArchitectureMetrics,
   SortConfig,
   SortKey
 } from '../types/architecture'
-import { FolderMetricsTable } from './FolderMetricsTable'
 
 function ArchitectureSkeleton() {
   return (
-    <div className="p-4 space-y-3">
-      <Skeleton className="h-4 w-32" />
-      <Skeleton className="h-8 w-full" />
-      <Skeleton className="h-8 w-full" />
-      <Skeleton className="h-8 w-full" />
-      <Skeleton className="h-8 w-full" />
+    <div className='space-y-3 p-4'>
+      <Skeleton className='h-4 w-32' />
+      <Skeleton className='h-8 w-full' />
+      <Skeleton className='h-8 w-full' />
+      <Skeleton className='h-8 w-full' />
+      <Skeleton className='h-8 w-full' />
     </div>
   )
 }
@@ -42,17 +43,17 @@ export function ArchitectureTab() {
 
   if (error) {
     return (
-      <div className="p-4 text-center text-muted-foreground">
-        <p className="text-sm">Failed to load architecture data</p>
-        <p className="text-xs mt-1">{(error as Error).message}</p>
+      <div className='p-4 text-center text-muted-foreground'>
+        <p className='text-sm'>Failed to load architecture data</p>
+        <p className='mt-1 text-xs'>{(error as Error).message}</p>
       </div>
     )
   }
 
   if (!data || data.folders.length === 0) {
     return (
-      <div className="p-4 text-center text-muted-foreground">
-        <p className="text-sm">No module data available</p>
+      <div className='p-4 text-center text-muted-foreground'>
+        <p className='text-sm'>No module data available</p>
       </div>
     )
   }
@@ -69,17 +70,17 @@ export function ArchitectureTab() {
     ) / totalFolders
 
   return (
-    <div className="flex flex-col h-full">
+    <div className='flex h-full flex-col'>
       {/* Header dengan summary stats */}
-      <div className="p-4 border-b border-border shrink-0">
-        <h2 className="text-sm font-medium text-foreground">
+      <div className='shrink-0 border-b border-border p-4'>
+        <h2 className='text-sm font-medium text-foreground'>
           Architecture Overview
         </h2>
-        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+        <div className='mt-2 flex items-center gap-4 text-xs text-muted-foreground'>
           <span>{totalFolders} modules</span>
           <span>Average Instability: {avgInstability.toFixed(2)}</span>
           {foldersWithCycles > 0 && (
-            <span className="text-red-400">
+            <span className='text-red-400'>
               {foldersWithCycles} modules in cycles
             </span>
           )}
@@ -87,7 +88,7 @@ export function ArchitectureTab() {
       </div>
 
       {/* Tabel utama */}
-      <div className="flex-1 overflow-auto">
+      <div className='flex-1 overflow-auto'>
         <FolderMetricsTable
           folders={data.folders}
           sortConfig={sortConfig}

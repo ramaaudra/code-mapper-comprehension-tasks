@@ -16,16 +16,16 @@ export function SimulationButton({
 }: SimulationButtonProps) {
   return (
     <Button
-      variant="ghost"
-      size="sm"
+      variant='ghost'
+      size='sm'
       onClick={(e) => {
         e.stopPropagation()
         onSimulate(fileId)
       }}
       disabled={disabled || isSimulating}
-      className="opacity-0 group-hover:opacity-100 transition-opacity"
+      className='opacity-0 transition-opacity group-hover:opacity-100'
     >
-      <Trash2 className="h-3.5 w-3.5" />
+      <Trash2 className='h-3.5 w-3.5' />
     </Button>
   )
 }

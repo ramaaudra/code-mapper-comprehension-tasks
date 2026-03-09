@@ -1,10 +1,10 @@
-import type { Edge, Node } from '@xyflow/react'
 import { useMemo } from 'react'
 
 import { useArchitectureFolders } from '@/features/architecture/hooks/useArchitectureMetrics'
 import { RISK_THRESHOLDS, calculateRiskScore } from '@/shared/lib/utils/risk'
 
 import type { ModuleEdgeData, ModuleNodeData } from '../utils/moduleAggregation'
+import type { Edge, Node } from '@xyflow/react'
 
 export interface ModuleGraphNode extends Node<ModuleNodeData> {
   type: 'module'

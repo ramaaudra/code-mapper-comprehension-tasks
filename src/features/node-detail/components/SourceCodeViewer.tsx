@@ -1,8 +1,9 @@
-import type { HighlightProps, PrismTheme } from 'prism-react-renderer'
 import { useCallback, useEffect, useState } from 'react'
 
 import { CheckCircle, Copy } from '@/shared/components/ui/icons'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
+
+import type { HighlightProps, PrismTheme } from 'prism-react-renderer'
 
 // Supported languages - only load what's necessary
 const SUPPORTED_LANGUAGES = [
@@ -131,10 +132,10 @@ export function SourceCodeViewer({
       <div
         className={`relative flex flex-col rounded-md border border-border bg-muted/30 ${className}`}
       >
-        <div className="flex items-center justify-center h-40 text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
-            <span className="text-sm">Loading syntax highlighter...</span>
+        <div className='flex h-40 items-center justify-center text-muted-foreground'>
+          <div className='flex items-center gap-2'>
+            <div className='h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+            <span className='text-sm'>Loading syntax highlighter...</span>
           </div>
         </div>
       </div>
@@ -147,30 +148,30 @@ export function SourceCodeViewer({
       <div
         className={`relative flex flex-col rounded-md border border-border bg-muted/30 ${className}`}
       >
-        <div className="flex-none flex items-center justify-between px-3 py-2 border-b border-border bg-muted/50">
-          <span className="text-xs text-muted-foreground">{language}</span>
+        <div className='flex flex-none items-center justify-between border-b border-border bg-muted/50 px-3 py-2'>
+          <span className='text-xs text-muted-foreground'>{language}</span>
           <button
             onClick={handleCopy}
-            className="p-1.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-            title="Copy code"
+            className='rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+            title='Copy code'
           >
             {copied ? (
               <CheckCircle
-                className="h-3.5 w-3.5 text-green-500"
-                weight="fill"
+                className='h-3.5 w-3.5 text-green-500'
+                weight='fill'
               />
             ) : (
-              <Copy className="h-3.5 w-3.5" />
+              <Copy className='h-3.5 w-3.5' />
             )}
           </button>
         </div>
-        <ScrollArea className="flex-1 h-full">
-          <pre className="p-4 font-mono text-xs leading-relaxed text-foreground/90">
+        <ScrollArea className='h-full flex-1'>
+          <pre className='p-4 font-mono text-xs leading-relaxed text-foreground/90'>
             {displayCode}
           </pre>
         </ScrollArea>
         {hasMoreLines && (
-          <div className="px-4 py-2 border-t border-border bg-yellow-500/10 text-xs text-yellow-600">
+          <div className='border-t border-border bg-yellow-500/10 px-4 py-2 text-xs text-yellow-600'>
             Showing first {maxLines} of {lines.length.toLocaleString()} lines
           </div>
         )}
@@ -186,33 +187,33 @@ export function SourceCodeViewer({
       className={`relative flex flex-col rounded-md border border-border bg-muted/30 ${className}`}
     >
       {/* Header with language and copy button */}
-      <div className="flex-none flex items-center justify-between px-3 py-2 border-b border-border bg-muted/50">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground font-mono">
+      <div className='flex flex-none items-center justify-between border-b border-border bg-muted/50 px-3 py-2'>
+        <div className='flex items-center gap-2'>
+          <span className='font-mono text-xs text-muted-foreground'>
             {effectiveLanguage === 'text' ? language : effectiveLanguage}
           </span>
           {effectiveLanguage === 'text' && language !== 'text' && (
-            <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+            <span className='rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>
               plain text
             </span>
           )}
         </div>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 px-2 py-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-          title="Copy code"
+          className='flex items-center gap-1.5 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+          title='Copy code'
         >
           {copied ? (
             <>
               <CheckCircle
-                className="h-3.5 w-3.5 text-green-500"
-                weight="fill"
+                className='h-3.5 w-3.5 text-green-500'
+                weight='fill'
               />
               <span>Copied!</span>
             </>
           ) : (
             <>
-              <Copy className="h-3.5 w-3.5" />
+              <Copy className='h-3.5 w-3.5' />
               <span>Copy</span>
             </>
           )}
@@ -220,7 +221,7 @@ export function SourceCodeViewer({
       </div>
 
       {/* Code with syntax highlighting */}
-      <ScrollArea className="flex-1 h-full">
+      <ScrollArea className='h-full flex-1'>
         <Highlight
           theme={effectiveTheme}
           code={displayCode}
@@ -234,7 +235,7 @@ export function SourceCodeViewer({
             getTokenProps
           }) => (
             <pre
-              className={`${highlightClassName} p-4 m-0 font-mono text-xs leading-relaxed`}
+              className={`${highlightClassName} m-0 p-4 font-mono text-xs leading-relaxed`}
               style={{
                 ...style,
                 background: 'transparent',
@@ -249,18 +250,18 @@ export function SourceCodeViewer({
                   <div
                     key={i}
                     {...restLineProps}
-                    className="table-row"
+                    className='table-row'
                     style={{ display: 'table-row' }}
                   >
                     {showLineNumbers && (
                       <span
-                        className="table-cell text-right pr-4 select-none text-muted-foreground/40"
+                        className='table-cell select-none pr-4 text-right text-muted-foreground/40'
                         style={{ minWidth: '2.5rem' }}
                       >
                         {i + 1}
                       </span>
                     )}
-                    <span className="table-cell">
+                    <span className='table-cell'>
                       {line.map((token, tokenKey) => {
                         const tokenProps = getTokenProps({ token })
                         const { key: _tokenKey, ...restTokenProps } = tokenProps
@@ -277,7 +278,7 @@ export function SourceCodeViewer({
 
       {/* Warning for large files */}
       {hasMoreLines && (
-        <div className="flex-none px-4 py-2 border-t border-border bg-yellow-500/10 text-xs text-yellow-600 flex items-center gap-2">
+        <div className='flex flex-none items-center gap-2 border-t border-border bg-yellow-500/10 px-4 py-2 text-xs text-yellow-600'>
           <span>
             Large file detected. Showing first {maxLines} of{' '}
             {lines.length.toLocaleString()} lines.

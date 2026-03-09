@@ -1,9 +1,9 @@
-import type { Dispatch, RefObject, SetStateAction } from 'react'
 import { useCallback, useRef, useState } from 'react'
 
 import type { FileTreeViewRef } from '@/features/file-analysis'
 import type { AnalysisNode } from '@/shared/types/analysis'
 import type { ExplorerViewMode, GraphViewMode } from '@/shared/types/explorer'
+import type { Dispatch, RefObject, SetStateAction } from 'react'
 
 interface UseExplorerUiStateOptions {
   initialLayoutDirection?: 'TB' | 'LR'

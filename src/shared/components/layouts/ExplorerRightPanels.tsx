@@ -1,12 +1,13 @@
 import { Suspense, lazy } from 'react'
 
-import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
 import { ModuleSidePanel } from '@/features/graph/components/ModuleSidePanel'
-import { useResizablePanel } from '@/shared/hooks/useResizablePanel'
-import type { AnalysisData, AnalysisNode } from '@/shared/types/analysis'
-import type { ExplorerViewMode } from '@/shared/types/explorer'
 
 import { ResizeGrip } from './ResizeGrip'
+
+import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
+import type { useResizablePanel } from '@/shared/hooks/useResizablePanel'
+import type { AnalysisData, AnalysisNode } from '@/shared/types/analysis'
+import type { ExplorerViewMode } from '@/shared/types/explorer'
 
 const NodeDetailPanel = lazy(() =>
   import('@/features/node-detail').then((module) => ({
@@ -43,8 +44,8 @@ interface ExplorerRightPanelsProps {
 
 function LoadingPanelFallback() {
   return (
-    <div className="h-full flex items-center justify-center bg-background">
-      <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+    <div className='flex h-full items-center justify-center bg-background'>
+      <div className='h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent' />
     </div>
   )
 }
@@ -74,7 +75,7 @@ export function ExplorerRightPanels({
       {showNodeDetailPanel && (
         <div
           ref={nodePanel.panelRef}
-          className="relative border-l border-border overflow-hidden flex-shrink-0"
+          className='relative flex-shrink-0 overflow-hidden border-l border-border'
           style={{ width: `${nodePanel.panelWidth}px` }}
         >
           <ResizeGrip resizeHandleProps={nodePanel.resizeHandleProps} />
@@ -91,7 +92,7 @@ export function ExplorerRightPanels({
       {showModuleSidePanel && modulePanel.modulePath && (
         <div
           ref={modulePanel.panelRef}
-          className="relative border-l border-border overflow-hidden flex-shrink-0"
+          className='relative flex-shrink-0 overflow-hidden border-l border-border'
           style={{ width: `${modulePanel.panelWidth}px` }}
         >
           <ResizeGrip resizeHandleProps={modulePanel.resizeHandleProps} />

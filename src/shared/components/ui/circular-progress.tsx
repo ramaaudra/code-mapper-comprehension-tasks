@@ -41,33 +41,33 @@ export function CircularProgress({
       className={cn('relative inline-flex', className)}
       style={{ width: size, height: size }}
     >
-      <svg className="transform -rotate-90" width={size} height={size}>
+      <svg className='-rotate-90 transform' width={size} height={size}>
         {/* Background circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          fill="none"
-          stroke="currentColor"
+          fill='none'
+          stroke='currentColor'
           strokeWidth={strokeWidth}
-          className="text-muted"
+          className='text-muted'
         />
         {/* Progress circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          fill="none"
-          stroke="currentColor"
+          fill='none'
+          stroke='currentColor'
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
+          strokeLinecap='round'
           className={cn('transition-all duration-500', getColor())}
         />
       </svg>
       {/* Center content */}
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className='absolute inset-0 flex items-center justify-center'>
         {children}
       </div>
     </div>

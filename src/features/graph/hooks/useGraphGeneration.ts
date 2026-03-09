@@ -1,5 +1,4 @@
 import { MarkerType } from '@xyflow/react'
-import type { Edge, Node } from '@xyflow/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
@@ -12,10 +11,11 @@ import {
 import { LRUCache } from '@/shared/lib/utils/lruCache'
 import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
 import { getRiskLabel, getRiskLevel } from '@/shared/lib/utils/risk'
-import type { AnalysisData, DependencyInfo } from '@/shared/types/analysis'
-import type { FileRiskProfile } from '@/shared/types/risk'
 
 import type { DependencyEdgeData, DependencyNodeData } from '../types/graph'
+import type { AnalysisData, DependencyInfo } from '@/shared/types/analysis'
+import type { FileRiskProfile } from '@/shared/types/risk'
+import type { Edge, Node } from '@xyflow/react'
 
 interface BadgeInfo {
   label: string
@@ -46,9 +46,21 @@ function getSimplifiedEdgeStyle(isLargeGraph: boolean) {
   if (isLargeGraph) {
     return {
       styles: {
-        strong: { strokeWidth: 2, stroke: '#525252', strokeOpacity: 0.7 },
-        medium: { strokeWidth: 1.5, stroke: '#737373', strokeOpacity: 0.6 },
-        weak: { strokeWidth: 1, stroke: '#a3a3a3', strokeOpacity: 0.5 }
+        strong: {
+          strokeWidth: 2.2,
+          stroke: 'hsl(var(--primary))',
+          strokeOpacity: 0.4
+        },
+        medium: {
+          strokeWidth: 1.7,
+          stroke: 'hsl(var(--primary))',
+          strokeOpacity: 0.32
+        },
+        weak: {
+          strokeWidth: 1.2,
+          stroke: 'hsl(var(--primary))',
+          strokeOpacity: 0.24
+        }
       },
       showLabels: false,
       animated: false
@@ -62,7 +74,7 @@ function renderGraphSync(
   edges: Edge<DependencyEdgeData>[],
   focusNodeId: string
 ): Node<DependencyNodeData>[] {
-  const graphNodes = Array.from(nodesMap.values()).sort((a, b) => {
+  const graphNodes = [...nodesMap.values()].sort((a, b) => {
     const order: Record<DependencyNodeData['direction'], number> = {
       selected: 0,
       incoming: 1,
@@ -101,9 +113,21 @@ export function useGraphGeneration({
 
   const edgeStyles = useMemo(
     () => ({
-      strong: { strokeWidth: 3, stroke: '#525252', strokeOpacity: 0.9 },
-      medium: { strokeWidth: 2, stroke: '#737373', strokeOpacity: 0.75 },
-      weak: { strokeWidth: 1.5, stroke: '#a3a3a3', strokeOpacity: 0.6 }
+      strong: {
+        strokeWidth: 2.5,
+        stroke: 'hsl(var(--primary))',
+        strokeOpacity: 0.52
+      },
+      medium: {
+        strokeWidth: 1.9,
+        stroke: 'hsl(var(--primary))',
+        strokeOpacity: 0.4
+      },
+      weak: {
+        strokeWidth: 1.4,
+        stroke: 'hsl(var(--primary))',
+        strokeOpacity: 0.28
+      }
     }),
     []
   )
@@ -112,19 +136,19 @@ export function useGraphGeneration({
     () => ({
       strong: {
         type: MarkerType.ArrowClosed,
-        color: '#525252',
-        width: 18,
-        height: 18
-      },
-      medium: {
-        type: MarkerType.ArrowClosed,
-        color: '#737373',
+        color: 'hsl(var(--primary))',
         width: 16,
         height: 16
       },
+      medium: {
+        type: MarkerType.ArrowClosed,
+        color: 'hsl(var(--primary))',
+        width: 15,
+        height: 15
+      },
       weak: {
         type: MarkerType.ArrowClosed,
-        color: '#a3a3a3',
+        color: 'hsl(var(--primary))',
         width: 14,
         height: 14
       }
@@ -134,8 +158,10 @@ export function useGraphGeneration({
 
   const labelBgStyle = useMemo(
     () => ({
-      fill: '#18181b',
+      fill: 'hsl(var(--card))',
       fillOpacity: 0.95,
+      stroke: 'hsl(var(--border))',
+      strokeWidth: 1,
       rx: 4,
       ry: 4
     }),
@@ -146,10 +172,10 @@ export function useGraphGeneration({
     () => ({
       fontWeight: 700,
       fontFamily: 'JetBrains Mono, monospace',
-      fontSize: 12,
-      fill: '#ffffffff',
+      fontSize: 11,
+      fill: 'hsl(var(--foreground))',
       paintOrder: 'stroke fill' as const,
-      stroke: '#000000',
+      stroke: 'transparent',
       strokeWidth: 0,
       strokeLinejoin: 'round' as const
     }),
@@ -305,10 +331,12 @@ export function useGraphGeneration({
             dep.strength >= 3 ? 'strong' : dep.strength >= 2 ? 'medium' : 'weak'
           const effectiveStyle =
             simplifiedStyle?.styles[styleKey] ?? edgeStyles[styleKey]
-          const showLabel = simplifiedStyle ? simplifiedStyle.showLabels : true
+          const showLabel = simplifiedStyle
+            ? simplifiedStyle.showLabels
+            : dep.strength > 1
           const shouldAnimate = simplifiedStyle
             ? simplifiedStyle.animated
-            : dep.strength >= 3
+            : false
 
           edges.push({
             id: `out-${focusNodeId}->${targetNodeId}`,
@@ -351,10 +379,12 @@ export function useGraphGeneration({
             strength >= 3 ? 'strong' : strength >= 2 ? 'medium' : 'weak'
           const effectiveStyle =
             simplifiedStyle?.styles[styleKey] ?? edgeStyles[styleKey]
-          const showLabel = simplifiedStyle ? simplifiedStyle.showLabels : true
+          const showLabel = simplifiedStyle
+            ? simplifiedStyle.showLabels
+            : strength > 1
           const shouldAnimate = simplifiedStyle
             ? simplifiedStyle.animated
-            : strength >= 3
+            : false
 
           edges.push({
             id: `in-${importerNodeId}->${focusNodeId}`,

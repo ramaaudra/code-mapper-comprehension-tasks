@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
+
 import type { UnresolvedImport } from '@/shared/types/analysis'
 
 interface UnresolvedImportsListProps {
@@ -22,28 +23,28 @@ export function UnresolvedImportsList({
 
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
+      <CardHeader className='pb-3'>
+        <CardTitle className='flex items-center gap-2 text-base'>
           Unresolved Imports
-          <Badge variant="secondary">{totalCount} total</Badge>
+          <Badge variant='secondary'>{totalCount} total</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className='space-y-3'>
           {imports.map((item) => (
             <div
               key={item.pattern}
-              className="flex items-start justify-between p-3 bg-muted/50 rounded-lg"
+              className='flex items-start justify-between rounded-lg bg-muted/50 p-3'
             >
-              <div className="space-y-1">
-                <code className="text-sm font-mono text-foreground">
+              <div className='space-y-1'>
+                <code className='font-mono text-sm text-foreground'>
                   {item.pattern}
                 </code>
-                <p className="text-xs text-muted-foreground">
+                <p className='text-xs text-muted-foreground'>
                   {item.count} imports from {item.files.length} files
                 </p>
               </div>
-              <Badge variant="outline" className="shrink-0">
+              <Badge variant='outline' className='shrink-0'>
                 {item.count}
               </Badge>
             </div>

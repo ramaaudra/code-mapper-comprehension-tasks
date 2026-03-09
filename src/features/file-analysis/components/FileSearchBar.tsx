@@ -25,16 +25,16 @@ export const FileSearchBar = forwardRef<FileSearchBarRef>(
     }))
 
     return (
-      <ActionTooltip label="Find file" side="bottom" asChild>
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <ActionTooltip label='Find file' side='bottom' asChild>
+        <div className='relative w-full'>
+          <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
           <Input
             ref={inputRef}
-            type="text"
+            type='text'
             placeholder={`Find file ${modifierKey}F`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className='pl-10'
           />
         </div>
       </ActionTooltip>

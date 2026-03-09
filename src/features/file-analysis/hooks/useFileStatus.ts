@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 
 import { getValueFromMap, hasMatchInSet, matchesFile } from '@/shared/lib/utils'
+
 import type { FileRiskProfile } from '@/shared/types/risk'
 
 interface FileStatusOptions {

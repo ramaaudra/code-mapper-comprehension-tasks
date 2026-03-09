@@ -115,7 +115,7 @@ function AppContent() {
 
   return (
     <ExplorerShell
-      runtimeMode="live"
+      runtimeMode='live'
       isLoading={isLoading}
       loadError={loadError}
       hasData={!!analysisData}
@@ -147,7 +147,7 @@ function AppContent() {
       main={
         analysisData ? (
           explorer.viewMode === 'graph' ? (
-            <div className="h-full bg-background">
+            <div className='h-full bg-background'>
               <DependencyGraph
                 nodes={graphElements.nodes}
                 edges={graphElements.edges}
@@ -193,17 +193,17 @@ function AppContent() {
             </Suspense>
           )
         ) : (
-          <div className="h-full flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-24 h-24 bg-primary/15 rounded-full flex items-center justify-center mx-auto mb-4">
-                <div className="w-12 h-12 bg-primary/50 rounded-full" />
+          <div className='flex h-full items-center justify-center'>
+            <div className='text-center'>
+              <div className='mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary/15'>
+                <div className='h-12 w-12 rounded-full bg-primary/50' />
               </div>
-              <h2 className="text-xl font-semibold text-foreground mb-2">
+              <h2 className='mb-2 text-xl font-semibold text-foreground'>
                 Waiting for analysis data
               </h2>
-              <p className="text-muted-foreground max-w-md mx-auto">
+              <p className='mx-auto max-w-md text-muted-foreground'>
                 Run the command{' '}
-                <code className="px-1 py-0.5 bg-muted rounded">
+                <code className='rounded bg-muted px-1 py-0.5'>
                   code-mapper analyze &lt;project-path&gt;
                 </code>{' '}
                 in your terminal.

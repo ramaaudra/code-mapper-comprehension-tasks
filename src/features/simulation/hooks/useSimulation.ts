@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { simulateRemoval } from '@/shared/lib/api/simulation'
+
 import type { SimulationResponse } from '@/shared/lib/api/types'
 import type { DependencyInfo } from '@/shared/types/analysis'
 

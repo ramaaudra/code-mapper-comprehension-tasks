@@ -11,6 +11,7 @@ import {
   ToggleGroup,
   ToggleGroupItem
 } from '@/shared/components/ui/toggle-group'
+
 import type {
   ExplorerRuntimeMode,
   ExplorerViewMode
@@ -69,34 +70,34 @@ export function TopBar({
         : null
 
   return (
-    <header className="h-14 bg-background border-b border-border px-4 flex items-center justify-between">
+    <header className='flex h-14 items-center justify-between border-b border-border bg-background px-4'>
       {/* Left: Toggle Sidebar + Brand */}
-      <div className="flex items-center gap-3">
+      <div className='flex items-center gap-3'>
         <SimpleTooltip
           content={isTreeCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-          side="bottom"
+          side='bottom'
           asChild
         >
           <Button
-            variant="ghost"
-            size="icon"
+            variant='ghost'
+            size='icon'
             onClick={onToggleTree}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            className='h-8 w-8 text-muted-foreground hover:text-foreground'
           >
             {isTreeCollapsed ? (
-              <PanelLeftOpen className="h-4 w-4" />
+              <PanelLeftOpen className='h-4 w-4' />
             ) : (
-              <PanelLeftClose className="h-4 w-4" />
+              <PanelLeftClose className='h-4 w-4' />
             )}
           </Button>
         </SimpleTooltip>
 
-        <div className="flex items-center gap-2">
-          <h1 className="text-base font-semibold text-foreground">
+        <div className='flex items-center gap-2'>
+          <h1 className='text-base font-semibold text-foreground'>
             Code Mapper
           </h1>
           {hasData && fileCount !== undefined && (
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
+            <span className='rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground'>
               {fileCount} files
             </span>
           )}
@@ -105,9 +106,9 @@ export function TopBar({
 
       {/* Center: Mode Switch (Overview | Graph | Architecture) */}
       {hasData && (
-        <div className="absolute left-1/2 transform -translate-x-1/2">
+        <div className='absolute left-1/2 -translate-x-1/2 transform'>
           <ToggleGroup
-            type="single"
+            type='single'
             value={viewMode}
             onValueChange={(value: string) => {
               if (value === 'overview') {
@@ -120,22 +121,22 @@ export function TopBar({
                 onShowSetupGuide()
               }
             }}
-            size="sm"
+            size='sm'
           >
-            <ToggleGroupItem value="overview" size="sm">
+            <ToggleGroupItem value='overview' size='sm'>
               Overview
             </ToggleGroupItem>
-            <ToggleGroupItem value="graph" size="sm">
+            <ToggleGroupItem value='graph' size='sm'>
               Graph
             </ToggleGroupItem>
-            <ToggleGroupItem value="architecture" size="sm">
+            <ToggleGroupItem value='architecture' size='sm'>
               Architecture
             </ToggleGroupItem>
-            <ToggleGroupItem value="setup-guide" size="sm">
-              <span className="flex items-center gap-1.5">
+            <ToggleGroupItem value='setup-guide' size='sm'>
+              <span className='flex items-center gap-1.5'>
                 Setup
                 {hasUnresolvedImports && (
-                  <AlertTriangle className="h-3 w-3 text-yellow-500" />
+                  <AlertTriangle className='h-3 w-3 text-yellow-500' />
                 )}
               </span>
             </ToggleGroupItem>
@@ -144,11 +145,11 @@ export function TopBar({
       )}
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-2">
+      <div className='flex items-center gap-2'>
         {loadError && runtimeMode === 'live' && (
-          <SimpleTooltip content={loadError} side="bottom" asChild>
-            <div className="flex h-8 w-8 items-center justify-center text-amber-500">
-              <AlertTriangle className="h-4 w-4" />
+          <SimpleTooltip content={loadError} side='bottom' asChild>
+            <div className='flex h-8 w-8 items-center justify-center text-amber-500'>
+              <AlertTriangle className='h-4 w-4' />
             </div>
           </SimpleTooltip>
         )}
@@ -164,23 +165,23 @@ export function TopBar({
                   ? `${totalChanges} file${totalChanges !== 1 ? 's' : ''} changed - click to reload`
                   : 'Reload analysis'
             }
-            side="bottom"
+            side='bottom'
             asChild
           >
-            <div className="relative">
+            <div className='relative'>
               <Button
-                variant="ghost"
-                size="icon"
+                variant='ghost'
+                size='icon'
                 onClick={onRefresh}
                 disabled={isLoading}
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                className='h-8 w-8 text-muted-foreground hover:text-foreground'
               >
                 <RotateCcw
                   className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
                 />
               </Button>
               {hasChanges && totalChanges > 0 && (
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-medium rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
+                <span className='absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-xs font-medium text-white'>
                   {totalChanges > 9 ? '9+' : totalChanges}
                 </span>
               )}
@@ -190,7 +191,7 @@ export function TopBar({
 
         {/* Timestamp (subtle) */}
         {timestampLabel && (
-          <span className="text-xs text-muted-foreground hidden lg:inline">
+          <span className='hidden text-xs text-muted-foreground lg:inline'>
             {timestampLabel}
           </span>
         )}

@@ -28,37 +28,37 @@ export function CouplingDistribution({
 }: CouplingDistributionProps) {
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base font-medium">
-            <Network className="h-4 w-4" />
+      <CardHeader className='pb-2'>
+        <div className='flex items-center justify-between'>
+          <CardTitle className='flex items-center gap-2 text-base font-medium'>
+            <Network className='h-4 w-4' />
             Coupling Distribution
           </CardTitle>
-          <InfoTooltip title="What is Coupling?" side="top">
-            <div className="space-y-2">
-              <p className="text-xs text-popover-foreground">
+          <InfoTooltip title='What is Coupling?' side='top'>
+            <div className='space-y-2'>
+              <p className='text-xs text-popover-foreground'>
                 Coupling measures how strongly a module depends on other
                 modules.
               </p>
-              <div className="text-xs space-y-1 pt-1 border-t border-border">
-                <p className="font-semibold text-popover-foreground">
+              <div className='space-y-1 border-t border-border pt-1 text-xs'>
+                <p className='font-semibold text-popover-foreground'>
                   Coupling Levels:
                 </p>
-                <p className="text-popover-foreground/80">
-                  • <span className="text-green-500 font-medium">Loose</span>:
+                <p className='text-popover-foreground/80'>
+                  • <span className='font-medium text-green-500'>Loose</span>:
                   1-2 dependencies — healthy
                   <br />•{' '}
-                  <span className="text-yellow-500 font-medium">Medium</span>
-                  : 3-5 dependencies — moderate
+                  <span className='font-medium text-yellow-500'>Medium</span>:
+                  3-5 dependencies — moderate
                   <br />•{' '}
-                  <span className="text-orange-500 font-medium">Tight</span>
-                  : 6-10 dependencies — high
+                  <span className='font-medium text-orange-500'>Tight</span>:
+                  6-10 dependencies — high
                   <br />•{' '}
-                  <span className="text-red-500 font-medium">Heavy</span>: 10+
+                  <span className='font-medium text-red-500'>Heavy</span>: 10+
                   dependencies — very high
                 </p>
               </div>
-              <p className="text-xs text-popover-foreground/80 pt-1">
+              <p className='pt-1 text-xs text-popover-foreground/80'>
                 Lower coupling improves maintainability and reduces the impact
                 of changes.
               </p>
@@ -66,30 +66,30 @@ export function CouplingDistribution({
           </InfoTooltip>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="text-sm">
-          <span className="text-muted-foreground">Average: </span>
-          <span className="font-semibold">{avgDependencies.toFixed(2)}</span>
-          <span className="text-muted-foreground"> deps/file</span>
+      <CardContent className='space-y-4'>
+        <div className='text-sm'>
+          <span className='text-muted-foreground'>Average: </span>
+          <span className='font-semibold'>{avgDependencies.toFixed(2)}</span>
+          <span className='text-muted-foreground'> deps/file</span>
         </div>
 
         {/* Distribution bars */}
-        <div className="space-y-2">
+        <div className='space-y-2'>
           {distribution.map((bucket) => (
             <div
               key={bucket.label}
-              className="space-y-1"
+              className='space-y-1'
               title={`${bucket.count} files with ${bucket.range} dependencies`}
             >
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">
+              <div className='flex items-center justify-between text-xs'>
+                <span className='text-muted-foreground'>
                   {bucket.label} ({bucket.range})
                 </span>
                 <span>
                   {bucket.count} files ({bucket.percentage.toFixed(0)}%)
                 </span>
               </div>
-              <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-primary/20">
+              <div className='relative h-1.5 w-full overflow-hidden rounded-full bg-primary/20'>
                 <div
                   className={`h-full transition-all ${bucket.color}`}
                   style={{ width: `${bucket.percentage}%` }}
@@ -101,14 +101,14 @@ export function CouplingDistribution({
 
         {/* Most coupled file */}
         {mostCoupledFile && (
-          <div className="pt-2 border-t border-border">
-            <p className="text-xs text-muted-foreground mb-1">Most coupled:</p>
+          <div className='border-t border-border pt-2'>
+            <p className='mb-1 text-xs text-muted-foreground'>Most coupled:</p>
             <p
-              className="text-sm font-mono truncate"
+              className='truncate font-mono text-sm'
               title={mostCoupledFile.path}
             >
               {mostCoupledFile.path.split('/').pop()}
-              <span className="text-muted-foreground ml-2">
+              <span className='ml-2 text-muted-foreground'>
                 ({mostCoupledFile.count} deps)
               </span>
             </p>

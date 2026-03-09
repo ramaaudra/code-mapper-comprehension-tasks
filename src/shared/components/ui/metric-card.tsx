@@ -19,18 +19,18 @@ export const MetricCard = memo(function MetricCard({
 }: MetricCardProps) {
   if (variant === 'minimal') {
     return (
-      <div className="rounded-lg bg-muted/20 p-6 min-h-[140px]">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+      <div className='min-h-[140px] rounded-lg bg-muted/20 p-6'>
+        <div className='flex items-center justify-between'>
+          <span className='text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground'>
             {label}
           </span>
-          {icon && <span className="p-2 text-muted-foreground">{icon}</span>}
+          {icon && <span className='p-2 text-muted-foreground'>{icon}</span>}
         </div>
-        <div className="mt-3 text-5xl font-semibold tabular-nums text-foreground tracking-tight">
+        <div className='mt-3 text-5xl font-semibold tabular-nums tracking-tight text-foreground'>
           {value}
         </div>
         {subValue && (
-          <p className="text-xs text-muted-foreground mt-1">{subValue}</p>
+          <p className='mt-1 text-xs text-muted-foreground'>{subValue}</p>
         )}
       </div>
     )
@@ -43,19 +43,19 @@ export const MetricCard = memo(function MetricCard({
   }
 
   return (
-    <div className="rounded-lg bg-muted/20 p-6 min-h-[140px]">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+    <div className='min-h-[140px] rounded-lg bg-muted/20 p-6'>
+      <div className='flex items-center justify-between'>
+        <span className='text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground'>
           {label}
         </span>
         {icon && <span className={`p-2 ${statusColors[status]}`}>{icon}</span>}
       </div>
-      <div className="mt-3 flex items-baseline gap-2">
-        <span className="text-5xl font-semibold tabular-nums text-foreground tracking-tight">
+      <div className='mt-3 flex items-baseline gap-2'>
+        <span className='text-5xl font-semibold tabular-nums tracking-tight text-foreground'>
           {value}
         </span>
         {subValue && (
-          <span className="text-sm text-muted-foreground">{subValue}</span>
+          <span className='text-sm text-muted-foreground'>{subValue}</span>
         )}
       </div>
     </div>

@@ -1,11 +1,12 @@
-import type { Dispatch, RefObject, SetStateAction } from 'react'
 import { useCallback, useMemo } from 'react'
 
-import type { FileTreeViewRef } from '@/features/file-analysis'
 import { useModuleExplorerState } from '@/features/graph'
 import { matchesFile } from '@/shared/lib/utils'
+
+import type { FileTreeViewRef } from '@/features/file-analysis'
 import type { AnalysisData, AnalysisNode } from '@/shared/types/analysis'
 import type { ExplorerViewMode, GraphViewMode } from '@/shared/types/explorer'
+import type { Dispatch, RefObject, SetStateAction } from 'react'
 
 interface UseExplorerControllerOptions {
   treeRef: RefObject<FileTreeViewRef | null>

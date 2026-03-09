@@ -23,15 +23,18 @@ export class PerformanceMonitor {
     return () => {
       const duration = performance.now() - start
 
-      if (!this.metrics.has(label)) {
-        this.metrics.set(label, [])
+      let measurements = this.metrics.get(label)
+
+      if (!measurements) {
+        measurements = []
+        this.metrics.set(label, measurements)
       }
 
-      this.metrics.get(label)!.push(duration)
+      measurements.push(duration)
 
       // Keep last 100 measurements
-      if (this.metrics.get(label)!.length > 100) {
-        this.metrics.get(label)!.shift()
+      if (measurements.length > 100) {
+        measurements.shift()
       }
 
       // Log if slow

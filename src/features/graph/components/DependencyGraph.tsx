@@ -8,6 +8,7 @@ import {
   FileTsx,
   Info,
   Lightning,
+  MapTrifold,
   Warning
 } from '@phosphor-icons/react'
 import {
@@ -15,6 +16,7 @@ import {
   BackgroundVariant,
   ConnectionLineType,
   Handle,
+  MarkerType,
   MiniMap,
   Position,
   ReactFlow,
@@ -22,7 +24,6 @@ import {
   useReactFlow,
   useStore
 } from '@xyflow/react'
-import type { Edge, EdgeTypes, Node, NodeProps, NodeTypes } from '@xyflow/react'
 import clsx from 'clsx'
 import {
   type ComponentType,
@@ -34,18 +35,24 @@ import {
   useState
 } from 'react'
 
-import '@xyflow/react/dist/style.css'
-
-import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
 import { getRelativePath } from '@/shared/lib/utils'
+import '@xyflow/react/dist/style.css'
 import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
 
 import { useAdaptiveQuality } from '../hooks/useAdaptiveQuality'
 import { useModuleGraph } from '../hooks/useModuleGraph'
+import {
+  createModuleRelationMap,
+  layoutFocusedModuleNodes
+} from '../utils/moduleFocusGraph'
 import { AggregatedEdge } from './AggregatedEdge'
 import { ModuleNodeComponent } from './ModuleNode'
 import { type ViewMode, ViewModeToggle } from './ViewModeToggle'
 import { ZoomControls } from './ZoomControls'
+
+import type { ModuleGraphEdge, ModuleGraphNode } from '../hooks/useModuleGraph'
+import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
+import type { Edge, EdgeTypes, Node, NodeProps, NodeTypes } from '@xyflow/react'
 
 export interface DependencyNodeData extends Record<string, unknown> {
   label: string
@@ -181,21 +188,30 @@ const moduleLayoutDefaults = {
 }
 
 function layoutModuleNodes(
-  nodes: Node[],
-  edges: Edge[],
+  nodes: ModuleGraphNode[],
+  edges: ModuleGraphEdge[],
   layoutDirection: 'LR' | 'TB',
-  isFocused: boolean
-): Node[] {
+  focusedModuleId?: string | null
+): ModuleGraphNode[] {
   if (nodes.length === 0) {
     return nodes
   }
 
+  if (focusedModuleId) {
+    return layoutFocusedModuleNodes(
+      nodes,
+      edges,
+      focusedModuleId,
+      layoutDirection
+    )
+  }
+
   const dagreGraph = new dagre.graphlib.Graph()
   dagreGraph.setDefaultEdgeLabel(() => ({}))
-  const config = isFocused
-    ? moduleLayoutDefaults.focused
-    : moduleLayoutDefaults.overview
-  dagreGraph.setGraph({ rankdir: layoutDirection, ...config })
+  dagreGraph.setGraph({
+    rankdir: layoutDirection,
+    ...moduleLayoutDefaults.overview
+  })
 
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: 300, height: 140 })
@@ -256,8 +272,8 @@ function ZoomIndicator() {
   }
 
   return (
-    <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-md text-sm font-mono z-20 shadow-lg">
-      {percentage}%<div className="text-xs opacity-75 mt-1">{label}</div>
+    <div className='absolute left-4 top-4 z-20 rounded-md bg-black/70 px-3 py-1 font-mono text-sm text-white shadow-lg'>
+      {percentage}%<div className='mt-1 text-xs opacity-75'>{label}</div>
     </div>
   )
 }
@@ -269,65 +285,79 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
 
   const backgroundTone: Record<DependencyNodeData['direction'], string> = {
     selected:
-      'bg-[hsl(var(--node-selected-bg))] border-[hsl(var(--node-selected-border))] ring-2 ring-[hsl(var(--node-selected-ring))]',
-    incoming:
-      'bg-[hsl(var(--node-incoming-bg))] border-[hsl(var(--node-incoming-border))] hover:border-[hsl(var(--node-incoming-hover))]',
-    outgoing:
-      'bg-[hsl(var(--node-outgoing-bg))] border-[hsl(var(--node-outgoing-border))] hover:border-[hsl(var(--node-outgoing-hover))]',
-    placeholder:
-      'bg-[hsl(var(--node-placeholder-bg))] border-[hsl(var(--node-placeholder-border))] hover:border-[hsl(var(--node-placeholder-hover))]'
+      'border-[hsl(var(--primary))] bg-[hsl(var(--card))] ring-2 ring-[hsl(var(--primary))]/20 shadow-lg shadow-[hsl(var(--primary))]/10',
+    incoming: 'border-[hsl(var(--border))] bg-[hsl(var(--card))]',
+    outgoing: 'border-[hsl(var(--border))] bg-[hsl(var(--card))]',
+    placeholder: 'border-[hsl(var(--border))] bg-[hsl(var(--card))]'
   }
 
   const chipTone: Record<DependencyNodeData['direction'], string> = {
     selected:
-      'bg-[hsl(var(--chip-selected-bg))] text-[hsl(var(--chip-selected-fg))]',
+      'border-[hsl(var(--primary))]/25 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]',
     incoming:
-      'bg-[hsl(var(--chip-incoming-bg))] text-[hsl(var(--chip-incoming-fg))]',
+      'border-[hsl(var(--border))] bg-[hsl(var(--muted))]/70 text-[hsl(var(--muted-foreground))]',
     outgoing:
-      'bg-[hsl(var(--chip-outgoing-bg))] text-[hsl(var(--chip-outgoing-fg))]',
+      'border-[hsl(var(--border))] bg-[hsl(var(--muted))]/70 text-[hsl(var(--muted-foreground))]',
     placeholder:
-      'bg-[hsl(var(--chip-placeholder-bg))] text-[hsl(var(--chip-placeholder-fg))]'
+      'border-[hsl(var(--border))] bg-[hsl(var(--muted))]/70 text-[hsl(var(--muted-foreground))]'
   }
 
   const chipLabel: Record<DependencyNodeData['direction'], string> = {
     selected: 'Focus',
-    incoming: 'In',
-    outgoing: 'Out',
+    incoming: 'Dependent',
+    outgoing: 'Dependency',
     placeholder: 'Info'
+  }
+
+  const iconTone: Record<DependencyNodeData['direction'], string> = {
+    selected: 'bg-[hsl(var(--primary))]/12 text-[hsl(var(--primary))]',
+    incoming: 'bg-[hsl(var(--muted))]/70 text-[hsl(var(--muted-foreground))]',
+    outgoing: 'bg-[hsl(var(--muted))]/70 text-[hsl(var(--muted-foreground))]',
+    placeholder: 'bg-[hsl(var(--muted))]/70 text-[hsl(var(--muted-foreground))]'
   }
 
   const FileIcon = getFileIcon(data.label)
 
   return (
-    <div
+    <button
+      type='button'
       className={clsx(
-        'relative rounded-lg border px-4 py-3 transition-all duration-200',
-        'text-left min-w-[220px] max-w-[280px] flex flex-col gap-2',
+        'relative flex min-w-[240px] max-w-[300px] flex-col gap-3 rounded-xl border px-4 py-3.5 text-left shadow-sm transition-all duration-200',
         backgroundTone[direction],
-        data.isHovered && '!border-[hsl(var(--node-hover-border))] shadow-md',
+        !data.isHovered &&
+          direction !== 'selected' &&
+          'hover:border-[hsl(var(--primary))] hover:shadow-md',
+        data.isHovered &&
+          '!border-[hsl(var(--primary))] shadow-md shadow-[hsl(var(--primary))]/10',
         'focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2'
       )}
-      tabIndex={0}
-      role="button"
       aria-label={`View details for ${data.label}`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <FileIcon size={16} className="shrink-0 text-muted-foreground" />
-          <div>
-            <div className="text-sm font-semibold text-[hsl(var(--foreground))] break-words">
+      <div className='flex items-center justify-between gap-3'>
+        <div className='flex items-center gap-2'>
+          <div
+            className={clsx(
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+              iconTone[direction]
+            )}
+          >
+            <FileIcon size={18} className='shrink-0' />
+          </div>
+          <div className='min-w-0'>
+            <div className='break-words text-sm font-semibold text-[hsl(var(--foreground))]'>
               {data.label}
             </div>
-            {data.subtitle && (
-              <div className="text-[11px] uppercase tracking-wide font-medium text-neutral-500 dark:text-neutral-400">
-                {data.subtitle}
-              </div>
-            )}
+            <div
+              className='truncate text-xs text-[hsl(var(--muted-foreground))]'
+              title={data.fullPath}
+            >
+              {getRelativePath(data.fullPath)}
+            </div>
           </div>
         </div>
         <div
           className={clsx(
-            'text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide',
+            'rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
             chipTone[direction]
           )}
         >
@@ -335,24 +365,29 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
         </div>
       </div>
 
-      <div className="text-xs text-muted-foreground leading-relaxed">
-        <div className="truncate" title={data.fullPath}>
-          {getRelativePath(data.fullPath)}
+      {data.subtitle && (
+        <div className='rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/45 px-3 py-2'>
+          <div className='text-[11px] font-semibold uppercase tracking-[0.12em] text-[hsl(var(--primary))]'>
+            {chipLabel[direction]}
+          </div>
+          <p className='mt-1 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]'>
+            {data.subtitle}
+          </p>
         </div>
-      </div>
+      )}
 
       {/* Risk Badges */}
       {data.badges && data.badges.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-1">
+        <div className='mt-1 flex flex-wrap gap-1'>
           {data.badges.map((badge, idx) => {
             const badgeStyles: Record<typeof badge.tone, string> = {
               danger:
-                'bg-[hsl(var(--risk-danger))] text-white border-[hsl(var(--risk-danger))]',
+                'border-[hsl(var(--destructive))]/25 bg-[hsl(var(--destructive))]/10 text-[hsl(var(--destructive-foreground))]',
               warning:
-                'bg-[hsl(var(--risk-warning))] text-white border-[hsl(var(--risk-warning))]',
+                'border-[hsl(var(--border))] bg-[hsl(var(--muted))]/75 text-[hsl(var(--foreground))]',
               success:
-                'bg-[hsl(var(--risk-success))] text-white border-[hsl(var(--risk-success))]',
-              info: 'bg-neutral-500 text-white border-neutral-500'
+                'border-[hsl(var(--border))] bg-[hsl(var(--muted))]/75 text-[hsl(var(--foreground))]',
+              info: 'border-[hsl(var(--border))] bg-[hsl(var(--muted))]/75 text-[hsl(var(--muted-foreground))]'
             }
 
             const BadgeIcon = {
@@ -366,14 +401,14 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
               <div
                 key={`${badge.label}-${idx}`}
                 className={clsx(
-                  'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium',
+                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
                   'border transition-all duration-200',
                   badgeStyles[badge.tone]
                 )}
                 title={badge.label}
               >
-                <BadgeIcon size={12} weight="fill" />
-                <span className="uppercase tracking-wide">{badge.label}</span>
+                <BadgeIcon size={12} weight='fill' />
+                <span className='uppercase tracking-wide'>{badge.label}</span>
               </div>
             )
           })}
@@ -381,26 +416,26 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
       )}
 
       <Handle
-        type="target"
+        type='target'
         position={Position.Left}
         style={{ opacity: 0, width: 12, height: 12, pointerEvents: 'none' }}
       />
       <Handle
-        type="target"
+        type='target'
         position={Position.Top}
         style={{ opacity: 0, width: 12, height: 12, pointerEvents: 'none' }}
       />
       <Handle
-        type="source"
+        type='source'
         position={Position.Right}
         style={{ opacity: 0, width: 12, height: 12, pointerEvents: 'none' }}
       />
       <Handle
-        type="source"
+        type='source'
         position={Position.Bottom}
         style={{ opacity: 0, width: 12, height: 12, pointerEvents: 'none' }}
       />
-    </div>
+    </button>
   )
 }
 
@@ -413,6 +448,34 @@ const nodeTypes: NodeTypes = {
 
 const edgeTypes: EdgeTypes = {
   aggregated: AggregatedEdge
+}
+
+const moduleEdgeMarker = {
+  type: MarkerType.ArrowClosed,
+  color: 'hsl(var(--primary))'
+} as const
+
+function withModuleEdgePresentation(
+  edge: ModuleGraphEdge,
+  options: { isFocusEdge: boolean; showLabel: boolean }
+): ModuleGraphEdge {
+  const edgeData = edge.data ?? {
+    source: edge.source,
+    target: edge.target,
+    weight: 1
+  }
+
+  return {
+    ...edge,
+    data: {
+      source: edgeData.source,
+      target: edgeData.target,
+      weight: edgeData.weight,
+      isFocusEdge: options.isFocusEdge,
+      showLabel: options.showLabel
+    },
+    markerEnd: moduleEdgeMarker
+  }
 }
 
 function DependencyGraphInner({
@@ -500,17 +563,34 @@ function DependencyGraphInner({
 
   const filteredModuleEdges = useMemo(() => {
     if (!focusedModuleId) {
-      return moduleEdges
+      return moduleEdges.map((edge) =>
+        withModuleEdgePresentation(edge, {
+          isFocusEdge: false,
+          showLabel: false
+        })
+      )
     }
 
-    const visibleNodeIds = new Set(filteredModuleNodes.map((n) => n.id))
+    return moduleEdges
+      .filter(
+        (edge) =>
+          edge.source === focusedModuleId || edge.target === focusedModuleId
+      )
+      .map((edge) =>
+        withModuleEdgePresentation(edge, {
+          isFocusEdge: true,
+          showLabel: true
+        })
+      )
+  }, [moduleEdges, focusedModuleId])
 
-    // Only show edges between visible nodes
-    return moduleEdges.filter(
-      (edge) =>
-        visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target)
-    )
-  }, [moduleEdges, filteredModuleNodes, focusedModuleId])
+  const moduleRelationMap = useMemo(() => {
+    if (!focusedModuleId) {
+      return new Map()
+    }
+
+    return createModuleRelationMap(focusedModuleId, filteredModuleEdges)
+  }, [filteredModuleEdges, focusedModuleId])
 
   // Apply dagre layout to module nodes for proper positioning
   const layoutedModuleNodes = useMemo(() => {
@@ -523,7 +603,7 @@ function DependencyGraphInner({
         filteredModuleNodes,
         filteredModuleEdges,
         layoutDirection,
-        !!focusedModuleId
+        focusedModuleId
       )
     } finally {
       endMeasure()
@@ -551,10 +631,19 @@ function DependencyGraphInner({
       data: {
         ...node.data,
         isSelected: node.id === selectedModule,
-        isHighlighted: node.id === highlightedModule
+        isHighlighted: node.id === highlightedModule,
+        isFocusContext: Boolean(focusedModuleId),
+        relationToFocus: moduleRelationMap.get(node.id) ?? 'overview'
       }
     }))
-  }, [activeNodes, selectedModule, highlightedModule, viewMode])
+  }, [
+    activeNodes,
+    focusedModuleId,
+    highlightedModule,
+    moduleRelationMap,
+    selectedModule,
+    viewMode
+  ])
 
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode)
@@ -739,56 +828,46 @@ function DependencyGraphInner({
     (isLayoutTransitioning || layoutedNodes.length === 0)
   ) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className='flex h-full items-center justify-center'>
         <div
-          className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"
-          aria-label="Loading…"
+          className='h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent'
+          aria-label='Loading…'
         />
       </div>
     )
   }
 
   return (
-    <div className="relative w-full h-full graph-container">
-      {/* View Mode Toggle */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100]">
-        <ViewModeToggle mode={viewMode} onChange={handleViewModeChange} />
+    <div className='graph-container relative h-full w-full'>
+      <div className='pointer-events-none absolute inset-x-3 top-3 z-[100] sm:inset-x-4 sm:top-4'>
+        <div className='grid w-full grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-3'>
+          <div />
+
+          <div className='pointer-events-auto justify-self-center'>
+            <ViewModeToggle mode={viewMode} onChange={handleViewModeChange} />
+          </div>
+
+          <div className='pointer-events-auto justify-self-end'>
+            {viewMode === 'module' && focusedModuleId ? (
+              <button
+                onClick={handleShowAllModules}
+                className='flex items-center gap-1.5 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-2.5 py-1.5 text-xs font-medium text-[hsl(var(--foreground))] shadow-sm transition-colors hover:bg-[hsl(var(--muted))] sm:px-3'
+              >
+                <MapTrifold size={14} />
+                <span className='hidden sm:inline'>Global Map</span>
+                <span className='sm:hidden'>Map</span>
+              </button>
+            ) : null}
+          </div>
+        </div>
       </div>
-
-      {/* Focus Mode Indicator & Reset */}
-      {viewMode === 'module' && focusedModuleId && (
-        <div className="absolute top-4 right-4 z-[100] flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[hsl(var(--primary))]/10 border border-[hsl(var(--primary))]/30">
-            <span className="text-xs font-medium text-[hsl(var(--primary))]">
-              ● Focus Mode
-            </span>
-          </div>
-          <button
-            onClick={handleShowAllModules}
-            className="flex items-center gap-1.5 text-xs bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border border-[hsl(var(--border))] px-3 py-1.5 rounded-md hover:bg-[hsl(var(--muted))] transition-colors font-medium"
-          >
-            Global Map
-          </button>
-        </div>
-      )}
-
-      {/* Global Map View Label */}
-      {viewMode === 'module' && !focusedModuleId && (
-        <div className="absolute top-4 right-4 z-[100]">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[hsl(var(--muted))] border border-[hsl(var(--border))]">
-            <span className="text-xs text-[hsl(var(--muted-foreground))]">
-              Global Map
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* Side Panel dipindah ke App.tsx - dirender di luar komponen ini */}
 
       {/* Loading state untuk module view */}
       {viewMode === 'module' && isModuleLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[hsl(var(--background))]/80 z-10">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-[hsl(var(--primary))] border-t-transparent" />
+        <div className='absolute inset-0 z-10 flex items-center justify-center bg-[hsl(var(--background))]/80'>
+          <div className='h-12 w-12 animate-spin rounded-full border-4 border-[hsl(var(--primary))] border-t-transparent' />
         </div>
       )}
 
@@ -831,20 +910,20 @@ function DependencyGraphInner({
         panOnScroll={false}
         zoomOnScroll={true}
         selectionOnDrag={false}
-        className="bg-[hsl(var(--canvas-background))]"
+        className='bg-[hsl(var(--canvas-background))]'
         proOptions={{ hideAttribution: true }}
       >
         <Background
           variant={BackgroundVariant.Dots}
           gap={50}
           size={5}
-          color="hsl(var(--muted-foreground) / 0.2)"
+          color='hsl(var(--muted-foreground) / 0.2)'
         />
         {showMiniMap && (
           <MiniMap
             pannable
             zoomable
-            className="!bg-[hsl(var(--canvas-background))] border border-[hsl(var(--border))]"
+            className='border border-[hsl(var(--border))] !bg-[hsl(var(--canvas-background))]'
             nodeStrokeColor={(n: DependencyFlowNode) =>
               n.data.direction === 'selected'
                 ? 'hsl(var(--foreground))'
@@ -886,11 +965,11 @@ export function DependencyGraph(props: DependencyGraphProps) {
 
   if (isEmpty) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center gap-3 text-neutral-500 dark:text-neutral-400">
-        <h2 className="text-lg font-semibold text-[hsl(var(--foreground))]">
+      <div className='flex h-full flex-col items-center justify-center gap-3 text-center text-neutral-500 dark:text-neutral-400'>
+        <h2 className='text-lg font-semibold text-[hsl(var(--foreground))]'>
           No dependencies for this file
         </h2>
-        <p className="text-sm max-w-md">
+        <p className='max-w-md text-sm'>
           Select another file from the tree to see more complex import/export
           relationships.
         </p>

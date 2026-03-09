@@ -8,6 +8,7 @@ import {
   fetchChangesStatus,
   reanalyzeProject
 } from '@/shared/lib/api/analysis'
+
 import type { AnalysisData } from '@/shared/types/analysis'
 import type { FileRiskProfile } from '@/shared/types/risk'
 

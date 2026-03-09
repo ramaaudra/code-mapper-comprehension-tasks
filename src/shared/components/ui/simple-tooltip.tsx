@@ -218,10 +218,10 @@ export function ActionTooltip({
   return (
     <SimpleTooltip
       content={
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2'>
           <span>{label}</span>
           {shortcut && (
-            <kbd className="ml-1 px-1.5 py-0.5 text-[10px] font-mono bg-primary-foreground/20 text-primary-foreground border border-primary-foreground/30 rounded">
+            <kbd className='ml-1 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1.5 py-0.5 font-mono text-[10px] text-primary-foreground'>
               {shortcut}
             </kbd>
           )}

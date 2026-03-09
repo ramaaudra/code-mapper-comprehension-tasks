@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
 
-import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
 import { getModulePathFromNodeLabel } from '@/shared/lib/utils'
+
+import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
 import type { GraphViewMode } from '@/shared/types/explorer'
 
 interface UseModuleExplorerStateOptions {

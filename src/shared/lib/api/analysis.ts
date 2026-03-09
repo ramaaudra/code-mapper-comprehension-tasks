@@ -1,8 +1,8 @@
-import type { AnalysisData } from '@/shared/types/analysis'
-
 import { api } from './client'
 import { unwrapApiResponse } from './types'
+
 import type { ApiSuccessResponse } from './types'
+import type { AnalysisData } from '@/shared/types/analysis'
 
 export interface ChangesStatus {
   hasChanges: boolean

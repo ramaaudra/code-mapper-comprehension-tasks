@@ -28,12 +28,12 @@ const SetupGuidePage = lazy(() =>
 
 function renderEmptyState() {
   return (
-    <div className="h-full flex items-center justify-center">
-      <div className="text-center">
-        <h2 className="text-xl font-semibold text-foreground mb-2">
+    <div className='flex h-full items-center justify-center'>
+      <div className='text-center'>
+        <h2 className='mb-2 text-xl font-semibold text-foreground'>
           No analysis data
         </h2>
-        <p className="text-muted-foreground">Report data not found</p>
+        <p className='text-muted-foreground'>Report data not found</p>
       </div>
     </div>
   )
@@ -55,7 +55,7 @@ export function ReportShell() {
   const main = !analysisData ? (
     renderEmptyState()
   ) : explorer.viewMode === 'graph' ? (
-    <div className="h-full bg-background">
+    <div className='h-full bg-background'>
       <DependencyGraph
         nodes={graphElements.nodes}
         edges={graphElements.edges}
@@ -103,7 +103,7 @@ export function ReportShell() {
 
   return (
     <ExplorerShell
-      runtimeMode="report"
+      runtimeMode='report'
       isLoading={false}
       loadError={null}
       hasData={!!analysisData}

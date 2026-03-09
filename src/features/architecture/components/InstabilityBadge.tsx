@@ -15,7 +15,7 @@ function getInstabilityColor(_value: number): string {
 export function InstabilityBadge({ value }: InstabilityBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-mono ${getInstabilityColor(value)}`}
+      className={`inline-flex items-center rounded px-2 py-0.5 font-mono text-xs ${getInstabilityColor(value)}`}
     >
       {value.toFixed(2)}
     </span>

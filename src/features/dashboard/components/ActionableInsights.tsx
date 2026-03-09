@@ -12,6 +12,7 @@ import {
   RefreshCw
 } from '@/shared/components/ui/icons'
 import { getRiskBgOpacityClass } from '@/shared/lib/utils/risk'
+
 import type { RiskLevel } from '@/shared/types/risk'
 
 interface RiskItem {
@@ -62,7 +63,7 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       priority: 1,
       type: 'critical',
       level: 'critical',
-      icon: <RefreshCw className="h-4 w-4 text-red-600" />,
+      icon: <RefreshCw className='h-4 w-4 text-red-600' />,
       message: `${cycleCount} circular ${cycleCount === 1 ? 'dependency' : 'dependencies'} detected`,
       action:
         'Break cycles immediately to prevent memory leaks and compilation issues'
@@ -76,7 +77,7 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       priority: 2,
       type: 'critical',
       level: 'critical',
-      icon: <AlertTriangle className="h-4 w-4 text-red-500" />,
+      icon: <AlertTriangle className='h-4 w-4 text-red-500' />,
       message: `${top.path} is in the Zone of Pain (Change Risk: ${top.riskScore.toFixed(1)})`,
       action: `Ca=${top.fanIn}, I=${top.instability.toFixed(2)}. Many dependents plus outward dependencies can propagate failures widely.`
     })
@@ -89,7 +90,7 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       priority: 3,
       type: 'warning',
       level: 'high',
-      icon: <Lightbulb className="h-4 w-4 text-orange-500" />,
+      icon: <Lightbulb className='h-4 w-4 text-orange-500' />,
       message: `${top.path.split('/').pop()} has ${top.dependencyCount} dependencies`,
       action: 'Potential God Object - consider splitting responsibilities'
     })
@@ -102,7 +103,7 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       priority: 4,
       type: 'warning',
       level: 'high',
-      icon: <AlertTriangle className="h-4 w-4 text-orange-500" />,
+      icon: <AlertTriangle className='h-4 w-4 text-orange-500' />,
       message: `${top.path} has high change risk (Score: ${top.riskScore.toFixed(1)})`,
       action: 'Review dependents and regression-test before making changes'
     })
@@ -114,7 +115,7 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       priority: 5,
       type: 'info',
       level: 'low',
-      icon: <Ghost className="h-4 w-4 text-muted-foreground" />,
+      icon: <Ghost className='h-4 w-4 text-muted-foreground' />,
       message: `${orphanCount} orphan files detected`,
       action:
         orphanCount > 10
@@ -129,7 +130,7 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       priority: 0,
       type: 'success',
       level: 'low',
-      icon: <CheckCircle className="h-4 w-4 text-green-500" />,
+      icon: <CheckCircle className='h-4 w-4 text-green-500' />,
       message: 'Architecture is in excellent shape',
       action: 'No critical risks detected - keep up the good work!'
     })
@@ -144,24 +145,24 @@ export function ActionableInsights(props: ActionableInsightsProps) {
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base font-medium">
-          <Lightbulb className="h-4 w-4" />
+      <CardHeader className='pb-2'>
+        <CardTitle className='flex items-center gap-2 text-base font-medium'>
+          <Lightbulb className='h-4 w-4' />
           Actionable Insights
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className='space-y-3'>
         {insights.map((insight, index) => (
           <div
             key={index}
-            className={`p-4 rounded-lg ${getRiskBgOpacityClass(insight.level, 5)}`}
+            className={`rounded-lg p-4 ${getRiskBgOpacityClass(insight.level, 5)}`}
           >
-            <div className="flex items-start gap-2">
-              <div className="shrink-0 mt-0.5">{insight.icon}</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{insight.message}</p>
+            <div className='flex items-start gap-2'>
+              <div className='mt-0.5 shrink-0'>{insight.icon}</div>
+              <div className='min-w-0 flex-1'>
+                <p className='text-sm font-medium'>{insight.message}</p>
                 {insight.action && (
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className='mt-1 text-xs text-muted-foreground'>
                     {insight.action}
                   </p>
                 )}

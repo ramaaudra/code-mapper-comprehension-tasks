@@ -14,6 +14,7 @@ import {
   RefreshCw as Loader2,
   WarningCircle
 } from '@/shared/components/ui/icons'
+
 import type { ApiErrorResponse } from '@/shared/lib/api/types'
 
 export function ReportDownloadButton() {
@@ -66,13 +67,13 @@ export function ReportDownloadButton() {
       <Button
         onClick={handleDownload}
         disabled={isGenerating}
-        variant="outline"
-        size="sm"
+        variant='outline'
+        size='sm'
       >
         {isGenerating ? (
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
         ) : (
-          <Download className="h-4 w-4 mr-2" />
+          <Download className='mr-2 h-4 w-4' />
         )}
         {isGenerating ? 'Generating...' : 'Export Report'}
       </Button>
@@ -80,8 +81,8 @@ export function ReportDownloadButton() {
       <Dialog open={!!errorMessage} onOpenChange={() => setErrorMessage(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <WarningCircle className="h-5 w-5 text-amber-500" />
+            <DialogTitle className='flex items-center gap-2'>
+              <WarningCircle className='h-5 w-5 text-amber-500' />
               Export report gagal
             </DialogTitle>
             <DialogDescription>

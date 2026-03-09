@@ -17,27 +17,27 @@ interface SimulationDialogProps {
 export function SimulationDialog({ result, onClose }: SimulationDialogProps) {
   return (
     <Dialog open={!!result} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className='max-w-2xl'>
         <DialogHeader>
           <DialogTitle>Deletion Simulation Result</DialogTitle>
         </DialogHeader>
-        <div className="mt-4 space-y-6">
+        <div className='mt-4 space-y-6'>
           {/* Broken Files Section */}
           <div>
-            <h3 className="font-semibold flex items-center gap-2">
-              <FileWarning className="h-5 w-5 text-red-500" />
+            <h3 className='flex items-center gap-2 font-semibold'>
+              <FileWarning className='h-5 w-5 text-red-500' />
               Files That Will Break ({result?.brokenFiles.length || 0})
             </h3>
-            <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+            <div className='mt-2 max-h-40 space-y-1 overflow-y-auto'>
               {result?.brokenFiles.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">
+                <p className='text-sm italic text-muted-foreground'>
                   No files will break
                 </p>
               ) : (
                 result?.brokenFiles.map((file) => (
                   <div
                     key={file}
-                    className="text-sm p-2 bg-muted rounded font-mono"
+                    className='rounded bg-muted p-2 font-mono text-sm'
                   >
                     {getBasename(file)}
                   </div>
@@ -48,20 +48,20 @@ export function SimulationDialog({ result, onClose }: SimulationDialogProps) {
 
           {/* New Orphans Section */}
           <div>
-            <h3 className="font-semibold flex items-center gap-2">
-              <FileX className="h-5 w-5 text-yellow-500" />
+            <h3 className='flex items-center gap-2 font-semibold'>
+              <FileX className='h-5 w-5 text-yellow-500' />
               New Orphans ({result?.newOrphans.length || 0})
             </h3>
-            <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+            <div className='mt-2 max-h-40 space-y-1 overflow-y-auto'>
               {result?.newOrphans.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">
+                <p className='text-sm italic text-muted-foreground'>
                   No files will become orphans
                 </p>
               ) : (
                 result?.newOrphans.map((file) => (
                   <div
                     key={file}
-                    className="text-sm p-2 bg-muted rounded font-mono"
+                    className='rounded bg-muted p-2 font-mono text-sm'
                   >
                     {getBasename(file)}
                   </div>

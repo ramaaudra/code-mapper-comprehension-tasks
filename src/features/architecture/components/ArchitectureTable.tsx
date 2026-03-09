@@ -14,13 +14,14 @@ import {
 } from '@/shared/lib/utils/risk'
 
 import { useFolderDetail } from '../hooks/useArchitectureMetrics'
+import { CycleBadge } from './CycleBadge'
+import { InstabilityBadge } from './InstabilityBadge'
+
 import type {
   FolderArchitectureMetrics,
   SortConfig,
   SortKey
 } from '../types/architecture'
-import { CycleBadge } from './CycleBadge'
-import { InstabilityBadge } from './InstabilityBadge'
 
 interface Column {
   key: SortKey
@@ -47,53 +48,53 @@ function ExpandedRow({ folderPath }: { folderPath: string }) {
 
   if (isLoading) {
     return (
-      <div className="px-8 py-4 space-y-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
+      <div className='space-y-2 px-8 py-4'>
+        <Skeleton className='h-4 w-full' />
+        <Skeleton className='h-4 w-3/4' />
+        <Skeleton className='h-4 w-1/2' />
       </div>
     )
   }
 
   if (!data?.files || data.files.length === 0) {
     return (
-      <div className="px-8 py-4 text-sm text-muted-foreground">
+      <div className='px-8 py-4 text-sm text-muted-foreground'>
         No files in this module
       </div>
     )
   }
 
   return (
-    <div className="px-8 py-4 bg-muted/30">
-      <table className="w-full text-xs">
+    <div className='bg-muted/30 px-8 py-4'>
+      <table className='w-full text-xs'>
         <thead>
-          <tr className="text-muted-foreground">
-            <th className="text-left py-2 font-medium">File</th>
-            <th className="text-center py-2 font-medium w-20">Ca</th>
-            <th className="text-center py-2 font-medium w-20">Ce</th>
-            <th className="text-center py-2 font-medium w-32">Instability</th>
+          <tr className='text-muted-foreground'>
+            <th className='py-2 text-left font-medium'>File</th>
+            <th className='w-20 py-2 text-center font-medium'>Ca</th>
+            <th className='w-20 py-2 text-center font-medium'>Ce</th>
+            <th className='w-32 py-2 text-center font-medium'>Instability</th>
           </tr>
         </thead>
         <tbody>
           {data.files.map((file) => (
-            <tr key={file.filePath} className="border-t border-border/30">
+            <tr key={file.filePath} className='border-t border-border/30'>
               <td
-                className="py-2 font-mono text-xs truncate max-w-xs"
+                className='max-w-xs truncate py-2 font-mono text-xs'
                 title={file.filePath}
               >
                 {file.filePath.split('/').pop()}
               </td>
-              <td className="py-2 text-center">{file.ca}</td>
-              <td className="py-2 text-center">{file.ce}</td>
-              <td className="py-2">
-                <div className="flex items-center gap-2 justify-center">
-                  <div className="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <td className='py-2 text-center'>{file.ca}</td>
+              <td className='py-2 text-center'>{file.ce}</td>
+              <td className='py-2'>
+                <div className='flex items-center justify-center gap-2'>
+                  <div className='h-1.5 w-16 overflow-hidden rounded-full bg-slate-800'>
                     <div
-                      className="h-full bg-slate-600"
+                      className='h-full bg-slate-600'
                       style={{ width: `${file.instability * 100}%` }}
                     />
                   </div>
-                  <span className="text-xs w-8 text-slate-400">
+                  <span className='w-8 text-xs text-slate-400'>
                     {file.instability.toFixed(2)}
                   </span>
                 </div>
@@ -169,20 +170,20 @@ export function ArchitectureTable({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="sticky top-0 bg-background border-b border-border z-10">
+    <div className='overflow-x-auto'>
+      <table className='w-full text-sm'>
+        <thead className='sticky top-0 z-10 border-b border-border bg-background'>
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`px-4 py-3 cursor-pointer hover:bg-muted/50 text-muted-foreground font-medium select-none ${col.className}`}
+                className={`cursor-pointer select-none px-4 py-3 font-medium text-muted-foreground hover:bg-muted/50 ${col.className}`}
                 onClick={() => onSort(col.key)}
               >
-                <span className="inline-flex items-center gap-1.5">
+                <span className='inline-flex items-center gap-1.5'>
                   {col.label}
                   {sortConfig.key === col.key && (
-                    <span className="text-foreground">
+                    <span className='text-foreground'>
                       {sortConfig.direction === 'asc' ? (
                         <CaretUp size={14} />
                       ) : (
@@ -208,22 +209,22 @@ export function ArchitectureTable({
               >
                 <>
                   <CollapsibleTrigger asChild>
-                    <tr className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors">
-                      <td className="px-4 py-3">
-                        <span className="flex items-center gap-2">
+                    <tr className='cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/30'>
+                      <td className='px-4 py-3'>
+                        <span className='flex items-center gap-2'>
                           {isExpanded ? (
                             <CaretDown
                               size={14}
-                              className="shrink-0 text-muted-foreground"
+                              className='shrink-0 text-muted-foreground'
                             />
                           ) : (
                             <CaretRight
                               size={14}
-                              className="shrink-0 text-muted-foreground"
+                              className='shrink-0 text-muted-foreground'
                             />
                           )}
                           <span
-                            className="font-mono truncate"
+                            className='truncate font-mono'
                             title={folder.folderPath}
                           >
                             {folder.folderPath}
@@ -231,15 +232,15 @@ export function ArchitectureTable({
                           {folder.hasCycle && <CycleBadge />}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center font-mono">
+                      <td className='px-4 py-3 text-center font-mono'>
                         {folder.ca}
                       </td>
-                      <td className="px-4 py-3 text-center font-mono">
+                      <td className='px-4 py-3 text-center font-mono'>
                         {folder.ce}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2 justify-center">
-                          <div className="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <td className='px-4 py-3'>
+                        <div className='flex items-center justify-center gap-2'>
+                          <div className='h-1.5 w-16 overflow-hidden rounded-full bg-slate-800'>
                             <div
                               className={`h-full transition-all ${getInstabilityBarColor()}`}
                               style={{ width: `${folder.instability * 100}%` }}
@@ -248,19 +249,19 @@ export function ArchitectureTable({
                           <InstabilityBadge value={folder.instability} />
                         </div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className='px-4 py-3'>
                         {(() => {
                           const riskScore = calculateRiskScore(
                             folder.ca,
                             folder.instability
                           )
                           return (
-                            <div className="flex items-center justify-center gap-2">
-                              <span className="font-mono text-sm">
+                            <div className='flex items-center justify-center gap-2'>
+                              <span className='font-mono text-sm'>
                                 {riskScore.toFixed(1)}
                               </span>
                               <span
-                                className={`w-2.5 h-2.5 rounded-full ${getRiskDotColor(riskScore)}`}
+                                className={`h-2.5 w-2.5 rounded-full ${getRiskDotColor(riskScore)}`}
                                 title={`Change Risk: ${riskScore.toFixed(1)}`}
                               />
                             </div>
@@ -271,7 +272,7 @@ export function ArchitectureTable({
                   </CollapsibleTrigger>
                   <CollapsibleContent asChild>
                     <tr>
-                      <td colSpan={5} className="p-0">
+                      <td colSpan={5} className='p-0'>
                         <ExpandedRow folderPath={folder.folderPath} />
                       </td>
                     </tr>

@@ -1,8 +1,7 @@
-import type { ReactNode } from 'react'
-
 import { DataContext } from '@/shared/context/DataContext'
 
 import type { ReportData } from './types'
+import type { ReactNode } from 'react'
 
 declare global {
   interface Window {
@@ -19,10 +18,10 @@ export function StaticProvider({ children }: StaticProviderProps) {
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <h1 className="text-xl font-semibold text-destructive">Error</h1>
-          <p className="text-muted-foreground mt-2">
+      <div className='flex h-screen items-center justify-center'>
+        <div className='text-center'>
+          <h1 className='text-xl font-semibold text-destructive'>Error</h1>
+          <p className='mt-2 text-muted-foreground'>
             Report data not found. Open this file from a generated report.
           </p>
         </div>

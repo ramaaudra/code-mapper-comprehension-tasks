@@ -1,8 +1,8 @@
-import type { DependencyInfo } from '@/shared/types/analysis'
-
 import { api } from './client'
 import { unwrapApiResponse } from './types'
+
 import type { ApiSuccessResponse, SimulationResponse } from './types'
+import type { DependencyInfo } from '@/shared/types/analysis'
 
 export async function simulateRemoval(payload: {
   fileToRemove: string

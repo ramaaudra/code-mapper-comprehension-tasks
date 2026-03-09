@@ -1,8 +1,5 @@
 import { forwardRef, memo, useImperativeHandle, useRef } from 'react'
 import { Tree } from 'react-arborist'
-import type { NodeApi } from 'react-arborist'
-import type { NodeRendererProps } from 'react-arborist'
-import type { TreeApi } from 'react-arborist'
 
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -22,11 +19,13 @@ import {
 } from '@/shared/components/ui/tooltip'
 import { getFileIcon } from '@/shared/lib/utils'
 import { getRiskColorClass, getRiskLevel } from '@/shared/lib/utils/risk'
-import type { FileTreeNode } from '@/shared/types/analysis'
-import type { FileRiskProfile, RiskLevel } from '@/shared/types/risk'
 
 import { useFileAnalysisContext } from '../context/FileAnalysisContext'
 import { FileSearchBar, type FileSearchBarRef } from './FileSearchBar'
+
+import type { FileTreeNode } from '@/shared/types/analysis'
+import type { FileRiskProfile, RiskLevel } from '@/shared/types/risk'
+import type { NodeApi, NodeRendererProps, TreeApi } from 'react-arborist'
 
 const createNodeRenderer = (
   filesInCycle: Set<string>,
@@ -62,12 +61,12 @@ const createNodeRenderer = (
 
     return (
       <div
-        role="treeitem"
+        role='treeitem'
         aria-selected={node.isSelected}
         tabIndex={0}
         style={style}
         ref={dragHandle}
-        className={`group flex items-center gap-2 cursor-pointer rounded-md transition-colors h-8 px-2 ${
+        className={`group flex h-8 cursor-pointer items-center gap-2 rounded-md px-2 transition-colors ${
           node.isSelected ? 'bg-primary/5' : 'hover:bg-muted'
         } ${isHovered && !node.isSelected ? 'bg-muted' : ''}`}
         onClick={() => {
@@ -101,17 +100,17 @@ const createNodeRenderer = (
         {/* Chevron for folders */}
         {!node.isLeaf && (
           <ChevronRight
-            className={`h-3 w-3 text-muted-foreground shrink-0 transition-transform ${
+            className={`h-3 w-3 shrink-0 text-muted-foreground transition-transform ${
               node.isOpen ? 'rotate-90' : ''
             }`}
           />
         )}
 
         {/* File/Folder icon - neutral color */}
-        <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+        <Icon className='h-4 w-4 shrink-0 text-muted-foreground' />
 
         {/* Filename */}
-        <span className="truncate text-sm text-foreground flex-1">
+        <span className='flex-1 truncate text-sm text-foreground'>
           {node.data.name}
         </span>
 
@@ -138,10 +137,10 @@ const createNodeRenderer = (
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Ghost className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Ghost className='h-3.5 w-3.5 text-muted-foreground' />
                 </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p className="text-xs">Orphan: Not imported by any file</p>
+                <TooltipContent side='right'>
+                  <p className='text-xs'>Orphan: Not imported by any file</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -152,10 +151,10 @@ const createNodeRenderer = (
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground" />
+                  <AlertTriangle className='h-3.5 w-3.5 text-muted-foreground' />
                 </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p className="text-xs">Circular dependency detected</p>
+                <TooltipContent side='right'>
+                  <p className='text-xs'>Circular dependency detected</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -166,10 +165,10 @@ const createNodeRenderer = (
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Bomb className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Bomb className='h-3.5 w-3.5 text-muted-foreground' />
                 </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p className="text-xs">
+                <TooltipContent side='right'>
+                  <p className='text-xs'>
                     Will break if simulated file is deleted
                   </p>
                 </TooltipContent>
@@ -182,10 +181,10 @@ const createNodeRenderer = (
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Ghost className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Ghost className='h-3.5 w-3.5 text-muted-foreground' />
                 </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p className="text-xs">
+                <TooltipContent side='right'>
+                  <p className='text-xs'>
                     Will become orphan if simulated file is deleted
                   </p>
                 </TooltipContent>
@@ -195,14 +194,14 @@ const createNodeRenderer = (
 
           {/* Delete simulation button - only on hover */}
           {node.isLeaf && (
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className='opacity-0 transition-opacity group-hover:opacity-100'>
               <TooltipProvider delayDuration={300}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-5 w-5"
+                      variant='ghost'
+                      size='icon'
+                      className='h-5 w-5'
                       disabled={isSimulating}
                       onClick={(e) => {
                         e.stopPropagation()
@@ -210,14 +209,14 @@ const createNodeRenderer = (
                       }}
                     >
                       {isSimulating ? (
-                        <div className="animate-spin rounded-full h-3 w-3 border-b border-muted-foreground" />
+                        <div className='h-3 w-3 animate-spin rounded-full border-b border-muted-foreground' />
                       ) : (
-                        <Trash2 className="h-3 w-3 text-muted-foreground" />
+                        <Trash2 className='h-3 w-3 text-muted-foreground' />
                       )}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p className="text-xs">Simulate deletion</p>
+                  <TooltipContent side='right'>
+                    <p className='text-xs'>Simulate deletion</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -265,13 +264,13 @@ function RiskIndicator({
       <Tooltip>
         <TooltipTrigger asChild>
           <span
-            className={`inline-block w-2 h-2 rounded-full ${getRiskColorClass(level)} cursor-help`}
+            className={`inline-block h-2 w-2 rounded-full ${getRiskColorClass(level)} cursor-help`}
           />
         </TooltipTrigger>
-        <TooltipContent side="right">
-          <div className="space-y-1">
-            <p className="font-medium">{getLabel(level)}</p>
-            <p className="text-xs text-muted-foreground">
+        <TooltipContent side='right'>
+          <div className='space-y-1'>
+            <p className='font-medium'>{getLabel(level)}</p>
+            <p className='text-xs text-muted-foreground'>
               Change Risk: {score.toFixed(1)}
             </p>
           </div>
@@ -338,33 +337,33 @@ export const FileTreeView = forwardRef<FileTreeViewRef, FileTreeViewProps>(
 
     if (!data || data.length === 0) {
       return (
-        <div className="h-full flex items-center justify-center text-muted-foreground">
-          <div className="text-center">
-            <Folder className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No files to display</p>
+        <div className='flex h-full items-center justify-center text-muted-foreground'>
+          <div className='text-center'>
+            <Folder className='mx-auto mb-2 h-12 w-12 opacity-50' />
+            <p className='text-sm'>No files to display</p>
           </div>
         </div>
       )
     }
 
     return (
-      <div className="h-full flex flex-col bg-background">
-        <div className="px-4 py-3 border-b border-border shrink-0">
-          <span className="text-xs font-medium text-muted-foreground tracking-wider uppercase">
+      <div className='flex h-full flex-col bg-background'>
+        <div className='shrink-0 border-b border-border px-4 py-3'>
+          <span className='text-xs font-medium uppercase tracking-wider text-muted-foreground'>
             File Explorer
           </span>
         </div>
 
-        <div className="px-3 py-2 shrink-0">
+        <div className='shrink-0 px-3 py-2'>
           <FileSearchBar ref={searchBarRef} />
         </div>
 
-        <div className="flex-1 overflow-hidden">
-          <div className="h-full px-2 pb-4">
+        <div className='flex-1 overflow-hidden'>
+          <div className='h-full px-2 pb-4'>
             <Tree
               ref={treeRef}
               data={data}
-              width="100%"
+              width='100%'
               height={800}
               rowHeight={32}
               indent={16}

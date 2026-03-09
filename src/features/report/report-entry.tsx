@@ -3,13 +3,12 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import '@/index.css'
-
 import { FileAnalysisProvider } from '@/features/file-analysis'
 import { AppProviders } from '@/shared/components/providers/AppProviders'
 import { ThemeProvider } from '@/shared/components/providers/ThemeProvider'
 
-import { StaticProvider } from './StaticProvider'
 import { ReportShell } from './components/ReportShell'
+import { StaticProvider } from './StaticProvider'
 
 const container = document.getElementById('root')
 if (!container) {

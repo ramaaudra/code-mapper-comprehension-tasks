@@ -1,13 +1,12 @@
-import type { ReactNode } from 'react'
+import { AppLayout } from './AppLayout'
+import { Sidebar } from './Sidebar'
+import { TopBar } from './TopBar'
 
 import type {
   ExplorerRuntimeMode,
   ExplorerViewMode
 } from '@/shared/types/explorer'
-
-import { AppLayout } from './AppLayout'
-import { Sidebar } from './Sidebar'
-import { TopBar } from './TopBar'
+import type { ReactNode } from 'react'
 
 interface ExplorerShellProps {
   runtimeMode: ExplorerRuntimeMode
@@ -78,9 +77,9 @@ export function ExplorerShell({
         totalChanges={totalChanges}
       />
 
-      <div className="flex h-[calc(100vh-56px)] overflow-hidden w-full">
+      <div className='flex h-[calc(100vh-56px)] w-full overflow-hidden'>
         <Sidebar isCollapsed={isTreeCollapsed}>{sidebar}</Sidebar>
-        <div className="flex-1 overflow-hidden">{main}</div>
+        <div className='flex-1 overflow-hidden'>{main}</div>
         {rightPanels}
       </div>
 

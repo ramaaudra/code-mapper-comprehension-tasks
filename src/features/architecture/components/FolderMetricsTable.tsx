@@ -3,12 +3,13 @@ import { useMemo } from 'react'
 import { CaretDown, CaretUp } from '@/shared/components/ui/icons'
 import { calculateRiskScore } from '@/shared/lib/utils/risk'
 
+import { FolderMetricsRow } from './FolderMetricsRow'
+
 import type {
   FolderArchitectureMetrics,
   SortConfig,
   SortKey
 } from '../types/architecture'
-import { FolderMetricsRow } from './FolderMetricsRow'
 
 interface Column {
   key: SortKey
@@ -66,19 +67,19 @@ export function FolderMetricsTable({
   }
 
   return (
-    <table className="w-full text-xs">
-      <thead className="sticky top-0 bg-background border-b border-border z-10">
+    <table className='w-full text-xs'>
+      <thead className='sticky top-0 z-10 border-b border-border bg-background'>
         <tr>
           {columns.map((col) => (
             <th
               key={col.key}
-              className={`px-3 py-2 cursor-pointer hover:bg-muted/50 text-muted-foreground font-medium select-none ${col.className}`}
+              className={`cursor-pointer select-none px-3 py-2 font-medium text-muted-foreground hover:bg-muted/50 ${col.className}`}
               onClick={() => handleSort(col.key)}
             >
-              <span className="inline-flex items-center gap-1">
+              <span className='inline-flex items-center gap-1'>
                 {col.label}
                 {sortConfig.key === col.key && (
-                  <span className="text-foreground">
+                  <span className='text-foreground'>
                     {sortConfig.direction === 'asc' ? (
                       <CaretUp size={12} />
                     ) : (

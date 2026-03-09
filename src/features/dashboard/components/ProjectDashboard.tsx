@@ -1,4 +1,3 @@
-import type { Edge, Node } from '@xyflow/react'
 import { memo, useMemo } from 'react'
 
 import { useArchitectureFolders } from '@/features/architecture'
@@ -16,13 +15,15 @@ import {
 } from '@/shared/components/ui/icons'
 import { MetricCard } from '@/shared/components/ui/metric-card'
 import { RISK_THRESHOLDS, calculateRiskScore } from '@/shared/lib/utils/risk'
-import type { AnalysisData } from '@/shared/types/analysis'
 
 import { ActionableInsights } from './ActionableInsights'
 import { ArchitectureHealthScore } from './ArchitectureHealthScore'
 import { CouplingDistribution } from './CouplingDistribution'
 import { HighRiskModules } from './HighRiskModules'
 import { IssuesPanel } from './IssuesPanel'
+
+import type { AnalysisData } from '@/shared/types/analysis'
+import type { Edge, Node } from '@xyflow/react'
 
 interface ProjectDashboardProps {
   analysisData: AnalysisData | null
@@ -201,12 +202,12 @@ export const ProjectDashboard = memo(
         {
           label: 'Total Files',
           value: snapshot.totalFiles.toLocaleString(),
-          icon: <FileText className="h-4 w-4" />
+          icon: <FileText className='h-4 w-4' />
         },
         {
           label: 'Dependencies',
           value: snapshot.totalDependencies.toLocaleString(),
-          icon: <Network className="h-4 w-4" />
+          icon: <Network className='h-4 w-4' />
         },
         {
           label: 'Avg. Dependencies / File',
@@ -214,7 +215,7 @@ export const ProjectDashboard = memo(
             typeof snapshot.averageDependenciesPerFile === 'number'
               ? `${snapshot.averageDependenciesPerFile}`
               : snapshot.averageDependenciesPerFile,
-          icon: <TrendingUp className="h-4 w-4" />
+          icon: <TrendingUp className='h-4 w-4' />
         }
       ]
 
@@ -241,27 +242,27 @@ export const ProjectDashboard = memo(
       }
 
       return (
-        <div className="h-full overflow-y-auto overflow-x-hidden bg-background w-full">
-          <div className="max-w-full mx-auto px-6 md:px-8 lg:px-12 py-6 pb-12 space-y-8">
-            <div className="space-y-2">
-              <h1 className="text-2xl font-semibold text-foreground">
+        <div className='h-full w-full overflow-y-auto overflow-x-hidden bg-background'>
+          <div className='mx-auto max-w-full space-y-8 px-6 py-6 pb-12 md:px-8 lg:px-12'>
+            <div className='space-y-2'>
+              <h1 className='text-2xl font-semibold text-foreground'>
                 Project Overview
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className='text-sm text-muted-foreground'>
                 Dependency analysis summary and repair priorities for your
                 project.
               </p>
             </div>
 
             {/* Top Metrics - Minimalist Developer Style */}
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-3'>
               {overviewCards.map(({ label, value, icon }) => (
                 <MetricCard
                   key={label}
                   label={label}
                   value={value}
                   icon={icon}
-                  variant="minimal"
+                  variant='minimal'
                 />
               ))}
             </div>
@@ -277,9 +278,9 @@ export const ProjectDashboard = memo(
               criticalInsights={criticalInsights}
             />
 
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className='grid gap-6 lg:grid-cols-2'>
               {/* Left Column */}
-              <div className="space-y-6">
+              <div className='space-y-6'>
                 <HighRiskModules
                   modules={allRiskProfiles.slice(0, 5)}
                   onViewModule={onShowModuleGraph}
@@ -289,7 +290,7 @@ export const ProjectDashboard = memo(
               </div>
 
               {/* Right Column */}
-              <div className="space-y-6">
+              <div className='space-y-6'>
                 <ActionableInsights
                   cycleCount={healthBreakdown.cycleCount}
                   orphanCount={healthBreakdown.orphanCount}
@@ -308,32 +309,32 @@ export const ProjectDashboard = memo(
             {onShowArchitecture && (
               <button
                 onClick={onShowArchitecture}
-                className="w-full group relative overflow-hidden rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 transition-all duration-300 hover:border-blue-500/40 hover:shadow-lg dark:from-blue-950/30 dark:to-cyan-950/20"
+                className='group relative w-full overflow-hidden rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 transition-all duration-300 hover:border-blue-500/40 hover:shadow-lg dark:from-blue-950/30 dark:to-cyan-950/20'
               >
-                <div className="absolute inset-0 bg-blue-400/5 dark:bg-blue-400/10" />
-                <div className="relative p-4 flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 dark:from-blue-500/30 dark:to-cyan-500/30 group-hover:scale-110 transition-transform duration-300">
-                    <Lightbulb className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <div className='absolute inset-0 bg-blue-400/5 dark:bg-blue-400/10' />
+                <div className='relative flex items-center gap-4 p-4'>
+                  <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 transition-transform duration-300 group-hover:scale-110 dark:from-blue-500/30 dark:to-cyan-500/30'>
+                    <Lightbulb className='h-6 w-6 text-blue-600 dark:text-blue-400' />
                   </div>
-                  <div className="flex-1 min-w-0 text-left">
-                    <h3 className="text-base font-semibold text-foreground mb-0.5">
+                  <div className='min-w-0 flex-1 text-left'>
+                    <h3 className='mb-0.5 text-base font-semibold text-foreground'>
                       New to Instability Metrics?
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className='text-sm text-muted-foreground'>
                       Learn why{' '}
-                      <span className="text-blue-600 dark:text-blue-400 font-medium">
+                      <span className='font-medium text-blue-600 dark:text-blue-400'>
                         Unstable
                       </span>{' '}
                       doesn't mean broken — and why high instability is often a
                       good thing for UI code.
                     </p>
                   </div>
-                  <div className="flex-shrink-0 flex items-center gap-2">
-                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                  <div className='flex flex-shrink-0 items-center gap-2'>
+                    <span className='text-sm font-medium text-blue-600 dark:text-blue-400'>
                       Read Guide
                     </span>
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/20 group-hover:bg-blue-500/20 dark:group-hover:bg-blue-500/30 transition-colors">
-                      <CaretRight className="h-4 w-4 text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform" />
+                    <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 transition-colors group-hover:bg-blue-500/20 dark:bg-blue-500/20 dark:group-hover:bg-blue-500/30'>
+                      <CaretRight className='h-4 w-4 text-blue-600 transition-transform group-hover:translate-x-0.5 dark:text-blue-400' />
                     </div>
                   </div>
                 </div>
@@ -345,7 +346,7 @@ export const ProjectDashboard = memo(
     }
 
     return (
-      <div className="h-full bg-background">
+      <div className='h-full bg-background'>
         <DependencyGraph
           nodes={dependencyGraph.nodes}
           edges={dependencyGraph.edges}

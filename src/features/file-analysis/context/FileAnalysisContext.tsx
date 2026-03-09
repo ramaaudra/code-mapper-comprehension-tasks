@@ -11,6 +11,7 @@ import {
 
 import { useAnalysisData } from '@/shared/hooks/useAnalysisData'
 import { getValueFromMap, normalizePath } from '@/shared/lib/utils'
+
 import type { AnalysisNode } from '@/shared/types/analysis'
 import type { FileRiskProfile } from '@/shared/types/risk'
 

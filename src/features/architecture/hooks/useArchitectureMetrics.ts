@@ -68,7 +68,7 @@ export function useFileArchitectureMetrics(filePath: string | null) {
 
   const liveQuery = useQuery({
     queryKey: ['architecture', 'file', filePath],
-    queryFn: () => architectureApi.getFileMetrics(filePath!),
+    queryFn: () => architectureApi.getFileMetrics(filePath ?? ''),
     enabled: !!filePath && !reportData,
     staleTime: 5 * 60 * 1000
   })
@@ -104,7 +104,7 @@ export function useFolderDetail(folderPath: string | null) {
 
   const liveQuery = useQuery({
     queryKey: ['architecture', 'folder', folderPath],
-    queryFn: () => architectureApi.getFolderDetail(folderPath!),
+    queryFn: () => architectureApi.getFolderDetail(folderPath ?? ''),
     enabled: !!folderPath && !reportFolder,
     staleTime: 5 * 60 * 1000
   })

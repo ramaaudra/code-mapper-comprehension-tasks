@@ -1,0 +1,33 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": false,
+  "printWidth": 80,
+  "arrowParens": "always",
+  "singleQuote": true,
+  "trailingComma": "none",
+  "tabWidth": 2,
+  "useTabs": false,
+  "bracketSpacing": true,
+  "jsxSingleQuote": true,
+  "sortImports": {
+    "order": "asc",
+    "ignoreCase": true,
+    "newlinesBetween": true,
+    "internalPattern": ["@/"],
+    "groups": [
+      "builtin",
+      "external",
+      "internal",
+      ["parent", "sibling", "index"],
+      "type",
+      "unknown"
+    ]
+  },
+  "sortTailwindcss": {
+    "functions": ["clsx", "cn", "cva", "twMerge"]
+  },
+  "sortPackageJson": {
+    "sortScripts": false
+  },
+  "ignorePatterns": ["node_modules", "dist", "*.config.ts", "vite.env.d.ts"]
+}

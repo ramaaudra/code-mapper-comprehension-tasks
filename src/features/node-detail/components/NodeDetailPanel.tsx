@@ -5,8 +5,11 @@ import {
   ArchitectureStats,
   useFileArchitectureMetrics
 } from '@/features/architecture'
-import type { ReportData } from '@/features/report/types'
 import { Button } from '@/shared/components/ui/button'
+import { DetailPanelHeader } from '@/shared/components/ui/detail-panel-header'
+import { DetailPanelSectionHeading } from '@/shared/components/ui/detail-panel-section-heading'
+import { DetailPanelState } from '@/shared/components/ui/detail-panel-state'
+import { DetailPanelTabs } from '@/shared/components/ui/detail-panel-tabs'
 import {
   Dialog,
   DialogContent,
@@ -22,18 +25,12 @@ import {
   Cube,
   Focus,
   Ghost,
-  Lightbulb,
   Map as MapIcon,
-  Target,
-  X
+  Target
 } from '@/shared/components/ui/icons'
+import { MetricInsightCard } from '@/shared/components/ui/metric-insight-card'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from '@/shared/components/ui/tabs'
+import { Tabs, TabsContent } from '@/shared/components/ui/tabs'
 import {
   Tooltip,
   TooltipContent,
@@ -53,14 +50,16 @@ import {
   getRiskBorderClass,
   getRiskTextClass
 } from '@/shared/lib/utils/risk'
+
+import { SourceCodeViewer } from './SourceCodeViewer'
+
+import type { ReportData } from '@/features/report/types'
 import type {
   AnalysisData,
   AnalysisEdge,
   AnalysisNode,
   DependencyReference
 } from '@/shared/types/analysis'
-
-import { SourceCodeViewer } from './SourceCodeViewer'
 
 interface NodeDetailPanelProps {
   node: AnalysisNode | string | null
@@ -261,50 +260,54 @@ const NodeDetailPanel = memo(
     ) => {
       if (items.length === 0) {
         return (
-          <div className="flex flex-col items-center justify-center h-40 text-muted-foreground text-sm">
-            <p>No {type} found.</p>
+          <div className='p-4'>
+            <DetailPanelState
+              title={`No ${type} found`}
+              description={`This file currently has no ${type} in the analysis result.`}
+              compact={true}
+            />
           </div>
         )
       }
 
       return (
-        <ScrollArea className="h-[calc(100vh-200px)] lg:h-[calc(100vh-220px)] w-full">
-          <div className="p-4 space-y-1">
+        <ScrollArea className='h-[calc(100vh-200px)] w-full lg:h-[calc(100vh-220px)]'>
+          <div className='space-y-1 p-4'>
             {items.map((item) => {
               const ItemFileIcon = getFileIcon(item.basename)
               return (
                 <div
                   key={item.id}
-                  className="group flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors"
+                  className='group flex items-center justify-between rounded-md p-2 transition-colors hover:bg-muted/50'
                 >
-                  <div className="flex-1 min-w-0 pr-2">
-                    <div className="flex items-center gap-2">
-                      <ItemFileIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="text-sm font-medium truncate">
+                  <div className='min-w-0 flex-1 pr-2'>
+                    <div className='flex items-center gap-2'>
+                      <ItemFileIcon className='h-4 w-4 shrink-0 text-muted-foreground' />
+                      <span className='truncate text-sm font-medium'>
                         {item.basename}
                       </span>
                       {item.strength > 1 && (
-                        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                        <span className='rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>
                           x{item.strength}
                         </span>
                       )}
                     </div>
                     <div
-                      className="text-xs text-muted-foreground truncate pl-6"
+                      className='truncate pl-6 text-xs text-muted-foreground'
                       title={item.label}
                     >
                       {item.label}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className='flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100'>
                     <button
                       onClick={() => handleTracePath(item.id)}
                       disabled={isTracing}
-                      className="p-1.5 rounded-md hover:bg-background border border-transparent hover:border-border text-muted-foreground hover:text-foreground"
-                      title="Trace path"
+                      className='rounded-md border border-transparent p-1.5 text-muted-foreground hover:border-border hover:bg-background hover:text-foreground'
+                      title='Trace path'
                       aria-label={`Trace path to ${item.basename}`}
                     >
-                      <MapIcon className="h-3.5 w-3.5" />
+                      <MapIcon className='h-3.5 w-3.5' />
                     </button>
                   </div>
                 </div>
@@ -340,32 +343,31 @@ const NodeDetailPanel = memo(
     const renderSourceContent = () => {
       if (isLoadingContent) {
         return (
-          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4" />
-            <p className="text-sm">Loading file content...</p>
-          </div>
+          <DetailPanelState
+            title='Loading source code'
+            description='Fetching file content and preparing the source viewer.'
+          />
         )
       }
 
       if (contentError) {
         return (
-          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground p-4">
-            <AlertTriangle className="h-8 w-8 text-destructive mb-4" />
-            <p className="text-sm font-medium text-destructive">
-              Failed to load file content
-            </p>
-            <p className="text-xs mt-2 text-center">
-              {(contentError as Error)?.message || 'Unknown error occurred'}
-            </p>
-          </div>
+          <DetailPanelState
+            title='Failed to load source code'
+            description={
+              (contentError as Error)?.message || 'An unknown error occurred.'
+            }
+            tone='danger'
+          />
         )
       }
 
       if (!fileContent) {
         return (
-          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground p-4">
-            <p className="text-sm">No content available</p>
-          </div>
+          <DetailPanelState
+            title='No source content available'
+            description='The analysis result does not include readable source content for this file.'
+          />
         )
       }
 
@@ -373,18 +375,18 @@ const NodeDetailPanel = memo(
       const hasMoreLines = fileContent.lines > MAX_LINES
 
       return (
-        <div className="flex flex-col h-full">
+        <div className='flex h-full flex-col'>
           {/* File info header */}
-          <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
+          <div className='flex items-center justify-between border-b bg-muted/50 px-4 py-2 text-xs text-muted-foreground'>
+            <div className='flex items-center gap-2'>
               <span
-                className="font-mono truncate max-w-[200px]"
+                className='max-w-[200px] truncate font-mono'
                 title={fileContent.path}
               >
                 {getRelativePath(fileContent.path)}
               </span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className='flex items-center gap-3'>
               <span>{formatFileSize(fileContent.size)}</span>
               <span>{fileContent.lines.toLocaleString()} lines</span>
             </div>
@@ -392,8 +394,8 @@ const NodeDetailPanel = memo(
 
           {/* Warning for large files */}
           {hasMoreLines && (
-            <div className="px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/20 text-xs text-yellow-600 flex items-center gap-2">
-              <AlertTriangle className="h-3.5 w-3.5" />
+            <div className='flex items-center gap-2 border-b border-yellow-500/20 bg-yellow-500/10 px-4 py-2 text-xs text-yellow-600'>
+              <AlertTriangle className='h-3.5 w-3.5' />
               <span>
                 Large file detected. Showing first {MAX_LINES} of{' '}
                 {fileContent.lines.toLocaleString()} lines.
@@ -402,14 +404,14 @@ const NodeDetailPanel = memo(
           )}
 
           {/* Code content with syntax highlighting */}
-          <div className="flex-1 min-h-0">
+          <div className='min-h-0 flex-1'>
             <SourceCodeViewer
               code={fileContent.content}
               language={detectLanguage(nodeData.basename ?? nodeData.id)}
-              theme="auto"
+              theme='auto'
               showLineNumbers={true}
               maxLines={MAX_LINES}
-              className="h-full rounded-none border-0"
+              className='h-full rounded-none border-0'
             />
           </div>
         </div>
@@ -421,261 +423,199 @@ const NodeDetailPanel = memo(
     const FileIcon = getFileIcon(displayBasename)
 
     return (
-      <div className="h-full w-full bg-background flex flex-col">
+      <div className='flex h-full w-full flex-col bg-background'>
         {/* Header */}
-        <div className="flex-none p-4 border-b">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3 overflow-hidden">
-              <div className="mt-1 p-1.5 bg-muted rounded-md shrink-0">
-                <FileIcon className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div className="min-w-0">
-                <h2
-                  className="text-lg font-semibold truncate"
-                  title={displayBasename}
-                >
-                  {displayBasename}
-                </h2>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <p
-                    className="text-xs text-muted-foreground truncate max-w-[180px]"
-                    title={nodeData.id}
+        <DetailPanelHeader
+          icon={<FileIcon className='h-5 w-5 text-muted-foreground' />}
+          title={displayBasename}
+          subtitle={getRelativePath(nodeData.id)}
+          meta={
+            <span className='whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>
+              {formatFileSize(displaySize)}
+            </span>
+          }
+          trailing={
+            <TooltipProvider>
+              <Tooltip open={showCopyMenu || copiedType !== null}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setShowCopyMenu(!showCopyMenu)}
+                    className='p-0.5 text-muted-foreground transition-colors hover:text-foreground'
                   >
-                    {getRelativePath(nodeData.id)}
-                  </p>
-                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">
-                    {formatFileSize(displaySize)}
-                  </span>
-                  <TooltipProvider>
-                    <Tooltip open={showCopyMenu || copiedType !== null}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={() => setShowCopyMenu(!showCopyMenu)}
-                          className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
-                        >
-                          <Copy className="h-3 w-3" />
-                          <span className="sr-only">Copy path</span>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="bottom"
-                        className="p-1 min-w-[120px]"
-                        onPointerDownOutside={() => setShowCopyMenu(false)}
+                    <Copy className='h-3 w-3' />
+                    <span className='sr-only'>Copy path</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side='bottom'
+                  className='min-w-[120px] p-1'
+                  onPointerDownOutside={() => setShowCopyMenu(false)}
+                >
+                  {copiedType ? (
+                    <div className='px-2 py-1 text-xs text-green-600'>
+                      Copied!
+                    </div>
+                  ) : (
+                    <div className='flex flex-col gap-1'>
+                      <button
+                        onClick={() => copyPath('full')}
+                        className='rounded px-2 py-1 text-left text-xs hover:bg-accent'
+                        aria-label='Copy full path'
                       >
-                        {copiedType ? (
-                          <div className="px-2 py-1 text-xs text-green-600">
-                            Copied!
-                          </div>
-                        ) : (
-                          <div className="flex flex-col gap-1">
-                            <button
-                              onClick={() => copyPath('full')}
-                              className="px-2 py-1 text-xs text-left hover:bg-accent rounded"
-                              aria-label="Copy full path"
-                            >
-                              Copy full path
-                            </button>
-                            <button
-                              onClick={() => copyPath('relative')}
-                              className="px-2 py-1 text-xs text-left hover:bg-accent rounded"
-                              aria-label="Copy relative path"
-                            >
-                              Copy relative path
-                            </button>
-                          </div>
-                        )}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8 -mr-2 -mt-2"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+                        Copy full path
+                      </button>
+                      <button
+                        onClick={() => copyPath('relative')}
+                        className='rounded px-2 py-1 text-left text-xs hover:bg-accent'
+                        aria-label='Copy relative path'
+                      >
+                        Copy relative path
+                      </button>
+                    </div>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          }
+          onClose={onClose}
+        />
 
         {/* Content */}
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="flex-1 flex flex-col overflow-hidden"
+          className='flex flex-1 flex-col overflow-hidden'
         >
-          <div className="px-4 pt-2 overflow-x-auto">
-            <TabsList className="w-full justify-start h-9 bg-transparent p-0 border-b rounded-none">
-              <TabsTrigger
-                value="overview"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-2 pt-1.5"
-              >
-                Overview
-              </TabsTrigger>
-              <TabsTrigger
-                value="dependencies"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-2 pt-1.5"
-              >
-                Imports{' '}
-                <span className="ml-1.5 text-xs text-muted-foreground bg-muted px-1.5 rounded-full">
-                  {outgoingEdges.length}
-                </span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="dependents"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-2 pt-1.5"
-              >
-                Used By{' '}
-                <span className="ml-1.5 text-xs text-muted-foreground bg-muted px-1.5 rounded-full">
-                  {incomingEdges.length}
-                </span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="source"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-2 pt-1.5"
-              >
-                Source
-                <span className="ml-1.5 text-xs text-muted-foreground bg-muted px-1.5 rounded-full">
-                  {fileContent?.lines?.toLocaleString() ??
-                    (nodeData?.size
-                      ? Math.ceil(nodeData.size / 40).toLocaleString()
-                      : '0')}
-                </span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <DetailPanelTabs
+            items={[
+              { value: 'overview', label: 'Overview' },
+              {
+                value: 'dependencies',
+                label: 'Imports',
+                badge: outgoingEdges.length
+              },
+              {
+                value: 'dependents',
+                label: 'Used By',
+                badge: incomingEdges.length
+              },
+              {
+                value: 'source',
+                label: 'Source',
+                badge:
+                  fileContent?.lines?.toLocaleString() ??
+                  (nodeData?.size
+                    ? Math.ceil(nodeData.size / 40).toLocaleString()
+                    : '0')
+              }
+            ]}
+          />
 
           <TabsContent
-            value="overview"
-            className="flex-1 overflow-y-auto m-0 p-4 space-y-6"
+            value='overview'
+            className='m-0 flex-1 space-y-6 overflow-y-auto p-4'
           >
             {/* Risk Assessment: The Verdict */}
             {isOrphan ? (
               // Orphan File Status (replaces normal risk assessment)
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium text-foreground">
-                  File Status
-                </h3>
-                <div className="p-4 rounded-lg border border-muted bg-muted/10">
-                  <div className="flex items-center gap-2 mb-2">
+              <div className='space-y-3'>
+                <DetailPanelSectionHeading title='File Status' />
+                <MetricInsightCard
+                  icon={
                     <Ghost
-                      className="h-4 w-4 text-muted-foreground"
-                      weight="fill"
+                      className='h-4 w-4 text-muted-foreground'
+                      weight='fill'
                     />
-                    <span className="font-semibold text-muted-foreground">
-                      Orphaned File (Unused)
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    This file has 0 dependents and is not an entry point. Safe
-                    to delete to reduce bundle size.
-                  </p>
-                  <div className="flex items-start gap-1.5 mt-2">
-                    <Lightbulb
-                      className="h-3 w-3 text-muted-foreground/60 mt-0.5 shrink-0"
-                      weight="fill"
-                    />
-                    <p className="text-xs text-muted-foreground/60 italic">
-                      Tip: Check if this is a test file, script, or dynamic
-                      import before deleting. False positives may occur.
-                    </p>
-                  </div>
-                </div>
+                  }
+                  title='Orphaned File (Unused)'
+                  description='This file has 0 dependents and is not an entry point. Safe to delete to reduce bundle size.'
+                  footer='Tip: Verify whether this is a test file, a script, or a dynamic import before deleting it. False positives may occur.'
+                  tone='default'
+                  className='border-muted bg-muted/10'
+                />
               </div>
             ) : (
               blastRadiusAssessment && (
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-foreground">
-                    Blast Radius
-                  </h3>
+                <div className='space-y-3'>
+                  <DetailPanelSectionHeading title='Blast Radius' />
                   {blastRadiusAssessment.isInCycle ? (
                     // Cycle Override: Critical Warning
-                    <div className="p-4 rounded-lg border-2 border-red-500 bg-red-500/5">
-                      <div className="flex items-center gap-2 mb-2">
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                        <span className="font-semibold text-red-500">
-                          CRITICAL: Circular Dependency
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        This file is part of a circular dependency chain.
-                        Changes may cause infinite loops or compilation errors.
-                      </p>
-                    </div>
+                    <MetricInsightCard
+                      icon={<AlertTriangle className='h-4 w-4 text-red-500' />}
+                      title='Critical Circular Dependency'
+                      description='This file is part of a circular dependency chain. Changes may cause infinite loops or compilation errors.'
+                      tone='danger'
+                      className='border-red-500/50 bg-red-500/5'
+                    />
                   ) : (
                     // Normal Risk Assessment
                     <TooltipProvider delayDuration={200}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div
-                            className={`p-4 rounded-lg border ${getRiskBorderClass(blastRadiusAssessment.level)} ${getRiskBgOpacityClass(blastRadiusAssessment.level, 5)} cursor-help`}
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                {blastRadiusAssessment.level === 'low' ? (
-                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                          <div className='cursor-help'>
+                            <MetricInsightCard
+                              icon={
+                                blastRadiusAssessment.level === 'low' ? (
+                                  <CheckCircle className='h-4 w-4 text-green-500' />
                                 ) : (
                                   <AlertTriangle
                                     className={`h-4 w-4 ${getRiskTextClass(blastRadiusAssessment.level)}`}
                                   />
-                                )}
-                                <span
-                                  className={`font-semibold ${getRiskTextClass(blastRadiusAssessment.level)}`}
-                                >
-                                  {getBlastRadiusLabel(
-                                    blastRadiusAssessment.level
-                                  )}
-                                </span>
-                              </div>
-                              <span className="text-xs text-muted-foreground">
-                                Score:{' '}
-                                {blastRadiusAssessment.riskScore.toFixed(1)}
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {getBlastRadiusDescription(
+                                )
+                              }
+                              title={getBlastRadiusLabel(
                                 blastRadiusAssessment.level
                               )}
-                            </p>
+                              value={`Score: ${blastRadiusAssessment.riskScore.toFixed(1)}`}
+                              description={getBlastRadiusDescription(
+                                blastRadiusAssessment.level
+                              )}
+                              tone={
+                                blastRadiusAssessment.level === 'low'
+                                  ? 'success'
+                                  : blastRadiusAssessment.level === 'medium'
+                                    ? 'warning'
+                                    : 'danger'
+                              }
+                              className={`${getRiskBorderClass(blastRadiusAssessment.level)} ${getRiskBgOpacityClass(blastRadiusAssessment.level, 5)}`}
+                            />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent
-                          side="top"
-                          className="max-w-xs bg-popover border-border"
+                          side='top'
+                          className='max-w-xs border-border bg-popover'
                         >
-                          <div className="space-y-2">
-                            <p className="font-semibold text-popover-foreground">
+                          <div className='space-y-2'>
+                            <p className='font-semibold text-popover-foreground'>
                               Blast Radius:{' '}
                               {blastRadiusAssessment.riskScore.toFixed(1)}
                             </p>
-                            <p className="text-xs text-popover-foreground/80">
+                            <p className='text-xs text-popover-foreground/80'>
                               Blast Radius estimates how many nearby files may
-                              require verification after you edit this file.
+                              require verification after this file changes.
                             </p>
                             {archMetrics && (
-                              <div className="text-xs space-y-1 pt-1 border-t border-border">
-                                <p className="text-popover-foreground/80">
+                              <div className='space-y-1 border-t border-border pt-1 text-xs'>
+                                <p className='text-popover-foreground/80'>
                                   • <strong>Dependents (Ca):</strong>{' '}
                                   {archMetrics.ca}
                                 </p>
-                                <p className="text-popover-foreground/80">
+                                <p className='text-popover-foreground/80'>
                                   • <strong>Dependencies (Ce):</strong>{' '}
                                   {archMetrics.ce}
                                 </p>
-                                <p className="text-popover-foreground/80 pt-1">
+                                <p className='pt-1 text-popover-foreground/80'>
                                   Calculation: {archMetrics.ca} + (
                                   {archMetrics.ce} × 0.5) ={' '}
                                   {blastRadiusAssessment.riskScore.toFixed(1)}
                                 </p>
                               </div>
                             )}
-                            <div className="text-xs pt-1 border-t border-border">
-                              <p className="text-popover-foreground/80">
+                            <div className='border-t border-border pt-1 text-xs'>
+                              <p className='text-popover-foreground/80'>
                                 A higher score suggests a broader local impact
-                                and a larger verification surface after change.
+                                and a larger verification surface after a
+                                change.
                               </p>
                             </div>
                           </div>
@@ -687,41 +627,35 @@ const NodeDetailPanel = memo(
                   {/* God Object Warning: Ce > threshold */}
                   {archMetrics &&
                     archMetrics.ce > ARCHITECTURE_THRESHOLDS.GOD_OBJECT_CE && (
-                      <div className="mt-3 p-3 rounded-lg border border-yellow-500/50 bg-yellow-500/10">
-                        <div className="flex items-center gap-2">
+                      <MetricInsightCard
+                        icon={
                           <Cube
-                            className="h-4 w-4 text-yellow-500"
-                            weight="fill"
+                            className='h-4 w-4 text-yellow-500'
+                            weight='fill'
                           />
-                          <span className="text-sm font-medium text-yellow-500">
-                            God Object Detected
-                          </span>
-                        </div>
-                        <p className="text-xs text-yellow-400/80 mt-1">
-                          This file depends on {archMetrics.ce} other files.
-                          Consider breaking it down.
-                        </p>
-                      </div>
+                        }
+                        title='God Object Detected'
+                        description={`This file depends on ${archMetrics.ce} other files. Consider splitting responsibilities into smaller units.`}
+                        tone='warning'
+                        className='mt-3 border-yellow-500/50 bg-yellow-500/10'
+                      />
                     )}
 
                   {/* Bottleneck Warning: Ca > threshold */}
                   {archMetrics &&
                     archMetrics.ca > ARCHITECTURE_THRESHOLDS.BOTTLENECK_CA && (
-                      <div className="mt-3 p-3 rounded-lg border border-orange-500/50 bg-orange-500/10">
-                        <div className="flex items-center gap-2">
+                      <MetricInsightCard
+                        icon={
                           <Target
-                            className="h-4 w-4 text-orange-500"
-                            weight="fill"
+                            className='h-4 w-4 text-orange-500'
+                            weight='fill'
                           />
-                          <span className="text-sm font-medium text-orange-500">
-                            Core Bottleneck
-                          </span>
-                        </div>
-                        <p className="text-xs text-orange-400/80 mt-1">
-                          {archMetrics.ca} files depend on this. Changes will
-                          break dozens of other components.
-                        </p>
-                      </div>
+                        }
+                        title='Core Bottleneck'
+                        description={`${archMetrics.ca} files depend on this. Changes here are more likely to affect many other files.`}
+                        tone='warning'
+                        className='mt-3 border-orange-500/50 bg-orange-500/10'
+                      />
                     )}
                 </div>
               )
@@ -729,10 +663,8 @@ const NodeDetailPanel = memo(
 
             {/* Architecture Metrics: The Evidence */}
             {archMetrics && (
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium text-foreground">
-                  Architecture Metrics
-                </h3>
+              <div className='space-y-3'>
+                <DetailPanelSectionHeading title='Architecture Metrics' />
                 <ArchitectureStats
                   ca={archMetrics.ca}
                   ce={archMetrics.ce}
@@ -744,41 +676,39 @@ const NodeDetailPanel = memo(
 
             {/* Actions */}
             {onFocusSubgraph && (
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium text-foreground">
-                  Graph Actions
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
+              <div className='space-y-3'>
+                <DetailPanelSectionHeading title='Graph Actions' />
+                <div className='grid grid-cols-2 gap-2'>
                   <Button
                     variant={
                       focusDirection === 'inward' ? 'secondary' : 'outline'
                     }
-                    size="sm"
+                    size='sm'
                     onClick={() => setFocusDirection('inward')}
-                    className="w-full justify-start"
+                    className='w-full justify-start'
                   >
-                    <ArrowLeft className="h-3 w-3 mr-2" /> Inward
+                    <ArrowLeft className='mr-2 h-3 w-3' /> Inward
                   </Button>
                   <Button
                     variant={
                       focusDirection === 'outward' ? 'secondary' : 'outline'
                     }
-                    size="sm"
+                    size='sm'
                     onClick={() => setFocusDirection('outward')}
-                    className="w-full justify-start"
+                    className='w-full justify-start'
                   >
-                    Outward <ArrowRight className="h-3 w-3 ml-2" />
+                    Outward <ArrowRight className='ml-2 h-3 w-3' />
                   </Button>
                 </div>
                 <Button
-                  variant="default"
-                  size="sm"
+                  variant='default'
+                  size='sm'
                   onClick={() =>
                     onFocusSubgraph(resolvedNodeId, focusDirection)
                   }
-                  className="w-full"
+                  className='w-full'
                 >
-                  <Focus className="h-3 w-3 mr-2" />
+                  <Focus className='mr-2 h-3 w-3' />
                   Focus{' '}
                   {focusDirection === 'inward'
                     ? 'Dependencies'
@@ -789,21 +719,20 @@ const NodeDetailPanel = memo(
             )}
           </TabsContent>
 
-          <TabsContent value="dependencies" className="flex-1 m-0">
+          <TabsContent value='dependencies' className='m-0 flex-1'>
             {renderDependencyList(imports, 'imports')}
           </TabsContent>
 
-          <TabsContent value="dependents" className="flex-1 m-0">
+          <TabsContent value='dependents' className='m-0 flex-1'>
             {renderDependencyList(importers, 'importers')}
           </TabsContent>
 
-          <TabsContent value="source" className="flex-1 m-0 overflow-hidden">
+          <TabsContent value='source' className='m-0 flex-1 overflow-hidden'>
             {isReportMode ? (
-              <div className="flex flex-col items-center justify-center h-64 text-muted-foreground p-4">
-                <p className="text-sm">
-                  Source code viewer is not available in static report mode.
-                </p>
-              </div>
+              <DetailPanelState
+                title='Source viewer unavailable in static report mode'
+                description='Open the live application to inspect source content interactively.'
+              />
             ) : (
               renderSourceContent()
             )}
@@ -812,39 +741,39 @@ const NodeDetailPanel = memo(
 
         {/* Path Trace Modal */}
         <Dialog open={isPathModalOpen} onOpenChange={setIsPathModalOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className='max-w-2xl'>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <MapIcon className="h-5 w-5 text-muted-foreground" />
+              <DialogTitle className='flex items-center gap-2'>
+                <MapIcon className='h-5 w-5 text-muted-foreground' />
                 Dependency Path to "{traceTarget}"
               </DialogTitle>
             </DialogHeader>
-            <div className="mt-4">
+            <div className='mt-4'>
               {isTracing ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="text-sm text-muted-foreground">
+                <div className='flex items-center justify-center py-8'>
+                  <div className='text-sm text-muted-foreground'>
                     Tracing path...
                   </div>
                 </div>
               ) : tracedPath && tracedPath.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="text-sm text-muted-foreground mb-3">
+                <div className='space-y-4'>
+                  <div className='mb-3 text-sm text-muted-foreground'>
                     Shortest path found ({tracedPath.length} steps):
                   </div>
-                  <div className="flex flex-col gap-2">
+                  <div className='flex flex-col gap-2'>
                     {tracedPath.map((file, index) => (
-                      <div key={index} className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground text-xs font-medium shrink-0">
+                      <div key={index} className='flex items-center gap-3'>
+                        <div className='flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground'>
                           {index + 1}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-mono text-sm bg-muted/50 p-2 rounded-md truncate">
+                        <div className='min-w-0 flex-1'>
+                          <div className='truncate rounded-md bg-muted/50 p-2 font-mono text-sm'>
                             {getBasename(file)}
                           </div>
                         </div>
                         {index < tracedPath.length - 1 && (
-                          <div className="text-muted-foreground shrink-0">
-                            <ArrowRight className="h-3 w-3" />
+                          <div className='shrink-0 text-muted-foreground'>
+                            <ArrowRight className='h-3 w-3' />
                           </div>
                         )}
                       </div>
@@ -852,11 +781,11 @@ const NodeDetailPanel = memo(
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <div className="text-muted-foreground text-sm">
-                    No direct dependency path found.
-                  </div>
-                </div>
+                <DetailPanelState
+                  title='No dependency path found'
+                  description='No direct dependency path could be traced between the selected files.'
+                  compact={true}
+                />
               )}
             </div>
           </DialogContent>

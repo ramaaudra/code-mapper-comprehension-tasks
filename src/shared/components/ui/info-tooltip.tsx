@@ -51,22 +51,22 @@ export function InfoTooltip({
         ) : (
           <span
             className={cn(
-              'text-muted-foreground hover:text-foreground transition-colors cursor-help',
+              'cursor-help text-muted-foreground transition-colors hover:text-foreground',
               iconClassName
             )}
           >
-            <Info className="h-4 w-4" />
+            <Info className='h-4 w-4' />
           </span>
         )}
       </TooltipTrigger>
       <TooltipContent
         side={side}
         align={align}
-        className={cn('max-w-sm bg-popover border-border', className)}
+        className={cn('max-w-sm border-border bg-popover', className)}
       >
         {title ? (
-          <div className="space-y-2">
-            <p className="font-semibold text-popover-foreground">{title}</p>
+          <div className='space-y-2'>
+            <p className='font-semibold text-popover-foreground'>{title}</p>
             {children}
           </div>
         ) : (
@@ -93,13 +93,13 @@ export function InfoTooltipContent({
   children
 }: InfoTooltipContentProps) {
   return (
-    <div className="space-y-2">
-      <p className="font-semibold text-popover-foreground">{title}</p>
+    <div className='space-y-2'>
+      <p className='font-semibold text-popover-foreground'>{title}</p>
       {description && (
-        <p className="text-xs text-popover-foreground">{description}</p>
+        <p className='text-xs text-popover-foreground'>{description}</p>
       )}
       {children && (
-        <div className="text-xs space-y-1 pt-1 border-t border-border">
+        <div className='space-y-1 border-t border-border pt-1 text-xs'>
           {children}
         </div>
       )}
@@ -120,8 +120,8 @@ export function InfoTooltipSection({
   children
 }: InfoTooltipSectionProps) {
   return (
-    <div className="text-xs space-y-1 pt-1 border-t border-border">
-      <p className="font-semibold text-popover-foreground">{title}</p>
+    <div className='space-y-1 border-t border-border pt-1 text-xs'>
+      <p className='font-semibold text-popover-foreground'>{title}</p>
       {children}
     </div>
   )
