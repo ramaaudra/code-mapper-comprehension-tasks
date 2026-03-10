@@ -44,6 +44,7 @@ import { architectureApi } from '@/shared/lib/api/architecture'
 import { findDependencyPath } from '@/shared/lib/api/pathfinding'
 import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
 import {
+  createDecisionAssessment,
   getBasename,
   getFileEvolutionMetrics,
   getFileIcon,
@@ -66,28 +67,15 @@ import { SourceCodeViewer } from './SourceCodeViewer'
 
 import type { ReportData } from '@/features/report/types'
 import type {
+  DecisionStatusTone,
+  ImpactScopeThresholds
+} from '@/shared/lib/utils'
+import type {
   AnalysisData,
   AnalysisEdge,
   AnalysisNode,
-  HotspotStatus,
   DependencyReference
 } from '@/shared/types/analysis'
-import type { RiskLevel } from '@/shared/types/risk'
-
-type DecisionStatusTone = 'default' | 'info' | 'success' | 'warning' | 'danger'
-
-interface FileDecisionAssessment {
-  title: string
-  summary: string
-  whyItMatters: string
-  actions: string[]
-  reviewPriority: string
-  impactScope: string
-  changePressure: string
-  externalReliance: string
-  structuralPosition: string
-  tone: DecisionStatusTone
-}
 
 const DECISION_CARD_TONE_ICON = {
   danger: <AlertTriangle className='h-4 w-4 text-red-500' />,
@@ -97,230 +85,9 @@ const DECISION_CARD_TONE_ICON = {
   default: <CheckCircle className='h-4 w-4 text-green-500' />
 } satisfies Record<DecisionStatusTone, React.ReactNode>
 
-function getImpactScope(ca: number): string {
-  if (ca >= 15) {
-    return 'Broad'
-  }
-  if (ca >= 5) {
-    return 'Moderate'
-  }
-  return 'Local'
-}
-
-function getChangePressure(relativeChurn: number): string {
-  if (relativeChurn >= 0.3) {
-    return 'High'
-  }
-  if (relativeChurn >= 0.1) {
-    return 'Moderate'
-  }
-  return 'Low'
-}
-
-function getExternalReliance(ce: number): string {
-  if (ce >= 10) {
-    return 'High'
-  }
-  if (ce >= 4) {
-    return 'Moderate'
-  }
-  return 'Low'
-}
-
-function getStructuralPosition(instability: number): string {
-  if (instability >= 0.7) {
-    return 'Outward-Dependent'
-  }
-  if (instability >= 0.4) {
-    return 'Balanced'
-  }
-  return 'Foundation-like'
-}
-
-function mapHotspotTone(
-  status: HotspotStatus,
-  isInCycle: boolean
-): DecisionStatusTone {
-  if (isInCycle || status === 'critical-hotspot') {
-    return 'danger'
-  }
-  if (status === 'high-review-needed') {
-    return 'warning'
-  }
-  if (status === 'active') {
-    return 'info'
-  }
-  return 'success'
-}
-
-function getReviewPriority(
-  status: HotspotStatus,
-  riskLevel: RiskLevel,
-  isInCycle: boolean
-): string {
-  if (isInCycle || status === 'critical-hotspot') {
-    return 'Critical Hotspot'
-  }
-  if (
-    status === 'high-review-needed' ||
-    riskLevel === 'high' ||
-    riskLevel === 'critical'
-  ) {
-    return 'High Review Priority'
-  }
-  if (status === 'active' || riskLevel === 'medium') {
-    return 'Normal Review Priority'
-  }
-  return 'Low Review Priority'
-}
-
-function createFileDecisionAssessment(params: {
-  isOrphan: boolean
-  isInCycle: boolean
-  ca: number
-  ce: number
-  instability: number
-  relativeChurn30d: number
-  hotspotStatus: HotspotStatus
-  riskLevel: RiskLevel
-}): FileDecisionAssessment {
-  const {
-    isOrphan,
-    isInCycle,
-    ca,
-    ce,
-    instability,
-    relativeChurn30d,
-    hotspotStatus,
-    riskLevel
-  } = params
-
-  const impactScope = getImpactScope(ca)
-  const changePressure = getChangePressure(relativeChurn30d)
-  const externalReliance = getExternalReliance(ce)
-  const structuralPosition = getStructuralPosition(instability)
-  const reviewPriority = getReviewPriority(hotspotStatus, riskLevel, isInCycle)
-  const tone = mapHotspotTone(hotspotStatus, isInCycle)
-
-  if (isOrphan) {
-    return {
-      title: 'Possibly Unused File',
-      summary: 'This file appears isolated in the current analysis.',
-      whyItMatters:
-        'No dependents were detected in the current graph, so change impact is usually more contained than in shared files.',
-      actions: [
-        'Verify whether this file is still used through dynamic imports, tests, or scripts.',
-        'If it is truly unused, consider cleanup or consolidation.'
-      ],
-      reviewPriority: 'Low Review Priority',
-      impactScope: 'Local',
-      changePressure,
-      externalReliance,
-      structuralPosition,
-      tone: 'success'
-    }
-  }
-
-  if (isInCycle) {
-    return {
-      title: 'Critical Hotspot',
-      summary:
-        'This file sits in a circular dependency and needs careful review.',
-      whyItMatters:
-        'Circular dependencies increase maintenance and verification cost, and changes can behave unexpectedly across the cycle.',
-      actions: [
-        'Keep the change small and focused.',
-        'Review the full dependency cycle before merging.',
-        'Prefer breaking the cycle over adding new responsibilities here.'
-      ],
-      reviewPriority,
-      impactScope,
-      changePressure,
-      externalReliance,
-      structuralPosition,
-      tone: 'danger'
-    }
-  }
-
-  if (impactScope === 'Broad' && changePressure === 'High') {
-    return {
-      title: 'Critical Hotspot',
-      summary:
-        'This file changes frequently and affects many other parts of the system.',
-      whyItMatters:
-        'This file changes often and affects many other parts of the system, so review and verification scope can spread quickly.',
-      actions: [
-        'Keep the PR small and focused.',
-        'Review dependents before merging.',
-        'Run broader regression checks.'
-      ],
-      reviewPriority,
-      impactScope,
-      changePressure,
-      externalReliance,
-      structuralPosition,
-      tone
-    }
-  }
-
-  if (impactScope === 'Local' && changePressure === 'High') {
-    return {
-      title: 'Active but Local',
-      summary:
-        'This file changes frequently, but its downstream impact stays relatively contained.',
-      whyItMatters:
-        'The recent edit pattern suggests active refinement, but downstream review scope is smaller than in widely used files.',
-      actions: [
-        'Keep changes self-contained.',
-        'Prefer local refactoring over adding more responsibilities.',
-        'Stabilize repeated edits if this area keeps changing.'
-      ],
-      reviewPriority,
-      impactScope,
-      changePressure,
-      externalReliance,
-      structuralPosition,
-      tone: tone === 'danger' ? 'warning' : tone
-    }
-  }
-
-  if (impactScope === 'Broad' && changePressure === 'Low') {
-    return {
-      title: 'Shared Foundation',
-      summary: 'This file is stable, but many other parts rely on it.',
-      whyItMatters:
-        'Even though it changes infrequently, mistakes here can increase downstream review needs across the codebase.',
-      actions: [
-        'Proceed carefully with clear intent.',
-        'Review downstream dependents before merging.',
-        'Prefer incremental changes over broad rewrites.'
-      ],
-      reviewPriority,
-      impactScope,
-      changePressure,
-      externalReliance,
-      structuralPosition,
-      tone: tone === 'success' ? 'info' : tone
-    }
-  }
-
-  return {
-    title: 'Likely Local Change',
-    summary:
-      'This file appears relatively contained and under lower recent change pressure.',
-    whyItMatters:
-      'Recent change activity is limited and downstream impact is smaller than in broad-impact or high-pressure areas.',
-    actions: [
-      'A focused feature change or local refactor is more feasible here.',
-      'Use normal review and testing discipline.'
-    ],
-    reviewPriority,
-    impactScope,
-    changePressure,
-    externalReliance,
-    structuralPosition,
-    tone
-  }
+const FILE_IMPACT_SCOPE_THRESHOLDS: ImpactScopeThresholds = {
+  broad: 15,
+  moderate: 5
 }
 
 interface NodeDetailPanelProps {
@@ -427,17 +194,17 @@ const NodeDetailPanel = memo(
         return null
       }
 
-      return createFileDecisionAssessment({
+      return createDecisionAssessment({
+        kind: 'file',
         isOrphan,
-        isInCycle: archMetrics.hasCycle,
+        hasCycle: archMetrics.hasCycle,
         ca: archMetrics.ca,
         ce: archMetrics.ce,
         instability: archMetrics.instability,
         relativeChurn30d: fileEvolution.churn30d.relativeChurn,
-        hotspotStatus: fileEvolution.hotspotStatus,
-        riskLevel: blastRadiusAssessment?.level ?? 'low'
+        impactScopeThresholds: FILE_IMPACT_SCOPE_THRESHOLDS
       })
-    }, [archMetrics, blastRadiusAssessment?.level, fileEvolution, isOrphan])
+    }, [archMetrics, fileEvolution, isOrphan])
 
     // Calculate indegree and outdegree
     const incomingEdges = useMemo(() => {

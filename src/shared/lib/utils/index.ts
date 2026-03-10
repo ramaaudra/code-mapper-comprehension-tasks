@@ -133,3 +133,12 @@ export {
   getHotspotTone,
   summarizeEvolutionAvailability
 } from './evolution'
+
+// Re-export decision assessment utilities
+export { createDecisionAssessment } from './decision-assessment'
+
+export type {
+  DecisionAssessment,
+  DecisionStatusTone,
+  ImpactScopeThresholds
+} from './decision-assessment'

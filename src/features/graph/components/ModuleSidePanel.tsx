@@ -17,7 +17,11 @@ import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Tabs, TabsContent } from '@/shared/components/ui/tabs'
 import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
-import { formatRelativeChurn, truncateMiddle } from '@/shared/lib/utils'
+import {
+  createDecisionAssessment,
+  formatRelativeChurn,
+  truncateMiddle
+} from '@/shared/lib/utils'
 import {
   RISK_THRESHOLDS,
   calculateRiskScore,
@@ -30,7 +34,10 @@ import {
 } from '@/shared/lib/utils/risk'
 
 import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
-import type { HotspotStatus } from '@/shared/types/analysis'
+import type {
+  DecisionStatusTone,
+  ImpactScopeThresholds
+} from '@/shared/lib/utils'
 import type { RiskLevel } from '@/shared/types/risk'
 
 interface ModuleSidePanelProps {
@@ -63,21 +70,6 @@ interface DependentImpactConfig {
   textClass: string
 }
 
-type DecisionStatusTone = 'default' | 'info' | 'success' | 'warning' | 'danger'
-
-interface ModuleDecisionAssessment {
-  title: string
-  summary: string
-  whyItMatters: string
-  actions: string[]
-  reviewPriority: string
-  impactScope: string
-  changePressure: string
-  externalReliance: string
-  structuralPosition: string
-  tone: DecisionStatusTone
-}
-
 const DECISION_CARD_TONE_ICON = {
   danger: <AlertTriangle className='h-4 w-4 text-red-500' />,
   warning: <AlertTriangle className='h-4 w-4 text-orange-500' />,
@@ -86,204 +78,9 @@ const DECISION_CARD_TONE_ICON = {
   default: <CheckCircle className='h-4 w-4 text-green-500' />
 } satisfies Record<DecisionStatusTone, React.ReactNode>
 
-function getImpactScope(ca: number): string {
-  if (ca >= 30) {
-    return 'Broad'
-  }
-  if (ca >= 10) {
-    return 'Moderate'
-  }
-  return 'Local'
-}
-
-function getChangePressure(relativeChurn: number): string {
-  if (relativeChurn >= 0.3) {
-    return 'High'
-  }
-  if (relativeChurn >= 0.1) {
-    return 'Moderate'
-  }
-  return 'Low'
-}
-
-function getExternalReliance(ce: number): string {
-  if (ce >= 10) {
-    return 'High'
-  }
-  if (ce >= 4) {
-    return 'Moderate'
-  }
-  return 'Low'
-}
-
-function getStructuralPosition(instability: number): string {
-  const band = getInstabilityBand(instability)
-  if (band === 'rigid') {
-    return 'Foundation-like'
-  }
-  if (band === 'balanced') {
-    return 'Balanced'
-  }
-  return 'Outward-Dependent'
-}
-
-function mapHotspotTone(
-  status: HotspotStatus,
-  hasCycle: boolean
-): DecisionStatusTone {
-  if (hasCycle || status === 'critical-hotspot') {
-    return 'danger'
-  }
-  if (status === 'high-review-needed') {
-    return 'warning'
-  }
-  if (status === 'active') {
-    return 'info'
-  }
-  return 'success'
-}
-
-function getReviewPriority(
-  status: HotspotStatus,
-  riskLevel: RiskLevel,
-  hasCycle: boolean
-): string {
-  if (hasCycle || status === 'critical-hotspot') {
-    return 'Critical Hotspot'
-  }
-  if (
-    status === 'high-review-needed' ||
-    riskLevel === 'high' ||
-    riskLevel === 'critical'
-  ) {
-    return 'High Review Priority'
-  }
-  if (status === 'active' || riskLevel === 'medium') {
-    return 'Normal Review Priority'
-  }
-  return 'Low Review Priority'
-}
-
-function createModuleDecisionAssessment(
-  moduleData: FolderArchitectureMetrics,
-  riskLevel: RiskLevel
-): ModuleDecisionAssessment | null {
-  const evolution = moduleData.evolution
-  if (!evolution) {
-    return null
-  }
-
-  const impactScope = getImpactScope(moduleData.ca)
-  const changePressure = getChangePressure(evolution.churn30d.relativeChurn)
-  const externalReliance = getExternalReliance(moduleData.ce)
-  const structuralPosition = getStructuralPosition(moduleData.instability)
-  const reviewPriority = getReviewPriority(
-    evolution.hotspotStatus,
-    riskLevel,
-    moduleData.hasCycle
-  )
-  const tone = mapHotspotTone(evolution.hotspotStatus, moduleData.hasCycle)
-
-  if (moduleData.hasCycle) {
-    return {
-      title: 'Critical Hotspot',
-      summary:
-        'This module participates in a circular dependency and needs careful review.',
-      whyItMatters:
-        'Circular dependencies increase coordination and verification cost, and changes can loop back through the same dependency chain.',
-      actions: [
-        'Keep changes focused and easy to review.',
-        'Inspect the full dependency cycle before merging.',
-        'Prefer breaking the cycle over adding more responsibilities here.'
-      ],
-      reviewPriority,
-      impactScope,
-      changePressure,
-      externalReliance,
-      structuralPosition,
-      tone: 'danger'
-    }
-  }
-
-  if (impactScope === 'Broad' && changePressure === 'High') {
-    return {
-      title: 'Critical Hotspot',
-      summary:
-        'This module changes frequently and has broad downstream impact.',
-      whyItMatters:
-        'Recent change pressure combines with many dependents, so review and regression scope can spread quickly.',
-      actions: [
-        'Keep changes small and focused.',
-        'Review downstream modules before merging.',
-        'Run broader regression checks across affected areas.'
-      ],
-      reviewPriority,
-      impactScope,
-      changePressure,
-      externalReliance,
-      structuralPosition,
-      tone
-    }
-  }
-
-  if (impactScope === 'Local' && changePressure === 'High') {
-    return {
-      title: 'Active but Local',
-      summary:
-        'This module changes actively, but its impact stays relatively contained.',
-      whyItMatters:
-        'Recent edit activity suggests ongoing refinement, but downstream review scope is smaller than in shared foundations.',
-      actions: [
-        'Keep changes self-contained.',
-        'Prefer local refactoring over adding more responsibilities.',
-        'Stabilize repeated edits if this area keeps changing.'
-      ],
-      reviewPriority,
-      impactScope,
-      changePressure,
-      externalReliance,
-      structuralPosition,
-      tone: tone === 'danger' ? 'warning' : tone
-    }
-  }
-
-  if (impactScope === 'Broad' && changePressure === 'Low') {
-    return {
-      title: 'Shared Foundation',
-      summary: 'This module is stable, but many other modules rely on it.',
-      whyItMatters:
-        'Even infrequent changes can increase review needs widely because this module sits in a shared position.',
-      actions: [
-        'Proceed carefully with clear intent.',
-        'Review dependent modules before merging.',
-        'Prefer incremental changes over broad rewrites.'
-      ],
-      reviewPriority,
-      impactScope,
-      changePressure,
-      externalReliance,
-      structuralPosition,
-      tone: tone === 'success' ? 'info' : tone
-    }
-  }
-
-  return {
-    title: 'Likely Local Change',
-    summary:
-      'This module appears relatively contained and under lower recent change pressure.',
-    whyItMatters:
-      'Recent change activity is limited and downstream impact is smaller than in broad-impact or high-pressure modules.',
-    actions: [
-      'A focused feature update or local refactor is more feasible here.',
-      'Use normal review and testing discipline.'
-    ],
-    reviewPriority,
-    impactScope,
-    changePressure,
-    externalReliance,
-    structuralPosition,
-    tone
-  }
+const MODULE_IMPACT_SCOPE_THRESHOLDS: ImpactScopeThresholds = {
+  broad: 30,
+  moderate: 10
 }
 
 function getInstabilityBand(instability: number): InstabilityBand {
@@ -642,16 +439,17 @@ interface OverviewTabProps {
 function OverviewTab({ moduleData }: OverviewTabProps) {
   const evolution = moduleData.evolution
   const riskScore = calculateRiskScore(moduleData.ca, moduleData.instability)
-  const riskProfile = createRiskProfile(moduleData.folderPath, {
-    ca: moduleData.ca,
-    ce: moduleData.ce,
-    instability: moduleData.instability,
-    hasCycle: moduleData.hasCycle
-  })
-  const decisionAssessment = createModuleDecisionAssessment(
-    moduleData,
-    riskProfile.level
-  )
+  const decisionAssessment = evolution
+    ? createDecisionAssessment({
+        kind: 'module',
+        hasCycle: moduleData.hasCycle,
+        ca: moduleData.ca,
+        ce: moduleData.ce,
+        instability: moduleData.instability,
+        relativeChurn30d: evolution.churn30d.relativeChurn,
+        impactScopeThresholds: MODULE_IMPACT_SCOPE_THRESHOLDS
+      })
+    : null
 
   return (
     <div className='space-y-4 p-4'>
