@@ -62,6 +62,14 @@ export function FolderMetricsTable({
         return sortConfig.direction === 'asc' ? aRisk - bRisk : bRisk - aRisk
       }
 
+      if (sortConfig.key === 'hotspotScore') {
+        const aHotspot = a.evolution?.hotspotScore ?? 0
+        const bHotspot = b.evolution?.hotspotScore ?? 0
+        return sortConfig.direction === 'asc'
+          ? aHotspot - bHotspot
+          : bHotspot - aHotspot
+      }
+
       const aVal = a[sortConfig.key]
       const bVal = b[sortConfig.key]
 

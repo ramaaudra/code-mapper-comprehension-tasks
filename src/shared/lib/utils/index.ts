@@ -123,3 +123,13 @@ export {
 
 // Re-export file icon utilities
 export { getFileIcon } from './file-icons'
+
+// Re-export evolutionary metric utilities
+export {
+  buildEvolutionaryHotspots,
+  formatRelativeChurn,
+  getFileEvolutionMetrics,
+  getHotspotStatusLabel,
+  getHotspotTone,
+  summarizeEvolutionAvailability
+} from './evolution'

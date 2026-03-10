@@ -15,6 +15,8 @@ import type { FileRiskProfile } from '@/shared/types/risk'
 interface UseAnalysisDataResult {
   analysisData: AnalysisData | null
   riskAnalysis: FileRiskProfile[]
+  evolutionarySummary: AnalysisData['evolutionaryMetrics']['summary'] | null
+  fileEvolutionMap: AnalysisData['evolutionaryMetrics']['files']
   analysisLoadedAt: number | null
   isLoading: boolean
   loadError: string | null
@@ -25,6 +27,8 @@ interface UseAnalysisDataResult {
 }
 
 const EMPTY_RISK_ANALYSIS: FileRiskProfile[] = []
+const EMPTY_FILE_EVOLUTION_MAP: AnalysisData['evolutionaryMetrics']['files'] =
+  {}
 
 export function useAnalysisData(): UseAnalysisDataResult {
   const context = useContext(DataContext)
@@ -55,6 +59,14 @@ export function useAnalysisData(): UseAnalysisDataResult {
     const embeddedRiskAnalysis = analysisData?.riskAnalysis
     return embeddedRiskAnalysis ?? EMPTY_RISK_ANALYSIS
   }, [analysisData?.riskAnalysis])
+
+  const evolutionarySummary = useMemo(() => {
+    return analysisData?.evolutionaryMetrics?.summary ?? null
+  }, [analysisData?.evolutionaryMetrics?.summary])
+
+  const fileEvolutionMap = useMemo(() => {
+    return analysisData?.evolutionaryMetrics?.files ?? EMPTY_FILE_EVOLUTION_MAP
+  }, [analysisData?.evolutionaryMetrics?.files])
 
   const loadAnalysis = useCallback(async () => {
     if (isReportMode) {
@@ -95,6 +107,8 @@ export function useAnalysisData(): UseAnalysisDataResult {
   return {
     analysisData,
     riskAnalysis,
+    evolutionarySummary,
+    fileEvolutionMap,
     analysisLoadedAt: isReportMode ? Date.now() : dataUpdatedAt,
     isLoading: isReportMode ? false : isLoading,
     loadError: isReportMode ? null : error?.message || null,

@@ -4,7 +4,12 @@ export const METRIC_LABELS = {
   instability: 'Instability (I)',
   dependentImpact: 'Dependent Impact',
   propagationRisk: 'Propagation Risk',
-  blastRadius: 'Blast Radius'
+  blastRadius: 'Blast Radius',
+  commits30d: 'Commits (30d)',
+  relativeChurn30d: 'Relative Churn (30d)',
+  relativeChurn90d: 'Relative Churn (90d)',
+  evolutionaryHotspotScore: 'Evolutionary Hotspot Score',
+  hotspotStatus: 'Hotspot Status'
 } as const
 
 export const METRIC_TOOLTIPS = {
@@ -19,7 +24,17 @@ export const METRIC_TOOLTIPS = {
   propagationRisk:
     'Derived heuristic calculated as Ca x I. It estimates how strongly change pressure may propagate through dependents.',
   blastRadius:
-    'Derived heuristic that estimates the nearby verification scope after a file change.'
+    'Derived heuristic that estimates the nearby verification scope after a file change.',
+  commits30d:
+    'Number of commits in the last 30 days that touched this file within the analyzed Git history window.',
+  relativeChurn30d:
+    'Recent code change pressure over the last 30 days, normalized by effective lines of code.',
+  relativeChurn90d:
+    'Medium-term code change pressure over the last 90 days, normalized by effective lines of code.',
+  evolutionaryHotspotScore:
+    'Product heuristic that combines recent relative churn with structural propagation risk to prioritize review hotspots.',
+  hotspotStatus:
+    'Repo-relative hotspot band derived from hotspot score percentiles. Use it for prioritization, not as a universal defect claim.'
 } as const
 
 export const HEURISTIC_LABELS = {

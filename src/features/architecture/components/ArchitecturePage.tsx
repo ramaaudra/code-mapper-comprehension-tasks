@@ -107,6 +107,9 @@ export function ArchitecturePage() {
     folders.reduce((sum, f) => sum + f.instability, 0) / totalModules
   const modulesWithCycles = folders.filter((f) => f.hasCycle).length
   const unstableModules = folders.filter((f) => f.instability >= 0.7).length
+  const hotspotModules = folders.filter(
+    (f) => f.evolution?.hotspotStatus === 'critical-hotspot'
+  ).length
 
   // Filter folders by search query
   const filteredFolders = folders.filter((f) =>
@@ -155,6 +158,16 @@ export function ArchitecturePage() {
           : 'No circular dependencies',
       icon: <AlertTriangle className='h-4 w-4' />,
       status: modulesWithCycles > 0 ? 'destructive' : 'default'
+    },
+    {
+      label: 'Critical Hotspot Areas',
+      value: hotspotModules,
+      subValue:
+        hotspotModules > 0
+          ? 'Recent change pressure plus high propagation sensitivity'
+          : 'No critical hotspot areas detected',
+      icon: <TrendingUp className='h-4 w-4' />,
+      status: hotspotModules > 0 ? 'warning' : 'default'
     }
   ]
 
@@ -175,7 +188,7 @@ export function ArchitecturePage() {
         </div>
 
         {/* Summary Cards */}
-        <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
+        <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-5'>
           {summaryCards.map(({ label, value, subValue, icon, status }) => (
             <MetricCard
               key={label}

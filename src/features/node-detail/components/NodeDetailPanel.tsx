@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/shared/components/ui/dialog'
+import { HotspotStatusLabel } from '@/shared/components/ui/hotspot-status-label'
 import {
   AlertTriangle,
   ArrowLeft,
@@ -25,10 +26,12 @@ import {
   Cube,
   Focus,
   Ghost,
+  Lightbulb,
   Map as MapIcon,
   Target
 } from '@/shared/components/ui/icons'
 import { MetricInsightCard } from '@/shared/components/ui/metric-insight-card'
+import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Tabs, TabsContent } from '@/shared/components/ui/tabs'
 import {
@@ -39,10 +42,13 @@ import {
 } from '@/shared/components/ui/tooltip'
 import { architectureApi } from '@/shared/lib/api/architecture'
 import { findDependencyPath } from '@/shared/lib/api/pathfinding'
+import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
 import {
   getBasename,
+  getFileEvolutionMetrics,
   getFileIcon,
   getRelativePath,
+  formatRelativeChurn,
   truncateMiddle
 } from '@/shared/lib/utils'
 import {
@@ -63,8 +69,259 @@ import type {
   AnalysisData,
   AnalysisEdge,
   AnalysisNode,
+  HotspotStatus,
   DependencyReference
 } from '@/shared/types/analysis'
+import type { RiskLevel } from '@/shared/types/risk'
+
+type DecisionStatusTone = 'default' | 'info' | 'success' | 'warning' | 'danger'
+
+interface FileDecisionAssessment {
+  title: string
+  summary: string
+  whyItMatters: string
+  actions: string[]
+  reviewPriority: string
+  impactScope: string
+  changePressure: string
+  externalReliance: string
+  structuralPosition: string
+  tone: DecisionStatusTone
+}
+
+const DECISION_CARD_TONE_ICON = {
+  danger: <AlertTriangle className='h-4 w-4 text-red-500' />,
+  warning: <AlertTriangle className='h-4 w-4 text-orange-500' />,
+  info: <Target className='h-4 w-4 text-sky-500' weight='fill' />,
+  success: <CheckCircle className='h-4 w-4 text-green-500' />,
+  default: <CheckCircle className='h-4 w-4 text-green-500' />
+} satisfies Record<DecisionStatusTone, React.ReactNode>
+
+function getImpactScope(ca: number): string {
+  if (ca >= 15) {
+    return 'Broad'
+  }
+  if (ca >= 5) {
+    return 'Moderate'
+  }
+  return 'Local'
+}
+
+function getChangePressure(relativeChurn: number): string {
+  if (relativeChurn >= 0.3) {
+    return 'High'
+  }
+  if (relativeChurn >= 0.1) {
+    return 'Moderate'
+  }
+  return 'Low'
+}
+
+function getExternalReliance(ce: number): string {
+  if (ce >= 10) {
+    return 'High'
+  }
+  if (ce >= 4) {
+    return 'Moderate'
+  }
+  return 'Low'
+}
+
+function getStructuralPosition(instability: number): string {
+  if (instability >= 0.7) {
+    return 'Outward-Dependent'
+  }
+  if (instability >= 0.4) {
+    return 'Balanced'
+  }
+  return 'Foundation-like'
+}
+
+function mapHotspotTone(
+  status: HotspotStatus,
+  isInCycle: boolean
+): DecisionStatusTone {
+  if (isInCycle || status === 'critical-hotspot') {
+    return 'danger'
+  }
+  if (status === 'high-review-needed') {
+    return 'warning'
+  }
+  if (status === 'active') {
+    return 'info'
+  }
+  return 'success'
+}
+
+function getReviewPriority(
+  status: HotspotStatus,
+  riskLevel: RiskLevel,
+  isInCycle: boolean
+): string {
+  if (isInCycle || status === 'critical-hotspot') {
+    return 'Critical Hotspot'
+  }
+  if (
+    status === 'high-review-needed' ||
+    riskLevel === 'high' ||
+    riskLevel === 'critical'
+  ) {
+    return 'High Review Priority'
+  }
+  if (status === 'active' || riskLevel === 'medium') {
+    return 'Normal Review Priority'
+  }
+  return 'Low Review Priority'
+}
+
+function createFileDecisionAssessment(params: {
+  isOrphan: boolean
+  isInCycle: boolean
+  ca: number
+  ce: number
+  instability: number
+  relativeChurn30d: number
+  hotspotStatus: HotspotStatus
+  riskLevel: RiskLevel
+}): FileDecisionAssessment {
+  const {
+    isOrphan,
+    isInCycle,
+    ca,
+    ce,
+    instability,
+    relativeChurn30d,
+    hotspotStatus,
+    riskLevel
+  } = params
+
+  const impactScope = getImpactScope(ca)
+  const changePressure = getChangePressure(relativeChurn30d)
+  const externalReliance = getExternalReliance(ce)
+  const structuralPosition = getStructuralPosition(instability)
+  const reviewPriority = getReviewPriority(hotspotStatus, riskLevel, isInCycle)
+  const tone = mapHotspotTone(hotspotStatus, isInCycle)
+
+  if (isOrphan) {
+    return {
+      title: 'Possibly Unused File',
+      summary: 'This file appears isolated in the current analysis.',
+      whyItMatters:
+        'No dependents were detected in the current graph, so change impact is usually more contained than in shared files.',
+      actions: [
+        'Verify whether this file is still used through dynamic imports, tests, or scripts.',
+        'If it is truly unused, consider cleanup or consolidation.'
+      ],
+      reviewPriority: 'Low Review Priority',
+      impactScope: 'Local',
+      changePressure,
+      externalReliance,
+      structuralPosition,
+      tone: 'success'
+    }
+  }
+
+  if (isInCycle) {
+    return {
+      title: 'Critical Hotspot',
+      summary:
+        'This file sits in a circular dependency and needs careful review.',
+      whyItMatters:
+        'Circular dependencies increase maintenance and verification cost, and changes can behave unexpectedly across the cycle.',
+      actions: [
+        'Keep the change small and focused.',
+        'Review the full dependency cycle before merging.',
+        'Prefer breaking the cycle over adding new responsibilities here.'
+      ],
+      reviewPriority,
+      impactScope,
+      changePressure,
+      externalReliance,
+      structuralPosition,
+      tone: 'danger'
+    }
+  }
+
+  if (impactScope === 'Broad' && changePressure === 'High') {
+    return {
+      title: 'Critical Hotspot',
+      summary:
+        'This file changes frequently and affects many other parts of the system.',
+      whyItMatters:
+        'This file changes often and affects many other parts of the system, so review and verification scope can spread quickly.',
+      actions: [
+        'Keep the PR small and focused.',
+        'Review dependents before merging.',
+        'Run broader regression checks.'
+      ],
+      reviewPriority,
+      impactScope,
+      changePressure,
+      externalReliance,
+      structuralPosition,
+      tone
+    }
+  }
+
+  if (impactScope === 'Local' && changePressure === 'High') {
+    return {
+      title: 'Active but Local',
+      summary:
+        'This file changes frequently, but its downstream impact stays relatively contained.',
+      whyItMatters:
+        'The recent edit pattern suggests active refinement, but downstream review scope is smaller than in widely used files.',
+      actions: [
+        'Keep changes self-contained.',
+        'Prefer local refactoring over adding more responsibilities.',
+        'Stabilize repeated edits if this area keeps changing.'
+      ],
+      reviewPriority,
+      impactScope,
+      changePressure,
+      externalReliance,
+      structuralPosition,
+      tone: tone === 'danger' ? 'warning' : tone
+    }
+  }
+
+  if (impactScope === 'Broad' && changePressure === 'Low') {
+    return {
+      title: 'Shared Foundation',
+      summary: 'This file is stable, but many other parts rely on it.',
+      whyItMatters:
+        'Even though it changes infrequently, mistakes here can increase downstream review needs across the codebase.',
+      actions: [
+        'Proceed carefully with clear intent.',
+        'Review downstream dependents before merging.',
+        'Prefer incremental changes over broad rewrites.'
+      ],
+      reviewPriority,
+      impactScope,
+      changePressure,
+      externalReliance,
+      structuralPosition,
+      tone: tone === 'success' ? 'info' : tone
+    }
+  }
+
+  return {
+    title: 'Likely Local Change',
+    summary:
+      'This file appears relatively contained and under lower recent change pressure.',
+    whyItMatters:
+      'Recent change activity is limited and downstream impact is smaller than in broad-impact or high-pressure areas.',
+    actions: [
+      'A focused feature change or local refactor is more feasible here.',
+      'Use normal review and testing discipline.'
+    ],
+    reviewPriority,
+    impactScope,
+    changePressure,
+    externalReliance,
+    structuralPosition,
+    tone
+  }
+}
 
 interface NodeDetailPanelProps {
   node: AnalysisNode | string | null
@@ -116,6 +373,10 @@ const NodeDetailPanel = memo(
     const nodeId = typeof node === 'string' ? node : node?.id
     const nodeData = data?.nodes?.find((n) => n.id === nodeId)
     const resolvedNodeId = nodeId ?? ''
+    const fileEvolution = getFileEvolutionMetrics(
+      nodeId ?? null,
+      data?.evolutionaryMetrics.files ?? {}
+    )
 
     // Architecture metrics
     const { data: archMetrics } = useFileArchitectureMetrics(nodeId ?? null)
@@ -160,6 +421,23 @@ const NodeDetailPanel = memo(
       }
       return data.issues.orphans.includes(nodeId)
     }, [data?.issues?.orphans, nodeId])
+
+    const decisionAssessment = useMemo(() => {
+      if (!archMetrics || !fileEvolution) {
+        return null
+      }
+
+      return createFileDecisionAssessment({
+        isOrphan,
+        isInCycle: archMetrics.hasCycle,
+        ca: archMetrics.ca,
+        ce: archMetrics.ce,
+        instability: archMetrics.instability,
+        relativeChurn30d: fileEvolution.churn30d.relativeChurn,
+        hotspotStatus: fileEvolution.hotspotStatus,
+        riskLevel: blastRadiusAssessment?.level ?? 'low'
+      })
+    }, [archMetrics, blastRadiusAssessment?.level, fileEvolution, isOrphan])
 
     // Calculate indegree and outdegree
     const incomingEdges = useMemo(() => {
@@ -524,7 +802,85 @@ const NodeDetailPanel = memo(
             className='m-0 flex-1 space-y-6 overflow-y-auto p-4'
           >
             {/* Risk Assessment: The Verdict */}
-            {isOrphan ? (
+            {decisionAssessment ? (
+              <div className='space-y-3'>
+                <DetailPanelSectionHeading title='What This Means' />
+                <MetricInsightCard
+                  icon={DECISION_CARD_TONE_ICON[decisionAssessment.tone]}
+                  title={decisionAssessment.title}
+                  value={decisionAssessment.reviewPriority}
+                  description={decisionAssessment.summary}
+                  footer={decisionAssessment.whyItMatters}
+                  tone={decisionAssessment.tone}
+                />
+
+                <MetricInsightCard
+                  icon={<Lightbulb className='h-4 w-4 text-amber-500' />}
+                  title='What to do next'
+                  description={
+                    decisionAssessment.actions[0] ??
+                    'Review this area carefully.'
+                  }
+                  footer={
+                    decisionAssessment.actions.length > 1
+                      ? `Also: ${decisionAssessment.actions.slice(1).join(' ')}`
+                      : undefined
+                  }
+                  tone='default'
+                  className='border-border bg-card/60'
+                />
+
+                <div className='grid grid-cols-2 gap-3'>
+                  <MetricValueCard
+                    value={decisionAssessment.impactScope}
+                    label='Impact Scope'
+                    helper={
+                      archMetrics ? (
+                        <span className='text-[11px] text-muted-foreground'>
+                          Dependents (Ca): {archMetrics.ca}
+                        </span>
+                      ) : null
+                    }
+                  />
+                  <MetricValueCard
+                    value={decisionAssessment.changePressure}
+                    label='Change Pressure'
+                    helper={
+                      fileEvolution ? (
+                        <span className='text-[11px] text-muted-foreground'>
+                          Relative Churn (30d):{' '}
+                          {formatRelativeChurn(
+                            fileEvolution.churn30d.relativeChurn
+                          )}
+                        </span>
+                      ) : null
+                    }
+                  />
+                  <MetricValueCard
+                    value={decisionAssessment.externalReliance}
+                    label='External Reliance'
+                    helper={
+                      archMetrics ? (
+                        <span className='text-[11px] text-muted-foreground'>
+                          Dependencies (Ce): {archMetrics.ce}
+                        </span>
+                      ) : null
+                    }
+                  />
+                  <MetricValueCard
+                    value={decisionAssessment.structuralPosition}
+                    label='Structural Position'
+                    helper={
+                      archMetrics ? (
+                        <span className='text-[11px] text-muted-foreground'>
+                          Instability (I): {archMetrics.instability.toFixed(2)}
+                        </span>
+                      ) : null
+                    }
+                  />
+                </div>
+              </div>
+            ) : isOrphan ? (
               // Orphan File Status (replaces normal risk assessment)
               <div className='space-y-3'>
                 <DetailPanelSectionHeading title='File Status' />
@@ -685,6 +1041,44 @@ const NodeDetailPanel = memo(
                   instability={archMetrics.instability}
                   hasCycle={archMetrics.hasCycle}
                 />
+              </div>
+            )}
+
+            {fileEvolution && (
+              <div className='space-y-3'>
+                <DetailPanelSectionHeading title='Evolutionary Metrics' />
+                <div className='grid grid-cols-2 gap-3'>
+                  <MetricValueCard
+                    value={formatRelativeChurn(
+                      fileEvolution.churn30d.relativeChurn
+                    )}
+                    label={METRIC_LABELS.relativeChurn30d}
+                    tooltip={METRIC_TOOLTIPS.relativeChurn30d}
+                  />
+                  <MetricValueCard
+                    value={formatRelativeChurn(
+                      fileEvolution.churn90d.relativeChurn
+                    )}
+                    label={METRIC_LABELS.relativeChurn90d}
+                    tooltip={METRIC_TOOLTIPS.relativeChurn90d}
+                  />
+                  <MetricValueCard
+                    value={fileEvolution.churn30d.commitCount}
+                    label={METRIC_LABELS.commits30d}
+                    tooltip={METRIC_TOOLTIPS.commits30d}
+                  />
+                  <MetricValueCard
+                    value={fileEvolution.hotspotScore.toFixed(2)}
+                    label={METRIC_LABELS.evolutionaryHotspotScore}
+                    tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
+                    helper={
+                      <HotspotStatusLabel
+                        status={fileEvolution.hotspotStatus}
+                        className='text-[11px] text-muted-foreground'
+                      />
+                    }
+                  />
+                </div>
               </div>
             )}
 

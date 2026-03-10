@@ -16,6 +16,12 @@ export interface ModuleNodeData extends Record<string, unknown> {
   riskScore: number
   instability: number
   isZoneOfPain: boolean
+  hotspotScore?: number
+  hotspotStatus?:
+    | 'stable'
+    | 'active'
+    | 'high-review-needed'
+    | 'critical-hotspot'
   relationToFocus?: ModuleRelationToFocus
   isFocusContext?: boolean
   isSelected?: boolean

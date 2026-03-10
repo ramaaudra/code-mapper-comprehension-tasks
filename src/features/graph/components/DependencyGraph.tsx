@@ -35,6 +35,7 @@ import {
   useState
 } from 'react'
 
+import { HotspotStatusLabel } from '@/shared/components/ui/hotspot-status-label'
 import { getRelativePath, truncateMiddle } from '@/shared/lib/utils'
 import '@xyflow/react/dist/style.css'
 import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
@@ -282,6 +283,13 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
   const data = (props.data ?? {}) as DependencyNodeData
   const direction = (data.direction ??
     'placeholder') as DependencyNodeData['direction']
+  const hotspotStatus =
+    (data.hotspotStatus as
+      | 'stable'
+      | 'active'
+      | 'high-review-needed'
+      | 'critical-hotspot'
+      | undefined) ?? 'stable'
 
   const backgroundTone: Record<DependencyNodeData['direction'], string> = {
     selected:
@@ -289,6 +297,17 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
     incoming: 'border-[hsl(var(--border))] bg-[hsl(var(--card))]',
     outgoing: 'border-[hsl(var(--border))] bg-[hsl(var(--card))]',
     placeholder: 'border-[hsl(var(--border))] bg-[hsl(var(--card))]'
+  }
+
+  const hotspotTone: Record<
+    'stable' | 'active' | 'high-review-needed' | 'critical-hotspot',
+    string
+  > = {
+    stable: '',
+    active: 'ring-1 ring-yellow-500/40',
+    'high-review-needed': 'border-orange-500/60 ring-2 ring-orange-500/25',
+    'critical-hotspot':
+      'border-red-500/70 ring-2 ring-red-500/30 shadow-lg shadow-red-500/15'
   }
 
   const chipTone: Record<DependencyNodeData['direction'], string> = {
@@ -324,6 +343,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
       className={clsx(
         'relative flex min-w-[240px] max-w-[300px] flex-col gap-3 rounded-xl border px-4 py-3.5 text-left shadow-sm transition-all duration-200',
         backgroundTone[direction],
+        hotspotTone[hotspotStatus],
         !data.isHovered &&
           direction !== 'selected' &&
           'hover:border-[hsl(var(--primary))] hover:shadow-md',
@@ -376,6 +396,20 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
           <p className='mt-1 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]'>
             {data.subtitle}
           </p>
+        </div>
+      )}
+
+      {hotspotStatus !== 'stable' && (
+        <div className='rounded-lg border border-border bg-muted/40 px-3 py-2'>
+          <div className='text-[11px] font-semibold uppercase tracking-[0.12em] text-orange-500'>
+            Hotspot
+          </div>
+          <div className='mt-1 flex items-start gap-1 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]'>
+            <HotspotStatusLabel status={hotspotStatus} />
+            {typeof data.relativeChurn30d === 'number' ? (
+              <span>{`· ${(data.relativeChurn30d * 100).toFixed(1)}% churn in 30d`}</span>
+            ) : null}
+          </div>
         </div>
       )}
 

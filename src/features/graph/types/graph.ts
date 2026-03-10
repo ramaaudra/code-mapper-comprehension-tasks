@@ -12,6 +12,13 @@ export interface DependencyNodeData extends Record<string, unknown> {
   isHovered?: boolean
   // Simplified mode for large graph optimization
   isSimplified?: boolean
+  hotspotStatus?:
+    | 'stable'
+    | 'active'
+    | 'high-review-needed'
+    | 'critical-hotspot'
+  hotspotScore?: number
+  relativeChurn30d?: number
 }
 
 export interface DependencyEdgeData extends Record<string, unknown> {

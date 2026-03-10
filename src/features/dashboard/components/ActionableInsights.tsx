@@ -22,6 +22,12 @@ interface RiskItem {
   fanIn: number
 }
 
+interface HotspotItem {
+  modulePath: string
+  relativeChurn30d: number
+  hotspotScore: number
+}
+
 interface GodObjectItem {
   path: string
   dependencyCount: number
@@ -33,6 +39,7 @@ interface ActionableInsightsProps {
   criticalRisks: RiskItem[]
   warningRisks: RiskItem[]
   godObjects: GodObjectItem[] // Files with >15 dependencies
+  topHotspot?: HotspotItem | null
 }
 
 interface Insight {
@@ -53,8 +60,14 @@ interface Insight {
  * 5. Orphans (cleanup)
  */
 function generateInsights(props: ActionableInsightsProps): Insight[] {
-  const { cycleCount, orphanCount, criticalRisks, warningRisks, godObjects } =
-    props
+  const {
+    cycleCount,
+    orphanCount,
+    criticalRisks,
+    warningRisks,
+    godObjects,
+    topHotspot
+  } = props
   const insights: Insight[] = []
 
   // 1. BLOCKER: Circular Dependencies
@@ -106,6 +119,17 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       icon: <AlertTriangle className='h-4 w-4 text-orange-500' />,
       message: `${top.path} has high propagation risk (Score: ${top.riskScore.toFixed(1)})`,
       action: 'Review dependents and regression-test before making changes'
+    })
+  }
+
+  if (topHotspot && topHotspot.hotspotScore >= 0.6) {
+    insights.push({
+      priority: 3,
+      type: 'warning',
+      level: topHotspot.hotspotScore >= 0.85 ? 'critical' : 'high',
+      icon: <AlertTriangle className='h-4 w-4 text-orange-500' />,
+      message: `${topHotspot.modulePath} is a high review priority area`,
+      action: `Recent change pressure is ${Math.round(topHotspot.relativeChurn30d * 100)}% in the last 30 days, combined with elevated structural propagation risk.`
     })
   }
 

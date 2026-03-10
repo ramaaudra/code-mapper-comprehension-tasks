@@ -5,9 +5,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from '@/shared/components/ui/collapsible'
+import { HotspotStatusLabel } from '@/shared/components/ui/hotspot-status-label'
 import { CaretDown, CaretRight, CaretUp } from '@/shared/components/ui/icons'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { METRIC_LABELS } from '@/shared/lib/metric-copy'
+import { formatRelativeChurn } from '@/shared/lib/utils'
 import {
   calculateRiskScore,
   getRiskColorClass,
@@ -51,6 +53,11 @@ const columns: Column[] = [
     key: 'riskScore',
     label: METRIC_LABELS.propagationRisk,
     className: 'text-center w-32'
+  },
+  {
+    key: 'hotspotScore',
+    label: METRIC_LABELS.evolutionaryHotspotScore,
+    className: 'text-center w-40'
   }
 ]
 
@@ -90,6 +97,7 @@ function ExpandedRow({ folderPath }: { folderPath: string }) {
             <th className='w-20 py-2 text-center font-medium'>Ca</th>
             <th className='w-20 py-2 text-center font-medium'>Ce</th>
             <th className='w-32 py-2 text-center font-medium'>Instability</th>
+            <th className='w-28 py-2 text-center font-medium'>Churn (30d)</th>
           </tr>
         </thead>
         <tbody>
@@ -116,6 +124,11 @@ function ExpandedRow({ folderPath }: { folderPath: string }) {
                   </span>
                 </div>
               </td>
+              <td className='py-2 text-center'>
+                {file.evolution
+                  ? formatRelativeChurn(file.evolution.churn30d.relativeChurn)
+                  : 'n/a'}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -138,6 +151,14 @@ export function ArchitectureTable({
         const aRisk = calculateRiskScore(a.ca, a.instability)
         const bRisk = calculateRiskScore(b.ca, b.instability)
         return sortConfig.direction === 'asc' ? aRisk - bRisk : bRisk - aRisk
+      }
+
+      if (sortConfig.key === 'hotspotScore') {
+        const aHotspot = a.evolution?.hotspotScore ?? 0
+        const bHotspot = b.evolution?.hotspotScore ?? 0
+        return sortConfig.direction === 'asc'
+          ? aHotspot - bHotspot
+          : bHotspot - aHotspot
       }
 
       const aVal = a[sortConfig.key]
@@ -285,11 +306,26 @@ export function ArchitectureTable({
                           )
                         })()}
                       </td>
+                      <td className='px-4 py-3 text-center font-mono text-xs'>
+                        {folder.evolution ? (
+                          <div className='flex flex-col items-center gap-1'>
+                            <span>
+                              {folder.evolution.hotspotScore.toFixed(2)}
+                            </span>
+                            <HotspotStatusLabel
+                              status={folder.evolution.hotspotStatus}
+                              className='text-[11px] text-muted-foreground'
+                            />
+                          </div>
+                        ) : (
+                          'n/a'
+                        )}
+                      </td>
                     </tr>
                   </CollapsibleTrigger>
                   <CollapsibleContent asChild>
                     <tr>
-                      <td colSpan={5} className='p-0'>
+                      <td colSpan={6} className='p-0'>
                         <ExpandedRow folderPath={folder.folderPath} />
                       </td>
                     </tr>

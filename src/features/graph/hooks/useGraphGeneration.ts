@@ -2,6 +2,7 @@ import { MarkerType } from '@xyflow/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
+  getFileEvolutionMetrics,
   getBasename,
   getValueFromMap,
   hasMatchInSet,
@@ -196,6 +197,12 @@ export function useGraphGeneration({
           return null
         }
 
+        const getEvolution = (targetPath: string) =>
+          getFileEvolutionMetrics(
+            targetPath,
+            currentData.evolutionaryMetrics.files
+          )
+
         // Check cache first
         const cached = graphCache.current.get(fileId)
         if (cached) {
@@ -232,6 +239,7 @@ export function useGraphGeneration({
           subtitle?: string
         ): string => {
           const normalizedPath = normalizePath(rawPath)
+          const evolution = getEvolution(normalizedPath)
           const existing = nodesMap.get(normalizedPath)
           if (existing) {
             return normalizedPath
@@ -287,6 +295,13 @@ export function useGraphGeneration({
             type: 'dependency',
             position: { x: 0, y: 0 },
             data: {
+              ...(evolution
+                ? {
+                    hotspotStatus: evolution.hotspotStatus,
+                    hotspotScore: evolution.hotspotScore,
+                    relativeChurn30d: evolution.churn30d.relativeChurn
+                  }
+                : {}),
               label: getBasename(normalizedPath),
               fullPath: normalizedPath,
               direction,

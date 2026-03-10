@@ -40,7 +40,9 @@ export function useModuleGraph() {
           outgoingModules: Object.keys(folder.couplingTo || {}),
           riskScore,
           instability: folder.instability,
-          isZoneOfPain: riskScore >= RISK_THRESHOLDS.CRITICAL
+          isZoneOfPain: riskScore >= RISK_THRESHOLDS.CRITICAL,
+          hotspotScore: folder.evolution?.hotspotScore ?? 0,
+          hotspotStatus: folder.evolution?.hotspotStatus ?? 'stable'
         }
       }
     })

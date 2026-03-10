@@ -14,11 +14,16 @@ import {
   TrendingUp
 } from '@/shared/components/ui/icons'
 import { MetricCard } from '@/shared/components/ui/metric-card'
+import {
+  buildEvolutionaryHotspots,
+  summarizeEvolutionAvailability
+} from '@/shared/lib/utils'
 import { RISK_THRESHOLDS, calculateRiskScore } from '@/shared/lib/utils/risk'
 
 import { ActionableInsights } from './ActionableInsights'
 import { ArchitectureHealthScore } from './ArchitectureHealthScore'
 import { CouplingDistribution } from './CouplingDistribution'
+import { EvolutionaryHotspots } from './EvolutionaryHotspots'
 import { HighRiskModules } from './HighRiskModules'
 import { IssuesPanel } from './IssuesPanel'
 
@@ -58,6 +63,8 @@ export const ProjectDashboard = memo(
     isLayoutTransitioning
   }: ProjectDashboardProps) {
     const { data: architectureData } = useArchitectureFolders()
+    const evolutionarySummary =
+      analysisData?.evolutionaryMetrics.summary ?? null
 
     // Calculate health breakdown
     const healthBreakdown = useMemo(() => {
@@ -108,6 +115,18 @@ export const ProjectDashboard = memo(
           r.riskScore < RISK_THRESHOLDS.CRITICAL
       )
     }, [allRiskProfiles])
+
+    const hotspotAvailability = useMemo(() => {
+      return summarizeEvolutionAvailability(evolutionarySummary)
+    }, [evolutionarySummary])
+
+    const evolutionaryHotspots = useMemo(() => {
+      return architectureData?.folders
+        ? buildEvolutionaryHotspots(architectureData.folders)
+        : []
+    }, [architectureData])
+
+    const topHotspot = evolutionaryHotspots[0] ?? null
 
     // Calculate coupling distribution
     const couplingDistribution = useMemo(() => {
@@ -195,7 +214,9 @@ export const ProjectDashboard = memo(
         averageDependenciesPerFile:
           analysisData?.detailedMetrics?.averageDependenciesPerFile ??
           analysisData?.metrics?.avgDegree ??
-          0
+          0,
+        averageRelativeChurn30d:
+          analysisData?.evolutionaryMetrics.summary.averageRelativeChurn30d ?? 0
       }
 
       const overviewCards = [
@@ -215,6 +236,13 @@ export const ProjectDashboard = memo(
             typeof snapshot.averageDependenciesPerFile === 'number'
               ? `${snapshot.averageDependenciesPerFile}`
               : snapshot.averageDependenciesPerFile,
+          icon: <TrendingUp className='h-4 w-4' />
+        },
+        {
+          label: 'Avg. Relative Churn (30d)',
+          value: hotspotAvailability.isAvailable
+            ? `${(snapshot.averageRelativeChurn30d * 100).toFixed(1)}%`
+            : 'Unavailable',
           icon: <TrendingUp className='h-4 w-4' />
         }
       ]
@@ -255,7 +283,7 @@ export const ProjectDashboard = memo(
             </div>
 
             {/* Top Metrics - Minimalist Developer Style */}
-            <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-3'>
+            <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
               {overviewCards.map(({ label, value, icon }) => (
                 <MetricCard
                   key={label}
@@ -286,6 +314,12 @@ export const ProjectDashboard = memo(
                   onViewModule={onShowModuleGraph}
                   onViewArchitecture={onShowArchitecture}
                 />
+                <EvolutionaryHotspots
+                  hotspots={evolutionaryHotspots}
+                  isAvailable={hotspotAvailability.isAvailable}
+                  unavailableReason={hotspotAvailability.message}
+                  onViewModule={onShowModuleGraph}
+                />
                 <CouplingDistribution {...couplingDistribution} />
               </div>
 
@@ -297,6 +331,7 @@ export const ProjectDashboard = memo(
                   criticalRisks={criticalRisks}
                   warningRisks={warningRisks}
                   godObjects={couplingDistribution.godObjects}
+                  topHotspot={topHotspot}
                 />
                 <IssuesPanel
                   data={analysisData}
@@ -366,6 +401,12 @@ export const ProjectDashboard = memo(
       return (
         prev.analysisData?.metrics?.fileCount ===
           next.analysisData?.metrics?.fileCount &&
+        prev.analysisData?.evolutionaryMetrics?.summary
+          .averageRelativeChurn30d ===
+          next.analysisData?.evolutionaryMetrics?.summary
+            .averageRelativeChurn30d &&
+        prev.analysisData?.evolutionaryMetrics?.summary.availability ===
+          next.analysisData?.evolutionaryMetrics?.summary.availability &&
         prev.viewMode === next.viewMode &&
         prev.selectedFileId === next.selectedFileId
       )

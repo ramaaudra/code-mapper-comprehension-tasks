@@ -1,5 +1,46 @@
 import type { FileRiskProfile } from '@/shared/types/risk'
 
+export type HotspotStatus =
+  | 'stable'
+  | 'active'
+  | 'high-review-needed'
+  | 'critical-hotspot'
+
+export interface ChurnWindowMetrics {
+  windowDays: 30 | 90
+  churnLoc: number
+  commitCount: number
+  relativeChurn: number
+}
+
+export interface FileEvolutionMetrics {
+  filePath: string
+  effectiveLoc: number
+  churn30d: ChurnWindowMetrics
+  churn90d: ChurnWindowMetrics
+  relativeChurnPercentile: number
+  structuralRiskPercentile: number
+  hotspotScore: number
+  hotspotPercentile: number
+  hotspotStatus: HotspotStatus
+}
+
+export interface EvolutionarySummary {
+  availability: 'available' | 'unavailable'
+  unavailableReason: string | null
+  averageRelativeChurn30d: number
+  averageRelativeChurn90d: number
+  filesWithChurn30d: number
+  filesWithCriticalHotspots: number
+  filesWithHighHotspots: number
+  defaultWindowDays: 30
+}
+
+export interface EvolutionaryMetricsResult {
+  summary: EvolutionarySummary
+  files: Record<string, FileEvolutionMetrics>
+}
+
 export interface UnresolvedImport {
   specifier: string
   pattern: string
@@ -55,6 +96,7 @@ export interface AnalysisNode {
   label?: string
   basename?: string
   size?: number
+  effectiveLoc?: number
   [key: string]: unknown
 }
 
@@ -89,6 +131,7 @@ export interface AnalysisData {
   fileTree: FileTreeNode[]
   dependencyMap: Record<string, DependencyInfo[]>
   riskAnalysis?: FileRiskProfile[]
+  evolutionaryMetrics: EvolutionaryMetricsResult
   issues: AnalysisIssues
   metrics: AnalysisMetrics
   detailedMetrics?: DetailedMetrics
