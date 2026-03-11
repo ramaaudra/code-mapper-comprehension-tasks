@@ -91,7 +91,7 @@ export function DiagnosisCard({
             <div className='min-w-0'>
               <h3
                 className={cn(
-                  'text-base font-semibold leading-tight',
+                  'text-lg font-semibold leading-tight sm:text-xl',
                   style.headline
                 )}
               >

@@ -59,10 +59,15 @@ export function MetricValueCard({
         className
       )}
     >
-      <div className={cn('text-2xl font-semibold tabular-nums', style.value)}>
+      <div
+        className={cn(
+          'text-lg font-semibold tabular-nums leading-tight tracking-tight sm:text-xl',
+          style.value
+        )}
+      >
         {value}
       </div>
-      <div className='mt-1 flex items-center gap-1 text-xs text-muted-foreground'>
+      <div className='mt-1.5 flex items-center gap-1 text-xs font-medium text-foreground/80'>
         <span>{label}</span>
         {tooltip ? (
           <InfoTooltip
@@ -76,7 +81,9 @@ export function MetricValueCard({
           </InfoTooltip>
         ) : null}
       </div>
-      {helper ? <div className='mt-2'>{helper}</div> : null}
+      {helper ? (
+        <div className='mt-2 text-xs text-muted-foreground'>{helper}</div>
+      ) : null}
     </div>
   )
 }

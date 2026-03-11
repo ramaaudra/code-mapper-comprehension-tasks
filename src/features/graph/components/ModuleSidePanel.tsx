@@ -22,7 +22,16 @@ import { Tabs, TabsContent } from '@/shared/components/ui/tabs'
 import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
 import {
   createDecisionAssessment,
+  formatChangePressureHelper,
+  formatChangePressureValue,
+  formatExternalRelianceHelper,
+  formatExternalRelianceValue,
   formatRelativeChurn,
+  formatImpactScopeHelper,
+  formatImpactScopeValue,
+  formatStructuralPositionHelper,
+  formatStructuralPositionValue,
+  getAssessmentMethodItems,
   getChangePressureTone,
   getExternalRelianceTone,
   getImpactScopeTone,
@@ -491,49 +500,56 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
           />
           <div className='grid grid-cols-2 gap-3'>
             <MetricValueCard
-              value={decisionAssessment.impactScope}
+              value={formatImpactScopeValue(decisionAssessment.impactScope)}
               label='Impact Scope'
               tone={getImpactScopeTone(decisionAssessment.impactScope)}
               helper={
                 <span className='text-[11px] text-muted-foreground'>
-                  Dependents (Ca): {moduleData.ca}
+                  {formatImpactScopeHelper(moduleData.ca)}
                 </span>
               }
             />
             <MetricValueCard
-              value={decisionAssessment.changePressure}
-              label='Change Pressure'
+              value={formatChangePressureValue(
+                decisionAssessment.changePressure
+              )}
+              label='Change Activity'
               tone={getChangePressureTone(decisionAssessment.changePressure)}
               helper={
                 evolution ? (
                   <span className='text-[11px] text-muted-foreground'>
-                    Relative Churn (30d):{' '}
-                    {formatRelativeChurn(evolution.churn30d.relativeChurn)}
+                    {formatChangePressureHelper(
+                      evolution.churn30d.relativeChurn
+                    )}
                   </span>
                 ) : null
               }
             />
             <MetricValueCard
-              value={decisionAssessment.externalReliance}
-              label='External Reliance'
+              value={formatExternalRelianceValue(
+                decisionAssessment.externalReliance
+              )}
+              label='Dependencies'
               tone={getExternalRelianceTone(
                 decisionAssessment.externalReliance
               )}
               helper={
                 <span className='text-[11px] text-muted-foreground'>
-                  Dependencies (Ce): {moduleData.ce}
+                  {formatExternalRelianceHelper(moduleData.ce)}
                 </span>
               }
             />
             <MetricValueCard
-              value={decisionAssessment.structuralPosition}
-              label='Structural Position'
+              value={formatStructuralPositionValue(
+                decisionAssessment.structuralPosition
+              )}
+              label='Architecture Role'
               tone={getStructuralPositionTone(
                 decisionAssessment.structuralPosition
               )}
               helper={
                 <span className='text-[11px] text-muted-foreground'>
-                  Instability (I): {moduleData.instability.toFixed(2)}
+                  {formatStructuralPositionHelper(moduleData.instability)}
                 </span>
               }
             />
@@ -546,6 +562,11 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
           title='Why this recommendation'
           summary='Inspect the structural and evolutionary evidence behind this verdict.'
         >
+          <div className='space-y-3'>
+            <DetailPanelSectionHeading title='How this was assessed' />
+            <InsightBulletList items={getAssessmentMethodItems()} />
+          </div>
+
           <div className='space-y-3'>
             <InstabilityCard moduleData={moduleData} />
             <DependentImpactCard moduleData={moduleData} />

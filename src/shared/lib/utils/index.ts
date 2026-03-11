@@ -129,6 +129,7 @@ export {
   buildEvolutionaryHotspots,
   formatRelativeChurn,
   getFileEvolutionMetrics,
+  getGraphHotspotStatusLabel,
   getHotspotStatusLabel,
   getHotspotTone,
   summarizeEvolutionAvailability
@@ -138,10 +139,19 @@ export {
 export { createDecisionAssessment } from './decision-assessment'
 export {
   getChangePressureTone,
+  getAssessmentMethodItems,
   getExternalRelianceTone,
   getImpactScopeTone,
   getReviewPriorityTone,
-  getStructuralPositionTone
+  getStructuralPositionTone,
+  formatChangePressureHelper,
+  formatChangePressureValue,
+  formatExternalRelianceHelper,
+  formatExternalRelianceValue,
+  formatImpactScopeHelper,
+  formatImpactScopeValue,
+  formatStructuralPositionHelper,
+  formatStructuralPositionValue
 } from './decision-assessment'
 
 export type {

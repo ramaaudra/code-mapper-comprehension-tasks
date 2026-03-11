@@ -104,6 +104,55 @@ const dagreDefaults = {
   marginy: 60
 }
 
+const dependencyNodeLayoutDefaults = {
+  width: 300,
+  minHeight: 92,
+  subtitleHeight: 24,
+  hotspotHeight: 48,
+  badgeRowHeight: 24
+} as const
+
+function estimateDependencyNodeHeight(data: DependencyNodeData): number {
+  let height = dependencyNodeLayoutDefaults.minHeight
+
+  if (data.subtitle) {
+    height += dependencyNodeLayoutDefaults.subtitleHeight
+  }
+
+  const hotspotStatus =
+    (data.hotspotStatus as
+      | 'stable'
+      | 'active'
+      | 'high-review-needed'
+      | 'critical-hotspot'
+      | undefined) ?? 'stable'
+
+  if (hotspotStatus !== 'stable') {
+    height += dependencyNodeLayoutDefaults.hotspotHeight
+  }
+
+  if (data.badges && data.badges.length > 0) {
+    height +=
+      Math.ceil(data.badges.length / 2) *
+      dependencyNodeLayoutDefaults.badgeRowHeight
+  }
+
+  return height
+}
+
+function getDependencyNodeLayoutSize(node: DependencyFlowNode) {
+  return {
+    width:
+      typeof node.width === 'number'
+        ? node.width
+        : dependencyNodeLayoutDefaults.width,
+    height:
+      typeof node.height === 'number'
+        ? node.height
+        : estimateDependencyNodeHeight(node.data)
+  }
+}
+
 function normalizePath(value: string): string {
   return value.replace(/\\/g, '/')
 }
@@ -148,8 +197,7 @@ function layoutNodes(
     : null
 
   nodes.forEach((node) => {
-    const width = typeof node.width === 'number' ? node.width : 260
-    const height = typeof node.height === 'number' ? node.height : 120
+    const { width, height } = getDependencyNodeLayoutSize(node)
     dagreGraph.setNode(node.id, { width, height })
   })
 
@@ -341,7 +389,10 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
     <button
       type='button'
       className={clsx(
-        'relative flex min-w-[240px] max-w-[300px] flex-col gap-3 rounded-xl border px-4 py-3.5 text-left shadow-sm transition-all duration-200',
+        'relative flex flex-col gap-2.5 rounded-xl border text-left shadow-sm transition-all duration-200',
+        direction === 'selected'
+          ? 'min-w-[248px] max-w-[304px] px-4 py-3.5'
+          : 'min-w-[220px] max-w-[272px] px-3.5 py-3',
         backgroundTone[direction],
         hotspotTone[hotspotStatus],
         !data.isHovered &&
@@ -388,34 +439,29 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
         </div>
       </div>
 
-      {data.subtitle && (
-        <div className='rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/45 px-3 py-2'>
-          <div className='text-[11px] font-semibold uppercase tracking-[0.12em] text-[hsl(var(--primary))]'>
-            {chipLabel[direction]}
-          </div>
-          <p className='mt-1 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]'>
-            {data.subtitle}
-          </p>
-        </div>
-      )}
+      {data.subtitle ? (
+        <p className='text-xs leading-relaxed text-[hsl(var(--muted-foreground))]'>
+          {data.subtitle}
+        </p>
+      ) : null}
 
-      {hotspotStatus !== 'stable' && (
-        <div className='rounded-lg border border-border bg-muted/40 px-3 py-2'>
-          <div className='text-[11px] font-semibold uppercase tracking-[0.12em] text-orange-500'>
-            Hotspot
-          </div>
-          <div className='mt-1 flex items-start gap-1 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]'>
-            <HotspotStatusLabel status={hotspotStatus} />
+      {hotspotStatus !== 'stable' ? (
+        <div className='rounded-md border border-border/70 bg-muted/35 px-2.5 py-1.5'>
+          <div className='flex flex-wrap items-start gap-x-1.5 gap-y-1 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]'>
+            <span className='text-[10px] font-semibold uppercase tracking-[0.12em] text-orange-500'>
+              Change signal
+            </span>
+            <HotspotStatusLabel status={hotspotStatus} variant='graph' />
             {typeof data.relativeChurn30d === 'number' ? (
-              <span>{`· ${(data.relativeChurn30d * 100).toFixed(1)}% churn in 30d`}</span>
+              <span>{`· ${(data.relativeChurn30d * 100).toFixed(1)}% changed in 30d`}</span>
             ) : null}
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Risk Badges */}
       {data.badges && data.badges.length > 0 && (
-        <div className='mt-1 flex flex-wrap gap-1'>
+        <div className='mt-0.5 flex flex-wrap gap-1'>
           {data.badges.map((badge, idx) => {
             const badgeStyles: Record<typeof badge.tone, string> = {
               danger:

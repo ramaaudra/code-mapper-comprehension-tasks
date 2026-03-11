@@ -24,6 +24,19 @@ export function getHotspotStatusLabel(status: HotspotStatus): string {
   }
 }
 
+export function getGraphHotspotStatusLabel(status: HotspotStatus): string {
+  switch (status) {
+    case 'critical-hotspot':
+      return 'Highest hotspot band'
+    case 'high-review-needed':
+      return 'Needs closer review'
+    case 'active':
+      return 'Recently active'
+    default:
+      return 'Lower hotspot band'
+  }
+}
+
 export function getHotspotTone(
   status: HotspotStatus
 ): 'default' | 'warning' | 'danger' {

@@ -47,11 +47,20 @@ import { findDependencyPath } from '@/shared/lib/api/pathfinding'
 import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
 import {
   createDecisionAssessment,
+  formatChangePressureHelper,
+  formatChangePressureValue,
+  formatExternalRelianceHelper,
+  formatExternalRelianceValue,
   getBasename,
   getChangePressureTone,
   getExternalRelianceTone,
   getFileEvolutionMetrics,
   getFileIcon,
+  formatImpactScopeHelper,
+  formatImpactScopeValue,
+  formatStructuralPositionHelper,
+  formatStructuralPositionValue,
+  getAssessmentMethodItems,
   getImpactScopeTone,
   getRelativePath,
   getStructuralPositionTone,
@@ -608,28 +617,31 @@ const NodeDetailPanel = memo(
 
                 <div className='grid grid-cols-2 gap-3'>
                   <MetricValueCard
-                    value={decisionAssessment.impactScope}
+                    value={formatImpactScopeValue(
+                      decisionAssessment.impactScope
+                    )}
                     label='Impact Scope'
                     tone={getImpactScopeTone(decisionAssessment.impactScope)}
                     helper={
                       archMetrics ? (
                         <span className='text-[11px] text-muted-foreground'>
-                          Dependents (Ca): {archMetrics.ca}
+                          {formatImpactScopeHelper(archMetrics.ca)}
                         </span>
                       ) : null
                     }
                   />
                   <MetricValueCard
-                    value={decisionAssessment.changePressure}
-                    label='Change Pressure'
+                    value={formatChangePressureValue(
+                      decisionAssessment.changePressure
+                    )}
+                    label='Change Activity'
                     tone={getChangePressureTone(
                       decisionAssessment.changePressure
                     )}
                     helper={
                       fileEvolution ? (
                         <span className='text-[11px] text-muted-foreground'>
-                          Relative Churn (30d):{' '}
-                          {formatRelativeChurn(
+                          {formatChangePressureHelper(
                             fileEvolution.churn30d.relativeChurn
                           )}
                         </span>
@@ -637,29 +649,35 @@ const NodeDetailPanel = memo(
                     }
                   />
                   <MetricValueCard
-                    value={decisionAssessment.externalReliance}
-                    label='External Reliance'
+                    value={formatExternalRelianceValue(
+                      decisionAssessment.externalReliance
+                    )}
+                    label='Dependencies'
                     tone={getExternalRelianceTone(
                       decisionAssessment.externalReliance
                     )}
                     helper={
                       archMetrics ? (
                         <span className='text-[11px] text-muted-foreground'>
-                          Dependencies (Ce): {archMetrics.ce}
+                          {formatExternalRelianceHelper(archMetrics.ce)}
                         </span>
                       ) : null
                     }
                   />
                   <MetricValueCard
-                    value={decisionAssessment.structuralPosition}
-                    label='Structural Position'
+                    value={formatStructuralPositionValue(
+                      decisionAssessment.structuralPosition
+                    )}
+                    label='Architecture Role'
                     tone={getStructuralPositionTone(
                       decisionAssessment.structuralPosition
                     )}
                     helper={
                       archMetrics ? (
                         <span className='text-[11px] text-muted-foreground'>
-                          Instability (I): {archMetrics.instability.toFixed(2)}
+                          {formatStructuralPositionHelper(
+                            archMetrics.instability
+                          )}
                         </span>
                       ) : null
                     }
@@ -823,6 +841,11 @@ const NodeDetailPanel = memo(
                   title='Why this recommendation'
                   summary='Inspect the structural and change-history evidence behind this verdict.'
                 >
+                  <div className='space-y-3'>
+                    <DetailPanelSectionHeading title='How this was assessed' />
+                    <InsightBulletList items={getAssessmentMethodItems()} />
+                  </div>
+
                   {archMetrics && (
                     <div className='space-y-3'>
                       <DetailPanelSectionHeading title='Architecture Metrics' />

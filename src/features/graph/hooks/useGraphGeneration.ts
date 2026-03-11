@@ -11,7 +11,7 @@ import {
 } from '@/shared/lib/utils'
 import { LRUCache } from '@/shared/lib/utils/lruCache'
 import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
-import { getRiskLabel, getRiskLevel } from '@/shared/lib/utils/risk'
+import { getRiskLevel } from '@/shared/lib/utils/risk'
 
 import type { DependencyEdgeData, DependencyNodeData } from '../types/graph'
 import type { AnalysisData, DependencyInfo } from '@/shared/types/analysis'
@@ -21,6 +21,25 @@ import type { Edge, Node } from '@xyflow/react'
 interface BadgeInfo {
   label: string
   tone: 'info' | 'warning' | 'danger' | 'success'
+}
+
+function getGraphRiskBadgeLabel(
+  level: ReturnType<typeof getRiskLevel>
+): string {
+  switch (level) {
+    case 'critical':
+      return 'Broad spread risk'
+    case 'high':
+      return 'Wider spread risk'
+    case 'medium':
+      return 'Moderate spread risk'
+    default:
+      return 'Limited spread risk'
+  }
+}
+
+function formatUsedByCount(count: number): string {
+  return `Used by ${count} ${count === 1 ? 'file' : 'files'}`
 }
 
 interface GraphElements {
@@ -281,7 +300,7 @@ export function useGraphGeneration({
                       ? 'info'
                       : 'success'
               badges.push({
-                label: `${getRiskLabel(level)} Propagation Risk`,
+                label: getGraphRiskBadgeLabel(level),
                 tone
               })
             }
@@ -320,9 +339,7 @@ export function useGraphGeneration({
         const focusNodeId = ensureNode(
           normalizedActual,
           'selected',
-          incomingCount > 0
-            ? `Imported by ${incomingCount} files`
-            : 'Active file'
+          incomingCount > 0 ? formatUsedByCount(incomingCount) : 'Focus file'
         )
 
         // Get simplified style for large graphs
@@ -332,7 +349,7 @@ export function useGraphGeneration({
           const targetNodeId = ensureNode(
             dep.target,
             'outgoing',
-            'Required module'
+            'Imported by the focus file'
           )
 
           if (!nodesMap.has(focusNodeId) || !nodesMap.has(targetNodeId)) {
@@ -376,7 +393,7 @@ export function useGraphGeneration({
           const importerNodeId = ensureNode(
             importer,
             'incoming',
-            'Imports this file'
+            'Imports the focus file'
           )
 
           if (!nodesMap.has(importerNodeId) || !nodesMap.has(focusNodeId)) {

@@ -42,6 +42,88 @@ export interface DecisionAssessment {
   tone: DecisionStatusTone
 }
 
+export function formatImpactScopeValue(impactScope: ImpactScope): string {
+  switch (impactScope) {
+    case 'Broad':
+      return 'Broad Impact'
+    case 'Moderate':
+      return 'Moderate Impact'
+    default:
+      return 'Local Impact'
+  }
+}
+
+export function formatChangePressureValue(
+  changePressure: ChangePressure
+): string {
+  switch (changePressure) {
+    case 'High':
+      return 'High Activity'
+    case 'Moderate':
+      return 'Moderate Activity'
+    default:
+      return 'Low Activity'
+  }
+}
+
+export function formatExternalRelianceValue(
+  externalReliance: ExternalReliance
+): string {
+  switch (externalReliance) {
+    case 'High':
+      return 'Many Dependencies'
+    case 'Moderate':
+      return 'Some Dependencies'
+    default:
+      return 'Few Dependencies'
+  }
+}
+
+export function formatStructuralPositionValue(
+  structuralPosition: StructuralPosition
+): string {
+  switch (structuralPosition) {
+    case 'Foundation-like':
+      return 'Foundation Role'
+    case 'Balanced':
+      return 'Balanced Role'
+    default:
+      return 'Dependency-heavy Role'
+  }
+}
+
+export function formatImpactScopeHelper(ca: number): string {
+  return `${ca} ${ca === 1 ? 'file depends' : 'files depend'} on this`
+}
+
+export function formatChangePressureHelper(relativeChurn: number): string {
+  return `${formatPercent(relativeChurn)} changed in 30 days`
+}
+
+export function formatExternalRelianceHelper(ce: number): string {
+  return ce === 0
+    ? 'Imports no internal files'
+    : `Imports ${ce} ${ce === 1 ? 'internal file' : 'internal files'}`
+}
+
+export function formatStructuralPositionHelper(instability: number): string {
+  return `Instability: ${instability.toFixed(2)}`
+}
+
+export function getAssessmentMethodItems(): string[] {
+  return [
+    'Change Activity uses Relative Churn (30d).',
+    'Impact Scope uses Dependents (Ca).',
+    'Dependencies uses Ce.',
+    'Architecture Role uses Instability (I).',
+    'Decision labels are product heuristics built from repository signals, not universal scientific thresholds.'
+  ]
+}
+
+function formatPercent(value: number): string {
+  return `${(value * 100).toFixed(1)}%`
+}
+
 export function getReviewPriorityTone(
   reviewPriority: ReviewPriority
 ): DecisionStatusTone {
@@ -232,18 +314,18 @@ function getDiagnosisHeadline(params: {
   }
 
   if (impactScope === 'Moderate' && changePressure === 'Moderate') {
-    return 'Manageable area, but not trivial'
+    return 'Moderate activity, limited spread'
   }
 
   if (impactScope === 'Moderate') {
-    return 'Mostly contained, some coordination needed'
+    return 'Contained area, some coordination needed'
   }
 
   if (changePressure === 'Moderate') {
     return 'Mostly local, still seeing recent edits'
   }
 
-  return 'Mostly local change area'
+  return 'Low recent activity, mostly local impact'
 }
 
 function getBasisSummary(params: {

@@ -5,10 +5,10 @@ import type { LayoutDirection } from '../types/graph'
 import type { ModuleRelationToFocus } from './moduleAggregation'
 
 const MODULE_NODE_WIDTH = 300
-const MODULE_NODE_HEIGHT = 140
+const MODULE_NODE_HEIGHT = 200
 const HORIZONTAL_LANE_OFFSET = 430
 const VERTICAL_LANE_OFFSET = 300
-const LANE_GAP = 190
+const LANE_GAP = 240
 
 function toTopLeftPosition(centerX: number, centerY: number) {
   return {
