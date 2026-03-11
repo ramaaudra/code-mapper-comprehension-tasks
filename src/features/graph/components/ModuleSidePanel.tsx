@@ -1,8 +1,10 @@
 import { useFolderDetail } from '@/features/architecture'
+import { DetailPanelDisclosure } from '@/shared/components/ui/detail-panel-disclosure'
 import { DetailPanelHeader } from '@/shared/components/ui/detail-panel-header'
 import { DetailPanelSectionHeading } from '@/shared/components/ui/detail-panel-section-heading'
 import { DetailPanelState } from '@/shared/components/ui/detail-panel-state'
 import { DetailPanelTabs } from '@/shared/components/ui/detail-panel-tabs'
+import { DiagnosisCard } from '@/shared/components/ui/diagnosis-card'
 import { HotspotStatusLabel } from '@/shared/components/ui/hotspot-status-label'
 import {
   AlertTriangle,
@@ -12,6 +14,7 @@ import {
   Folder
 } from '@/shared/components/ui/icons'
 import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
+import { InsightBulletList } from '@/shared/components/ui/insight-bullet-list'
 import { MetricInsightCard } from '@/shared/components/ui/metric-insight-card'
 import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
@@ -20,6 +23,10 @@ import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
 import {
   createDecisionAssessment,
   formatRelativeChurn,
+  getChangePressureTone,
+  getExternalRelianceTone,
+  getImpactScopeTone,
+  getStructuralPositionTone,
   truncateMiddle
 } from '@/shared/lib/utils'
 import {
@@ -455,33 +462,38 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
     <div className='space-y-4 p-4'>
       {decisionAssessment ? (
         <div className='space-y-3'>
-          <DetailPanelSectionHeading title='What This Means' />
-          <MetricInsightCard
+          <DiagnosisCard
             icon={DECISION_CARD_TONE_ICON[decisionAssessment.tone]}
-            title={decisionAssessment.title}
-            value={decisionAssessment.reviewPriority}
-            description={decisionAssessment.summary}
-            footer={decisionAssessment.whyItMatters}
-            tone={decisionAssessment.tone}
-          />
-          <MetricInsightCard
-            icon={<CheckCircle className='h-4 w-4 text-emerald-500' />}
-            title='What to do next'
-            description={
+            headline={decisionAssessment.headline}
+            taxonomyLabel={decisionAssessment.title}
+            reviewPriority={decisionAssessment.reviewPriority}
+            summary={decisionAssessment.summary}
+            basisSummary={decisionAssessment.basisSummary}
+            actionLead={
               decisionAssessment.actions[0] ?? 'Review this module carefully.'
             }
-            footer={
-              decisionAssessment.actions.length > 1
-                ? `Also: ${decisionAssessment.actions.slice(1).join(' ')}`
-                : undefined
+            actionList={
+              decisionAssessment.actions.length > 1 ? (
+                <InsightBulletList
+                  items={decisionAssessment.actions.slice(1)}
+                />
+              ) : undefined
             }
-            tone='default'
-            className='border-border bg-card/60'
+            driversLead={decisionAssessment.topDrivers[0] ?? ''}
+            driversList={
+              decisionAssessment.topDrivers.length > 1 ? (
+                <InsightBulletList
+                  items={decisionAssessment.topDrivers.slice(1)}
+                />
+              ) : undefined
+            }
+            tone={decisionAssessment.tone}
           />
           <div className='grid grid-cols-2 gap-3'>
             <MetricValueCard
               value={decisionAssessment.impactScope}
               label='Impact Scope'
+              tone={getImpactScopeTone(decisionAssessment.impactScope)}
               helper={
                 <span className='text-[11px] text-muted-foreground'>
                   Dependents (Ca): {moduleData.ca}
@@ -491,6 +503,7 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
             <MetricValueCard
               value={decisionAssessment.changePressure}
               label='Change Pressure'
+              tone={getChangePressureTone(decisionAssessment.changePressure)}
               helper={
                 evolution ? (
                   <span className='text-[11px] text-muted-foreground'>
@@ -503,6 +516,9 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
             <MetricValueCard
               value={decisionAssessment.externalReliance}
               label='External Reliance'
+              tone={getExternalRelianceTone(
+                decisionAssessment.externalReliance
+              )}
               helper={
                 <span className='text-[11px] text-muted-foreground'>
                   Dependencies (Ce): {moduleData.ce}
@@ -512,6 +528,9 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
             <MetricValueCard
               value={decisionAssessment.structuralPosition}
               label='Structural Position'
+              tone={getStructuralPositionTone(
+                decisionAssessment.structuralPosition
+              )}
               helper={
                 <span className='text-[11px] text-muted-foreground'>
                   Instability (I): {moduleData.instability.toFixed(2)}
@@ -522,58 +541,125 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
         </div>
       ) : null}
 
-      <InstabilityCard moduleData={moduleData} />
-      <DependentImpactCard moduleData={moduleData} />
-      <PropagationRiskCard moduleData={moduleData} />
-      <div className='grid grid-cols-2 gap-3'>
-        <MetricValueCard
-          value={moduleData.fileCount}
-          label='Files'
-          tooltip={metricTooltipContent.Files}
-        />
-        <MetricValueCard
-          value={moduleData.ca}
-          label={METRIC_LABELS.dependentsCa}
-          tooltip={metricTooltipContent[METRIC_LABELS.dependentsCa]}
-        />
-        <MetricValueCard
-          value={moduleData.ce}
-          label={METRIC_LABELS.dependenciesCe}
-          tooltip={metricTooltipContent[METRIC_LABELS.dependenciesCe]}
-        />
-        <MetricValueCard
-          value={moduleData.instability.toFixed(2)}
-          label={METRIC_LABELS.instability}
-          tooltip={metricTooltipContent[METRIC_LABELS.instability]}
-        />
-        <MetricValueCard
-          value={riskScore.toFixed(1)}
-          label={METRIC_LABELS.propagationRisk}
-          tooltip={metricTooltipContent[METRIC_LABELS.propagationRisk]}
-        />
-        <MetricValueCard
-          value={
-            evolution
-              ? formatRelativeChurn(evolution.churn30d.relativeChurn)
-              : 'n/a'
-          }
-          label={METRIC_LABELS.relativeChurn30d}
-          tooltip={METRIC_TOOLTIPS.relativeChurn30d}
-        />
-        <MetricValueCard
-          value={evolution ? evolution.hotspotScore.toFixed(2) : 'n/a'}
-          label={METRIC_LABELS.evolutionaryHotspotScore}
-          tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
-          helper={
-            evolution ? (
-              <HotspotStatusLabel
-                status={evolution.hotspotStatus}
-                className='text-[11px] text-muted-foreground'
+      {decisionAssessment ? (
+        <DetailPanelDisclosure
+          title='Why this recommendation'
+          summary='Inspect the structural and evolutionary evidence behind this verdict.'
+        >
+          <div className='space-y-3'>
+            <InstabilityCard moduleData={moduleData} />
+            <DependentImpactCard moduleData={moduleData} />
+            <PropagationRiskCard moduleData={moduleData} />
+          </div>
+          <div className='space-y-3'>
+            <DetailPanelSectionHeading title='Supporting Metrics' />
+            <div className='grid grid-cols-2 gap-3'>
+              <MetricValueCard
+                value={moduleData.fileCount}
+                label='Files'
+                tooltip={metricTooltipContent.Files}
               />
-            ) : null
-          }
-        />
-      </div>
+              <MetricValueCard
+                value={moduleData.ca}
+                label={METRIC_LABELS.dependentsCa}
+                tooltip={metricTooltipContent[METRIC_LABELS.dependentsCa]}
+              />
+              <MetricValueCard
+                value={moduleData.ce}
+                label={METRIC_LABELS.dependenciesCe}
+                tooltip={metricTooltipContent[METRIC_LABELS.dependenciesCe]}
+              />
+              <MetricValueCard
+                value={moduleData.instability.toFixed(2)}
+                label={METRIC_LABELS.instability}
+                tooltip={metricTooltipContent[METRIC_LABELS.instability]}
+              />
+              <MetricValueCard
+                value={riskScore.toFixed(1)}
+                label={METRIC_LABELS.propagationRisk}
+                tooltip={metricTooltipContent[METRIC_LABELS.propagationRisk]}
+              />
+              <MetricValueCard
+                value={
+                  evolution
+                    ? formatRelativeChurn(evolution.churn30d.relativeChurn)
+                    : 'n/a'
+                }
+                label={METRIC_LABELS.relativeChurn30d}
+                tooltip={METRIC_TOOLTIPS.relativeChurn30d}
+              />
+              <MetricValueCard
+                value={evolution ? evolution.hotspotScore.toFixed(2) : 'n/a'}
+                label={METRIC_LABELS.evolutionaryHotspotScore}
+                tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
+                helper={
+                  evolution ? (
+                    <HotspotStatusLabel
+                      status={evolution.hotspotStatus}
+                      className='text-[11px] text-muted-foreground'
+                    />
+                  ) : null
+                }
+              />
+            </div>
+          </div>
+        </DetailPanelDisclosure>
+      ) : (
+        <>
+          <InstabilityCard moduleData={moduleData} />
+          <DependentImpactCard moduleData={moduleData} />
+          <PropagationRiskCard moduleData={moduleData} />
+          <div className='grid grid-cols-2 gap-3'>
+            <MetricValueCard
+              value={moduleData.fileCount}
+              label='Files'
+              tooltip={metricTooltipContent.Files}
+            />
+            <MetricValueCard
+              value={moduleData.ca}
+              label={METRIC_LABELS.dependentsCa}
+              tooltip={metricTooltipContent[METRIC_LABELS.dependentsCa]}
+            />
+            <MetricValueCard
+              value={moduleData.ce}
+              label={METRIC_LABELS.dependenciesCe}
+              tooltip={metricTooltipContent[METRIC_LABELS.dependenciesCe]}
+            />
+            <MetricValueCard
+              value={moduleData.instability.toFixed(2)}
+              label={METRIC_LABELS.instability}
+              tooltip={metricTooltipContent[METRIC_LABELS.instability]}
+            />
+            <MetricValueCard
+              value={riskScore.toFixed(1)}
+              label={METRIC_LABELS.propagationRisk}
+              tooltip={metricTooltipContent[METRIC_LABELS.propagationRisk]}
+            />
+            <MetricValueCard
+              value={
+                evolution
+                  ? formatRelativeChurn(evolution.churn30d.relativeChurn)
+                  : 'n/a'
+              }
+              label={METRIC_LABELS.relativeChurn30d}
+              tooltip={METRIC_TOOLTIPS.relativeChurn30d}
+            />
+            <MetricValueCard
+              value={evolution ? evolution.hotspotScore.toFixed(2) : 'n/a'}
+              label={METRIC_LABELS.evolutionaryHotspotScore}
+              tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
+              helper={
+                evolution ? (
+                  <HotspotStatusLabel
+                    status={evolution.hotspotStatus}
+                    className='text-[11px] text-muted-foreground'
+                  />
+                ) : null
+              }
+            />
+          </div>
+        </>
+      )}
     </div>
   )
 }

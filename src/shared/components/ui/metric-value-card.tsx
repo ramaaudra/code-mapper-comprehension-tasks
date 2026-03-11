@@ -8,7 +8,37 @@ interface MetricValueCardProps {
   label: string
   tooltip?: string
   helper?: ReactNode
+  tone?: 'default' | 'info' | 'success' | 'warning' | 'danger'
   className?: string
+}
+
+const toneStyles: Record<
+  NonNullable<MetricValueCardProps['tone']>,
+  {
+    container: string
+    value: string
+  }
+> = {
+  default: {
+    container: 'border-border bg-muted/35',
+    value: 'text-foreground'
+  },
+  info: {
+    container: 'border-sky-500/30 bg-sky-500/5',
+    value: 'text-sky-600'
+  },
+  success: {
+    container: 'border-emerald-500/30 bg-emerald-500/5',
+    value: 'text-emerald-600'
+  },
+  warning: {
+    container: 'border-amber-500/30 bg-amber-500/5',
+    value: 'text-amber-600'
+  },
+  danger: {
+    container: 'border-destructive/30 bg-destructive/5',
+    value: 'text-destructive'
+  }
 }
 
 export function MetricValueCard({
@@ -16,16 +46,20 @@ export function MetricValueCard({
   label,
   tooltip,
   helper,
+  tone = 'default',
   className
 }: MetricValueCardProps) {
+  const style = toneStyles[tone]
+
   return (
     <div
       className={cn(
-        'rounded-lg border border-border bg-muted/35 p-3 shadow-sm',
+        'rounded-lg border p-3 shadow-sm transition-colors',
+        style.container,
         className
       )}
     >
-      <div className='text-2xl font-semibold tabular-nums text-foreground'>
+      <div className={cn('text-2xl font-semibold tabular-nums', style.value)}>
         {value}
       </div>
       <div className='mt-1 flex items-center gap-1 text-xs text-muted-foreground'>

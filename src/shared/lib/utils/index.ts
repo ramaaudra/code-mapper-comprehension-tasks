@@ -136,9 +136,17 @@ export {
 
 // Re-export decision assessment utilities
 export { createDecisionAssessment } from './decision-assessment'
+export {
+  getChangePressureTone,
+  getExternalRelianceTone,
+  getImpactScopeTone,
+  getReviewPriorityTone,
+  getStructuralPositionTone
+} from './decision-assessment'
 
 export type {
   DecisionAssessment,
   DecisionStatusTone,
-  ImpactScopeThresholds
+  ImpactScopeThresholds,
+  ReviewPriority
 } from './decision-assessment'

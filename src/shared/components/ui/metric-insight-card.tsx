@@ -6,8 +6,9 @@ interface MetricInsightCardProps {
   icon: ReactNode
   title: string
   value?: string
+  valueSlot?: ReactNode
   description: string
-  footer?: string
+  footer?: ReactNode
   tone?: 'default' | 'info' | 'success' | 'warning' | 'danger'
   titleSuffix?: ReactNode
   className?: string
@@ -58,6 +59,7 @@ export function MetricInsightCard({
   icon,
   title,
   value,
+  valueSlot,
   description,
   footer,
   tone = 'default',
@@ -84,7 +86,9 @@ export function MetricInsightCard({
             {titleSuffix}
           </div>
         </div>
-        {value ? (
+        {valueSlot ? (
+          valueSlot
+        ) : value ? (
           <span className={cn('font-mono text-xs', style.value)}>{value}</span>
         ) : null}
       </div>
@@ -94,7 +98,9 @@ export function MetricInsightCard({
       </p>
 
       {footer ? (
-        <p className='mt-2 text-[11px] text-muted-foreground/80'>{footer}</p>
+        <div className='mt-2 text-[11px] text-muted-foreground/80'>
+          {footer}
+        </div>
       ) : null}
     </div>
   )

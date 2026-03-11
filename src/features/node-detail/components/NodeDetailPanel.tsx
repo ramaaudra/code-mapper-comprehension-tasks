@@ -6,10 +6,12 @@ import {
   useFileArchitectureMetrics
 } from '@/features/architecture'
 import { Button } from '@/shared/components/ui/button'
+import { DetailPanelDisclosure } from '@/shared/components/ui/detail-panel-disclosure'
 import { DetailPanelHeader } from '@/shared/components/ui/detail-panel-header'
 import { DetailPanelSectionHeading } from '@/shared/components/ui/detail-panel-section-heading'
 import { DetailPanelState } from '@/shared/components/ui/detail-panel-state'
 import { DetailPanelTabs } from '@/shared/components/ui/detail-panel-tabs'
+import { DiagnosisCard } from '@/shared/components/ui/diagnosis-card'
 import {
   Dialog,
   DialogContent,
@@ -26,10 +28,10 @@ import {
   Cube,
   Focus,
   Ghost,
-  Lightbulb,
   Map as MapIcon,
   Target
 } from '@/shared/components/ui/icons'
+import { InsightBulletList } from '@/shared/components/ui/insight-bullet-list'
 import { MetricInsightCard } from '@/shared/components/ui/metric-insight-card'
 import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
@@ -46,9 +48,13 @@ import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
 import {
   createDecisionAssessment,
   getBasename,
+  getChangePressureTone,
+  getExternalRelianceTone,
   getFileEvolutionMetrics,
   getFileIcon,
+  getImpactScopeTone,
   getRelativePath,
+  getStructuralPositionTone,
   formatRelativeChurn,
   truncateMiddle
 } from '@/shared/lib/utils'
@@ -571,36 +577,40 @@ const NodeDetailPanel = memo(
             {/* Risk Assessment: The Verdict */}
             {decisionAssessment ? (
               <div className='space-y-3'>
-                <DetailPanelSectionHeading title='What This Means' />
-                <MetricInsightCard
+                <DiagnosisCard
                   icon={DECISION_CARD_TONE_ICON[decisionAssessment.tone]}
-                  title={decisionAssessment.title}
-                  value={decisionAssessment.reviewPriority}
-                  description={decisionAssessment.summary}
-                  footer={decisionAssessment.whyItMatters}
-                  tone={decisionAssessment.tone}
-                />
-
-                <MetricInsightCard
-                  icon={<Lightbulb className='h-4 w-4 text-amber-500' />}
-                  title='What to do next'
-                  description={
+                  headline={decisionAssessment.headline}
+                  taxonomyLabel={decisionAssessment.title}
+                  reviewPriority={decisionAssessment.reviewPriority}
+                  summary={decisionAssessment.summary}
+                  basisSummary={decisionAssessment.basisSummary}
+                  actionLead={
                     decisionAssessment.actions[0] ??
                     'Review this area carefully.'
                   }
-                  footer={
-                    decisionAssessment.actions.length > 1
-                      ? `Also: ${decisionAssessment.actions.slice(1).join(' ')}`
-                      : undefined
+                  actionList={
+                    decisionAssessment.actions.length > 1 ? (
+                      <InsightBulletList
+                        items={decisionAssessment.actions.slice(1)}
+                      />
+                    ) : undefined
                   }
-                  tone='default'
-                  className='border-border bg-card/60'
+                  driversLead={decisionAssessment.topDrivers[0] ?? ''}
+                  driversList={
+                    decisionAssessment.topDrivers.length > 1 ? (
+                      <InsightBulletList
+                        items={decisionAssessment.topDrivers.slice(1)}
+                      />
+                    ) : undefined
+                  }
+                  tone={decisionAssessment.tone}
                 />
 
                 <div className='grid grid-cols-2 gap-3'>
                   <MetricValueCard
                     value={decisionAssessment.impactScope}
                     label='Impact Scope'
+                    tone={getImpactScopeTone(decisionAssessment.impactScope)}
                     helper={
                       archMetrics ? (
                         <span className='text-[11px] text-muted-foreground'>
@@ -612,6 +622,9 @@ const NodeDetailPanel = memo(
                   <MetricValueCard
                     value={decisionAssessment.changePressure}
                     label='Change Pressure'
+                    tone={getChangePressureTone(
+                      decisionAssessment.changePressure
+                    )}
                     helper={
                       fileEvolution ? (
                         <span className='text-[11px] text-muted-foreground'>
@@ -626,6 +639,9 @@ const NodeDetailPanel = memo(
                   <MetricValueCard
                     value={decisionAssessment.externalReliance}
                     label='External Reliance'
+                    tone={getExternalRelianceTone(
+                      decisionAssessment.externalReliance
+                    )}
                     helper={
                       archMetrics ? (
                         <span className='text-[11px] text-muted-foreground'>
@@ -637,6 +653,9 @@ const NodeDetailPanel = memo(
                   <MetricValueCard
                     value={decisionAssessment.structuralPosition}
                     label='Structural Position'
+                    tone={getStructuralPositionTone(
+                      decisionAssessment.structuralPosition
+                    )}
                     helper={
                       archMetrics ? (
                         <span className='text-[11px] text-muted-foreground'>
@@ -798,100 +817,206 @@ const NodeDetailPanel = memo(
               )
             )}
 
-            {/* Architecture Metrics: The Evidence */}
-            {archMetrics && (
-              <div className='space-y-3'>
-                <DetailPanelSectionHeading title='Architecture Metrics' />
-                <ArchitectureStats
-                  ca={archMetrics.ca}
-                  ce={archMetrics.ce}
-                  instability={archMetrics.instability}
-                  hasCycle={archMetrics.hasCycle}
-                />
-              </div>
-            )}
-
-            {fileEvolution && (
-              <div className='space-y-3'>
-                <DetailPanelSectionHeading title='Evolutionary Metrics' />
-                <div className='grid grid-cols-2 gap-3'>
-                  <MetricValueCard
-                    value={formatRelativeChurn(
-                      fileEvolution.churn30d.relativeChurn
-                    )}
-                    label={METRIC_LABELS.relativeChurn30d}
-                    tooltip={METRIC_TOOLTIPS.relativeChurn30d}
-                  />
-                  <MetricValueCard
-                    value={formatRelativeChurn(
-                      fileEvolution.churn90d.relativeChurn
-                    )}
-                    label={METRIC_LABELS.relativeChurn90d}
-                    tooltip={METRIC_TOOLTIPS.relativeChurn90d}
-                  />
-                  <MetricValueCard
-                    value={fileEvolution.churn30d.commitCount}
-                    label={METRIC_LABELS.commits30d}
-                    tooltip={METRIC_TOOLTIPS.commits30d}
-                  />
-                  <MetricValueCard
-                    value={fileEvolution.hotspotScore.toFixed(2)}
-                    label={METRIC_LABELS.evolutionaryHotspotScore}
-                    tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
-                    helper={
-                      <HotspotStatusLabel
-                        status={fileEvolution.hotspotStatus}
-                        className='text-[11px] text-muted-foreground'
+            {decisionAssessment ? (
+              (archMetrics || fileEvolution) && (
+                <DetailPanelDisclosure
+                  title='Why this recommendation'
+                  summary='Inspect the structural and change-history evidence behind this verdict.'
+                >
+                  {archMetrics && (
+                    <div className='space-y-3'>
+                      <DetailPanelSectionHeading title='Architecture Metrics' />
+                      <ArchitectureStats
+                        ca={archMetrics.ca}
+                        ce={archMetrics.ce}
+                        instability={archMetrics.instability}
+                        hasCycle={archMetrics.hasCycle}
                       />
-                    }
-                  />
-                </div>
-              </div>
+                    </div>
+                  )}
+
+                  {fileEvolution && (
+                    <div className='space-y-3'>
+                      <DetailPanelSectionHeading title='Evolutionary Metrics' />
+                      <div className='grid grid-cols-2 gap-3'>
+                        <MetricValueCard
+                          value={formatRelativeChurn(
+                            fileEvolution.churn30d.relativeChurn
+                          )}
+                          label={METRIC_LABELS.relativeChurn30d}
+                          tooltip={METRIC_TOOLTIPS.relativeChurn30d}
+                        />
+                        <MetricValueCard
+                          value={formatRelativeChurn(
+                            fileEvolution.churn90d.relativeChurn
+                          )}
+                          label={METRIC_LABELS.relativeChurn90d}
+                          tooltip={METRIC_TOOLTIPS.relativeChurn90d}
+                        />
+                        <MetricValueCard
+                          value={fileEvolution.churn30d.commitCount}
+                          label={METRIC_LABELS.commits30d}
+                          tooltip={METRIC_TOOLTIPS.commits30d}
+                        />
+                        <MetricValueCard
+                          value={fileEvolution.hotspotScore.toFixed(2)}
+                          label={METRIC_LABELS.evolutionaryHotspotScore}
+                          tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
+                          helper={
+                            <HotspotStatusLabel
+                              status={fileEvolution.hotspotStatus}
+                              className='text-[11px] text-muted-foreground'
+                            />
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
+                </DetailPanelDisclosure>
+              )
+            ) : (
+              <>
+                {archMetrics && (
+                  <div className='space-y-3'>
+                    <DetailPanelSectionHeading title='Architecture Metrics' />
+                    <ArchitectureStats
+                      ca={archMetrics.ca}
+                      ce={archMetrics.ce}
+                      instability={archMetrics.instability}
+                      hasCycle={archMetrics.hasCycle}
+                    />
+                  </div>
+                )}
+
+                {fileEvolution && (
+                  <div className='space-y-3'>
+                    <DetailPanelSectionHeading title='Evolutionary Metrics' />
+                    <div className='grid grid-cols-2 gap-3'>
+                      <MetricValueCard
+                        value={formatRelativeChurn(
+                          fileEvolution.churn30d.relativeChurn
+                        )}
+                        label={METRIC_LABELS.relativeChurn30d}
+                        tooltip={METRIC_TOOLTIPS.relativeChurn30d}
+                      />
+                      <MetricValueCard
+                        value={formatRelativeChurn(
+                          fileEvolution.churn90d.relativeChurn
+                        )}
+                        label={METRIC_LABELS.relativeChurn90d}
+                        tooltip={METRIC_TOOLTIPS.relativeChurn90d}
+                      />
+                      <MetricValueCard
+                        value={fileEvolution.churn30d.commitCount}
+                        label={METRIC_LABELS.commits30d}
+                        tooltip={METRIC_TOOLTIPS.commits30d}
+                      />
+                      <MetricValueCard
+                        value={fileEvolution.hotspotScore.toFixed(2)}
+                        label={METRIC_LABELS.evolutionaryHotspotScore}
+                        tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
+                        helper={
+                          <HotspotStatusLabel
+                            status={fileEvolution.hotspotStatus}
+                            className='text-[11px] text-muted-foreground'
+                          />
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Actions */}
-            {onFocusSubgraph && (
-              <div className='space-y-3'>
-                <DetailPanelSectionHeading title='Graph Actions' />
-                <div className='grid grid-cols-2 gap-2'>
+            {onFocusSubgraph &&
+              (decisionAssessment ? (
+                <DetailPanelDisclosure
+                  title='Graph tools'
+                  summary='Focus inward or outward relationships without leaving this panel.'
+                >
+                  <div className='space-y-3'>
+                    <div className='grid grid-cols-2 gap-2'>
+                      <Button
+                        variant={
+                          focusDirection === 'inward' ? 'secondary' : 'outline'
+                        }
+                        size='sm'
+                        onClick={() => setFocusDirection('inward')}
+                        className='w-full justify-start'
+                      >
+                        <ArrowLeft className='mr-2 h-3 w-3' /> Inward
+                      </Button>
+                      <Button
+                        variant={
+                          focusDirection === 'outward' ? 'secondary' : 'outline'
+                        }
+                        size='sm'
+                        onClick={() => setFocusDirection('outward')}
+                        className='w-full justify-start'
+                      >
+                        Outward <ArrowRight className='ml-2 h-3 w-3' />
+                      </Button>
+                    </div>
+                    <Button
+                      variant='default'
+                      size='sm'
+                      onClick={() =>
+                        onFocusSubgraph(resolvedNodeId, focusDirection)
+                      }
+                      className='w-full'
+                    >
+                      <Focus className='mr-2 h-3 w-3' />
+                      Focus{' '}
+                      {focusDirection === 'inward'
+                        ? 'Dependencies'
+                        : 'Dependents'}{' '}
+                      Subgraph
+                    </Button>
+                  </div>
+                </DetailPanelDisclosure>
+              ) : (
+                <div className='space-y-3'>
+                  <DetailPanelSectionHeading title='Graph Actions' />
+                  <div className='grid grid-cols-2 gap-2'>
+                    <Button
+                      variant={
+                        focusDirection === 'inward' ? 'secondary' : 'outline'
+                      }
+                      size='sm'
+                      onClick={() => setFocusDirection('inward')}
+                      className='w-full justify-start'
+                    >
+                      <ArrowLeft className='mr-2 h-3 w-3' /> Inward
+                    </Button>
+                    <Button
+                      variant={
+                        focusDirection === 'outward' ? 'secondary' : 'outline'
+                      }
+                      size='sm'
+                      onClick={() => setFocusDirection('outward')}
+                      className='w-full justify-start'
+                    >
+                      Outward <ArrowRight className='ml-2 h-3 w-3' />
+                    </Button>
+                  </div>
                   <Button
-                    variant={
-                      focusDirection === 'inward' ? 'secondary' : 'outline'
-                    }
+                    variant='default'
                     size='sm'
-                    onClick={() => setFocusDirection('inward')}
-                    className='w-full justify-start'
-                  >
-                    <ArrowLeft className='mr-2 h-3 w-3' /> Inward
-                  </Button>
-                  <Button
-                    variant={
-                      focusDirection === 'outward' ? 'secondary' : 'outline'
+                    onClick={() =>
+                      onFocusSubgraph(resolvedNodeId, focusDirection)
                     }
-                    size='sm'
-                    onClick={() => setFocusDirection('outward')}
-                    className='w-full justify-start'
+                    className='w-full'
                   >
-                    Outward <ArrowRight className='ml-2 h-3 w-3' />
+                    <Focus className='mr-2 h-3 w-3' />
+                    Focus{' '}
+                    {focusDirection === 'inward'
+                      ? 'Dependencies'
+                      : 'Dependents'}{' '}
+                    Subgraph
                   </Button>
                 </div>
-                <Button
-                  variant='default'
-                  size='sm'
-                  onClick={() =>
-                    onFocusSubgraph(resolvedNodeId, focusDirection)
-                  }
-                  className='w-full'
-                >
-                  <Focus className='mr-2 h-3 w-3' />
-                  Focus{' '}
-                  {focusDirection === 'inward'
-                    ? 'Dependencies'
-                    : 'Dependents'}{' '}
-                  Subgraph
-                </Button>
-              </div>
-            )}
+              ))}
           </TabsContent>
 
           <TabsContent value='dependencies' className='m-0 flex-1'>
