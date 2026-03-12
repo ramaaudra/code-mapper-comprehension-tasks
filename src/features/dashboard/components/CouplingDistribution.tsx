@@ -17,6 +17,8 @@ import { Network } from '@/shared/components/ui/icons'
 import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
 import { getBasename, getRelativePath } from '@/shared/lib/utils'
 
+import { dashboardCopy } from '../content/dashboardCopy'
+
 interface CouplingBucket {
   label: string
   range: string
@@ -60,11 +62,10 @@ export function CouplingDistribution({
           <div className='space-y-1'>
             <CardTitle className='flex items-center gap-2 text-base font-medium'>
               <Network className='h-4 w-4' />
-              Coupling Snapshot
+              {dashboardCopy.couplingSnapshot.title}
             </CardTitle>
             <CardDescription>
-              Use this to understand how dependency load is distributed across
-              files.
+              {dashboardCopy.couplingSnapshot.description}
             </CardDescription>
           </div>
           <InfoTooltip title='What is Coupling?' side='top'>
@@ -101,16 +102,18 @@ export function CouplingDistribution({
       </CardHeader>
       <CardContent className='space-y-4'>
         <div className='text-sm'>
-          <span className='text-muted-foreground'>Average: </span>
+          <span className='text-muted-foreground'>
+            {dashboardCopy.couplingSnapshot.averagePrefix}{' '}
+          </span>
           <span className='font-semibold'>{avgDependencies.toFixed(2)}</span>
           <span className='text-muted-foreground'>
             {' '}
-            outgoing dependencies per file
+            {dashboardCopy.couplingSnapshot.averageSuffix}
           </span>
         </div>
 
         <p className='text-xs text-muted-foreground'>
-          Click a bucket to inspect matching files.
+          {dashboardCopy.couplingSnapshot.bucketHelper}
         </p>
 
         {/* Distribution bars */}
@@ -171,15 +174,20 @@ export function CouplingDistribution({
             <DialogHeader>
               <DialogTitle>
                 {selectedBucket
-                  ? `${selectedBucket.label} coupling files (${selectedBucket.count})`
+                  ? dashboardCopy.couplingSnapshot.dialogTitle(
+                      selectedBucket.label,
+                      selectedBucket.count
+                    )
                   : 'Coupling bucket'}
               </DialogTitle>
             </DialogHeader>
             {selectedBucket ? (
               <div className='space-y-3 overflow-y-auto pr-1'>
                 <p className='text-sm text-muted-foreground'>
-                  Files in the {selectedBucket.label.toLowerCase()} bucket have{' '}
-                  {selectedBucket.range} outgoing dependencies.
+                  {dashboardCopy.couplingSnapshot.dialogDescription(
+                    selectedBucket.label,
+                    selectedBucket.range
+                  )}
                 </p>
                 <div className='space-y-2'>
                   {selectedBucket.files.map((file) => (

@@ -19,6 +19,7 @@ import { MetricInsightCard } from '@/shared/components/ui/metric-insight-card'
 import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Tabs, TabsContent } from '@/shared/components/ui/tabs'
+import { decisionCopy } from '@/shared/content/decisionCopy'
 import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
 import {
   createDecisionAssessment,
@@ -48,6 +49,8 @@ import {
   getRiskLabel,
   getRiskTextClass
 } from '@/shared/lib/utils/risk'
+
+import { graphCopy } from '../content/graphCopy'
 
 import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
 import type {
@@ -501,7 +504,7 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
           <div className='grid grid-cols-2 gap-3'>
             <MetricValueCard
               value={formatImpactScopeValue(decisionAssessment.impactScope)}
-              label='Impact Scope'
+              label={decisionCopy.evidence.labels.impactScope}
               tone={getImpactScopeTone(decisionAssessment.impactScope)}
               helper={
                 <span className='text-[11px] text-muted-foreground'>
@@ -513,7 +516,7 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
               value={formatChangePressureValue(
                 decisionAssessment.changePressure
               )}
-              label='Change Activity'
+              label={decisionCopy.evidence.labels.changeActivity}
               tone={getChangePressureTone(decisionAssessment.changePressure)}
               helper={
                 evolution ? (
@@ -529,7 +532,7 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
               value={formatExternalRelianceValue(
                 decisionAssessment.externalReliance
               )}
-              label='Dependencies'
+              label={decisionCopy.evidence.labels.dependencies}
               tone={getExternalRelianceTone(
                 decisionAssessment.externalReliance
               )}
@@ -543,7 +546,7 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
               value={formatStructuralPositionValue(
                 decisionAssessment.structuralPosition
               )}
-              label='Architecture Role'
+              label={decisionCopy.evidence.labels.architectureRole}
               tone={getStructuralPositionTone(
                 decisionAssessment.structuralPosition
               )}
@@ -559,11 +562,13 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
 
       {decisionAssessment ? (
         <DetailPanelDisclosure
-          title='Why this recommendation'
-          summary='Inspect the structural and evolutionary evidence behind this verdict.'
+          title={graphCopy.modulePanel.disclosure.whyTitle}
+          summary={graphCopy.modulePanel.disclosure.whySummary}
         >
           <div className='space-y-3'>
-            <DetailPanelSectionHeading title='How this was assessed' />
+            <DetailPanelSectionHeading
+              title={graphCopy.modulePanel.disclosure.howAssessedTitle}
+            />
             <InsightBulletList items={getAssessmentMethodItems()} />
           </div>
 
@@ -573,11 +578,13 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
             <PropagationRiskCard moduleData={moduleData} />
           </div>
           <div className='space-y-3'>
-            <DetailPanelSectionHeading title='Supporting Metrics' />
+            <DetailPanelSectionHeading
+              title={graphCopy.modulePanel.disclosure.supportingMetricsTitle}
+            />
             <div className='grid grid-cols-2 gap-3'>
               <MetricValueCard
                 value={moduleData.fileCount}
-                label='Files'
+                label={graphCopy.modulePanel.supportingMetrics.files}
                 tooltip={metricTooltipContent.Files}
               />
               <MetricValueCard
@@ -633,7 +640,7 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
           <div className='grid grid-cols-2 gap-3'>
             <MetricValueCard
               value={moduleData.fileCount}
-              label='Files'
+              label={graphCopy.modulePanel.supportingMetrics.files}
               tooltip={metricTooltipContent.Files}
             />
             <MetricValueCard
@@ -702,8 +709,8 @@ function FilesTab({ modulePath, onViewFile }: FilesTabProps) {
   if (isLoading) {
     return (
       <DetailPanelState
-        title='Loading module files'
-        description='Preparing the list of files inside this module.'
+        title={graphCopy.modulePanel.files.loadingTitle}
+        description={graphCopy.modulePanel.files.loadingDescription}
         compact={true}
       />
     )
@@ -712,8 +719,8 @@ function FilesTab({ modulePath, onViewFile }: FilesTabProps) {
   if (sortedFiles.length === 0) {
     return (
       <DetailPanelState
-        title='No files found'
-        description='This module currently has no file entries in the analysis result.'
+        title={graphCopy.modulePanel.files.emptyTitle}
+        description={graphCopy.modulePanel.files.emptyDescription}
         compact={true}
       />
     )
@@ -741,11 +748,16 @@ function FilesTab({ modulePath, onViewFile }: FilesTabProps) {
               </div>
               <div className='mt-2 flex items-center justify-between pl-7'>
                 <span className='text-xs text-muted-foreground'>
-                  Propagation Risk: {riskScore.toFixed(1)} · Dependents (Ca):{' '}
-                  {file.ca} · Instability (I): {file.instability.toFixed(2)}
-                  {file.evolution
-                    ? ` · Churn (30d): ${formatRelativeChurn(file.evolution.churn30d.relativeChurn)}`
-                    : ''}
+                  {graphCopy.modulePanel.files.summary(
+                    riskScore,
+                    file.ca,
+                    file.instability,
+                    file.evolution
+                      ? formatRelativeChurn(
+                          file.evolution.churn30d.relativeChurn
+                        )
+                      : undefined
+                  )}
                 </span>
                 <button
                   onClick={() => onViewFile(file.filePath)}
@@ -804,13 +816,15 @@ function ConnectionsTab({ moduleData }: ConnectionsTabProps) {
       <div className='space-y-6 p-4'>
         <section>
           <DetailPanelSectionHeading
-            title='Incoming'
+            title={graphCopy.modulePanel.connections.incoming}
             meta={`${incoming.length} modules`}
           />
           {incoming.length === 0 ? (
             <DetailPanelState
-              title='No incoming module dependencies'
-              description='No other modules currently depend on this module.'
+              title={graphCopy.modulePanel.connections.noIncomingTitle}
+              description={
+                graphCopy.modulePanel.connections.noIncomingDescription
+              }
               compact={true}
             />
           ) : (
@@ -824,13 +838,15 @@ function ConnectionsTab({ moduleData }: ConnectionsTabProps) {
 
         <section>
           <DetailPanelSectionHeading
-            title='Outgoing'
+            title={graphCopy.modulePanel.connections.outgoing}
             meta={`${outgoing.length} modules`}
           />
           {outgoing.length === 0 ? (
             <DetailPanelState
-              title='No outgoing module dependencies'
-              description='This module currently has no outgoing dependencies to other modules.'
+              title={graphCopy.modulePanel.connections.noOutgoingTitle}
+              description={
+                graphCopy.modulePanel.connections.noOutgoingDescription
+              }
               compact={true}
             />
           ) : (
@@ -859,9 +875,12 @@ export function ModuleSidePanel({
       <Tabs defaultValue='overview' className='flex min-h-0 flex-1 flex-col'>
         <DetailPanelTabs
           items={[
-            { value: 'overview', label: 'Overview' },
-            { value: 'files', label: 'Files' },
-            { value: 'connections', label: 'Connections' }
+            { value: 'overview', label: graphCopy.modulePanel.tabs.overview },
+            { value: 'files', label: graphCopy.modulePanel.tabs.files },
+            {
+              value: 'connections',
+              label: graphCopy.modulePanel.tabs.connections
+            }
           ]}
         />
 
@@ -874,8 +893,8 @@ export function ModuleSidePanel({
           ) : (
             <div className='p-4'>
               <DetailPanelState
-                title='No module data available'
-                description='The current analysis result does not include architecture metrics for this module.'
+                title={graphCopy.modulePanel.overview.noModuleTitle}
+                description={graphCopy.modulePanel.overview.noModuleDescription}
               />
             </div>
           )}
@@ -891,8 +910,10 @@ export function ModuleSidePanel({
           ) : (
             <div className='p-4'>
               <DetailPanelState
-                title='No connection data available'
-                description='The analysis result does not include incoming or outgoing module connections for this module.'
+                title={graphCopy.modulePanel.connections.noDataTitle}
+                description={
+                  graphCopy.modulePanel.connections.noDataDescription
+                }
               />
             </div>
           )}

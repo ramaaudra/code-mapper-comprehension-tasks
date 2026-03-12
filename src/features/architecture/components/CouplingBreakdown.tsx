@@ -1,5 +1,7 @@
 import { ArrowLeft, ArrowRight } from '@/shared/components/ui/icons'
 
+import { architectureCopy } from '../content/architectureCopy'
+
 interface CouplingBreakdownProps {
   couplingTo: Record<string, number>
   couplingFrom: Record<string, number>
@@ -18,7 +20,7 @@ export function CouplingBreakdown({
       <div>
         <h4 className='mb-2 flex items-center gap-1 text-muted-foreground'>
           <ArrowRight size={12} />
-          Depends on Other Modules (Ce)
+          {architectureCopy.couplingBreakdown.importsFromOtherModules}
         </h4>
         {toEntries.length > 0 ? (
           <ul className='space-y-1'>
@@ -36,7 +38,7 @@ export function CouplingBreakdown({
           </ul>
         ) : (
           <p className='italic text-muted-foreground'>
-            No outgoing cross-module dependencies
+            {architectureCopy.couplingBreakdown.noOutgoing}
           </p>
         )}
       </div>
@@ -45,7 +47,7 @@ export function CouplingBreakdown({
       <div>
         <h4 className='mb-2 flex items-center gap-1 text-muted-foreground'>
           <ArrowLeft size={12} />
-          Used by Other Modules (Ca)
+          {architectureCopy.couplingBreakdown.usedByOtherModules}
         </h4>
         {fromEntries.length > 0 ? (
           <ul className='space-y-1'>
@@ -63,7 +65,7 @@ export function CouplingBreakdown({
           </ul>
         ) : (
           <p className='italic text-muted-foreground'>
-            No incoming cross-module dependents
+            {architectureCopy.couplingBreakdown.noIncoming}
           </p>
         )}
       </div>

@@ -15,6 +15,8 @@ import {
   WarningCircle
 } from '@/shared/components/ui/icons'
 
+import { reportCopy } from '../content/reportCopy'
+
 import type { ApiErrorResponse } from '@/shared/lib/api/types'
 
 export function ReportDownloadButton() {
@@ -75,7 +77,9 @@ export function ReportDownloadButton() {
         ) : (
           <Download className='mr-2 h-4 w-4' />
         )}
-        {isGenerating ? 'Generating...' : 'Export Report'}
+        {isGenerating
+          ? reportCopy.exportButton.generating
+          : reportCopy.exportButton.default}
       </Button>
 
       <Dialog open={!!errorMessage} onOpenChange={() => setErrorMessage(null)}>
@@ -83,14 +87,16 @@ export function ReportDownloadButton() {
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2'>
               <WarningCircle className='h-5 w-5 text-amber-500' />
-              Export report gagal
+              {reportCopy.exportButton.errorTitle}
             </DialogTitle>
             <DialogDescription>
-              {errorMessage || 'Terjadi kesalahan saat membuat report.'}
+              {errorMessage || reportCopy.exportButton.errorDescription}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={() => setErrorMessage(null)}>Tutup</Button>
+            <Button onClick={() => setErrorMessage(null)}>
+              {reportCopy.exportButton.close}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

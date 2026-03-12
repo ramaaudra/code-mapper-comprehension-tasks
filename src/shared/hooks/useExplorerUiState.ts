@@ -2,7 +2,11 @@ import { useCallback, useRef, useState } from 'react'
 
 import type { FileTreeViewRef } from '@/features/file-analysis'
 import type { AnalysisNode } from '@/shared/types/analysis'
-import type { ExplorerViewMode, GraphViewMode } from '@/shared/types/explorer'
+import type {
+  ExplorerViewMode,
+  GraphViewMode,
+  NonGuideViewMode
+} from '@/shared/types/explorer'
 import type { Dispatch, RefObject, SetStateAction } from 'react'
 
 interface UseExplorerUiStateOptions {
@@ -22,6 +26,8 @@ export interface ExplorerUiState {
   setViewMode: Dispatch<SetStateAction<ExplorerViewMode>>
   graphViewMode: GraphViewMode
   setGraphViewMode: Dispatch<SetStateAction<GraphViewMode>>
+  guideReturnViewMode: NonGuideViewMode
+  setGuideReturnViewMode: Dispatch<SetStateAction<NonGuideViewMode>>
   highlightedModule: string | null
   setHighlightedModule: Dispatch<SetStateAction<string | null>>
   focusedModulePath: string | null
@@ -46,6 +52,8 @@ export function useExplorerUiState({
   const [viewMode, setViewMode] = useState<ExplorerViewMode>(initialViewMode)
   const [graphViewMode, setGraphViewMode] =
     useState<GraphViewMode>(initialGraphViewMode)
+  const [guideReturnViewMode, setGuideReturnViewMode] =
+    useState<NonGuideViewMode>(initialViewMode as NonGuideViewMode)
   const [highlightedModule, setHighlightedModule] = useState<string | null>(
     null
   )
@@ -68,6 +76,8 @@ export function useExplorerUiState({
     setViewMode,
     graphViewMode,
     setGraphViewMode,
+    guideReturnViewMode,
+    setGuideReturnViewMode,
     highlightedModule,
     setHighlightedModule,
     focusedModulePath,

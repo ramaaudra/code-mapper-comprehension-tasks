@@ -13,6 +13,8 @@ import { LRUCache } from '@/shared/lib/utils/lruCache'
 import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
 import { getRiskLevel } from '@/shared/lib/utils/risk'
 
+import { graphCopy } from '../content/graphCopy'
+
 import type { DependencyEdgeData, DependencyNodeData } from '../types/graph'
 import type { AnalysisData, DependencyInfo } from '@/shared/types/analysis'
 import type { FileRiskProfile } from '@/shared/types/risk'
@@ -28,18 +30,18 @@ function getGraphRiskBadgeLabel(
 ): string {
   switch (level) {
     case 'critical':
-      return 'Broad spread risk'
+      return graphCopy.node.risk.critical
     case 'high':
-      return 'Wider spread risk'
+      return graphCopy.node.risk.high
     case 'medium':
-      return 'Moderate spread risk'
+      return graphCopy.node.risk.medium
     default:
-      return 'Limited spread risk'
+      return graphCopy.node.risk.low
   }
 }
 
 function formatUsedByCount(count: number): string {
-  return `Used by ${count} ${count === 1 ? 'file' : 'files'}`
+  return graphCopy.node.relation.usedByCount(count)
 }
 
 interface GraphElements {
@@ -339,7 +341,9 @@ export function useGraphGeneration({
         const focusNodeId = ensureNode(
           normalizedActual,
           'selected',
-          incomingCount > 0 ? formatUsedByCount(incomingCount) : 'Focus file'
+          incomingCount > 0
+            ? formatUsedByCount(incomingCount)
+            : graphCopy.node.relation.focusFile
         )
 
         // Get simplified style for large graphs
@@ -349,7 +353,7 @@ export function useGraphGeneration({
           const targetNodeId = ensureNode(
             dep.target,
             'outgoing',
-            'Imported by the focus file'
+            graphCopy.node.relation.importedByFocusFile
           )
 
           if (!nodesMap.has(focusNodeId) || !nodesMap.has(targetNodeId)) {
@@ -393,7 +397,7 @@ export function useGraphGeneration({
           const importerNodeId = ensureNode(
             importer,
             'incoming',
-            'Imports the focus file'
+            graphCopy.node.relation.importsFocusFile
           )
 
           if (!nodesMap.has(importerNodeId) || !nodesMap.has(focusNodeId)) {

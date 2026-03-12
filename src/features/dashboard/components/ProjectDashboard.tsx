@@ -20,6 +20,7 @@ import {
 } from '@/shared/lib/utils'
 import { RISK_THRESHOLDS, calculateRiskScore } from '@/shared/lib/utils/risk'
 
+import { dashboardCopy } from '../content/dashboardCopy'
 import { ActionableInsights } from './ActionableInsights'
 import { ArchitectureHealthScore } from './ArchitectureHealthScore'
 import { CouplingDistribution } from './CouplingDistribution'
@@ -75,6 +76,7 @@ interface ProjectDashboardProps {
   selectedFileId: string | null
   onNavigateToFile: (fileId: string) => void
   onShowArchitecture?: () => void
+  onShowMetricsGuide?: () => void
   onShowModuleGraph?: (modulePath: string) => void
   isLayoutTransitioning?: boolean
 }
@@ -90,6 +92,7 @@ export const ProjectDashboard = memo(
     selectedFileId,
     onNavigateToFile,
     onShowArchitecture,
+    onShowMetricsGuide,
     onShowModuleGraph,
     isLayoutTransitioning
   }: ProjectDashboardProps) {
@@ -319,11 +322,10 @@ export const ProjectDashboard = memo(
           <div className='mx-auto max-w-full space-y-8 px-6 py-6 pb-12 md:px-8 lg:px-12'>
             <div className='space-y-2'>
               <h1 className='text-2xl font-semibold text-foreground'>
-                Project Overview
+                {dashboardCopy.page.title}
               </h1>
               <p className='text-sm text-muted-foreground'>
-                Dependency analysis summary and repair priorities for your
-                project.
+                {dashboardCopy.page.description}
               </p>
             </div>
 
@@ -343,9 +345,9 @@ export const ProjectDashboard = memo(
 
             <div className='space-y-4'>
               <OverviewSectionHeader
-                eyebrow='Quick Snapshot'
-                title='Project size and recent activity'
-                description='Use this row to orient yourself before diving into the review queues below.'
+                eyebrow={dashboardCopy.sections.quickSnapshot.eyebrow}
+                title={dashboardCopy.sections.quickSnapshot.title}
+                description={dashboardCopy.sections.quickSnapshot.description}
               />
               <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
                 {overviewCards.map(({ label, value, icon }) => (
@@ -362,9 +364,9 @@ export const ProjectDashboard = memo(
 
             <div className='space-y-4'>
               <OverviewSectionHeader
-                eyebrow='Review First'
-                title='Shared and active areas that deserve attention'
-                description='Use these two views together: the left list shows where changes can spread, and the right list shows where recent change pressure is highest.'
+                eyebrow={dashboardCopy.sections.reviewFirst.eyebrow}
+                title={dashboardCopy.sections.reviewFirst.title}
+                description={dashboardCopy.sections.reviewFirst.description}
               />
               <div className='grid gap-6 lg:grid-cols-2'>
                 <HighRiskModules
@@ -383,9 +385,9 @@ export const ProjectDashboard = memo(
 
             <div className='space-y-4'>
               <OverviewSectionHeader
-                eyebrow='Current Issues'
-                title='Blockers and cleanup candidates'
-                description='Check cycles first, then review orphaned files when you have maintenance time.'
+                eyebrow={dashboardCopy.sections.currentIssues.eyebrow}
+                title={dashboardCopy.sections.currentIssues.title}
+                description={dashboardCopy.sections.currentIssues.description}
               />
               <IssuesPanel
                 data={analysisData}
@@ -395,9 +397,9 @@ export const ProjectDashboard = memo(
 
             <div className='space-y-4'>
               <OverviewSectionHeader
-                eyebrow='System Context'
-                title='Overall change safety and dependency load'
-                description='These summaries help you understand the broader system condition after triaging the urgent areas above.'
+                eyebrow={dashboardCopy.sections.systemContext.eyebrow}
+                title={dashboardCopy.sections.systemContext.title}
+                description={dashboardCopy.sections.systemContext.description}
               />
               <div className='grid gap-6 lg:grid-cols-2'>
                 <ArchitectureHealthScore
@@ -417,9 +419,9 @@ export const ProjectDashboard = memo(
             </div>
 
             {/* Instability Teaser Card */}
-            {onShowArchitecture && (
+            {onShowMetricsGuide && (
               <button
-                onClick={onShowArchitecture}
+                onClick={onShowMetricsGuide}
                 className='group relative w-full overflow-hidden rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 transition-all duration-300 hover:border-blue-500/40 hover:shadow-lg dark:from-blue-950/30 dark:to-cyan-950/20'
               >
                 <div className='absolute inset-0 bg-blue-400/5 dark:bg-blue-400/10' />
@@ -429,20 +431,15 @@ export const ProjectDashboard = memo(
                   </div>
                   <div className='min-w-0 flex-1 text-left'>
                     <h3 className='mb-0.5 text-base font-semibold text-foreground'>
-                      New to Instability Metrics?
+                      {dashboardCopy.guideTeaser.title}
                     </h3>
                     <p className='text-sm text-muted-foreground'>
-                      Learn why{' '}
-                      <span className='font-medium text-blue-600 dark:text-blue-400'>
-                        Unstable
-                      </span>{' '}
-                      doesn't mean broken — and why high instability is often a
-                      good thing for UI code.
+                      {dashboardCopy.guideTeaser.description}
                     </p>
                   </div>
                   <div className='flex flex-shrink-0 items-center gap-2'>
                     <span className='text-sm font-medium text-blue-600 dark:text-blue-400'>
-                      Read Guide
+                      {dashboardCopy.guideTeaser.cta}
                     </span>
                     <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 transition-colors group-hover:bg-blue-500/20 dark:bg-blue-500/20 dark:group-hover:bg-blue-500/30'>
                       <CaretRight className='h-4 w-4 text-blue-600 transition-transform group-hover:translate-x-0.5 dark:text-blue-400' />

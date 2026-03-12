@@ -15,6 +15,8 @@ import {
 } from '@/shared/components/ui/icons'
 import { getRiskBgOpacityClass } from '@/shared/lib/utils/risk'
 
+import { dashboardCopy } from '../content/dashboardCopy'
+
 import type { RiskLevel } from '@/shared/types/risk'
 
 interface RiskItem {
@@ -94,12 +96,11 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       type: 'critical',
       level: 'critical',
       icon: <RefreshCw className='h-4 w-4 text-red-600' />,
-      message: `Break ${cycleCount} dependency ${cycleCount === 1 ? 'cycle' : 'cycles'} before broader refactors`,
-      action:
-        'Cycles increase coordination and testing cost. Start with the smallest loop and remove one back-reference first.',
+      message: dashboardCopy.actionableInsights.cycle.message(cycleCount),
+      action: dashboardCopy.actionableInsights.cycle.action,
       target: {
         kind: 'architecture',
-        ctaLabel: 'Open architecture'
+        ctaLabel: dashboardCopy.actionableInsights.cta.architecture
       }
     })
   }
@@ -112,13 +113,12 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       type: 'critical',
       level: 'critical',
       icon: <AlertTriangle className='h-4 w-4 text-red-500' />,
-      message: `Review ${top.path} before editing shared flows`,
-      action:
-        'This area is widely reused and structurally able to spread change, so expect broader verification than a local edit.',
+      message: dashboardCopy.actionableInsights.criticalRisk.message(top.path),
+      action: dashboardCopy.actionableInsights.criticalRisk.action,
       target: {
         kind: 'module',
         value: top.path,
-        ctaLabel: 'Open module'
+        ctaLabel: dashboardCopy.actionableInsights.cta.module
       }
     })
   }
@@ -131,12 +131,16 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       type: 'warning',
       level: 'high',
       icon: <Lightbulb className='h-4 w-4 text-orange-500' />,
-      message: `Split ${getBasename(top.path)} before adding more responsibilities`,
-      action: `${top.dependencyCount} direct dependencies suggest this file is carrying too many concerns.`,
+      message: dashboardCopy.actionableInsights.godObject.message(
+        getBasename(top.path)
+      ),
+      action: dashboardCopy.actionableInsights.godObject.action(
+        top.dependencyCount
+      ),
       target: {
         kind: 'file',
         value: top.path,
-        ctaLabel: 'Open file'
+        ctaLabel: dashboardCopy.actionableInsights.cta.file
       }
     })
   }
@@ -149,13 +153,12 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       type: 'warning',
       level: 'high',
       icon: <AlertTriangle className='h-4 w-4 text-orange-500' />,
-      message: `Plan broader checks before editing ${top.path}`,
-      action:
-        'Changes here can reach more dependents than a local module update, so review nearby consumers before merging.',
+      message: dashboardCopy.actionableInsights.warningRisk.message(top.path),
+      action: dashboardCopy.actionableInsights.warningRisk.action,
       target: {
         kind: 'module',
         value: top.path,
-        ctaLabel: 'Open module'
+        ctaLabel: dashboardCopy.actionableInsights.cta.module
       }
     })
   }
@@ -166,12 +169,16 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       type: 'warning',
       level: topHotspot.hotspotScore >= 0.85 ? 'critical' : 'high',
       icon: <AlertTriangle className='h-4 w-4 text-orange-500' />,
-      message: `Review ${topHotspot.modulePath} carefully before editing this active area`,
-      action: `Recent change activity is ${Math.round(topHotspot.relativeChurn30d * 100)}% in the last 30 days, so this area deserves closer review while it is still changing.`,
+      message: dashboardCopy.actionableInsights.hotspot.message(
+        topHotspot.modulePath
+      ),
+      action: dashboardCopy.actionableInsights.hotspot.action(
+        Math.round(topHotspot.relativeChurn30d * 100)
+      ),
       target: {
         kind: 'module',
         value: topHotspot.modulePath,
-        ctaLabel: 'Open module'
+        ctaLabel: dashboardCopy.actionableInsights.cta.module
       }
     })
   }
@@ -183,11 +190,11 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       type: 'info',
       level: 'low',
       icon: <Ghost className='h-4 w-4 text-muted-foreground' />,
-      message: `Validate ${orphanCount} cleanup ${orphanCount === 1 ? 'candidate' : 'candidates'} when no blocker remains`,
+      message: dashboardCopy.actionableInsights.orphans.message(orphanCount),
       action:
         orphanCount > 10
-          ? 'These files may be removable, but confirm dynamic imports, tests, and scripts before cleanup.'
-          : 'Low urgency. Review them during maintenance or cleanup work.'
+          ? dashboardCopy.actionableInsights.orphans.actionHigh
+          : dashboardCopy.actionableInsights.orphans.actionLow
     })
   }
 
@@ -198,8 +205,8 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       type: 'success',
       level: 'low',
       icon: <CheckCircle className='h-4 w-4 text-green-500' />,
-      message: 'No urgent review blockers detected',
-      action: 'You can start with normal feature work and focused local review.'
+      message: dashboardCopy.actionableInsights.success.message,
+      action: dashboardCopy.actionableInsights.success.action
     })
   }
 
@@ -235,11 +242,10 @@ export function ActionableInsights(props: ActionableInsightsProps) {
       <CardHeader className='pb-2'>
         <CardTitle className='flex items-center gap-2 text-base font-medium'>
           <Lightbulb className='h-4 w-4' />
-          Start Here
+          {dashboardCopy.actionableInsights.title}
         </CardTitle>
         <CardDescription>
-          Review these first to reduce change risk and avoid broader
-          regressions.
+          {dashboardCopy.actionableInsights.description}
         </CardDescription>
       </CardHeader>
       <CardContent className='space-y-3'>
@@ -252,7 +258,9 @@ export function ActionableInsights(props: ActionableInsightsProps) {
                 <div className='mt-0.5 shrink-0'>{insight.icon}</div>
                 <div className='min-w-0 flex-1'>
                   <p className='mb-1 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground'>
-                    {index === 0 ? 'Do this first' : 'Then review'}
+                    {index === 0
+                      ? dashboardCopy.actionableInsights.primaryLabel
+                      : dashboardCopy.actionableInsights.secondaryLabel}
                   </p>
                   <p className='text-sm font-medium'>{insight.message}</p>
                   {insight.action && (

@@ -23,6 +23,8 @@ import {
 import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
 import { getBasename, getRelativePath } from '@/shared/lib/utils'
 
+import { dashboardCopy } from '../content/dashboardCopy'
+
 import type { AnalysisData } from '@/shared/types/analysis'
 
 interface IssuesPanelProps {
@@ -53,12 +55,12 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
         <CardHeader>
           <CardTitle className='flex items-center gap-2 text-sm font-medium'>
             <AlertTriangle className='h-4 w-4' />
-            Issues Analysis
+            {dashboardCopy.issuesPanel.emptyStateTitle}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className='text-sm text-muted-foreground'>
-            No analysis data available
+            {dashboardCopy.issuesPanel.emptyStateDescription}
           </p>
         </CardContent>
       </Card>
@@ -86,11 +88,11 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
               <div className='flex items-center gap-2'>
                 <AlertTriangle className='h-4 w-4 text-muted-foreground' />
                 <span className='text-sm font-medium'>
-                  Dependency cycles to fix
+                  {dashboardCopy.issuesPanel.cycles.title}
                 </span>
               </div>
               <p className='text-xs text-muted-foreground'>
-                Break these first to reduce coordination and testing cost.
+                {dashboardCopy.issuesPanel.cycles.description}
               </p>
             </div>
             <div className='flex items-center gap-2'>
@@ -130,7 +132,9 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                   <DialogHeader>
                     <DialogTitle className='flex items-center gap-2'>
                       <AlertTriangle className='h-5 w-5 text-orange-500' />
-                      Circular Dependencies ({circularDependencies.length})
+                      {dashboardCopy.issuesPanel.cycles.dialogTitle(
+                        circularDependencies.length
+                      )}
                     </DialogTitle>
                   </DialogHeader>
                   <div className='space-y-4 overflow-y-auto p-2'>
@@ -252,7 +256,7 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
         {circularDependencies.length === 0 && (
           <CardContent>
             <div className='rounded-md border border-emerald-500/20 bg-emerald-500/5 px-3 py-3 text-sm text-muted-foreground'>
-              No dependency cycles detected.
+              {dashboardCopy.issuesPanel.cycles.empty}
             </div>
           </CardContent>
         )}
@@ -267,11 +271,11 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                 <div className='flex items-center gap-2'>
                   <Ghost className='h-4 w-4 text-muted-foreground' />
                   <span className='text-sm font-medium'>
-                    Cleanup candidates
+                    {dashboardCopy.issuesPanel.cleanup.title}
                   </span>
                 </div>
                 <p className='text-xs text-muted-foreground'>
-                  These files may be removable after a quick validation pass.
+                  {dashboardCopy.issuesPanel.cleanup.description}
                 </p>
               </div>
               <div className='flex items-center gap-2'>

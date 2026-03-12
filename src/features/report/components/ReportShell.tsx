@@ -1,10 +1,11 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 
 import { ArchitecturePage } from '@/features/architecture/components/ArchitecturePage'
 import { DashboardSkeleton } from '@/features/dashboard'
 import { ProjectDashboard } from '@/features/dashboard/components/ProjectDashboard'
 import { FileTreeSkeleton } from '@/features/file-analysis'
 import { DependencyGraph } from '@/features/graph'
+import { MetricsGuidePage } from '@/features/metrics-guide'
 import { SimulationDialog } from '@/features/simulation'
 import { useSimulation } from '@/features/simulation/hooks/useSimulation'
 import { ExplorerRightPanels, ExplorerShell } from '@/shared/components/layouts'
@@ -52,6 +53,17 @@ export function ReportShell() {
     explorer.treeRef.current?.focusSearch()
   })
 
+  useEffect(() => {
+    if (
+      analysisData &&
+      explorer.viewMode !== 'metrics-guide' &&
+      typeof window !== 'undefined' &&
+      window.location.hash.startsWith('#metrics-guide')
+    ) {
+      explorer.handleShowMetricsGuide('overview')
+    }
+  }, [analysisData, explorer])
+
   const main = !analysisData ? (
     renderEmptyState()
   ) : explorer.viewMode === 'graph' ? (
@@ -74,7 +86,15 @@ export function ReportShell() {
     </div>
   ) : explorer.viewMode === 'architecture' ? (
     <Suspense fallback={<DashboardSkeleton />}>
-      <ArchitecturePage />
+      <ArchitecturePage
+        onShowMetricsGuide={() =>
+          explorer.handleShowMetricsGuide('architecture')
+        }
+      />
+    </Suspense>
+  ) : explorer.viewMode === 'metrics-guide' ? (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <MetricsGuidePage onBack={explorer.handleBackFromMetricsGuide} />
     </Suspense>
   ) : explorer.viewMode === 'setup-guide' ? (
     <Suspense fallback={<DashboardSkeleton />}>
@@ -95,6 +115,7 @@ export function ReportShell() {
         selectedFileId={explorer.selectedFileId}
         onNavigateToFile={explorer.navigateToFile}
         onShowArchitecture={explorer.handleShowArchitecture}
+        onShowMetricsGuide={() => explorer.handleShowMetricsGuide('overview')}
         onShowModuleGraph={explorer.handleShowModuleGraph}
         isLayoutTransitioning={ui.isLayoutTransitioning}
       />

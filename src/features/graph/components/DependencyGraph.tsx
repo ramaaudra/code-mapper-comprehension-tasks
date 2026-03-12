@@ -40,6 +40,7 @@ import { getRelativePath, truncateMiddle } from '@/shared/lib/utils'
 import '@xyflow/react/dist/style.css'
 import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
 
+import { graphCopy } from '../content/graphCopy'
 import { useAdaptiveQuality } from '../hooks/useAdaptiveQuality'
 import { useModuleGraph } from '../hooks/useModuleGraph'
 import {
@@ -370,10 +371,10 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
   }
 
   const chipLabel: Record<DependencyNodeData['direction'], string> = {
-    selected: 'Focus',
-    incoming: 'Dependent',
-    outgoing: 'Dependency',
-    placeholder: 'Info'
+    selected: graphCopy.node.chips.selected,
+    incoming: graphCopy.node.chips.incoming,
+    outgoing: graphCopy.node.chips.outgoing,
+    placeholder: graphCopy.node.chips.placeholder
   }
 
   const iconTone: Record<DependencyNodeData['direction'], string> = {
@@ -449,7 +450,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
         <div className='rounded-md border border-border/70 bg-muted/35 px-2.5 py-1.5'>
           <div className='flex flex-wrap items-start gap-x-1.5 gap-y-1 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]'>
             <span className='text-[10px] font-semibold uppercase tracking-[0.12em] text-orange-500'>
-              Change signal
+              {graphCopy.node.changeSignal}
             </span>
             <HotspotStatusLabel status={hotspotStatus} variant='graph' />
             {typeof data.relativeChurn30d === 'number' ? (
@@ -578,7 +579,7 @@ function DependencyGraphInner({
 }: DependencyGraphProps) {
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode)
   const [selectedModule, setSelectedModule] = useState<string | null>(null)
-  // isSidePanelOpen digunakan sebagai internal tracking state
+  // Track side panel visibility internally for graph interactions
   const [, setIsSidePanelOpen] = useState(false)
   const [focusedModuleId, setFocusedModuleId] = useState<string | null>(null)
 
@@ -621,8 +622,8 @@ function DependencyGraphInner({
     onModuleSelect?.(initialFocusedModuleId, moduleData)
   }, [initialFocusedModuleId, initialViewMode, folders, onModuleSelect])
 
-  // selectedModuleData tidak lagi dirender di sini (dipindah ke App.tsx)
-  // isSidePanelOpen tetap ada untuk internal state tracking
+  // selectedModuleData is no longer rendered here (moved to App.tsx)
+  // isSidePanelOpen still exists for internal state tracking
 
   // Filter module nodes/edges based on focus (for cleaner visualization)
   const filteredModuleNodes = useMemo(() => {
@@ -945,7 +946,7 @@ function DependencyGraphInner({
         </div>
       </div>
 
-      {/* Side Panel dipindah ke App.tsx - dirender di luar komponen ini */}
+      {/* Side panel moved to App.tsx and rendered outside this component */}
 
       {/* Loading state untuk module view */}
       {viewMode === 'module' && isModuleLoading && (

@@ -83,14 +83,14 @@ export function useFileArchitectureMetrics(filePath: string | null) {
     }
   }
 
-  // Live mode atau file tidak ditemukan di context
+  // Live mode, or the file was not found in the report context
   return liveQuery
 }
 
 export function useFolderDetail(folderPath: string | null) {
   const context = useContext(DataContext)
 
-  // Report mode: cari folder dan files-nya di context
+  // Report mode: look up the folder and its files from report context
   const reportFolder =
     context?.architectureData && folderPath
       ? context.architectureData.folders.find(

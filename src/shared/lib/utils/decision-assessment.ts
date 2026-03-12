@@ -1,3 +1,23 @@
+import {
+  decisionCopy,
+  formatChangePressureHelperCopy,
+  formatChangePressureValueCopy,
+  formatExternalRelianceHelperCopy,
+  formatExternalRelianceValueCopy,
+  formatImpactScopeHelperCopy,
+  formatImpactScopeValueCopy,
+  formatStructuralPositionHelperCopy,
+  formatStructuralPositionValueCopy,
+  getActiveButLocalDecisionCopy,
+  getCriticalHotspotDecisionCopy,
+  getCycleDecisionCopy,
+  getDecisionBasisSummaryCopy,
+  getDecisionHeadlineCopy,
+  getLikelyLocalDecisionCopy,
+  getOrphanDecisionCopy,
+  getSharedFoundationDecisionCopy
+} from '@/shared/content/decisionCopy'
+
 export type DecisionStatusTone =
   | 'default'
   | 'info'
@@ -43,85 +63,45 @@ export interface DecisionAssessment {
 }
 
 export function formatImpactScopeValue(impactScope: ImpactScope): string {
-  switch (impactScope) {
-    case 'Broad':
-      return 'Broad Impact'
-    case 'Moderate':
-      return 'Moderate Impact'
-    default:
-      return 'Local Impact'
-  }
+  return formatImpactScopeValueCopy(impactScope)
 }
 
 export function formatChangePressureValue(
   changePressure: ChangePressure
 ): string {
-  switch (changePressure) {
-    case 'High':
-      return 'High Activity'
-    case 'Moderate':
-      return 'Moderate Activity'
-    default:
-      return 'Low Activity'
-  }
+  return formatChangePressureValueCopy(changePressure)
 }
 
 export function formatExternalRelianceValue(
   externalReliance: ExternalReliance
 ): string {
-  switch (externalReliance) {
-    case 'High':
-      return 'Many Dependencies'
-    case 'Moderate':
-      return 'Some Dependencies'
-    default:
-      return 'Few Dependencies'
-  }
+  return formatExternalRelianceValueCopy(externalReliance)
 }
 
 export function formatStructuralPositionValue(
   structuralPosition: StructuralPosition
 ): string {
-  switch (structuralPosition) {
-    case 'Foundation-like':
-      return 'Foundation Role'
-    case 'Balanced':
-      return 'Balanced Role'
-    default:
-      return 'Dependency-heavy Role'
-  }
+  return formatStructuralPositionValueCopy(structuralPosition)
 }
 
 export function formatImpactScopeHelper(ca: number): string {
-  return `${ca} ${ca === 1 ? 'file depends' : 'files depend'} on this`
+  return formatImpactScopeHelperCopy(ca)
 }
 
 export function formatChangePressureHelper(relativeChurn: number): string {
-  return `${formatPercent(relativeChurn)} changed in 30 days`
+  return formatChangePressureHelperCopy(relativeChurn)
 }
 
 export function formatExternalRelianceHelper(ce: number): string {
-  return ce === 0
-    ? 'Imports no internal files'
-    : `Imports ${ce} ${ce === 1 ? 'internal file' : 'internal files'}`
+  return formatExternalRelianceHelperCopy(ce)
 }
 
 export function formatStructuralPositionHelper(instability: number): string {
-  return `Instability: ${instability.toFixed(2)}`
+  return formatStructuralPositionHelperCopy(instability)
 }
 
 export function getAssessmentMethodItems(): string[] {
-  return [
-    'Change Activity uses Relative Churn (30d).',
-    'Impact Scope uses Dependents (Ca).',
-    'Dependencies uses Ce.',
-    'Architecture Role uses Instability (I).',
-    'Decision labels are product heuristics built from repository signals, not universal scientific thresholds.'
-  ]
-}
-
-function formatPercent(value: number): string {
-  return `${(value * 100).toFixed(1)}%`
+  return [...decisionCopy.evidence.assessmentMethodItems]
 }
 
 export function getReviewPriorityTone(
@@ -287,144 +267,28 @@ function getDiagnosisHeadline(params: {
   hasCycle: boolean
   isOrphan: boolean
 }): string {
-  const { title, impactScope, changePressure, hasCycle, isOrphan } = params
-
-  if (isOrphan) {
-    return 'Appears isolated in the current analysis'
-  }
-
-  if (hasCycle) {
-    return 'Circular dependency requires extra care'
-  }
-
-  if (title === 'Critical Hotspot') {
-    return 'Frequent changes, broad impact'
-  }
-
-  if (title === 'Active but Local') {
-    return impactScope === 'Moderate'
-      ? 'Frequent changes, narrower spread'
-      : 'Frequent changes, mostly local impact'
-  }
-
-  if (title === 'Shared Foundation') {
-    return changePressure === 'Moderate'
-      ? 'Widely shared, still active'
-      : 'Widely shared, change carefully'
-  }
-
-  if (impactScope === 'Moderate' && changePressure === 'Moderate') {
-    return 'Moderate activity, limited spread'
-  }
-
-  if (impactScope === 'Moderate') {
-    return 'Contained area, some coordination needed'
-  }
-
-  if (changePressure === 'Moderate') {
-    return 'Mostly local, still seeing recent edits'
-  }
-
-  return 'Low recent activity, mostly local impact'
+  return getDecisionHeadlineCopy(params)
 }
 
 function getBasisSummary(params: {
   hasCycle: boolean
   isOrphan: boolean
 }): string {
-  const { hasCycle, isOrphan } = params
-
-  if (isOrphan) {
-    return 'Based on graph isolation in the current analysis.'
-  }
-
-  if (hasCycle) {
-    return 'Based on cycle participation, downstream impact, and recent change pressure.'
-  }
-
-  return 'Based on repository signals: change pressure, downstream impact, external reliance, and structural position.'
+  return getDecisionBasisSummaryCopy(params)
 }
 
 function createActiveButLocalCopy(params: {
   subject: 'file' | 'module'
   impactScope: ImpactScope
 }) {
-  const { subject, impactScope } = params
-
-  if (impactScope === 'Moderate') {
-    return {
-      summary: `This ${subject} changes frequently and has noticeable downstream impact, but it is not as widely shared as a broad hotspot.`,
-      whyItMatters:
-        'Recent change pressure is high and some downstream coordination is likely, but verification scope is still narrower than in broad shared areas.',
-      actions: [
-        'Keep changes focused and easy to review.',
-        'Check the closest dependents before merging.',
-        'Stabilize repeated edits if this area keeps changing.'
-      ],
-      topDrivers: [
-        'Recent change pressure is high in this area.',
-        'Several nearby dependents may still need coordination.',
-        'Impact is noticeable, but narrower than a broad shared hotspot.'
-      ]
-    }
-  }
-
-  return {
-    summary: `This ${subject} changes frequently, but its downstream impact stays relatively contained.`,
-    whyItMatters:
-      'The recent edit pattern suggests active refinement, but review scope is still smaller than in broad shared areas.',
-    actions: [
-      'Keep changes self-contained.',
-      'Prefer local refactoring over adding more responsibilities.',
-      'Stabilize repeated edits if this area keeps changing.'
-    ],
-    topDrivers: [
-      'Recent change pressure is high in this area.',
-      'Downstream impact stays relatively contained.',
-      'This pattern often signals active refinement rather than broad shared risk.'
-    ]
-  }
+  return getActiveButLocalDecisionCopy(params)
 }
 
 function createSharedFoundationCopy(params: {
   subject: 'file' | 'module'
   changePressure: ChangePressure
 }) {
-  const { subject, changePressure } = params
-
-  if (changePressure === 'Moderate') {
-    return {
-      summary: `This ${subject} is shared across the codebase and still sees some recent change activity.`,
-      whyItMatters:
-        'It is not the hottest area in the repository, but many other parts still rely on it, so verification scope can widen quickly.',
-      actions: [
-        'Proceed carefully with clear intent.',
-        'Review downstream dependents before merging.',
-        'Prefer incremental changes over broad rewrites.'
-      ],
-      topDrivers: [
-        'Many other parts still rely on this area.',
-        'Recent activity is present even if this is not the hottest area.',
-        'Verification scope can widen quickly because the area is broadly shared.'
-      ]
-    }
-  }
-
-  return {
-    summary: `This ${subject} is stable, but many other parts rely on it.`,
-    whyItMatters:
-      'Even though it changes less often, mistakes here can increase downstream review needs across the codebase.',
-    actions: [
-      'Proceed carefully with clear intent.',
-      'Review downstream dependents before merging.',
-      'Prefer incremental changes over broad rewrites.'
-    ],
-    topDrivers: [
-      'Many other parts rely on this area.',
-      'Even a small mistake here can widen downstream review scope.',
-      'Its position matters more than its recent churn.'
-    ]
-  }
+  return getSharedFoundationDecisionCopy(params)
 }
 
 function createLikelyLocalChangeCopy(params: {
@@ -432,74 +296,7 @@ function createLikelyLocalChangeCopy(params: {
   impactScope: ImpactScope
   changePressure: ChangePressure
 }) {
-  const { subject, impactScope, changePressure } = params
-
-  if (impactScope === 'Moderate' && changePressure === 'Moderate') {
-    return {
-      summary: `This ${subject} sits in a manageable middle ground: it is more contained than a shared foundation, but it still deserves normal coordination.`,
-      whyItMatters:
-        'Both recent change activity and downstream impact are moderate, so this area is usually workable without being trivial.',
-      actions: [
-        'Use normal review and testing discipline.',
-        'Check the nearest dependents before merging.',
-        'Keep the change scoped to one intent.'
-      ],
-      topDrivers: [
-        'Recent change activity is moderate rather than quiet.',
-        'Downstream impact is also moderate rather than purely local.',
-        'This area is manageable, but it still deserves normal coordination.'
-      ]
-    }
-  }
-
-  if (impactScope === 'Moderate') {
-    return {
-      summary: `This ${subject} is more contained than a broad shared area, but some downstream coordination is still likely.`,
-      whyItMatters:
-        'Review scope is still narrower than in a shared foundation, but changes are not purely local.',
-      actions: [
-        'Use normal review and testing discipline.',
-        'Check the closest dependents before merging.'
-      ],
-      topDrivers: [
-        'Some downstream coordination is still likely here.',
-        'Impact is narrower than in a broad shared area.',
-        'This is not purely local work even if it is more contained.'
-      ]
-    }
-  }
-
-  if (changePressure === 'Moderate') {
-    return {
-      summary: `This ${subject} is still relatively contained, but it has seen some recent change activity.`,
-      whyItMatters:
-        'Recent edits are present, but downstream impact remains smaller than in broad shared areas.',
-      actions: [
-        'Keep the change scoped and easy to review.',
-        'Use normal review and testing discipline.'
-      ],
-      topDrivers: [
-        'Recent edits are present in this area.',
-        'Downstream impact remains smaller than in broad shared areas.',
-        'The area is still workable without broad coordination.'
-      ]
-    }
-  }
-
-  return {
-    summary: `This ${subject} appears relatively contained and under lower recent change pressure.`,
-    whyItMatters:
-      'Recent change activity is lower and downstream impact is smaller than in broad-impact or high-pressure areas.',
-    actions: [
-      'A focused feature change or local refactor is more feasible here.',
-      'Use normal review and testing discipline.'
-    ],
-    topDrivers: [
-      'Recent change pressure is lower here.',
-      'Downstream impact is relatively contained.',
-      'A focused change is easier to isolate than in shared hotspots.'
-    ]
-  }
+  return getLikelyLocalDecisionCopy(params)
 }
 
 function getDecisionTone(
@@ -570,6 +367,8 @@ export function createDecisionAssessment(
   const structuralPosition = getStructuralPosition(instability)
 
   if (isOrphan) {
+    const copy = getOrphanDecisionCopy()
+
     return {
       headline: getDiagnosisHeadline({
         title: 'Possibly Unused File',
@@ -580,18 +379,10 @@ export function createDecisionAssessment(
       }),
       title: 'Possibly Unused File',
       basisSummary: getBasisSummary({ hasCycle, isOrphan }),
-      summary: 'This file appears isolated in the current analysis.',
-      whyItMatters:
-        'No dependents were detected in the current graph, so change impact is usually more contained than in shared files.',
-      actions: [
-        'Verify whether this file is still used through dynamic imports, tests, or scripts.',
-        'If it is truly unused, consider cleanup or consolidation.'
-      ],
-      topDrivers: [
-        'No dependents were detected in the current graph.',
-        'This area appears more isolated than shared files.',
-        'Cleanup may be easier here than in broadly reused areas.'
-      ],
+      summary: copy.summary,
+      whyItMatters: copy.whyItMatters,
+      actions: copy.actions,
+      topDrivers: copy.topDrivers,
       reviewPriority: 'Low Review Priority',
       impactScope: 'Local',
       changePressure,
@@ -622,23 +413,16 @@ export function createDecisionAssessment(
   const basisSummary = getBasisSummary({ hasCycle, isOrphan })
 
   if (hasCycle) {
+    const copy = getCycleDecisionCopy(subject)
+
     return {
       headline,
       title,
       basisSummary,
-      summary: `This ${subject} sits in a circular dependency and needs careful review.`,
-      whyItMatters:
-        'Circular dependencies increase maintenance and verification cost, and changes can behave unexpectedly across the same dependency chain.',
-      actions: [
-        'Keep the change small and focused.',
-        'Review the full dependency cycle before merging.',
-        'Prefer breaking the cycle over adding new responsibilities here.'
-      ],
-      topDrivers: [
-        'This area participates in a circular dependency.',
-        'Changes can feed back through the same dependency chain.',
-        'Verification cost is higher because behavior can loop unexpectedly.'
-      ],
+      summary: copy.summary,
+      whyItMatters: copy.whyItMatters,
+      actions: copy.actions,
+      topDrivers: copy.topDrivers,
       reviewPriority,
       impactScope,
       changePressure,
@@ -649,23 +433,16 @@ export function createDecisionAssessment(
   }
 
   if (title === 'Critical Hotspot') {
+    const copy = getCriticalHotspotDecisionCopy(subject)
+
     return {
       headline,
       title,
       basisSummary,
-      summary: `This ${subject} changes frequently and affects many other parts of the system.`,
-      whyItMatters:
-        'Recent change pressure combines with broad downstream impact, so review and verification scope can spread quickly.',
-      actions: [
-        'Keep the change small and focused.',
-        'Review dependents before merging.',
-        'Run broader regression checks.'
-      ],
-      topDrivers: [
-        'Recent change pressure is high.',
-        'Many other parts depend on this area.',
-        'Verification scope can spread quickly after a change.'
-      ],
+      summary: copy.summary,
+      whyItMatters: copy.whyItMatters,
+      actions: copy.actions,
+      topDrivers: copy.topDrivers,
       reviewPriority,
       impactScope,
       changePressure,

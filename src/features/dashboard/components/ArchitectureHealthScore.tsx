@@ -21,6 +21,8 @@ import {
 } from '@/shared/components/ui/tooltip'
 import { RISK_THRESHOLDS } from '@/shared/lib/utils/risk'
 
+import { dashboardCopy } from '../content/dashboardCopy'
+
 interface HealthBreakdown {
   stabilityScore: number
   cycleCount: number
@@ -95,12 +97,12 @@ export function ArchitectureHealthScore({
 
   const getStructuralProfileLabel = (value: number) => {
     if (value <= 0.3) {
-      return 'More foundational'
+      return dashboardCopy.architectureHealth.profile.foundational
     }
     if (value <= 0.6) {
-      return 'Balanced'
+      return dashboardCopy.architectureHealth.profile.balanced
     }
-    return 'More outward-facing'
+    return dashboardCopy.architectureHealth.profile.outward
   }
 
   const getStructuralProfileDescription = (value: number) => {
@@ -130,11 +132,10 @@ export function ArchitectureHealthScore({
     <Card>
       <CardHeader className='pb-2'>
         <CardTitle className='text-base font-medium'>
-          Overall Change Safety
+          {dashboardCopy.architectureHealth.title}
         </CardTitle>
         <CardDescription>
-          A summary of cycle pressure, shared-change risk, and code hygiene
-          signals across the repository.
+          {dashboardCopy.architectureHealth.description}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -216,7 +217,9 @@ export function ArchitectureHealthScore({
               <div className='flex items-center gap-2'>
                 <Lightbulb className='h-4 w-4 text-blue-500' />
                 <span className='text-sm'>
-                  <span className='text-muted-foreground'>Change Profile:</span>{' '}
+                  <span className='text-muted-foreground'>
+                    {dashboardCopy.architectureHealth.labels.changeProfile}
+                  </span>{' '}
                   <span className='font-medium'>
                     {getStructuralProfileLabel(breakdown.stabilityScore)}
                   </span>
@@ -233,7 +236,9 @@ export function ArchitectureHealthScore({
                   <RefreshCw className='h-4 w-4 text-red-500' />
                 )}
                 <span className='text-sm'>
-                  <span className='text-muted-foreground'>Cycles:</span>{' '}
+                  <span className='text-muted-foreground'>
+                    {dashboardCopy.architectureHealth.labels.cycles}
+                  </span>{' '}
                   <span className='font-medium'>{breakdown.cycleCount}</span>
                 </span>
               </div>
@@ -245,7 +250,9 @@ export function ArchitectureHealthScore({
                   <AlertTriangle className='h-4 w-4 text-red-500' />
                 )}
                 <span className='text-sm'>
-                  <span className='text-muted-foreground'>Critical Risks:</span>{' '}
+                  <span className='text-muted-foreground'>
+                    {dashboardCopy.architectureHealth.labels.criticalRisks}
+                  </span>{' '}
                   <span className='font-medium'>
                     {riskMetrics.criticalCount}
                   </span>

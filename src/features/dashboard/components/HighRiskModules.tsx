@@ -16,6 +16,8 @@ import {
   getRiskLevel
 } from '@/shared/lib/utils/risk'
 
+import { dashboardCopy } from '../content/dashboardCopy'
+
 interface RiskModule {
   path: string
   instability: number
@@ -54,19 +56,20 @@ export function HighRiskModules({
         <CardHeader className='pb-2'>
           <CardTitle className='flex items-center gap-2 text-base font-medium'>
             <AlertTriangle className='h-4 w-4' />
-            Shared areas that can spread change
+            {dashboardCopy.highRiskModules.title}
           </CardTitle>
           <CardDescription>
-            Review these modules carefully before editing shared flows or
-            services.
+            {dashboardCopy.highRiskModules.description}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className='py-4 text-center text-muted-foreground'>
             <AlertTriangle className='mx-auto mb-2 h-8 w-8 opacity-50' />
-            <p className='text-sm'>No module data available</p>
+            <p className='text-sm'>
+              {dashboardCopy.highRiskModules.emptyTitle}
+            </p>
             <p className='mt-1 text-xs'>
-              Run analysis to see propagation-risk hotspots
+              {dashboardCopy.highRiskModules.emptyDescription}
             </p>
           </div>
         </CardContent>
@@ -81,25 +84,29 @@ export function HighRiskModules({
           <div className='space-y-1'>
             <CardTitle className='flex items-center gap-2 text-base font-medium'>
               <AlertTriangle className='h-4 w-4 text-orange-500' />
-              Shared areas that can spread change
+              {dashboardCopy.highRiskModules.title}
               <span className='text-xs font-normal text-muted-foreground'>
                 ({sortedModules.length})
               </span>
             </CardTitle>
             <CardDescription>
-              Review these modules carefully before editing shared flows or
-              services.
+              {dashboardCopy.highRiskModules.description}
             </CardDescription>
           </div>
-          <InfoTooltip title='What is Propagation Risk?' side='top'>
+          <InfoTooltip
+            title={dashboardCopy.highRiskModules.tooltip.title}
+            side='top'
+          >
             <div className='space-y-2'>
               <p className='text-xs text-popover-foreground'>
-                Spread risk estimates how widely a module change may travel
-                through the codebase when many other areas depend on it.
+                {dashboardCopy.highRiskModules.tooltip.intro}
               </p>
               <div className='space-y-1 border-t border-border pt-1 text-xs'>
                 <p className='text-popover-foreground'>
-                  <strong>Heuristic:</strong> Propagation Risk = Ca × I
+                  <strong>
+                    {dashboardCopy.highRiskModules.tooltip.heuristicLabel}
+                  </strong>{' '}
+                  Propagation Risk = Ca × I
                 </p>
                 <p className='text-popover-foreground/80'>
                   • <strong>{METRIC_LABELS.dependentsCa}:</strong> Number of
@@ -110,7 +117,7 @@ export function HighRiskModules({
               </div>
               <div className='space-y-1 border-t border-border pt-1 text-xs'>
                 <p className='font-semibold text-popover-foreground'>
-                  Risk Zones:
+                  {dashboardCopy.highRiskModules.tooltip.thresholdsIntro}
                 </p>
                 <p className='text-popover-foreground/80'>
                   •{' '}
@@ -136,12 +143,10 @@ export function HighRiskModules({
                 </p>
               </div>
               <p className='border-t border-border pt-1 text-xs text-popover-foreground/80'>
-                These thresholds are product heuristics for triage, not
-                universal scientific cutoffs.
+                {dashboardCopy.highRiskModules.tooltip.thresholdsNote}
               </p>
               <p className='pt-1 text-xs text-popover-foreground/80'>
-                A high score means many dependents combined with a dependency
-                structure that can spread change impact widely.
+                {dashboardCopy.highRiskModules.tooltip.summary}
               </p>
             </div>
           </InfoTooltip>
@@ -150,9 +155,15 @@ export function HighRiskModules({
       <CardContent className='space-y-3'>
         {/* Column Headers */}
         <div className='flex items-center gap-4 px-4 text-[10px] uppercase tracking-wider text-muted-foreground'>
-          <div className='flex-1'>Spread Risk</div>
-          <div className='w-16 text-right'>Spread Potential</div>
-          <div className='w-20 text-right'>Shared By</div>
+          <div className='flex-1'>
+            {dashboardCopy.highRiskModules.columns.spreadRisk}
+          </div>
+          <div className='w-16 text-right'>
+            {dashboardCopy.highRiskModules.columns.spreadPotential}
+          </div>
+          <div className='w-20 text-right'>
+            {dashboardCopy.highRiskModules.columns.sharedBy}
+          </div>
         </div>
         {sortedModules.map((module) => {
           const barWidth = (module.riskScore / maxRiskScore) * 100
@@ -191,7 +202,9 @@ export function HighRiskModules({
                 <div className='flex shrink-0 items-center gap-4 text-xs'>
                   <span
                     className='w-16 cursor-help text-right tabular-nums text-muted-foreground transition-colors hover:text-foreground'
-                    title={`Instability (I): ${module.instability.toFixed(2)}\n0.0 = Stable, 1.0 = Unstable`}
+                    title={dashboardCopy.highRiskModules.instabilityTitle(
+                      module.instability.toFixed(2)
+                    )}
                   >
                     {module.instability.toFixed(2)}
                   </span>
@@ -209,7 +222,7 @@ export function HighRiskModules({
             onClick={onViewArchitecture}
             className='w-full py-2 text-center text-xs text-primary hover:underline'
           >
-            View all in Architecture tab →
+            {dashboardCopy.highRiskModules.footerCta}
           </button>
         )}
       </CardContent>

@@ -8,7 +8,6 @@ import {
 import { HotspotStatusLabel } from '@/shared/components/ui/hotspot-status-label'
 import { CaretDown, CaretRight, CaretUp } from '@/shared/components/ui/icons'
 import { Skeleton } from '@/shared/components/ui/skeleton'
-import { METRIC_LABELS } from '@/shared/lib/metric-copy'
 import { formatRelativeChurn } from '@/shared/lib/utils'
 import {
   calculateRiskScore,
@@ -16,6 +15,7 @@ import {
   getRiskLevel
 } from '@/shared/lib/utils/risk'
 
+import { architectureCopy } from '../content/architectureCopy'
 import { useFolderDetail } from '../hooks/useArchitectureMetrics'
 import { CycleBadge } from './CycleBadge'
 import { InstabilityBadge } from './InstabilityBadge'
@@ -33,30 +33,34 @@ interface Column {
 }
 
 const columns: Column[] = [
-  { key: 'folderPath', label: 'Module', className: 'text-left' },
+  {
+    key: 'folderPath',
+    label: architectureCopy.table.columns.module,
+    className: 'text-left'
+  },
   {
     key: 'ca',
-    label: METRIC_LABELS.dependentsCa,
+    label: architectureCopy.table.columns.usedBy,
     className: 'text-center w-24'
   },
   {
     key: 'ce',
-    label: METRIC_LABELS.dependenciesCe,
+    label: architectureCopy.table.columns.imports,
     className: 'text-center w-24'
   },
   {
     key: 'instability',
-    label: METRIC_LABELS.instability,
+    label: architectureCopy.table.columns.structuralPosition,
     className: 'text-center w-32'
   },
   {
     key: 'riskScore',
-    label: METRIC_LABELS.propagationRisk,
+    label: architectureCopy.table.columns.spreadRisk,
     className: 'text-center w-32'
   },
   {
     key: 'hotspotScore',
-    label: METRIC_LABELS.evolutionaryHotspotScore,
+    label: architectureCopy.table.columns.hotspotPriority,
     className: 'text-center w-40'
   }
 ]
@@ -83,7 +87,7 @@ function ExpandedRow({ folderPath }: { folderPath: string }) {
   if (!data?.files || data.files.length === 0) {
     return (
       <div className='px-8 py-4 text-sm text-muted-foreground'>
-        No files in this module
+        {architectureCopy.table.expanded.empty}
       </div>
     )
   }
@@ -93,11 +97,21 @@ function ExpandedRow({ folderPath }: { folderPath: string }) {
       <table className='w-full text-xs'>
         <thead>
           <tr className='text-muted-foreground'>
-            <th className='py-2 text-left font-medium'>File</th>
-            <th className='w-20 py-2 text-center font-medium'>Ca</th>
-            <th className='w-20 py-2 text-center font-medium'>Ce</th>
-            <th className='w-32 py-2 text-center font-medium'>Instability</th>
-            <th className='w-28 py-2 text-center font-medium'>Churn (30d)</th>
+            <th className='py-2 text-left font-medium'>
+              {architectureCopy.table.expanded.file}
+            </th>
+            <th className='w-20 py-2 text-center font-medium'>
+              {architectureCopy.table.expanded.usedBy}
+            </th>
+            <th className='w-20 py-2 text-center font-medium'>
+              {architectureCopy.table.expanded.imports}
+            </th>
+            <th className='w-32 py-2 text-center font-medium'>
+              {architectureCopy.table.expanded.structuralPosition}
+            </th>
+            <th className='w-28 py-2 text-center font-medium'>
+              {architectureCopy.table.expanded.changedIn30d}
+            </th>
           </tr>
         </thead>
         <tbody>

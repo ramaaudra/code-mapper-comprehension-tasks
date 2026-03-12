@@ -23,6 +23,7 @@ import { Input } from '@/shared/components/ui/input'
 import { MetricCard } from '@/shared/components/ui/metric-card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 
+import { architectureCopy } from '../content/architectureCopy'
 import { useArchitectureFolders } from '../hooks/useArchitectureMetrics'
 import { ArchitectureTable } from './ArchitectureTable'
 
@@ -31,6 +32,10 @@ import type {
   SortConfig,
   SortKey
 } from '../types/architecture'
+
+interface ArchitecturePageProps {
+  onShowMetricsGuide?: () => void
+}
 
 function ArchitecturePageSkeleton() {
   return (
@@ -48,7 +53,9 @@ function ArchitecturePageSkeleton() {
   )
 }
 
-export function ArchitecturePage() {
+export function ArchitecturePage({
+  onShowMetricsGuide
+}: ArchitecturePageProps) {
   const { data, isLoading, error } = useArchitectureFolders()
   const [searchQuery, setSearchQuery] = useState('')
   const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -74,7 +81,7 @@ export function ArchitecturePage() {
         <div className='text-center'>
           <AlertTriangle className='mx-auto mb-4 h-12 w-12 text-destructive' />
           <h2 className='mb-2 text-lg font-semibold'>
-            Failed to load architecture data
+            {architectureCopy.page.errorTitle}
           </h2>
           <p className='text-sm text-muted-foreground'>
             {(error as Error).message}
@@ -89,9 +96,11 @@ export function ArchitecturePage() {
       <div className='flex h-full items-center justify-center bg-background'>
         <div className='text-center'>
           <Layers className='mx-auto mb-4 h-12 w-12 text-muted-foreground' />
-          <h2 className='mb-2 text-lg font-semibold'>No architecture data</h2>
+          <h2 className='mb-2 text-lg font-semibold'>
+            {architectureCopy.page.emptyTitle}
+          </h2>
           <p className='text-sm text-muted-foreground'>
-            Run analysis to see module metrics
+            {architectureCopy.page.emptyDescription}
           </p>
         </div>
       </div>
@@ -124,33 +133,36 @@ export function ArchitecturePage() {
     status: 'default' | 'warning' | 'destructive'
   }> = [
     {
-      label: 'Total Modules',
+      label: architectureCopy.summaryCards.totalModules,
       value: totalModules,
       subValue: `${totalFiles} files`,
       icon: <FolderTree className='h-4 w-4' />,
       status: 'default'
     },
     {
-      label: 'Average Instability (I)',
+      label: architectureCopy.summaryCards.averageStructuralPosition,
       value: avgInstability.toFixed(2),
       subValue:
         avgInstability > 0.6
-          ? 'Flexible overall'
+          ? 'More outward-facing overall'
           : avgInstability > 0.4
             ? 'Balanced overall'
-            : 'More rigid overall',
+            : 'More foundational overall',
       icon: <TrendingUp className='h-4 w-4' />,
       status: 'default'
     },
     {
-      label: 'Modules with High Instability',
+      label: architectureCopy.summaryCards.outwardFacingModules,
       value: unstableModules,
-      subValue: unstableModules > 0 ? 'I >= 0.70' : 'None at I >= 0.70',
+      subValue:
+        unstableModules > 0
+          ? 'Modules above I >= 0.70'
+          : 'None above I >= 0.70',
       icon: <Wind className='h-4 w-4' />,
       status: 'default'
     },
     {
-      label: 'Modules in Cycles',
+      label: architectureCopy.summaryCards.modulesInCycles,
       value: modulesWithCycles,
       subValue:
         modulesWithCycles > 0
@@ -160,7 +172,7 @@ export function ArchitecturePage() {
       status: modulesWithCycles > 0 ? 'destructive' : 'default'
     },
     {
-      label: 'Critical Hotspot Areas',
+      label: architectureCopy.summaryCards.criticalReviewAreas,
       value: hotspotModules,
       subValue:
         hotspotModules > 0
@@ -177,13 +189,10 @@ export function ArchitecturePage() {
         {/* Header */}
         <div className='space-y-2'>
           <h1 className='text-2xl font-semibold text-foreground'>
-            Architecture Analysis
+            {architectureCopy.page.title}
           </h1>
           <p className='text-sm text-muted-foreground'>
-            Module-level coupling metrics, structural profile, and
-            change-propagation analysis. Use Propagation Risk as a derived
-            impact indicator to identify hotspots, and read Instability as a
-            structural position rather than a danger score.
+            {architectureCopy.page.description}
           </p>
         </div>
 
@@ -203,17 +212,7 @@ export function ArchitecturePage() {
         </div>
 
         {/* Reading Guide: Instability Education Card */}
-        <button
-          type='button'
-          className={`relative overflow-hidden rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 transition-all duration-300 dark:from-blue-950/30 dark:to-cyan-950/20 ${
-            isReadingGuideExpanded
-              ? ''
-              : 'cursor-pointer hover:border-blue-500/40'
-          }`}
-          onClick={() =>
-            !isReadingGuideExpanded && setIsReadingGuideExpanded(true)
-          }
-        >
+        <div className='relative overflow-hidden rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 transition-all duration-300 dark:from-blue-950/30 dark:to-cyan-950/20'>
           <div className='absolute inset-0 bg-blue-400/5 dark:bg-blue-400/10' />
           <div className='relative'>
             {isReadingGuideExpanded ? (
@@ -226,7 +225,7 @@ export function ArchitecturePage() {
                   </div>
                   <div className='min-w-0 flex-1'>
                     <h3 className='mb-2 text-sm font-semibold text-foreground'>
-                      Understanding the Instability (I) Metric
+                      {architectureCopy.readingGuide.expandedTitle}
                     </h3>
                     <p className='mb-4 text-sm leading-relaxed text-muted-foreground'>
                       Do not treat the <strong>Flexible / Unstable</strong>{' '}
@@ -290,16 +289,26 @@ export function ArchitecturePage() {
                       </div>
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setIsReadingGuideExpanded(false)
-                    }}
-                    className='flex-shrink-0 rounded-md p-1.5 text-muted-foreground/60 transition-colors hover:bg-background/80 hover:text-foreground'
-                    aria-label='Collapse reading guide'
-                  >
-                    <CaretDown className='h-4 w-4' />
-                  </button>
+                  <div className='flex flex-shrink-0 items-center gap-2'>
+                    {onShowMetricsGuide ? (
+                      <button
+                        onClick={onShowMetricsGuide}
+                        className='flex items-center gap-1.5 rounded-lg border border-blue-500/20 px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-400 dark:hover:bg-blue-500/20'
+                      >
+                        Full Guide
+                        <CaretRight className='h-4 w-4' />
+                      </button>
+                    ) : null}
+                    <button
+                      onClick={() => {
+                        setIsReadingGuideExpanded(false)
+                      }}
+                      className='rounded-md p-1.5 text-muted-foreground/60 transition-colors hover:bg-background/80 hover:text-foreground'
+                      aria-label='Collapse reading guide'
+                    >
+                      <CaretDown className='h-4 w-4' />
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -309,30 +318,42 @@ export function ArchitecturePage() {
                 </div>
                 <div className='min-w-0 flex-1'>
                   <h3 className='mb-0.5 text-base font-semibold text-foreground'>
-                    New to Instability Metrics?
+                    {architectureCopy.readingGuide.collapsedTitle}
                   </h3>
                   <p className='text-sm text-muted-foreground'>
                     <span className='font-medium text-blue-600 dark:text-blue-400'>
                       Click to learn
                     </span>{' '}
-                    why instability is a structural metric, not a defect or a
-                    direct danger score.
+                    {architectureCopy.readingGuide.collapsedDescription}
                   </p>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setIsReadingGuideExpanded(true)
-                  }}
-                  className='flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400 dark:hover:bg-blue-500/30'
-                >
-                  Read Guide
-                  <CaretRight className='h-4 w-4' />
-                </button>
+                <div className='flex items-center gap-2'>
+                  <button
+                    onClick={() => {
+                      setIsReadingGuideExpanded(true)
+                    }}
+                    className='flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400 dark:hover:bg-blue-500/30'
+                  >
+                    {architectureCopy.readingGuide.readHere}
+                    <CaretRight className='h-4 w-4' />
+                  </button>
+                  {onShowMetricsGuide ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onShowMetricsGuide()
+                      }}
+                      className='flex items-center gap-1.5 rounded-lg border border-blue-500/20 px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-400 dark:hover:bg-blue-500/20'
+                    >
+                      {architectureCopy.readingGuide.fullGuide}
+                      <CaretRight className='h-4 w-4' />
+                    </button>
+                  ) : null}
+                </div>
               </div>
             )}
           </div>
-        </button>
+        </div>
 
         {/* Search & Filter */}
         <div className='flex items-center gap-4'>
@@ -350,12 +371,21 @@ export function ArchitecturePage() {
           </Badge>
         </div>
 
+        <p className='text-sm text-muted-foreground'>
+          {architectureCopy.page.triageCue}
+        </p>
+
         {/* Main Table */}
         <Card>
           <CardHeader className='pb-3'>
-            <CardTitle className='text-base font-medium'>
-              Module Metrics
-            </CardTitle>
+            <div className='space-y-1'>
+              <CardTitle className='text-base font-medium'>
+                {architectureCopy.table.title}
+              </CardTitle>
+              <p className='text-sm text-muted-foreground'>
+                {architectureCopy.table.description}
+              </p>
+            </div>
           </CardHeader>
           <CardContent className='p-0'>
             <ArchitectureTable

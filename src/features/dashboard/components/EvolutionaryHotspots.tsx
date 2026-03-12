@@ -16,6 +16,8 @@ import {
   getRiskTextClass
 } from '@/shared/lib/utils/risk'
 
+import { dashboardCopy } from '../content/dashboardCopy'
+
 import type { EvolutionaryHotspotItem } from '@/shared/lib/utils/evolution'
 
 interface EvolutionaryHotspotsProps {
@@ -49,16 +51,18 @@ export function EvolutionaryHotspots({
         <CardHeader className='pb-2'>
           <CardTitle className='flex items-center gap-2 text-base font-medium'>
             <RefreshCw className='h-4 w-4' />
-            Evolutionary Hotspots
+            {dashboardCopy.evolutionaryHotspots.title}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className='py-4 text-center text-muted-foreground'>
             <RefreshCw className='mx-auto mb-2 h-8 w-8 opacity-50' />
-            <p className='text-sm'>Evolutionary metrics unavailable</p>
+            <p className='text-sm'>
+              {dashboardCopy.evolutionaryHotspots.unavailableTitle}
+            </p>
             <p className='mt-1 text-xs'>
               {unavailableReason ??
-                'Open a Git-backed project with usable history to inspect change pressure and hotspot ranking.'}
+                dashboardCopy.evolutionaryHotspots.unavailableDescription}
             </p>
           </div>
         </CardContent>
@@ -75,23 +79,20 @@ export function EvolutionaryHotspots({
           <div className='space-y-1'>
             <CardTitle className='flex items-center gap-2 text-base font-medium'>
               <RefreshCw className='h-4 w-4 text-orange-500' />
-              Recently active areas to review first
+              {dashboardCopy.evolutionaryHotspots.title}
             </CardTitle>
             <CardDescription>
-              These modules changed heavily in recent history and deserve closer
-              review.
+              {dashboardCopy.evolutionaryHotspots.description}
             </CardDescription>
           </div>
-          <InfoTooltip title='What is an Evolutionary Hotspot?' side='top'>
+          <InfoTooltip
+            title={dashboardCopy.evolutionaryHotspots.tooltip.title}
+            side='top'
+          >
             <div className='space-y-2 text-xs text-popover-foreground'>
-              <p>
-                Evolutionary Hotspot Score combines recent relative churn with
-                structural propagation risk to prioritize modules that deserve
-                more careful review.
-              </p>
+              <p>{dashboardCopy.evolutionaryHotspots.tooltip.intro}</p>
               <p className='border-t border-border pt-2 text-popover-foreground/80'>
-                This is a product heuristic for prioritization, not a universal
-                scientific defect threshold.
+                {dashboardCopy.evolutionaryHotspots.tooltip.note}
               </p>
             </div>
           </InfoTooltip>
@@ -100,9 +101,11 @@ export function EvolutionaryHotspots({
       <CardContent className='space-y-3'>
         {items.length === 0 ? (
           <div className='py-4 text-center text-muted-foreground'>
-            <p className='text-sm'>No recent change pressure detected</p>
+            <p className='text-sm'>
+              {dashboardCopy.evolutionaryHotspots.emptyTitle}
+            </p>
             <p className='mt-1 text-xs'>
-              No modules changed in the last 30 days.
+              {dashboardCopy.evolutionaryHotspots.emptyDescription}
             </p>
           </div>
         ) : (
@@ -140,19 +143,19 @@ export function EvolutionaryHotspots({
                 </div>
                 <div className='grid gap-2 text-xs text-muted-foreground sm:grid-cols-2'>
                   <span>
-                    Changed in 30d:{' '}
+                    {dashboardCopy.evolutionaryHotspots.labels.changedIn30d}:{' '}
                     <strong className='text-foreground'>
                       {formatRelativeChurn(hotspot.relativeChurn30d)}
                     </strong>
                   </span>
                   <span>
-                    Spread Risk:{' '}
+                    {dashboardCopy.evolutionaryHotspots.labels.spreadRisk}:{' '}
                     <strong className='text-foreground'>
                       {hotspot.propagationRisk.toFixed(1)}
                     </strong>
                   </span>
                   <span>
-                    Changed Files:{' '}
+                    {dashboardCopy.evolutionaryHotspots.labels.changedFiles}:{' '}
                     <strong className='text-foreground'>
                       {hotspot.changedFileCount30d}
                     </strong>
@@ -166,7 +169,7 @@ export function EvolutionaryHotspots({
         {hotspots.length > 5 ? (
           <div className='flex items-center gap-2 text-xs text-muted-foreground'>
             <AlertTriangle className='h-3.5 w-3.5' />
-            Showing the top 5 modules by hotspot priority.
+            {dashboardCopy.evolutionaryHotspots.footer}
           </div>
         ) : null}
       </CardContent>

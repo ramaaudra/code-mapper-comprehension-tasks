@@ -48,24 +48,24 @@ interface SimpleTooltipProps {
   triggerClassName?: string
 
   /**
-   * Delay sebelum tooltip muncul (dalam ms)
-   * @default 200 (diambil dari global TooltipProvider)
+   * Delay before the tooltip appears (in ms).
+   * @default 200 (inherited from the global TooltipProvider)
    */
   delayDuration?: number
 
   /**
-   * Apakah trigger menggunakan asChild pattern
-   * Set true jika children adalah component yang perlu menerima ref
+   * Whether the trigger uses the asChild pattern.
+   * Set to true when the child component needs to receive the ref.
    * @default false
    */
   asChild?: boolean
 }
 
 /**
- * SimpleTooltip - Wrapper sederhana untuk Tooltip dengan boilerplate minimal
+ * SimpleTooltip - A lightweight tooltip wrapper with minimal boilerplate.
  *
- * Menggunakan global TooltipProvider dari main.tsx (tidak perlu TooltipProvider lokal)
- * Default styling sudah include: text-xs, max-width sesuai kebutuhan
+ * Uses the global TooltipProvider from main.tsx, so no local provider is needed.
+ * Default styling already includes text-xs and a practical max width.
  *
  * @example
  * // Basic usage - string content

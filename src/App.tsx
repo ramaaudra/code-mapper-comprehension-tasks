@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback } from 'react'
+import { Suspense, lazy, useCallback, useEffect } from 'react'
 
 import { DashboardSkeleton } from '@/features/dashboard'
 import {
@@ -29,6 +29,12 @@ const ProjectDashboard = lazy(() =>
 const ArchitecturePage = lazy(() =>
   import('@/features/architecture').then((module) => ({
     default: module.ArchitecturePage
+  }))
+)
+
+const MetricsGuidePage = lazy(() =>
+  import('@/features/metrics-guide').then((module) => ({
+    default: module.MetricsGuidePage
   }))
 )
 
@@ -67,6 +73,8 @@ function AppContent() {
     handleSimulateDelete,
     graphViewMode,
     setGraphViewMode,
+    guideReturnViewMode,
+    setGuideReturnViewMode,
     highlightedModule,
     setHighlightedModule,
     focusedModulePath,
@@ -97,6 +105,8 @@ function AppContent() {
     setViewMode,
     graphViewMode,
     setGraphViewMode,
+    guideReturnViewMode,
+    setGuideReturnViewMode,
     highlightedModule,
     setHighlightedModule,
     focusedModulePath,
@@ -112,6 +122,17 @@ function AppContent() {
     closeSimulation()
     setSimulationResult(null)
   }, [closeSimulation, setSimulationResult])
+
+  useEffect(() => {
+    if (
+      analysisData &&
+      viewMode !== 'metrics-guide' &&
+      typeof window !== 'undefined' &&
+      window.location.hash.startsWith('#metrics-guide')
+    ) {
+      explorer.handleShowMetricsGuide('overview')
+    }
+  }, [analysisData, explorer, viewMode])
 
   return (
     <ExplorerShell
@@ -166,7 +187,15 @@ function AppContent() {
             </div>
           ) : explorer.viewMode === 'architecture' ? (
             <Suspense fallback={<DashboardSkeleton />}>
-              <ArchitecturePage />
+              <ArchitecturePage
+                onShowMetricsGuide={() =>
+                  explorer.handleShowMetricsGuide('architecture')
+                }
+              />
+            </Suspense>
+          ) : explorer.viewMode === 'metrics-guide' ? (
+            <Suspense fallback={<DashboardSkeleton />}>
+              <MetricsGuidePage onBack={explorer.handleBackFromMetricsGuide} />
             </Suspense>
           ) : explorer.viewMode === 'setup-guide' ? (
             <Suspense fallback={<DashboardSkeleton />}>
@@ -187,6 +216,9 @@ function AppContent() {
                 selectedFileId={selectedFileId}
                 onNavigateToFile={explorer.navigateToFile}
                 onShowArchitecture={explorer.handleShowArchitecture}
+                onShowMetricsGuide={() =>
+                  explorer.handleShowMetricsGuide('overview')
+                }
                 onShowModuleGraph={explorer.handleShowModuleGraph}
                 isLayoutTransitioning={isLayoutTransitioning}
               />

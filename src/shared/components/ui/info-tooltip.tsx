@@ -84,8 +84,8 @@ interface InfoTooltipContentProps {
 }
 
 /**
- * InfoTooltipContent - Layout helper untuk konten tooltip edukasi
- * Menggunakan pola yang konsisten: title, description, optional sections
+ * InfoTooltipContent - Layout helper for educational tooltip content.
+ * Uses a consistent pattern: title, description, and optional sections.
  */
 export function InfoTooltipContent({
   title,

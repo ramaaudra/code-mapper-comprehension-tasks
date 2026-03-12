@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { Skeleton } from '@/shared/components/ui/skeleton'
 
+import { architectureCopy } from '../content/architectureCopy'
 import { useArchitectureFolders } from '../hooks/useArchitectureMetrics'
 import { FolderMetricsTable } from './FolderMetricsTable'
 
@@ -53,7 +54,7 @@ export function ArchitectureTab() {
   if (!data || data.folders.length === 0) {
     return (
       <div className='p-4 text-center text-muted-foreground'>
-        <p className='text-sm'>No module data available</p>
+        <p className='text-sm'>{architectureCopy.tab.empty}</p>
       </div>
     )
   }
@@ -74,14 +75,17 @@ export function ArchitectureTab() {
       {/* Header dengan summary stats */}
       <div className='shrink-0 border-b border-border p-4'>
         <h2 className='text-sm font-medium text-foreground'>
-          Architecture Overview
+          {architectureCopy.tab.title}
         </h2>
         <div className='mt-2 flex items-center gap-4 text-xs text-muted-foreground'>
           <span>{totalFolders} modules</span>
-          <span>Average Instability: {avgInstability.toFixed(2)}</span>
+          <span>
+            {architectureCopy.tab.averageInstabilityLabel}:{' '}
+            {avgInstability.toFixed(2)}
+          </span>
           {foldersWithCycles > 0 && (
             <span className='text-red-400'>
-              {foldersWithCycles} modules in cycles
+              {architectureCopy.tab.modulesInCycles(foldersWithCycles)}
             </span>
           )}
         </div>

@@ -42,6 +42,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
+import { decisionCopy } from '@/shared/content/decisionCopy'
 import { architectureApi } from '@/shared/lib/api/architecture'
 import { findDependencyPath } from '@/shared/lib/api/pathfinding'
 import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
@@ -78,6 +79,7 @@ import {
   getRiskTextClass
 } from '@/shared/lib/utils/risk'
 
+import { nodeDetailCopy } from '../content/nodeDetailCopy'
 import { SourceCodeViewer } from './SourceCodeViewer'
 
 import type { ReportData } from '@/features/report/types'
@@ -330,8 +332,8 @@ const NodeDetailPanel = memo(
         return (
           <div className='p-4'>
             <DetailPanelState
-              title={`No ${type} found`}
-              description={`This file currently has no ${type} in the analysis result.`}
+              title={nodeDetailCopy.dependencyList.emptyTitle(type)}
+              description={nodeDetailCopy.dependencyList.emptyDescription(type)}
               compact={true}
             />
           </div>
@@ -372,7 +374,7 @@ const NodeDetailPanel = memo(
                       onClick={() => handleTracePath(item.id)}
                       disabled={isTracing}
                       className='rounded-md border border-transparent p-1.5 text-muted-foreground hover:border-border hover:bg-background hover:text-foreground'
-                      title='Trace path'
+                      title={nodeDetailCopy.dependencyList.tracePath}
                       aria-label={`Trace path to ${item.basename}`}
                     >
                       <MapIcon className='h-3.5 w-3.5' />
@@ -412,8 +414,8 @@ const NodeDetailPanel = memo(
       if (isLoadingContent) {
         return (
           <DetailPanelState
-            title='Loading source code'
-            description='Fetching file content and preparing the source viewer.'
+            title={nodeDetailCopy.source.loadingTitle}
+            description={nodeDetailCopy.source.loadingDescription}
           />
         )
       }
@@ -421,7 +423,7 @@ const NodeDetailPanel = memo(
       if (contentError) {
         return (
           <DetailPanelState
-            title='Failed to load source code'
+            title={nodeDetailCopy.source.errorTitle}
             description={
               (contentError as Error)?.message || 'An unknown error occurred.'
             }
@@ -433,8 +435,8 @@ const NodeDetailPanel = memo(
       if (!fileContent) {
         return (
           <DetailPanelState
-            title='No source content available'
-            description='The analysis result does not include readable source content for this file.'
+            title={nodeDetailCopy.source.noContentTitle}
+            description={nodeDetailCopy.source.noContentDescription}
           />
         )
       }
@@ -556,20 +558,20 @@ const NodeDetailPanel = memo(
         >
           <DetailPanelTabs
             items={[
-              { value: 'overview', label: 'Overview' },
+              { value: 'overview', label: nodeDetailCopy.tabs.overview },
               {
                 value: 'dependencies',
-                label: 'Imports',
+                label: nodeDetailCopy.tabs.imports,
                 badge: outgoingEdges.length
               },
               {
                 value: 'dependents',
-                label: 'Used By',
+                label: nodeDetailCopy.tabs.dependents,
                 badge: incomingEdges.length
               },
               {
                 value: 'source',
-                label: 'Source',
+                label: nodeDetailCopy.tabs.source,
                 badge:
                   fileContent?.lines?.toLocaleString() ??
                   (nodeData?.size
@@ -620,7 +622,7 @@ const NodeDetailPanel = memo(
                     value={formatImpactScopeValue(
                       decisionAssessment.impactScope
                     )}
-                    label='Impact Scope'
+                    label={decisionCopy.evidence.labels.impactScope}
                     tone={getImpactScopeTone(decisionAssessment.impactScope)}
                     helper={
                       archMetrics ? (
@@ -634,7 +636,7 @@ const NodeDetailPanel = memo(
                     value={formatChangePressureValue(
                       decisionAssessment.changePressure
                     )}
-                    label='Change Activity'
+                    label={decisionCopy.evidence.labels.changeActivity}
                     tone={getChangePressureTone(
                       decisionAssessment.changePressure
                     )}
@@ -652,7 +654,7 @@ const NodeDetailPanel = memo(
                     value={formatExternalRelianceValue(
                       decisionAssessment.externalReliance
                     )}
-                    label='Dependencies'
+                    label={decisionCopy.evidence.labels.dependencies}
                     tone={getExternalRelianceTone(
                       decisionAssessment.externalReliance
                     )}
@@ -668,7 +670,7 @@ const NodeDetailPanel = memo(
                     value={formatStructuralPositionValue(
                       decisionAssessment.structuralPosition
                     )}
-                    label='Architecture Role'
+                    label={decisionCopy.evidence.labels.architectureRole}
                     tone={getStructuralPositionTone(
                       decisionAssessment.structuralPosition
                     )}
@@ -687,7 +689,9 @@ const NodeDetailPanel = memo(
             ) : isOrphan ? (
               // Orphan File Status (replaces normal risk assessment)
               <div className='space-y-3'>
-                <DetailPanelSectionHeading title='File Status' />
+                <DetailPanelSectionHeading
+                  title={nodeDetailCopy.orphan.sectionTitle}
+                />
                 <MetricInsightCard
                   icon={
                     <Ghost
@@ -695,9 +699,9 @@ const NodeDetailPanel = memo(
                       weight='fill'
                     />
                   }
-                  title='Orphaned File (Unused)'
-                  description='This file has 0 dependents and is not an entry point in the current analysis. It is likely unused and worth reviewing for cleanup.'
-                  footer='Tip: Verify whether this is a test file, a script, or a dynamic import before deleting it. False positives may occur.'
+                  title={nodeDetailCopy.orphan.title}
+                  description={nodeDetailCopy.orphan.description}
+                  footer={nodeDetailCopy.orphan.footer}
                   tone='default'
                   className='border-muted bg-muted/10'
                 />
@@ -705,13 +709,17 @@ const NodeDetailPanel = memo(
             ) : (
               blastRadiusAssessment && (
                 <div className='space-y-3'>
-                  <DetailPanelSectionHeading title='Blast Radius' />
+                  <DetailPanelSectionHeading
+                    title={nodeDetailCopy.blastRadius.sectionTitle}
+                  />
                   {blastRadiusAssessment.isInCycle ? (
                     // Cycle Override: Critical Warning
                     <MetricInsightCard
                       icon={<AlertTriangle className='h-4 w-4 text-red-500' />}
-                      title='Critical Circular Dependency'
-                      description='This file is part of a circular dependency chain. Changes can increase initialization, runtime, and maintenance risks.'
+                      title={nodeDetailCopy.blastRadius.criticalTitle}
+                      description={
+                        nodeDetailCopy.blastRadius.criticalDescription
+                      }
                       tone='danger'
                       className='border-red-500/50 bg-red-500/5'
                     />
@@ -808,8 +816,10 @@ const NodeDetailPanel = memo(
                             weight='fill'
                           />
                         }
-                        title='God Object Detected'
-                        description={`This file depends on ${archMetrics.ce} other files. Consider splitting responsibilities into smaller units.`}
+                        title={nodeDetailCopy.blastRadius.godObjectTitle}
+                        description={nodeDetailCopy.blastRadius.godObjectDescription(
+                          archMetrics.ce
+                        )}
                         tone='warning'
                         className='mt-3 border-yellow-500/50 bg-yellow-500/10'
                       />
@@ -825,8 +835,10 @@ const NodeDetailPanel = memo(
                             weight='fill'
                           />
                         }
-                        title='Core Bottleneck'
-                        description={`${archMetrics.ca} files depend on this. Changes here are more likely to affect many other files.`}
+                        title={nodeDetailCopy.blastRadius.bottleneckTitle}
+                        description={nodeDetailCopy.blastRadius.bottleneckDescription(
+                          archMetrics.ca
+                        )}
                         tone='warning'
                         className='mt-3 border-orange-500/50 bg-orange-500/10'
                       />
@@ -838,17 +850,23 @@ const NodeDetailPanel = memo(
             {decisionAssessment ? (
               (archMetrics || fileEvolution) && (
                 <DetailPanelDisclosure
-                  title='Why this recommendation'
-                  summary='Inspect the structural and change-history evidence behind this verdict.'
+                  title={nodeDetailCopy.disclosure.whyTitle}
+                  summary={nodeDetailCopy.disclosure.whySummary}
                 >
                   <div className='space-y-3'>
-                    <DetailPanelSectionHeading title='How this was assessed' />
+                    <DetailPanelSectionHeading
+                      title={nodeDetailCopy.disclosure.howAssessedTitle}
+                    />
                     <InsightBulletList items={getAssessmentMethodItems()} />
                   </div>
 
                   {archMetrics && (
                     <div className='space-y-3'>
-                      <DetailPanelSectionHeading title='Architecture Metrics' />
+                      <DetailPanelSectionHeading
+                        title={
+                          nodeDetailCopy.disclosure.architectureMetricsTitle
+                        }
+                      />
                       <ArchitectureStats
                         ca={archMetrics.ca}
                         ce={archMetrics.ce}
@@ -860,7 +878,11 @@ const NodeDetailPanel = memo(
 
                   {fileEvolution && (
                     <div className='space-y-3'>
-                      <DetailPanelSectionHeading title='Evolutionary Metrics' />
+                      <DetailPanelSectionHeading
+                        title={
+                          nodeDetailCopy.disclosure.evolutionaryMetricsTitle
+                        }
+                      />
                       <div className='grid grid-cols-2 gap-3'>
                         <MetricValueCard
                           value={formatRelativeChurn(
@@ -901,7 +923,9 @@ const NodeDetailPanel = memo(
               <>
                 {archMetrics && (
                   <div className='space-y-3'>
-                    <DetailPanelSectionHeading title='Architecture Metrics' />
+                    <DetailPanelSectionHeading
+                      title={nodeDetailCopy.disclosure.architectureMetricsTitle}
+                    />
                     <ArchitectureStats
                       ca={archMetrics.ca}
                       ce={archMetrics.ce}
@@ -913,7 +937,9 @@ const NodeDetailPanel = memo(
 
                 {fileEvolution && (
                   <div className='space-y-3'>
-                    <DetailPanelSectionHeading title='Evolutionary Metrics' />
+                    <DetailPanelSectionHeading
+                      title={nodeDetailCopy.disclosure.evolutionaryMetricsTitle}
+                    />
                     <div className='grid grid-cols-2 gap-3'>
                       <MetricValueCard
                         value={formatRelativeChurn(
@@ -955,8 +981,8 @@ const NodeDetailPanel = memo(
             {onFocusSubgraph &&
               (decisionAssessment ? (
                 <DetailPanelDisclosure
-                  title='Graph tools'
-                  summary='Focus inward or outward relationships without leaving this panel.'
+                  title={nodeDetailCopy.graphTools.title}
+                  summary={nodeDetailCopy.graphTools.summary}
                 >
                   <div className='space-y-3'>
                     <div className='grid grid-cols-2 gap-2'>
@@ -968,7 +994,8 @@ const NodeDetailPanel = memo(
                         onClick={() => setFocusDirection('inward')}
                         className='w-full justify-start'
                       >
-                        <ArrowLeft className='mr-2 h-3 w-3' /> Inward
+                        <ArrowLeft className='mr-2 h-3 w-3' />{' '}
+                        {nodeDetailCopy.graphTools.inward}
                       </Button>
                       <Button
                         variant={
@@ -978,7 +1005,8 @@ const NodeDetailPanel = memo(
                         onClick={() => setFocusDirection('outward')}
                         className='w-full justify-start'
                       >
-                        Outward <ArrowRight className='ml-2 h-3 w-3' />
+                        {nodeDetailCopy.graphTools.outward}{' '}
+                        <ArrowRight className='ml-2 h-3 w-3' />
                       </Button>
                     </div>
                     <Button
@@ -990,17 +1018,19 @@ const NodeDetailPanel = memo(
                       className='w-full'
                     >
                       <Focus className='mr-2 h-3 w-3' />
-                      Focus{' '}
+                      {nodeDetailCopy.graphTools.focusPrefix}{' '}
                       {focusDirection === 'inward'
-                        ? 'Dependencies'
-                        : 'Dependents'}{' '}
-                      Subgraph
+                        ? nodeDetailCopy.graphTools.focusDependencies
+                        : nodeDetailCopy.graphTools.focusDependents}{' '}
+                      {nodeDetailCopy.graphTools.focusSuffix}
                     </Button>
                   </div>
                 </DetailPanelDisclosure>
               ) : (
                 <div className='space-y-3'>
-                  <DetailPanelSectionHeading title='Graph Actions' />
+                  <DetailPanelSectionHeading
+                    title={nodeDetailCopy.graphTools.legacyTitle}
+                  />
                   <div className='grid grid-cols-2 gap-2'>
                     <Button
                       variant={
@@ -1010,7 +1040,8 @@ const NodeDetailPanel = memo(
                       onClick={() => setFocusDirection('inward')}
                       className='w-full justify-start'
                     >
-                      <ArrowLeft className='mr-2 h-3 w-3' /> Inward
+                      <ArrowLeft className='mr-2 h-3 w-3' />{' '}
+                      {nodeDetailCopy.graphTools.inward}
                     </Button>
                     <Button
                       variant={
@@ -1020,7 +1051,8 @@ const NodeDetailPanel = memo(
                       onClick={() => setFocusDirection('outward')}
                       className='w-full justify-start'
                     >
-                      Outward <ArrowRight className='ml-2 h-3 w-3' />
+                      {nodeDetailCopy.graphTools.outward}{' '}
+                      <ArrowRight className='ml-2 h-3 w-3' />
                     </Button>
                   </div>
                   <Button
@@ -1032,11 +1064,11 @@ const NodeDetailPanel = memo(
                     className='w-full'
                   >
                     <Focus className='mr-2 h-3 w-3' />
-                    Focus{' '}
+                    {nodeDetailCopy.graphTools.focusPrefix}{' '}
                     {focusDirection === 'inward'
-                      ? 'Dependencies'
-                      : 'Dependents'}{' '}
-                    Subgraph
+                      ? nodeDetailCopy.graphTools.focusDependencies
+                      : nodeDetailCopy.graphTools.focusDependents}{' '}
+                    {nodeDetailCopy.graphTools.focusSuffix}
                   </Button>
                 </div>
               ))}
@@ -1053,8 +1085,8 @@ const NodeDetailPanel = memo(
           <TabsContent value='source' className='m-0 flex-1 overflow-hidden'>
             {isReportMode ? (
               <DetailPanelState
-                title='Source viewer unavailable in static report mode'
-                description='Open the live application to inspect source content interactively.'
+                title={nodeDetailCopy.source.reportModeTitle}
+                description={nodeDetailCopy.source.reportModeDescription}
               />
             ) : (
               renderSourceContent()
@@ -1105,8 +1137,8 @@ const NodeDetailPanel = memo(
                 </div>
               ) : (
                 <DetailPanelState
-                  title='No dependency path found'
-                  description='No direct dependency path could be traced between the selected files.'
+                  title={nodeDetailCopy.pathTrace.noPathTitle}
+                  description={nodeDetailCopy.pathTrace.noPathDescription}
                   compact={true}
                 />
               )}
