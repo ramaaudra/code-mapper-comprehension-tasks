@@ -73,8 +73,10 @@ function AppContent() {
     handleSimulateDelete,
     graphViewMode,
     setGraphViewMode,
-    guideReturnViewMode,
-    setGuideReturnViewMode,
+    utilityReturnViewMode,
+    setUtilityReturnViewMode,
+    metricsGuideMode,
+    setMetricsGuideMode,
     highlightedModule,
     setHighlightedModule,
     focusedModulePath,
@@ -105,8 +107,10 @@ function AppContent() {
     setViewMode,
     graphViewMode,
     setGraphViewMode,
-    guideReturnViewMode,
-    setGuideReturnViewMode,
+    utilityReturnViewMode,
+    setUtilityReturnViewMode,
+    metricsGuideMode,
+    setMetricsGuideMode,
     highlightedModule,
     setHighlightedModule,
     focusedModulePath,
@@ -141,10 +145,13 @@ function AppContent() {
       loadError={loadError}
       hasData={!!analysisData}
       onRefresh={refreshAnalysis}
-      viewMode={explorer.viewMode}
+      activePrimaryViewMode={explorer.activePrimaryViewMode}
+      activeUtilityViewMode={explorer.activeUtilityViewMode}
+      contextChip={explorer.activeContextChip}
       onShowOverview={explorer.handleShowOverview}
       onShowGraph={explorer.handleShowGraph}
       onShowArchitecture={explorer.handleShowArchitecture}
+      onShowMetricsGuide={explorer.handleShowMetricsGuide}
       isTreeCollapsed={explorer.isTreeCollapsed}
       onToggleTree={explorer.toggleTreeView}
       onShowSetupGuide={explorer.handleShowSetupGuide}
@@ -195,13 +202,16 @@ function AppContent() {
             </Suspense>
           ) : explorer.viewMode === 'metrics-guide' ? (
             <Suspense fallback={<DashboardSkeleton />}>
-              <MetricsGuidePage onBack={explorer.handleBackFromMetricsGuide} />
+              <MetricsGuidePage
+                onBack={explorer.handleBackFromUtility}
+                onModeChange={explorer.handleMetricsGuideModeChange}
+              />
             </Suspense>
           ) : explorer.viewMode === 'setup-guide' ? (
             <Suspense fallback={<DashboardSkeleton />}>
               <SetupGuidePage
                 warnings={analysisData.warnings}
-                onBack={explorer.handleShowOverview}
+                onBack={explorer.handleBackFromUtility}
               />
             </Suspense>
           ) : (

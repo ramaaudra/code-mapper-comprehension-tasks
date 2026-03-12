@@ -14,6 +14,11 @@ import {
   ToggleGroup,
   ToggleGroupItem
 } from '@/shared/components/ui/toggle-group'
+import { shellCopy } from '@/shared/content/shellCopy'
+import {
+  buildMetricsGuideHash,
+  parseMetricsGuideHash
+} from '@/shared/lib/utils'
 
 import {
   metricsGuideDecisionStates,
@@ -30,11 +35,12 @@ import { MetricsGuideSection } from './MetricsGuideSection'
 import { MetricsVisualPrimer } from './MetricsVisualPrimer'
 import { ScreenUsageGuide } from './ScreenUsageGuide'
 
+import type { MetricsGuideMode } from '@/shared/types/explorer'
+
 interface MetricsGuidePageProps {
   onBack: () => void
+  onModeChange?: (mode: MetricsGuideMode) => void
 }
-
-type GuideMode = 'quick' | 'reference'
 
 const quickGuideSectionLinks = [
   { id: 'start-here', label: 'Start Here' },
@@ -51,28 +57,11 @@ const referenceSectionLinks = [
   { id: 'glossary', label: 'Glossary' }
 ] as const
 
-function parseGuideHash(
-  hash: string
-): { mode: GuideMode; section?: string } | null {
-  if (!hash.startsWith('#metrics-guide')) {
-    return null
-  }
-
-  const parts = hash.replace('#metrics-guide', '').split('/').filter(Boolean)
-  const mode = parts[0] === 'reference' ? 'reference' : 'quick'
-  const section = parts[1]
-
-  return { mode, section }
-}
-
-function buildGuideHash(mode: GuideMode, section?: string) {
-  return section
-    ? `#metrics-guide/${mode}/${section}`
-    : `#metrics-guide/${mode}`
-}
-
-export function MetricsGuidePage({ onBack }: MetricsGuidePageProps) {
-  const [mode, setMode] = useState<GuideMode>('quick')
+export function MetricsGuidePage({
+  onBack,
+  onModeChange
+}: MetricsGuidePageProps) {
+  const [mode, setMode] = useState<MetricsGuideMode>('quick')
   const coreMetrics = useMemo(
     () =>
       metricsGuideMetrics.filter((metric) => metric.family === 'Core Metric'),
@@ -93,15 +82,17 @@ export function MetricsGuidePage({ onBack }: MetricsGuidePageProps) {
     }
 
     const applyHash = () => {
-      const parsed = parseGuideHash(window.location.hash)
+      const parsed = parseMetricsGuideHash(window.location.hash)
 
       if (!parsed) {
-        window.history.replaceState(null, '', buildGuideHash('quick'))
+        window.history.replaceState(null, '', buildMetricsGuideHash('quick'))
         setMode('quick')
+        onModeChange?.('quick')
         return
       }
 
       setMode(parsed.mode)
+      onModeChange?.(parsed.mode)
 
       if (parsed.section) {
         const sectionId = parsed.section
@@ -118,11 +109,11 @@ export function MetricsGuidePage({ onBack }: MetricsGuidePageProps) {
     window.addEventListener('hashchange', applyHash)
 
     return () => window.removeEventListener('hashchange', applyHash)
-  }, [])
+  }, [onModeChange])
 
   const scrollToSection = (id: string) => {
     if (typeof window !== 'undefined') {
-      window.history.replaceState(null, '', buildGuideHash(mode, id))
+      window.history.replaceState(null, '', buildMetricsGuideHash(mode, id))
     }
 
     document
@@ -131,12 +122,13 @@ export function MetricsGuidePage({ onBack }: MetricsGuidePageProps) {
   }
 
   const handleModeChange = (nextMode: string) => {
-    const resolvedMode: GuideMode =
+    const resolvedMode: MetricsGuideMode =
       nextMode === 'reference' ? 'reference' : 'quick'
     setMode(resolvedMode)
+    onModeChange?.(resolvedMode)
 
     if (typeof window !== 'undefined') {
-      window.history.replaceState(null, '', buildGuideHash(resolvedMode))
+      window.history.replaceState(null, '', buildMetricsGuideHash(resolvedMode))
     }
   }
 
@@ -151,7 +143,7 @@ export function MetricsGuidePage({ onBack }: MetricsGuidePageProps) {
             className='gap-2 px-0'
           >
             <ArrowLeft className='h-4 w-4' />
-            Back
+            {shellCopy.utilities.back}
           </Button>
 
           <div className='space-y-2'>

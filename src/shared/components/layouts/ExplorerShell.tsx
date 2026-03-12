@@ -3,8 +3,10 @@ import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 
 import type {
+  ExplorerContextChip,
   ExplorerRuntimeMode,
-  ExplorerViewMode
+  PrimaryExplorerViewMode,
+  UtilityExplorerViewMode
 } from '@/shared/types/explorer'
 import type { ReactNode } from 'react'
 
@@ -14,10 +16,13 @@ interface ExplorerShellProps {
   loadError: string | null
   hasData: boolean
   onRefresh: () => void
-  viewMode: ExplorerViewMode
+  activePrimaryViewMode: PrimaryExplorerViewMode | null
+  activeUtilityViewMode: UtilityExplorerViewMode | null
+  contextChip: ExplorerContextChip | null
   onShowOverview: () => void
   onShowGraph: () => void
   onShowArchitecture: () => void
+  onShowMetricsGuide: () => void
   isTreeCollapsed: boolean
   onToggleTree: () => void
   onShowSetupGuide: () => void
@@ -38,10 +43,13 @@ export function ExplorerShell({
   loadError,
   hasData,
   onRefresh,
-  viewMode,
+  activePrimaryViewMode,
+  activeUtilityViewMode,
+  contextChip,
   onShowOverview,
   onShowGraph,
   onShowArchitecture,
+  onShowMetricsGuide,
   isTreeCollapsed,
   onToggleTree,
   onShowSetupGuide,
@@ -63,10 +71,13 @@ export function ExplorerShell({
         loadError={loadError}
         hasData={hasData}
         onRefresh={onRefresh}
-        viewMode={viewMode}
+        activePrimaryViewMode={activePrimaryViewMode}
+        activeUtilityViewMode={activeUtilityViewMode}
+        contextChip={contextChip}
         onShowOverview={onShowOverview}
         onShowGraph={onShowGraph}
         onShowArchitecture={onShowArchitecture}
+        onShowMetricsGuide={onShowMetricsGuide}
         isTreeCollapsed={isTreeCollapsed}
         onToggleTree={onToggleTree}
         onShowSetupGuide={onShowSetupGuide}

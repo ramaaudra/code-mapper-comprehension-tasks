@@ -1,14 +1,23 @@
 import { useCallback, useMemo } from 'react'
 
 import { useModuleExplorerState } from '@/features/graph'
-import { matchesFile } from '@/shared/lib/utils'
+import {
+  buildMetricsGuideHash,
+  matchesFile,
+  parseMetricsGuideHash,
+  resolveExplorerContextChip
+} from '@/shared/lib/utils'
 
 import type { FileTreeViewRef } from '@/features/file-analysis'
 import type { AnalysisData, AnalysisNode } from '@/shared/types/analysis'
 import type {
+  ExplorerContextChip,
   ExplorerViewMode,
   GraphViewMode,
-  NonGuideViewMode
+  MetricsGuideMode,
+  NonUtilityViewMode,
+  PrimaryExplorerViewMode,
+  UtilityExplorerViewMode
 } from '@/shared/types/explorer'
 import type { Dispatch, RefObject, SetStateAction } from 'react'
 
@@ -23,8 +32,10 @@ interface UseExplorerControllerOptions {
   setViewMode: Dispatch<SetStateAction<ExplorerViewMode>>
   graphViewMode: GraphViewMode
   setGraphViewMode: Dispatch<SetStateAction<GraphViewMode>>
-  guideReturnViewMode: NonGuideViewMode
-  setGuideReturnViewMode: Dispatch<SetStateAction<NonGuideViewMode>>
+  utilityReturnViewMode: NonUtilityViewMode
+  setUtilityReturnViewMode: Dispatch<SetStateAction<NonUtilityViewMode>>
+  metricsGuideMode: MetricsGuideMode
+  setMetricsGuideMode: Dispatch<SetStateAction<MetricsGuideMode>>
   highlightedModule: string | null
   setHighlightedModule: Dispatch<SetStateAction<string | null>>
   focusedModulePath: string | null
@@ -52,8 +63,10 @@ export function useExplorerController({
   setViewMode,
   graphViewMode,
   setGraphViewMode,
-  guideReturnViewMode,
-  setGuideReturnViewMode,
+  utilityReturnViewMode,
+  setUtilityReturnViewMode,
+  metricsGuideMode,
+  setMetricsGuideMode,
   highlightedModule,
   setHighlightedModule,
   focusedModulePath,
@@ -91,7 +104,18 @@ export function useExplorerController({
     [analysisData]
   )
 
-  const clearMetricsGuideHash = useCallback(() => {
+  const isPrimaryViewMode = useCallback(
+    (candidate: ExplorerViewMode): candidate is PrimaryExplorerViewMode => {
+      return (
+        candidate === 'overview' ||
+        candidate === 'graph' ||
+        candidate === 'architecture'
+      )
+    },
+    []
+  )
+
+  const clearUtilityHash = useCallback(() => {
     if (
       typeof window !== 'undefined' &&
       window.location.hash.startsWith('#metrics-guide')
@@ -103,6 +127,21 @@ export function useExplorerController({
       )
     }
   }, [])
+
+  const resolveUtilitySourceView = useCallback(
+    (sourceView?: NonUtilityViewMode): NonUtilityViewMode => {
+      if (sourceView) {
+        return sourceView
+      }
+
+      if (isPrimaryViewMode(viewMode)) {
+        return viewMode
+      }
+
+      return utilityReturnViewMode
+    },
+    [isPrimaryViewMode, utilityReturnViewMode, viewMode]
+  )
 
   const resolveNode = useCallback(
     (rawFileId: string, resolvedFileId: string) => {
@@ -120,6 +159,7 @@ export function useExplorerController({
   const handleFileSelect = useCallback(
     (fileId: string | null) => {
       if (!fileId || !analysisData) {
+        clearUtilityHash()
         setSelectedFileId(null)
         setSelectedNode(null)
         resetModulePanel()
@@ -128,6 +168,7 @@ export function useExplorerController({
         return null
       }
 
+      clearUtilityHash()
       setViewMode('graph')
       setGraphViewMode('file')
       setFocusedModulePath(null)
@@ -144,6 +185,7 @@ export function useExplorerController({
     [
       analysisData,
       clearGraph,
+      clearUtilityHash,
       generateGraphForFile,
       resetModulePanel,
       resolveFileId,
@@ -179,64 +221,84 @@ export function useExplorerController({
   )
 
   const handleShowOverview = useCallback(() => {
-    clearMetricsGuideHash()
+    clearUtilityHash()
     setViewMode('overview')
     setSelectedFileId(null)
     setSelectedNode(null)
     clearGraph()
   }, [
     clearGraph,
-    clearMetricsGuideHash,
+    clearUtilityHash,
     setSelectedFileId,
     setSelectedNode,
     setViewMode
   ])
 
   const handleShowGraph = useCallback(() => {
-    clearMetricsGuideHash()
+    clearUtilityHash()
     setViewMode('graph')
     setGraphViewMode('file')
     setHighlightedModule(null)
-  }, [
-    clearMetricsGuideHash,
-    setGraphViewMode,
-    setHighlightedModule,
-    setViewMode
-  ])
+  }, [clearUtilityHash, setGraphViewMode, setHighlightedModule, setViewMode])
 
   const handleShowArchitecture = useCallback(() => {
-    clearMetricsGuideHash()
+    clearUtilityHash()
     setViewMode('architecture')
-  }, [clearMetricsGuideHash, setViewMode])
+  }, [clearUtilityHash, setViewMode])
 
-  const handleShowSetupGuide = useCallback(() => {
-    clearMetricsGuideHash()
-    setViewMode('setup-guide')
-  }, [clearMetricsGuideHash, setViewMode])
+  const handleShowSetupGuide = useCallback(
+    (sourceView?: NonUtilityViewMode) => {
+      clearUtilityHash()
+      setUtilityReturnViewMode(resolveUtilitySourceView(sourceView))
+      setViewMode('setup-guide')
+    },
+    [
+      clearUtilityHash,
+      resolveUtilitySourceView,
+      setUtilityReturnViewMode,
+      setViewMode
+    ]
+  )
 
   const handleShowMetricsGuide = useCallback(
-    (sourceView?: NonGuideViewMode) => {
-      const nextSource =
-        sourceView ??
-        (viewMode === 'metrics-guide' ? guideReturnViewMode : viewMode)
+    (sourceView?: NonUtilityViewMode) => {
+      const nextSource = resolveUtilitySourceView(sourceView)
+      const hashMode =
+        typeof window !== 'undefined'
+          ? parseMetricsGuideHash(window.location.hash)?.mode
+          : null
+      const nextMode = hashMode ?? 'quick'
 
-      setGuideReturnViewMode(nextSource as NonGuideViewMode)
+      setUtilityReturnViewMode(nextSource)
+      setMetricsGuideMode(nextMode)
       if (typeof window !== 'undefined') {
-        window.history.replaceState(null, '', '#metrics-guide/quick')
+        window.history.replaceState(null, '', buildMetricsGuideHash(nextMode))
       }
       setViewMode('metrics-guide')
     },
-    [guideReturnViewMode, setGuideReturnViewMode, setViewMode, viewMode]
+    [
+      resolveUtilitySourceView,
+      setMetricsGuideMode,
+      setUtilityReturnViewMode,
+      setViewMode
+    ]
   )
 
-  const handleBackFromMetricsGuide = useCallback(() => {
-    clearMetricsGuideHash()
-    setViewMode(guideReturnViewMode)
-  }, [clearMetricsGuideHash, guideReturnViewMode, setViewMode])
+  const handleBackFromUtility = useCallback(() => {
+    clearUtilityHash()
+    setViewMode(utilityReturnViewMode)
+  }, [clearUtilityHash, setViewMode, utilityReturnViewMode])
+
+  const handleMetricsGuideModeChange = useCallback(
+    (mode: MetricsGuideMode) => {
+      setMetricsGuideMode(mode)
+    },
+    [setMetricsGuideMode]
+  )
 
   const handleShowModuleGraph = useCallback(
     (modulePath: string) => {
-      clearMetricsGuideHash()
+      clearUtilityHash()
       setViewMode('graph')
       setGraphViewMode('module')
       setFocusedModulePath(modulePath)
@@ -247,7 +309,7 @@ export function useExplorerController({
       }, 5000)
     },
     [
-      clearMetricsGuideHash,
+      clearUtilityHash,
       setFocusedModulePath,
       setGraphViewMode,
       setHighlightedModule,
@@ -281,11 +343,36 @@ export function useExplorerController({
   const hasUnresolvedImports =
     (analysisData?.warnings?.unresolvedImports?.length ?? 0) > 0
 
+  const activePrimaryViewMode = useMemo<PrimaryExplorerViewMode | null>(() => {
+    return isPrimaryViewMode(viewMode) ? viewMode : null
+  }, [isPrimaryViewMode, viewMode])
+
+  const activeUtilityViewMode = useMemo<UtilityExplorerViewMode | null>(() => {
+    if (viewMode === 'metrics-guide' || viewMode === 'setup-guide') {
+      return viewMode
+    }
+
+    return null
+  }, [viewMode])
+
+  const activeContextChip = useMemo<ExplorerContextChip | null>(() => {
+    return resolveExplorerContextChip({
+      viewMode,
+      graphViewMode,
+      currentHash: buildMetricsGuideHash(metricsGuideMode),
+      hasUnresolvedImports
+    })
+  }, [graphViewMode, hasUnresolvedImports, metricsGuideMode, viewMode])
+
   return {
     treeRef,
     selectedFileId,
     viewMode,
+    activePrimaryViewMode,
+    activeUtilityViewMode,
     graphViewMode,
+    activeContextChip,
+    metricsGuideMode,
     highlightedModule,
     focusedModulePath,
     isTreeCollapsed,
@@ -301,7 +388,8 @@ export function useExplorerController({
     handleShowArchitecture,
     handleShowSetupGuide,
     handleShowMetricsGuide,
-    handleBackFromMetricsGuide,
+    handleBackFromUtility,
+    handleMetricsGuideModeChange,
     handleShowModuleGraph,
     handleModuleSelect,
     handleModulePanelClose,

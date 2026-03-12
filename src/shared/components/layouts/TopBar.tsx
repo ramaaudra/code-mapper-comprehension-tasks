@@ -1,4 +1,5 @@
 import { ReportDownloadButton } from '@/features/report/components/ReportDownloadButton'
+import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
   AlertTriangle,
@@ -11,10 +12,14 @@ import {
   ToggleGroup,
   ToggleGroupItem
 } from '@/shared/components/ui/toggle-group'
+import { shellCopy } from '@/shared/content/shellCopy'
+import { cn } from '@/shared/lib/utils'
 
 import type {
+  ExplorerContextChip,
   ExplorerRuntimeMode,
-  ExplorerViewMode
+  PrimaryExplorerViewMode,
+  UtilityExplorerViewMode
 } from '@/shared/types/explorer'
 
 interface TopBarProps {
@@ -23,10 +28,13 @@ interface TopBarProps {
   loadError: string | null
   hasData: boolean
   onRefresh: () => void
-  viewMode: ExplorerViewMode
+  activePrimaryViewMode: PrimaryExplorerViewMode | null
+  activeUtilityViewMode: UtilityExplorerViewMode | null
+  contextChip: ExplorerContextChip | null
   onShowOverview: () => void
   onShowGraph: () => void
   onShowArchitecture: () => void
+  onShowMetricsGuide: () => void
   isTreeCollapsed: boolean
   onToggleTree: () => void
   onShowSetupGuide: () => void
@@ -43,10 +51,13 @@ export function TopBar({
   loadError,
   hasData,
   onRefresh,
-  viewMode,
+  activePrimaryViewMode,
+  activeUtilityViewMode,
+  contextChip,
   onShowOverview,
   onShowGraph,
   onShowArchitecture,
+  onShowMetricsGuide,
   isTreeCollapsed,
   onToggleTree,
   onShowSetupGuide,
@@ -58,23 +69,26 @@ export function TopBar({
 }: TopBarProps) {
   const timestampLabel =
     runtimeMode === 'report' && analysisLoadedAt
-      ? `Generated: ${new Date(analysisLoadedAt).toLocaleString(undefined, {
+      ? `${shellCopy.timestamps.generatedPrefix} ${new Date(
+          analysisLoadedAt
+        ).toLocaleString(undefined, {
           dateStyle: 'long',
           timeStyle: 'short'
         })}`
-      : runtimeMode === 'live' && analysisLoadedAt
-        ? new Intl.DateTimeFormat(undefined, {
-            hour: '2-digit',
-            minute: '2-digit'
-          }).format(new Date(analysisLoadedAt))
-        : null
+      : null
+
+  const contextChipClassName =
+    contextChip?.tone === 'warning'
+      ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-300'
+      : 'border-border/70 bg-muted/60 text-muted-foreground'
 
   return (
-    <header className='flex h-14 items-center justify-between border-b border-border bg-background px-4'>
-      {/* Left: Toggle Sidebar + Brand */}
-      <div className='flex items-center gap-3'>
+    <header className='grid h-14 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border bg-background px-3 sm:px-4'>
+      <div className='flex min-w-0 items-center gap-3'>
         <SimpleTooltip
-          content={isTreeCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+          content={
+            isTreeCollapsed ? shellCopy.sidebar.show : shellCopy.sidebar.hide
+          }
           side='bottom'
           asChild
         >
@@ -82,7 +96,7 @@ export function TopBar({
             variant='ghost'
             size='icon'
             onClick={onToggleTree}
-            className='h-8 w-8 text-muted-foreground hover:text-foreground'
+            className='h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground'
           >
             {isTreeCollapsed ? (
               <PanelLeftOpen className='h-4 w-4' />
@@ -92,24 +106,23 @@ export function TopBar({
           </Button>
         </SimpleTooltip>
 
-        <div className='flex items-center gap-2'>
-          <h1 className='text-base font-semibold text-foreground'>
-            Code Mapper
+        <div className='flex min-w-0 items-center gap-2'>
+          <h1 className='truncate text-base font-semibold text-foreground'>
+            {shellCopy.brand}
           </h1>
           {hasData && fileCount !== undefined && (
-            <span className='rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground'>
-              {fileCount} files
+            <span className='hidden rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground xl:inline-flex'>
+              {shellCopy.fileCount(fileCount)}
             </span>
           )}
         </div>
       </div>
 
-      {/* Center: Mode Switch (Overview | Graph | Architecture) */}
-      {hasData && (
-        <div className='absolute left-1/2 -translate-x-1/2 transform'>
+      <div className='justify-self-center'>
+        {hasData && (
           <ToggleGroup
             type='single'
-            value={viewMode}
+            value={activePrimaryViewMode ?? undefined}
             onValueChange={(value: string) => {
               if (value === 'overview') {
                 onShowOverview()
@@ -117,35 +130,89 @@ export function TopBar({
                 onShowGraph()
               } else if (value === 'architecture') {
                 onShowArchitecture()
-              } else if (value === 'setup-guide') {
-                onShowSetupGuide()
               }
             }}
             size='sm'
           >
             <ToggleGroupItem value='overview' size='sm'>
-              Overview
+              {shellCopy.navigation.overview}
             </ToggleGroupItem>
             <ToggleGroupItem value='graph' size='sm'>
-              Graph
+              {shellCopy.navigation.graph}
             </ToggleGroupItem>
             <ToggleGroupItem value='architecture' size='sm'>
-              Architecture
-            </ToggleGroupItem>
-            <ToggleGroupItem value='setup-guide' size='sm'>
-              <span className='flex items-center gap-1.5'>
-                Setup
-                {hasUnresolvedImports && (
-                  <AlertTriangle className='h-3 w-3 text-yellow-500' />
-                )}
-              </span>
+              {shellCopy.navigation.architecture}
             </ToggleGroupItem>
           </ToggleGroup>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Right: Actions */}
-      <div className='flex items-center gap-2'>
+      <div className='flex min-w-0 items-center justify-end gap-1.5'>
+        {hasData && (
+          <>
+            <SimpleTooltip
+              content={shellCopy.utilities.metricsGuide.tooltip}
+              side='bottom'
+              asChild
+            >
+              <Button
+                variant={
+                  activeUtilityViewMode === 'metrics-guide'
+                    ? 'secondary'
+                    : 'ghost'
+                }
+                size='sm'
+                onClick={onShowMetricsGuide}
+                className={cn(
+                  'gap-2 px-2.5',
+                  activeUtilityViewMode !== 'metrics-guide' &&
+                    'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {shellCopy.utilities.metricsGuide.label}
+              </Button>
+            </SimpleTooltip>
+
+            <SimpleTooltip
+              content={shellCopy.utilities.analysisSetup.tooltip}
+              side='bottom'
+              asChild
+            >
+              <Button
+                variant={
+                  activeUtilityViewMode === 'setup-guide'
+                    ? 'secondary'
+                    : 'ghost'
+                }
+                size='sm'
+                onClick={onShowSetupGuide}
+                className={cn(
+                  'gap-2 px-2.5',
+                  activeUtilityViewMode !== 'setup-guide' &&
+                    'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {shellCopy.utilities.analysisSetup.label}
+                {hasUnresolvedImports && (
+                  <AlertTriangle className='h-3.5 w-3.5 shrink-0 text-amber-500' />
+                )}
+              </Button>
+            </SimpleTooltip>
+
+            {contextChip && (
+              <Badge
+                variant='outline'
+                className={cn(
+                  'hidden shrink-0 border text-[11px] lg:inline-flex',
+                  contextChipClassName
+                )}
+              >
+                {contextChip.label}
+              </Badge>
+            )}
+          </>
+        )}
+
         {loadError && runtimeMode === 'live' && (
           <SimpleTooltip content={loadError} side='bottom' asChild>
             <div className='flex h-8 w-8 items-center justify-center text-amber-500'>
@@ -160,10 +227,10 @@ export function TopBar({
           <SimpleTooltip
             content={
               isLoading
-                ? 'Loading...'
+                ? shellCopy.actions.loading
                 : hasChanges
-                  ? `${totalChanges} file${totalChanges !== 1 ? 's' : ''} changed - click to reload`
-                  : 'Reload analysis'
+                  ? shellCopy.actions.reloadChanged(totalChanges)
+                  : shellCopy.actions.reload
             }
             side='bottom'
             asChild
@@ -177,7 +244,7 @@ export function TopBar({
                 className='h-8 w-8 text-muted-foreground hover:text-foreground'
               >
                 <RotateCcw
-                  className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
+                  className={cn('h-4 w-4', isLoading && 'animate-spin')}
                 />
               </Button>
               {hasChanges && totalChanges > 0 && (
@@ -189,9 +256,8 @@ export function TopBar({
           </SimpleTooltip>
         )}
 
-        {/* Timestamp (subtle) */}
-        {timestampLabel && (
-          <span className='hidden text-xs text-muted-foreground lg:inline'>
+        {runtimeMode === 'report' && timestampLabel && (
+          <span className='hidden shrink-0 text-xs text-muted-foreground xl:inline'>
             {timestampLabel}
           </span>
         )}

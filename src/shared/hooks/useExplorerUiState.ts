@@ -5,7 +5,8 @@ import type { AnalysisNode } from '@/shared/types/analysis'
 import type {
   ExplorerViewMode,
   GraphViewMode,
-  NonGuideViewMode
+  MetricsGuideMode,
+  NonUtilityViewMode
 } from '@/shared/types/explorer'
 import type { Dispatch, RefObject, SetStateAction } from 'react'
 
@@ -26,8 +27,10 @@ export interface ExplorerUiState {
   setViewMode: Dispatch<SetStateAction<ExplorerViewMode>>
   graphViewMode: GraphViewMode
   setGraphViewMode: Dispatch<SetStateAction<GraphViewMode>>
-  guideReturnViewMode: NonGuideViewMode
-  setGuideReturnViewMode: Dispatch<SetStateAction<NonGuideViewMode>>
+  utilityReturnViewMode: NonUtilityViewMode
+  setUtilityReturnViewMode: Dispatch<SetStateAction<NonUtilityViewMode>>
+  metricsGuideMode: MetricsGuideMode
+  setMetricsGuideMode: Dispatch<SetStateAction<MetricsGuideMode>>
   highlightedModule: string | null
   setHighlightedModule: Dispatch<SetStateAction<string | null>>
   focusedModulePath: string | null
@@ -52,8 +55,10 @@ export function useExplorerUiState({
   const [viewMode, setViewMode] = useState<ExplorerViewMode>(initialViewMode)
   const [graphViewMode, setGraphViewMode] =
     useState<GraphViewMode>(initialGraphViewMode)
-  const [guideReturnViewMode, setGuideReturnViewMode] =
-    useState<NonGuideViewMode>(initialViewMode as NonGuideViewMode)
+  const [utilityReturnViewMode, setUtilityReturnViewMode] =
+    useState<NonUtilityViewMode>(initialViewMode as NonUtilityViewMode)
+  const [metricsGuideMode, setMetricsGuideMode] =
+    useState<MetricsGuideMode>('quick')
   const [highlightedModule, setHighlightedModule] = useState<string | null>(
     null
   )
@@ -76,8 +81,10 @@ export function useExplorerUiState({
     setViewMode,
     graphViewMode,
     setGraphViewMode,
-    guideReturnViewMode,
-    setGuideReturnViewMode,
+    utilityReturnViewMode,
+    setUtilityReturnViewMode,
+    metricsGuideMode,
+    setMetricsGuideMode,
     highlightedModule,
     setHighlightedModule,
     focusedModulePath,

@@ -19,8 +19,10 @@ export function useAppLogic() {
     setViewMode,
     graphViewMode,
     setGraphViewMode,
-    guideReturnViewMode,
-    setGuideReturnViewMode,
+    utilityReturnViewMode,
+    setUtilityReturnViewMode,
+    metricsGuideMode,
+    setMetricsGuideMode,
     highlightedModule,
     setHighlightedModule,
     focusedModulePath,
@@ -144,44 +146,9 @@ export function useAppLogic() {
     [analysisData, handleFileSelect, treeRef]
   )
 
-  const handleShowOverview = useCallback(() => {
-    setViewMode('overview')
-    setSelectedFileId(null)
-    setSelectedNode(null)
-    clearGraph()
-  }, [clearGraph, setSelectedFileId, setSelectedNode, setViewMode])
-
-  const handleShowArchitecture = useCallback(() => {
-    setViewMode('architecture')
-  }, [setViewMode])
-
-  const handleShowGraph = useCallback(() => {
-    setViewMode('graph')
-    setGraphViewMode('file')
-    setHighlightedModule(null)
-  }, [setGraphViewMode, setHighlightedModule, setViewMode])
-
-  const handleShowModuleGraph = useCallback(
-    (modulePath: string) => {
-      setViewMode('graph')
-      setGraphViewMode('module')
-      setFocusedModulePath(modulePath)
-      setHighlightedModule(modulePath)
-
-      setTimeout(() => {
-        setHighlightedModule(null)
-      }, 5000)
-    },
-    [setFocusedModulePath, setGraphViewMode, setHighlightedModule, setViewMode]
-  )
-
   const clearFocusedModule = useCallback(() => {
     setFocusedModulePath(null)
   }, [setFocusedModulePath])
-
-  const handleShowSetupGuide = useCallback(() => {
-    setViewMode('setup-guide')
-  }, [setViewMode])
 
   const refreshAnalysis = useCallback(async () => {
     const result = await reanalyze()
@@ -268,15 +235,12 @@ export function useAppLogic() {
     setSimulationResult,
     handleFileSelect,
     navigateToFile,
-    handleShowOverview,
-    handleShowGraph,
-    handleShowModuleGraph,
-    handleShowArchitecture,
-    handleShowSetupGuide,
     graphViewMode,
     setGraphViewMode,
-    guideReturnViewMode,
-    setGuideReturnViewMode,
+    utilityReturnViewMode,
+    setUtilityReturnViewMode,
+    metricsGuideMode,
+    setMetricsGuideMode,
     highlightedModule,
     focusedModulePath,
     setFocusedModulePath,

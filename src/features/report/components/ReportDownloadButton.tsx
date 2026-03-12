@@ -69,7 +69,7 @@ export function ReportDownloadButton() {
       <Button
         onClick={handleDownload}
         disabled={isGenerating}
-        variant='outline'
+        variant='secondary'
         size='sm'
       >
         {isGenerating ? (

@@ -1,12 +1,20 @@
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
-import { ArrowLeft } from '@/shared/components/ui/icons'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle
+} from '@/shared/components/ui/icons'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
+import { shellCopy } from '@/shared/content/shellCopy'
 
+import { setupGuideCopy } from '../content/setupGuideCopy'
 import { UnresolvedImportsList } from './UnresolvedImportsList'
 
 import type { AnalysisWarnings } from '@/shared/types/analysis'
@@ -16,7 +24,6 @@ interface SetupGuidePageProps {
   onBack: () => void
 }
 
-// Reusable inline code component to avoid repetition
 function InlineCode({ children }: { children: React.ReactNode }) {
   return (
     <code className='rounded bg-muted px-1.5 py-0.5 font-mono text-xs'>
@@ -25,7 +32,6 @@ function InlineCode({ children }: { children: React.ReactNode }) {
   )
 }
 
-// Static content defined outside component to avoid re-creation on render
 const TSCONFIG_EXAMPLE = `{
   "compilerOptions": {
     "baseUrl": ".",
@@ -38,68 +44,72 @@ const TSCONFIG_EXAMPLE = `{
 }`
 
 export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
-  const hasUnresolvedImports = warnings && warnings.unresolvedImports.length > 0
+  const hasUnresolvedImports = (warnings?.unresolvedImports.length ?? 0) > 0
+  const statusCopy = hasUnresolvedImports
+    ? setupGuideCopy.status.warningsDetected
+    : setupGuideCopy.status.analysisReady
 
   return (
     <ScrollArea className='h-full bg-background'>
       <div className='mx-auto max-w-3xl space-y-6 p-6'>
-        {/* Header */}
-        <div className='space-y-2'>
-          <button
+        <div className='space-y-3'>
+          <Button
+            variant='ghost'
+            size='sm'
             onClick={onBack}
-            className='inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground'
+            className='gap-2 px-0'
           >
             <ArrowLeft className='h-4 w-4' />
-            Back to Overview
-          </button>
-          <h1 className='text-2xl font-bold'>Setup Guide</h1>
-          <p className='text-muted-foreground'>
-            Configure path aliases for accurate analysis results.
-          </p>
+            {shellCopy.utilities.back}
+          </Button>
+
+          <div className='space-y-2'>
+            <div className='flex flex-wrap items-center gap-2'>
+              <Badge variant='outline'>
+                {setupGuideCopy.header.surfaceBadge}
+              </Badge>
+              <Badge
+                variant='secondary'
+                className={
+                  hasUnresolvedImports
+                    ? 'bg-amber-500/15 text-amber-700 hover:bg-amber-500/15 dark:bg-amber-500/20 dark:text-amber-300'
+                    : 'bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/15 dark:bg-emerald-500/20 dark:text-emerald-300'
+                }
+              >
+                {statusCopy.badge}
+              </Badge>
+            </div>
+            <h1 className='text-2xl font-bold'>
+              {setupGuideCopy.header.title}
+            </h1>
+            <p className='text-muted-foreground'>
+              {setupGuideCopy.header.description}
+            </p>
+          </div>
         </div>
 
-        {/* Status Card */}
         <Card
           className={
             hasUnresolvedImports
-              ? 'border-yellow-500/50'
-              : 'border-green-500/50'
+              ? 'border-amber-500/40'
+              : 'border-emerald-500/40'
           }
         >
           <CardHeader className='pb-2'>
             <CardTitle className='flex items-center gap-2 text-base'>
               {hasUnresolvedImports ? (
-                <>
-                  <span className='h-2 w-2 rounded-full bg-yellow-500' />
-                  Unresolved Imports Detected
-                </>
+                <AlertTriangle className='h-4 w-4 text-amber-500' />
               ) : (
-                <>
-                  <span className='h-2 w-2 rounded-full bg-green-500' />
-                  Configuration Correct
-                </>
+                <CheckCircle className='h-4 w-4 text-emerald-500' />
               )}
+              {statusCopy.title}
             </CardTitle>
           </CardHeader>
           <CardContent className='text-sm text-muted-foreground'>
-            {hasUnresolvedImports ? (
-              <p>
-                Some imports with aliases like{' '}
-                <code className='text-foreground'>@/components</code> could not
-                be resolved. This usually happens because the path mapping
-                configuration is incomplete or the referenced file does not
-                exist.
-              </p>
-            ) : (
-              <p>
-                Path mappings detected successfully. All imports should be
-                resolved correctly.
-              </p>
-            )}
+            <p>{statusCopy.description}</p>
           </CardContent>
         </Card>
 
-        {/* Unresolved Imports List */}
         {warnings && (
           <UnresolvedImportsList
             imports={warnings.unresolvedImports}
@@ -107,21 +117,20 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
           />
         )}
 
-        {/* Instructions */}
         {hasUnresolvedImports && (
           <Card>
             <CardHeader className='pb-3'>
-              <CardTitle className='text-base'>How to Fix</CardTitle>
+              <CardTitle className='text-base'>
+                {setupGuideCopy.instructions.title}
+              </CardTitle>
             </CardHeader>
             <CardContent className='space-y-6'>
               <div className='space-y-3'>
                 <h4 className='text-sm font-medium'>
-                  1. Create or edit configuration file
+                  {setupGuideCopy.instructions.steps.createConfig.title}
                 </h4>
                 <p className='text-sm text-muted-foreground'>
-                  Make sure one of the following files exists in your project
-                  root with the correct path mappings (priority:
-                  tsconfig.app.json {'>'} tsconfig.json {'>'} jsconfig.json):
+                  {setupGuideCopy.instructions.steps.createConfig.description}
                 </p>
                 <pre className='overflow-x-auto rounded-lg bg-muted p-4 text-xs'>
                   <code>{TSCONFIG_EXAMPLE}</code>
@@ -129,38 +138,34 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
               </div>
 
               <div className='space-y-2'>
-                <h4 className='text-sm font-medium'>2. Re-run analysis</h4>
+                <h4 className='text-sm font-medium'>
+                  {setupGuideCopy.instructions.steps.rerunAnalysis.title}
+                </h4>
                 <p className='text-sm text-muted-foreground'>
-                  After adding path mappings, re-run the{' '}
-                  <InlineCode>analyze .</InlineCode> command or click the
-                  refresh button in the UI.
+                  {setupGuideCopy.instructions.steps.rerunAnalysis.description}{' '}
+                  <InlineCode>analyze .</InlineCode>
                 </p>
               </div>
 
               <div className='space-y-2'>
-                <h4 className='text-sm font-medium'>3. For Vite projects</h4>
+                <h4 className='text-sm font-medium'>
+                  {setupGuideCopy.instructions.steps.viteProjects.title}
+                </h4>
                 <p className='text-sm text-muted-foreground'>
-                  Make sure path mappings are in{' '}
-                  <InlineCode>tsconfig.json</InlineCode> or{' '}
-                  <InlineCode>tsconfig.app.json</InlineCode>, not just in{' '}
-                  <InlineCode>vite.config.ts</InlineCode>. Code Mapper reads
-                  configuration from tsconfig/jsconfig files, not from Vite
-                  config.
+                  {setupGuideCopy.instructions.steps.viteProjects.description}
                 </p>
               </div>
 
               <div className='space-y-2'>
-                <h4 className='text-sm font-medium'>4. Troubleshooting tips</h4>
+                <h4 className='text-sm font-medium'>
+                  {setupGuideCopy.instructions.steps.troubleshooting.title}
+                </h4>
                 <ul className='list-inside list-disc space-y-1 text-sm text-muted-foreground'>
-                  <li>
-                    Ensure <code>baseUrl</code> is set relative to the tsconfig
-                    file location
-                  </li>
-                  <li>Verify that the imported file actually exists</li>
-                  <li>
-                    For monorepos, run analysis from the subdirectories
-                    (frontend/backend), not from the root
-                  </li>
+                  {setupGuideCopy.instructions.steps.troubleshooting.items.map(
+                    (item) => (
+                      <li key={item}>{item}</li>
+                    )
+                  )}
                 </ul>
               </div>
             </CardContent>

@@ -113,6 +113,12 @@ export function getModulePathFromNodeLabel(label?: string): string | null {
   return normalizedLabel.slice(0, lastSlashIndex)
 }
 
+export {
+  buildMetricsGuideHash,
+  parseMetricsGuideHash,
+  resolveExplorerContextChip
+} from './explorer-shell'
+
 // Re-export file status utilities
 export {
   normalizePath,
