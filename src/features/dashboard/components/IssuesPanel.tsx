@@ -82,9 +82,16 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
       <Card className='overflow-hidden'>
         <CardHeader className='pb-3'>
           <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-2'>
-              <AlertTriangle className='h-4 w-4 text-muted-foreground' />
-              <span className='text-sm font-medium'>Circular Dependencies</span>
+            <div className='space-y-1'>
+              <div className='flex items-center gap-2'>
+                <AlertTriangle className='h-4 w-4 text-muted-foreground' />
+                <span className='text-sm font-medium'>
+                  Dependency cycles to fix
+                </span>
+              </div>
+              <p className='text-xs text-muted-foreground'>
+                Break these first to reduce coordination and testing cost.
+              </p>
             </div>
             <div className='flex items-center gap-2'>
               {/* Severity badges in header */}
@@ -242,6 +249,13 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
             </div>
           </div>
         </CardHeader>
+        {circularDependencies.length === 0 && (
+          <CardContent>
+            <div className='rounded-md border border-emerald-500/20 bg-emerald-500/5 px-3 py-3 text-sm text-muted-foreground'>
+              No dependency cycles detected.
+            </div>
+          </CardContent>
+        )}
       </Card>
 
       <div className='space-y-4'>
@@ -249,9 +263,16 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
         <Card className='overflow-hidden'>
           <CardHeader className='pb-3'>
             <div className='flex items-center justify-between'>
-              <div className='flex items-center gap-2'>
-                <Ghost className='h-4 w-4 text-muted-foreground' />
-                <span className='text-sm font-medium'>Orphaned Files</span>
+              <div className='space-y-1'>
+                <div className='flex items-center gap-2'>
+                  <Ghost className='h-4 w-4 text-muted-foreground' />
+                  <span className='text-sm font-medium'>
+                    Cleanup candidates
+                  </span>
+                </div>
+                <p className='text-xs text-muted-foreground'>
+                  These files may be removable after a quick validation pass.
+                </p>
               </div>
               <div className='flex items-center gap-2'>
                 <Dialog

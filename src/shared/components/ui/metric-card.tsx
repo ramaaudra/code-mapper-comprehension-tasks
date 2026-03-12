@@ -19,18 +19,18 @@ export const MetricCard = memo(function MetricCard({
 }: MetricCardProps) {
   if (variant === 'minimal') {
     return (
-      <div className='min-h-[140px] rounded-lg bg-muted/20 p-6'>
+      <div className='min-h-[128px] rounded-lg border border-border/60 bg-muted/15 p-5'>
         <div className='flex items-center justify-between'>
-          <span className='text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground'>
+          <span className='text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground/85'>
             {label}
           </span>
-          {icon && <span className='p-2 text-muted-foreground'>{icon}</span>}
+          {icon && <span className='p-1.5 text-muted-foreground'>{icon}</span>}
         </div>
-        <div className='mt-3 text-5xl font-semibold tabular-nums tracking-tight text-foreground'>
+        <div className='mt-3 text-[2.2rem] font-semibold tabular-nums tracking-tight text-foreground lg:text-[2.45rem]'>
           {value}
         </div>
         {subValue && (
-          <p className='mt-1 text-xs text-muted-foreground'>{subValue}</p>
+          <p className='mt-1 text-xs text-muted-foreground/90'>{subValue}</p>
         )}
       </div>
     )

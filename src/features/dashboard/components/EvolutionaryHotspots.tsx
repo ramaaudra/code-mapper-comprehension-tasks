@@ -1,6 +1,7 @@
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
@@ -71,10 +72,16 @@ export function EvolutionaryHotspots({
     <Card>
       <CardHeader className='pb-2'>
         <div className='flex items-center justify-between gap-2'>
-          <CardTitle className='flex items-center gap-2 text-base font-medium'>
-            <RefreshCw className='h-4 w-4 text-orange-500' />
-            Evolutionary Hotspots
-          </CardTitle>
+          <div className='space-y-1'>
+            <CardTitle className='flex items-center gap-2 text-base font-medium'>
+              <RefreshCw className='h-4 w-4 text-orange-500' />
+              Recently active areas to review first
+            </CardTitle>
+            <CardDescription>
+              These modules changed heavily in recent history and deserve closer
+              review.
+            </CardDescription>
+          </div>
           <InfoTooltip title='What is an Evolutionary Hotspot?' side='top'>
             <div className='space-y-2 text-xs text-popover-foreground'>
               <p>
@@ -133,25 +140,19 @@ export function EvolutionaryHotspots({
                 </div>
                 <div className='grid gap-2 text-xs text-muted-foreground sm:grid-cols-2'>
                   <span>
-                    Relative Churn (30d):{' '}
+                    Changed in 30d:{' '}
                     <strong className='text-foreground'>
                       {formatRelativeChurn(hotspot.relativeChurn30d)}
                     </strong>
                   </span>
                   <span>
-                    Propagation Risk:{' '}
+                    Spread Risk:{' '}
                     <strong className='text-foreground'>
                       {hotspot.propagationRisk.toFixed(1)}
                     </strong>
                   </span>
                   <span>
-                    Hotspot Score:{' '}
-                    <strong className='text-foreground'>
-                      {hotspot.hotspotScore.toFixed(2)}
-                    </strong>
-                  </span>
-                  <span>
-                    Changed Files in 30d:{' '}
+                    Changed Files:{' '}
                     <strong className='text-foreground'>
                       {hotspot.changedFileCount30d}
                     </strong>
@@ -165,7 +166,7 @@ export function EvolutionaryHotspots({
         {hotspots.length > 5 ? (
           <div className='flex items-center gap-2 text-xs text-muted-foreground'>
             <AlertTriangle className='h-3.5 w-3.5' />
-            Showing the top 5 modules by hotspot score.
+            Showing the top 5 modules by hotspot priority.
           </div>
         ) : null}
       </CardContent>

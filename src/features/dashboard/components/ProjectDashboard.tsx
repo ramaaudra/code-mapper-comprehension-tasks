@@ -30,6 +30,37 @@ import { IssuesPanel } from './IssuesPanel'
 import type { AnalysisData } from '@/shared/types/analysis'
 import type { Edge, Node } from '@xyflow/react'
 
+interface OverviewSectionHeaderProps {
+  eyebrow: string
+  title: string
+  description: string
+}
+
+interface CouplingBucketFile {
+  path: string
+  count: number
+}
+
+function OverviewSectionHeader({
+  eyebrow,
+  title,
+  description
+}: OverviewSectionHeaderProps) {
+  return (
+    <div className='space-y-1.5'>
+      <p className='text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground/85'>
+        {eyebrow}
+      </p>
+      <div className='space-y-1'>
+        <h2 className='text-lg font-semibold text-foreground'>{title}</h2>
+        <p className='max-w-3xl text-sm text-muted-foreground/90'>
+          {description}
+        </p>
+      </div>
+    </div>
+  )
+}
+
 interface ProjectDashboardProps {
   analysisData: AnalysisData | null
   dependencyGraph: {
@@ -146,15 +177,25 @@ export const ProjectDashboard = memo(
         })
       )
 
+      const sortedByCount = [...depCounts].sort((a, b) => b.count - a.count)
+
+      const toBucketFiles = (items: CouplingBucketFile[]) =>
+        [...items].sort((a, b) => b.count - a.count)
+
       const total = depCounts.length
-      const loose = depCounts.filter((d) => d.count <= 2).length
-      const medium = depCounts.filter((d) => d.count > 2 && d.count <= 6).length
-      const tight = depCounts.filter((d) => d.count > 6 && d.count <= 10).length
-      const heavy = depCounts.filter((d) => d.count > 10).length
+      const looseFiles = depCounts.filter((d) => d.count <= 2)
+      const mediumFiles = depCounts.filter((d) => d.count > 2 && d.count <= 6)
+      const tightFiles = depCounts.filter((d) => d.count > 6 && d.count <= 10)
+      const heavyFiles = depCounts.filter((d) => d.count > 10)
+
+      const loose = looseFiles.length
+      const medium = mediumFiles.length
+      const tight = tightFiles.length
+      const heavy = heavyFiles.length
 
       const avgDeps =
         depCounts.reduce((sum, d) => sum + d.count, 0) / Math.max(total, 1)
-      const mostCoupled = depCounts.sort((a, b) => b.count - a.count)[0]
+      const mostCoupled = sortedByCount[0]
 
       // Identify God Objects (files with >15 dependencies)
       const godObjects = depCounts
@@ -170,31 +211,35 @@ export const ProjectDashboard = memo(
         distribution: [
           {
             label: 'Loose',
-            range: '0-2',
+            range: '1-2',
             count: loose,
             percentage: (loose / total) * 100,
-            color: 'bg-green-500'
+            color: 'bg-green-500',
+            files: toBucketFiles(looseFiles)
           },
           {
             label: 'Medium',
-            range: '3-6',
+            range: '3-5',
             count: medium,
             percentage: (medium / total) * 100,
-            color: 'bg-yellow-500'
+            color: 'bg-yellow-500',
+            files: toBucketFiles(mediumFiles)
           },
           {
             label: 'Tight',
-            range: '7-10',
+            range: '6-10',
             count: tight,
             percentage: (tight / total) * 100,
-            color: 'bg-orange-500'
+            color: 'bg-orange-500',
+            files: toBucketFiles(tightFiles)
           },
           {
             label: 'Heavy',
             range: '10+',
             count: heavy,
             percentage: (heavy / total) * 100,
-            color: 'bg-red-500'
+            color: 'bg-red-500',
+            files: toBucketFiles(heavyFiles)
           }
         ],
         mostCoupledFile: mostCoupled
@@ -282,33 +327,46 @@ export const ProjectDashboard = memo(
               </p>
             </div>
 
-            {/* Top Metrics - Minimalist Developer Style */}
-            <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
-              {overviewCards.map(({ label, value, icon }) => (
-                <MetricCard
-                  key={label}
-                  label={label}
-                  value={value}
-                  icon={icon}
-                  variant='minimal'
-                />
-              ))}
+            <div className='space-y-3'>
+              <ActionableInsights
+                cycleCount={healthBreakdown.cycleCount}
+                orphanCount={healthBreakdown.orphanCount}
+                criticalRisks={criticalRisks}
+                warningRisks={warningRisks}
+                godObjects={couplingDistribution.godObjects}
+                topHotspot={topHotspot}
+                onNavigateToFile={onNavigateToFile}
+                onViewModule={onShowModuleGraph}
+                onShowArchitecture={onShowArchitecture}
+              />
             </div>
 
-            {/* Health Score - Full Width with Critical Insights */}
-            <ArchitectureHealthScore
-              breakdown={healthBreakdown}
-              riskMetrics={{
-                criticalCount: criticalRisks.length,
-                warningCount: warningRisks.length,
-                godObjectCount: couplingDistribution.godObjects.length
-              }}
-              criticalInsights={criticalInsights}
-            />
+            <div className='space-y-4'>
+              <OverviewSectionHeader
+                eyebrow='Quick Snapshot'
+                title='Project size and recent activity'
+                description='Use this row to orient yourself before diving into the review queues below.'
+              />
+              <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
+                {overviewCards.map(({ label, value, icon }) => (
+                  <MetricCard
+                    key={label}
+                    label={label}
+                    value={value}
+                    icon={icon}
+                    variant='minimal'
+                  />
+                ))}
+              </div>
+            </div>
 
-            <div className='grid gap-6 lg:grid-cols-2'>
-              {/* Left Column */}
-              <div className='space-y-6'>
+            <div className='space-y-4'>
+              <OverviewSectionHeader
+                eyebrow='Review First'
+                title='Shared and active areas that deserve attention'
+                description='Use these two views together: the left list shows where changes can spread, and the right list shows where recent change pressure is highest.'
+              />
+              <div className='grid gap-6 lg:grid-cols-2'>
                 <HighRiskModules
                   modules={allRiskProfiles.slice(0, 5)}
                   onViewModule={onShowModuleGraph}
@@ -320,21 +378,39 @@ export const ProjectDashboard = memo(
                   unavailableReason={hotspotAvailability.message}
                   onViewModule={onShowModuleGraph}
                 />
-                <CouplingDistribution {...couplingDistribution} />
               </div>
+            </div>
 
-              {/* Right Column */}
-              <div className='space-y-6'>
-                <ActionableInsights
-                  cycleCount={healthBreakdown.cycleCount}
-                  orphanCount={healthBreakdown.orphanCount}
-                  criticalRisks={criticalRisks}
-                  warningRisks={warningRisks}
-                  godObjects={couplingDistribution.godObjects}
-                  topHotspot={topHotspot}
+            <div className='space-y-4'>
+              <OverviewSectionHeader
+                eyebrow='Current Issues'
+                title='Blockers and cleanup candidates'
+                description='Check cycles first, then review orphaned files when you have maintenance time.'
+              />
+              <IssuesPanel
+                data={analysisData}
+                onNavigateToFile={onNavigateToFile}
+              />
+            </div>
+
+            <div className='space-y-4'>
+              <OverviewSectionHeader
+                eyebrow='System Context'
+                title='Overall change safety and dependency load'
+                description='These summaries help you understand the broader system condition after triaging the urgent areas above.'
+              />
+              <div className='grid gap-6 lg:grid-cols-2'>
+                <ArchitectureHealthScore
+                  breakdown={healthBreakdown}
+                  riskMetrics={{
+                    criticalCount: criticalRisks.length,
+                    warningCount: warningRisks.length,
+                    godObjectCount: couplingDistribution.godObjects.length
+                  }}
+                  criticalInsights={criticalInsights}
                 />
-                <IssuesPanel
-                  data={analysisData}
+                <CouplingDistribution
+                  {...couplingDistribution}
                   onNavigateToFile={onNavigateToFile}
                 />
               </div>

@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
@@ -53,8 +54,12 @@ export function HighRiskModules({
         <CardHeader className='pb-2'>
           <CardTitle className='flex items-center gap-2 text-base font-medium'>
             <AlertTriangle className='h-4 w-4' />
-            Top Propagation Risk Modules
+            Shared areas that can spread change
           </CardTitle>
+          <CardDescription>
+            Review these modules carefully before editing shared flows or
+            services.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className='py-4 text-center text-muted-foreground'>
@@ -73,19 +78,24 @@ export function HighRiskModules({
     <Card>
       <CardHeader className='pb-2'>
         <div className='flex items-center justify-between'>
-          <CardTitle className='flex items-center gap-2 text-base font-medium'>
-            <AlertTriangle className='h-4 w-4 text-orange-500' />
-            Top Propagation Risk Modules
-            <span className='text-xs font-normal text-muted-foreground'>
-              ({sortedModules.length})
-            </span>
-          </CardTitle>
+          <div className='space-y-1'>
+            <CardTitle className='flex items-center gap-2 text-base font-medium'>
+              <AlertTriangle className='h-4 w-4 text-orange-500' />
+              Shared areas that can spread change
+              <span className='text-xs font-normal text-muted-foreground'>
+                ({sortedModules.length})
+              </span>
+            </CardTitle>
+            <CardDescription>
+              Review these modules carefully before editing shared flows or
+              services.
+            </CardDescription>
+          </div>
           <InfoTooltip title='What is Propagation Risk?' side='top'>
             <div className='space-y-2'>
               <p className='text-xs text-popover-foreground'>
-                Propagation Risk is a derived architectural heuristic based on
-                Robert C. Martin's dependency metrics. It estimates how widely a
-                module change may propagate.
+                Spread risk estimates how widely a module change may travel
+                through the codebase when many other areas depend on it.
               </p>
               <div className='space-y-1 border-t border-border pt-1 text-xs'>
                 <p className='text-popover-foreground'>
@@ -112,17 +122,17 @@ export function HighRiskModules({
                   <span className='font-medium text-orange-500'>
                     {RISK_THRESHOLDS.HIGH} to &lt;{RISK_THRESHOLDS.CRITICAL}
                   </span>
-                  : High propagation risk
+                  : High spread risk
                   <br />•{' '}
                   <span className='font-medium text-yellow-500'>
                     {RISK_THRESHOLDS.MEDIUM} to &lt;{RISK_THRESHOLDS.HIGH}
                   </span>
-                  : Medium propagation risk
+                  : Medium spread risk
                   <br />•{' '}
                   <span className='font-medium text-green-500'>
                     &lt;{RISK_THRESHOLDS.MEDIUM}
                   </span>
-                  : Low propagation risk
+                  : Low spread risk
                 </p>
               </div>
               <p className='border-t border-border pt-1 text-xs text-popover-foreground/80'>
@@ -140,9 +150,9 @@ export function HighRiskModules({
       <CardContent className='space-y-3'>
         {/* Column Headers */}
         <div className='flex items-center gap-4 px-4 text-[10px] uppercase tracking-wider text-muted-foreground'>
-          <div className='flex-1'>Propagation Risk</div>
-          <div className='w-16 text-right'>Instability</div>
-          <div className='w-20 text-right'>Dependents</div>
+          <div className='flex-1'>Spread Risk</div>
+          <div className='w-16 text-right'>Spread Potential</div>
+          <div className='w-20 text-right'>Shared By</div>
         </div>
         {sortedModules.map((module) => {
           const barWidth = (module.riskScore / maxRiskScore) * 100
@@ -181,9 +191,9 @@ export function HighRiskModules({
                 <div className='flex shrink-0 items-center gap-4 text-xs'>
                   <span
                     className='w-16 cursor-help text-right tabular-nums text-muted-foreground transition-colors hover:text-foreground'
-                    title={`Instability: ${module.instability.toFixed(2)}\n0.0 = Stable, 1.0 = Unstable`}
+                    title={`Instability (I): ${module.instability.toFixed(2)}\n0.0 = Stable, 1.0 = Unstable`}
                   >
-                    I: {module.instability.toFixed(2)}
+                    {module.instability.toFixed(2)}
                   </span>
                   <span className='w-20 text-right tabular-nums text-muted-foreground'>
                     {module.fanIn}

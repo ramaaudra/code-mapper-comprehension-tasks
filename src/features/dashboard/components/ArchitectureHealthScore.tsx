@@ -1,6 +1,7 @@
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
@@ -18,7 +19,6 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
-import { HEURISTIC_LABELS } from '@/shared/lib/metric-copy'
 import { RISK_THRESHOLDS } from '@/shared/lib/utils/risk'
 
 interface HealthBreakdown {
@@ -95,12 +95,22 @@ export function ArchitectureHealthScore({
 
   const getStructuralProfileLabel = (value: number) => {
     if (value <= 0.3) {
-      return 'Rigid'
+      return 'More foundational'
     }
     if (value <= 0.6) {
       return 'Balanced'
     }
-    return 'Flexible'
+    return 'More outward-facing'
+  }
+
+  const getStructuralProfileDescription = (value: number) => {
+    if (value <= 0.3) {
+      return 'More foundational than outward-facing. Shared changes may need careful review.'
+    }
+    if (value <= 0.6) {
+      return 'A mix of shared and outward-facing modules. Review needs are more balanced.'
+    }
+    return 'More outward-facing than foundational. This is common in UI-heavy areas and does not automatically mean poor design.'
   }
 
   const getInsightIcon = (type: CriticalInsight['type']) => {
@@ -120,8 +130,12 @@ export function ArchitectureHealthScore({
     <Card>
       <CardHeader className='pb-2'>
         <CardTitle className='text-base font-medium'>
-          {HEURISTIC_LABELS.architectureHealth}
+          Overall Change Safety
         </CardTitle>
+        <CardDescription>
+          A summary of cycle pressure, shared-change risk, and code hygiene
+          signals across the repository.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className='flex items-center gap-8'>
@@ -202,14 +216,15 @@ export function ArchitectureHealthScore({
               <div className='flex items-center gap-2'>
                 <Lightbulb className='h-4 w-4 text-blue-500' />
                 <span className='text-sm'>
-                  <span className='text-muted-foreground'>
-                    Structural Profile:
-                  </span>{' '}
+                  <span className='text-muted-foreground'>Change Profile:</span>{' '}
                   <span className='font-medium'>
                     {getStructuralProfileLabel(breakdown.stabilityScore)}
                   </span>
                 </span>
               </div>
+              <p className='pl-6 text-xs leading-relaxed text-muted-foreground'>
+                {getStructuralProfileDescription(breakdown.stabilityScore)}
+              </p>
 
               <div className='flex items-center gap-2'>
                 {breakdown.cycleCount === 0 ? (
@@ -256,7 +271,7 @@ export function ArchitectureHealthScore({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <p className='inline-flex cursor-help items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground'>
-                        Top Priority
+                        Main drivers
                         <span className='text-[8px]'>ⓘ</span>
                       </p>
                     </TooltipTrigger>
@@ -266,7 +281,7 @@ export function ArchitectureHealthScore({
                     >
                       <div className='space-y-2'>
                         <p className='text-xs font-semibold text-popover-foreground'>
-                          Critical issues requiring immediate attention:
+                          Main signals affecting this summary:
                         </p>
                         <ul className='list-inside list-disc space-y-0.5 text-xs text-popover-foreground'>
                           <li>
