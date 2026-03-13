@@ -17,11 +17,24 @@ import {
 
 import { reportCopy } from '../content/reportCopy'
 
+import type { ButtonProps } from '@/shared/components/ui/button'
 import type { ApiErrorResponse } from '@/shared/lib/api/types'
 
-export function ReportDownloadButton() {
+interface ReportDownloadButtonProps {
+  buttonProps?: Omit<ButtonProps, 'children' | 'disabled' | 'onClick'>
+}
+
+export function ReportDownloadButton({
+  buttonProps
+}: ReportDownloadButtonProps = {}) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const {
+    className,
+    size = 'sm',
+    variant = 'secondary',
+    ...buttonRestProps
+  } = buttonProps ?? {}
 
   const parseErrorMessage = async (response: Response): Promise<string> => {
     const contentType = response.headers.get('content-type') || ''
@@ -69,13 +82,15 @@ export function ReportDownloadButton() {
       <Button
         onClick={handleDownload}
         disabled={isGenerating}
-        variant='secondary'
-        size='sm'
+        variant={variant}
+        size={size}
+        className={className}
+        {...buttonRestProps}
       >
         {isGenerating ? (
-          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+          <Loader2 className='mr-2 h-4 w-4 animate-spin' aria-hidden='true' />
         ) : (
-          <Download className='mr-2 h-4 w-4' />
+          <Download className='mr-2 h-4 w-4' aria-hidden='true' />
         )}
         {isGenerating
           ? reportCopy.exportButton.generating
@@ -86,7 +101,10 @@ export function ReportDownloadButton() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2'>
-              <WarningCircle className='h-5 w-5 text-amber-500' />
+              <WarningCircle
+                className='h-5 w-5 text-amber-500'
+                aria-hidden='true'
+              />
               {reportCopy.exportButton.errorTitle}
             </DialogTitle>
             <DialogDescription>

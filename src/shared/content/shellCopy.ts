@@ -1,5 +1,11 @@
 export const shellCopy = {
   brand: 'Code Mapper',
+  regions: {
+    primaryNavigation: 'Primary Navigation',
+    help: 'Help & Setup',
+    reportActions: 'Report Actions',
+    operations: 'Operations'
+  },
   sidebar: {
     show: 'Show sidebar',
     hide: 'Hide sidebar'
@@ -37,7 +43,7 @@ export const shellCopy = {
     }
   },
   actions: {
-    loading: 'Loading...',
+    loading: 'Loading…',
     reload: 'Reload analysis',
     reloadChanged: (count: number) =>
       `${count} file${count === 1 ? '' : 's'} changed - click to reload`

@@ -13,7 +13,11 @@ import {
   ToggleGroupItem
 } from '@/shared/components/ui/toggle-group'
 import { shellCopy } from '@/shared/content/shellCopy'
-import { cn } from '@/shared/lib/utils'
+import {
+  cn,
+  resolveTopBarActionGroups,
+  resolveTopBarIconLabels
+} from '@/shared/lib/utils'
 
 import type {
   ExplorerContextChip,
@@ -67,6 +71,17 @@ export function TopBar({
   hasChanges = false,
   totalChanges = 0
 }: TopBarProps) {
+  const actionGroups = resolveTopBarActionGroups({
+    hasData,
+    runtimeMode,
+    loadError
+  })
+  const iconLabels = resolveTopBarIconLabels({
+    isTreeCollapsed,
+    isLoading,
+    hasChanges,
+    totalChanges
+  })
   const timestampLabel =
     runtimeMode === 'report' && analysisLoadedAt
       ? `${shellCopy.timestamps.generatedPrefix} ${new Date(
@@ -96,12 +111,13 @@ export function TopBar({
             variant='ghost'
             size='icon'
             onClick={onToggleTree}
-            className='h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground'
+            aria-label={iconLabels.sidebarToggle}
+            className='h-8 w-8 shrink-0 touch-manipulation text-muted-foreground hover:text-foreground'
           >
             {isTreeCollapsed ? (
-              <PanelLeftOpen className='h-4 w-4' />
+              <PanelLeftOpen className='h-4 w-4' aria-hidden='true' />
             ) : (
-              <PanelLeftClose className='h-4 w-4' />
+              <PanelLeftClose className='h-4 w-4' aria-hidden='true' />
             )}
           </Button>
         </SimpleTooltip>
@@ -118,8 +134,11 @@ export function TopBar({
         </div>
       </div>
 
-      <div className='justify-self-center'>
-        {hasData && (
+      <nav
+        aria-label={shellCopy.regions.primaryNavigation}
+        className='justify-self-center'
+      >
+        {hasData && actionGroups.showHelpGroup && (
           <ToggleGroup
             type='single'
             value={activePrimaryViewMode ?? undefined}
@@ -132,24 +151,27 @@ export function TopBar({
                 onShowArchitecture()
               }
             }}
-            size='sm'
           >
-            <ToggleGroupItem value='overview' size='sm'>
+            <ToggleGroupItem value='overview'>
               {shellCopy.navigation.overview}
             </ToggleGroupItem>
-            <ToggleGroupItem value='graph' size='sm'>
+            <ToggleGroupItem value='graph'>
               {shellCopy.navigation.graph}
             </ToggleGroupItem>
-            <ToggleGroupItem value='architecture' size='sm'>
+            <ToggleGroupItem value='architecture'>
               {shellCopy.navigation.architecture}
             </ToggleGroupItem>
           </ToggleGroup>
         )}
-      </div>
+      </nav>
 
-      <div className='flex min-w-0 items-center justify-end gap-1.5'>
-        {hasData && (
-          <>
+      <div className='flex min-w-0 items-center justify-end gap-2'>
+        {actionGroups.showHelpGroup && (
+          <div
+            role='group'
+            aria-label={shellCopy.regions.help}
+            className='flex min-w-0 items-center gap-1'
+          >
             <SimpleTooltip
               content={shellCopy.utilities.metricsGuide.tooltip}
               side='bottom'
@@ -164,7 +186,7 @@ export function TopBar({
                 size='sm'
                 onClick={onShowMetricsGuide}
                 className={cn(
-                  'gap-2 px-2.5',
+                  'h-8 touch-manipulation gap-1.5 px-2.5 text-xs font-medium',
                   activeUtilityViewMode !== 'metrics-guide' &&
                     'text-muted-foreground hover:text-foreground'
                 )}
@@ -187,14 +209,17 @@ export function TopBar({
                 size='sm'
                 onClick={onShowSetupGuide}
                 className={cn(
-                  'gap-2 px-2.5',
+                  'h-8 touch-manipulation gap-1.5 px-2.5 text-xs font-medium',
                   activeUtilityViewMode !== 'setup-guide' &&
                     'text-muted-foreground hover:text-foreground'
                 )}
               >
                 {shellCopy.utilities.analysisSetup.label}
                 {hasUnresolvedImports && (
-                  <AlertTriangle className='h-3.5 w-3.5 shrink-0 text-amber-500' />
+                  <AlertTriangle
+                    className='h-3.5 w-3.5 shrink-0 text-amber-500'
+                    aria-hidden='true'
+                  />
                 )}
               </Button>
             </SimpleTooltip>
@@ -210,50 +235,82 @@ export function TopBar({
                 {contextChip.label}
               </Badge>
             )}
-          </>
+          </div>
         )}
 
-        {loadError && runtimeMode === 'live' && (
-          <SimpleTooltip content={loadError} side='bottom' asChild>
-            <div className='flex h-8 w-8 items-center justify-center text-amber-500'>
-              <AlertTriangle className='h-4 w-4' />
-            </div>
-          </SimpleTooltip>
-        )}
+        {actionGroups.showHelpGroup &&
+          (actionGroups.showExportGroup ||
+            actionGroups.showOperationsGroup ||
+            Boolean(timestampLabel)) && (
+            <span
+              aria-hidden='true'
+              className='hidden h-5 w-px shrink-0 bg-border/70 lg:block'
+            />
+          )}
 
-        {hasData && runtimeMode === 'live' && <ReportDownloadButton />}
-
-        {hasData && runtimeMode === 'live' && (
-          <SimpleTooltip
-            content={
-              isLoading
-                ? shellCopy.actions.loading
-                : hasChanges
-                  ? shellCopy.actions.reloadChanged(totalChanges)
-                  : shellCopy.actions.reload
-            }
-            side='bottom'
-            asChild
+        {actionGroups.showExportGroup && (
+          <div
+            role='group'
+            aria-label={shellCopy.regions.reportActions}
+            className='flex shrink-0 items-center'
           >
-            <div className='relative'>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={onRefresh}
-                disabled={isLoading}
-                className='h-8 w-8 text-muted-foreground hover:text-foreground'
-              >
-                <RotateCcw
-                  className={cn('h-4 w-4', isLoading && 'animate-spin')}
-                />
-              </Button>
-              {hasChanges && totalChanges > 0 && (
-                <span className='absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-xs font-medium text-white'>
-                  {totalChanges > 9 ? '9+' : totalChanges}
-                </span>
-              )}
-            </div>
-          </SimpleTooltip>
+            <ReportDownloadButton
+              buttonProps={{
+                variant: 'ghost',
+                size: 'sm',
+                className:
+                  'h-8 gap-1.5 border border-border/70 px-2.5 text-xs font-medium touch-manipulation text-muted-foreground hover:bg-muted hover:text-foreground'
+              }}
+            />
+          </div>
+        )}
+
+        {actionGroups.showExportGroup && actionGroups.showOperationsGroup && (
+          <span
+            aria-hidden='true'
+            className='hidden h-5 w-px shrink-0 bg-border/70 lg:block'
+          />
+        )}
+
+        {actionGroups.showOperationsGroup && (
+          <div
+            role='group'
+            aria-label={shellCopy.regions.operations}
+            className='flex shrink-0 items-center gap-1'
+          >
+            {loadError && runtimeMode === 'live' && (
+              <SimpleTooltip content={loadError} side='bottom' asChild>
+                <div className='flex h-8 w-8 items-center justify-center text-amber-500'>
+                  <AlertTriangle className='h-4 w-4' aria-hidden='true' />
+                </div>
+              </SimpleTooltip>
+            )}
+
+            {hasData && runtimeMode === 'live' && (
+              <SimpleTooltip content={iconLabels.refresh} side='bottom' asChild>
+                <div className='relative'>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={onRefresh}
+                    disabled={isLoading}
+                    aria-label={iconLabels.refresh}
+                    className='h-8 w-8 touch-manipulation text-muted-foreground hover:text-foreground'
+                  >
+                    <RotateCcw
+                      className={cn('h-4 w-4', isLoading && 'animate-spin')}
+                      aria-hidden='true'
+                    />
+                  </Button>
+                  {hasChanges && totalChanges > 0 && (
+                    <span className='absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-xs font-medium text-white'>
+                      {totalChanges > 9 ? '9+' : totalChanges}
+                    </span>
+                  )}
+                </div>
+              </SimpleTooltip>
+            )}
+          </div>
         )}
 
         {runtimeMode === 'report' && timestampLabel && (
