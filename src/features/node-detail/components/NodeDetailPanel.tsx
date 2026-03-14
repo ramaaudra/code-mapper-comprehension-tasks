@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useContext, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   ArchitectureStats,
+  useFileReviewThresholdCalibration,
   useFileArchitectureMetrics
 } from '@/features/architecture'
 import { Button } from '@/shared/components/ui/button'
@@ -27,7 +28,6 @@ import {
   Copy,
   Cube,
   Focus,
-  Ghost,
   Map as MapIcon,
   Target
 } from '@/shared/components/ui/icons'
@@ -43,9 +43,11 @@ import {
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
 import { decisionCopy } from '@/shared/content/decisionCopy'
+import { DataContext } from '@/shared/context/DataContext'
 import { architectureApi } from '@/shared/lib/api/architecture'
 import { findDependencyPath } from '@/shared/lib/api/pathfinding'
 import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
+import { getReviewSignalDefinition } from '@/shared/lib/metric-thresholds'
 import {
   createDecisionAssessment,
   formatChangePressureHelper,
@@ -80,13 +82,16 @@ import {
 } from '@/shared/lib/utils/risk'
 
 import { nodeDetailCopy } from '../content/nodeDetailCopy'
+import {
+  resolveBlastRadiusRole,
+  resolveNodeDetailOverviewState,
+  resolveNodeDetailSourceState,
+  resolveSourceTabBadge,
+  shouldShowTracePathAction
+} from '../lib/panel-state'
 import { SourceCodeViewer } from './SourceCodeViewer'
 
-import type { ReportData } from '@/features/report/types'
-import type {
-  DecisionStatusTone,
-  ImpactScopeThresholds
-} from '@/shared/lib/utils'
+import type { DecisionStatusTone } from '@/shared/lib/utils'
 import type {
   AnalysisData,
   AnalysisEdge,
@@ -102,20 +107,13 @@ const DECISION_CARD_TONE_ICON = {
   default: <CheckCircle className='h-4 w-4 text-green-500' />
 } satisfies Record<DecisionStatusTone, React.ReactNode>
 
-const FILE_IMPACT_SCOPE_THRESHOLDS: ImpactScopeThresholds = {
-  broad: 15,
-  moderate: 5
-}
+const blastRadiusSignal = getReviewSignalDefinition('blastRadius')
 
 interface NodeDetailPanelProps {
   node: AnalysisNode | string | null
   data: AnalysisData | null
   onClose: () => void
   onFocusSubgraph?: (nodeId: string, direction: 'inward' | 'outward') => void
-}
-
-interface CodeMapperWindow extends Window {
-  __CODE_MAPPER_DATA__?: ReportData
 }
 
 const NodeDetailPanel = memo(
@@ -138,6 +136,7 @@ const NodeDetailPanel = memo(
     )
     const [activeTab, setActiveTab] = useState('overview')
     const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const dataContext = useContext(DataContext)
 
     // Cleanup timeout on unmount to prevent memory leaks
     useEffect(() => {
@@ -148,10 +147,8 @@ const NodeDetailPanel = memo(
       }
     }, [])
 
-    // Check if in report mode (static HTML) - disable API calls to prevent CORS errors
     const isReportMode =
-      typeof window !== 'undefined' &&
-      !!(window as CodeMapperWindow).__CODE_MAPPER_DATA__
+      !!dataContext?.analysisData && !!dataContext?.architectureData
 
     // Handle both old node object format and new node ID format
     const nodeId = typeof node === 'string' ? node : node?.id
@@ -161,6 +158,7 @@ const NodeDetailPanel = memo(
       nodeId ?? null,
       data?.evolutionaryMetrics.files ?? {}
     )
+    const fileThresholdCalibration = useFileReviewThresholdCalibration(data)
 
     // Architecture metrics
     const { data: archMetrics } = useFileArchitectureMetrics(nodeId ?? null)
@@ -189,14 +187,18 @@ const NodeDetailPanel = memo(
         archMetrics.ca,
         archMetrics.ce
       )
-      const level = getBlastRadiusLevel(blastRadiusScore, archMetrics.hasCycle)
+      const level = getBlastRadiusLevel(
+        blastRadiusScore,
+        archMetrics.hasCycle,
+        fileThresholdCalibration
+      )
 
       return {
         riskScore: blastRadiusScore,
         level: level,
         isInCycle: archMetrics.hasCycle
       }
-    }, [archMetrics])
+    }, [archMetrics, fileThresholdCalibration])
 
     // Check if this file is an orphan (not imported by any file and not an entry point)
     const isOrphan = useMemo(() => {
@@ -207,7 +209,7 @@ const NodeDetailPanel = memo(
     }, [data?.issues?.orphans, nodeId])
 
     const decisionAssessment = useMemo(() => {
-      if (!archMetrics || !fileEvolution) {
+      if (!archMetrics) {
         return null
       }
 
@@ -218,10 +220,39 @@ const NodeDetailPanel = memo(
         ca: archMetrics.ca,
         ce: archMetrics.ce,
         instability: archMetrics.instability,
-        relativeChurn30d: fileEvolution.churn30d.relativeChurn,
-        impactScopeThresholds: FILE_IMPACT_SCOPE_THRESHOLDS
+        relativeChurn30d: fileEvolution?.churn30d.relativeChurn ?? 0,
+        thresholdCalibration: fileThresholdCalibration
       })
-    }, [archMetrics, fileEvolution, isOrphan])
+    }, [archMetrics, fileEvolution, fileThresholdCalibration, isOrphan])
+
+    const overviewState = useMemo(
+      () =>
+        resolveNodeDetailOverviewState({
+          hasDecisionAssessment: !!decisionAssessment,
+          hasArchitectureMetrics: !!archMetrics,
+          hasEvolutionMetrics: !!fileEvolution
+        }),
+      [archMetrics, decisionAssessment, fileEvolution]
+    )
+
+    const blastRadiusRole = useMemo(
+      () =>
+        resolveBlastRadiusRole({
+          hasArchitectureMetrics: !!archMetrics
+        }),
+      [archMetrics]
+    )
+    const sourceTabBadge = useMemo(
+      () =>
+        resolveSourceTabBadge({
+          isReportMode,
+          fileContentLines: fileContent?.lines ?? null,
+          fallbackEstimatedLines: nodeData?.size
+            ? Math.ceil(nodeData.size / 40)
+            : 0
+        }),
+      [fileContent?.lines, isReportMode, nodeData?.size]
+    )
 
     // Calculate indegree and outdegree
     const incomingEdges = useMemo(() => {
@@ -370,15 +401,17 @@ const NodeDetailPanel = memo(
                     </div>
                   </div>
                   <div className='flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100'>
-                    <button
-                      onClick={() => handleTracePath(item.id)}
-                      disabled={isTracing}
-                      className='rounded-md border border-transparent p-1.5 text-muted-foreground hover:border-border hover:bg-background hover:text-foreground'
-                      title={nodeDetailCopy.dependencyList.tracePath}
-                      aria-label={`Trace path to ${item.basename}`}
-                    >
-                      <MapIcon className='h-3.5 w-3.5' />
-                    </button>
+                    {shouldShowTracePathAction(isReportMode) ? (
+                      <button
+                        onClick={() => handleTracePath(item.id)}
+                        disabled={isTracing}
+                        className='rounded-md border border-transparent p-1.5 text-muted-foreground hover:border-border hover:bg-background hover:text-foreground'
+                        title={nodeDetailCopy.dependencyList.tracePath}
+                        aria-label={`Trace path to ${item.basename}`}
+                      >
+                        <MapIcon className='h-3.5 w-3.5' />
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               )
@@ -411,7 +444,23 @@ const NodeDetailPanel = memo(
     }
 
     const renderSourceContent = () => {
-      if (isLoadingContent) {
+      const sourceState = resolveNodeDetailSourceState({
+        isReportMode,
+        isLoadingContent,
+        hasContentError: !!contentError,
+        hasFileContent: !!fileContent
+      })
+
+      if (sourceState === 'report') {
+        return (
+          <DetailPanelState
+            title={nodeDetailCopy.source.reportModeTitle}
+            description={nodeDetailCopy.source.reportModeDescription}
+          />
+        )
+      }
+
+      if (sourceState === 'loading') {
         return (
           <DetailPanelState
             title={nodeDetailCopy.source.loadingTitle}
@@ -420,7 +469,7 @@ const NodeDetailPanel = memo(
         )
       }
 
-      if (contentError) {
+      if (sourceState === 'error') {
         return (
           <DetailPanelState
             title={nodeDetailCopy.source.errorTitle}
@@ -428,6 +477,15 @@ const NodeDetailPanel = memo(
               (contentError as Error)?.message || 'An unknown error occurred.'
             }
             tone='danger'
+          />
+        )
+      }
+
+      if (sourceState === 'empty') {
+        return (
+          <DetailPanelState
+            title={nodeDetailCopy.source.noContentTitle}
+            description={nodeDetailCopy.source.noContentDescription}
           />
         )
       }
@@ -442,7 +500,8 @@ const NodeDetailPanel = memo(
       }
 
       const MAX_LINES = 1000
-      const hasMoreLines = fileContent.lines > MAX_LINES
+      const readyFileContent = fileContent
+      const hasMoreLines = readyFileContent.lines > MAX_LINES
 
       return (
         <div className='flex h-full flex-col'>
@@ -451,14 +510,14 @@ const NodeDetailPanel = memo(
             <div className='flex items-center gap-2'>
               <span
                 className='max-w-[200px] truncate font-mono'
-                title={fileContent.path}
+                title={readyFileContent.path}
               >
-                {getRelativePath(fileContent.path)}
+                {getRelativePath(readyFileContent.path)}
               </span>
             </div>
             <div className='flex items-center gap-3'>
-              <span>{formatFileSize(fileContent.size)}</span>
-              <span>{fileContent.lines.toLocaleString()} lines</span>
+              <span>{formatFileSize(readyFileContent.size)}</span>
+              <span>{readyFileContent.lines.toLocaleString()} lines</span>
             </div>
           </div>
 
@@ -468,7 +527,7 @@ const NodeDetailPanel = memo(
               <AlertTriangle className='h-3.5 w-3.5' />
               <span>
                 Large file detected. Showing first {MAX_LINES} of{' '}
-                {fileContent.lines.toLocaleString()} lines.
+                {readyFileContent.lines.toLocaleString()} lines.
               </span>
             </div>
           )}
@@ -476,7 +535,7 @@ const NodeDetailPanel = memo(
           {/* Code content with syntax highlighting */}
           <div className='min-h-0 flex-1'>
             <SourceCodeViewer
-              code={fileContent.content}
+              code={readyFileContent.content}
               language={detectLanguage(nodeData.basename ?? nodeData.id)}
               theme='auto'
               showLineNumbers={true}
@@ -572,11 +631,7 @@ const NodeDetailPanel = memo(
               {
                 value: 'source',
                 label: nodeDetailCopy.tabs.source,
-                badge:
-                  fileContent?.lines?.toLocaleString() ??
-                  (nodeData?.size
-                    ? Math.ceil(nodeData.size / 40).toLocaleString()
-                    : '0')
+                badge: sourceTabBadge
               }
             ]}
           />
@@ -585,8 +640,7 @@ const NodeDetailPanel = memo(
             value='overview'
             className='m-0 flex-1 space-y-6 overflow-y-auto p-4'
           >
-            {/* Risk Assessment: The Verdict */}
-            {decisionAssessment ? (
+            {overviewState.showDiagnosis && decisionAssessment ? (
               <div className='space-y-3'>
                 <DiagnosisCard
                   icon={DECISION_CARD_TONE_ICON[decisionAssessment.tone]}
@@ -686,242 +740,159 @@ const NodeDetailPanel = memo(
                   />
                 </div>
               </div>
-            ) : isOrphan ? (
-              // Orphan File Status (replaces normal risk assessment)
+            ) : null}
+
+            {overviewState.showDiagnosisUnavailableState ? (
+              <DetailPanelState
+                title={nodeDetailCopy.diagnosisUnavailable.title}
+                description={nodeDetailCopy.diagnosisUnavailable.description}
+              />
+            ) : null}
+
+            {overviewState.showBlastRadius &&
+            blastRadiusAssessment &&
+            blastRadiusRole === 'supporting' ? (
               <div className='space-y-3'>
                 <DetailPanelSectionHeading
-                  title={nodeDetailCopy.orphan.sectionTitle}
+                  title={nodeDetailCopy.blastRadius.sectionTitle}
                 />
-                <MetricInsightCard
-                  icon={
-                    <Ghost
-                      className='h-4 w-4 text-muted-foreground'
-                      weight='fill'
+                {blastRadiusAssessment.isInCycle ? (
+                  <MetricInsightCard
+                    icon={<AlertTriangle className='h-4 w-4 text-red-500' />}
+                    title={nodeDetailCopy.blastRadius.criticalTitle}
+                    description={nodeDetailCopy.blastRadius.criticalDescription}
+                    tone='danger'
+                    className='border-red-500/50 bg-red-500/5'
+                  />
+                ) : (
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className='cursor-help'>
+                          <MetricInsightCard
+                            icon={
+                              blastRadiusAssessment.level === 'low' ? (
+                                <CheckCircle className='h-4 w-4 text-green-500' />
+                              ) : (
+                                <AlertTriangle
+                                  className={`h-4 w-4 ${getRiskTextClass(blastRadiusAssessment.level)}`}
+                                />
+                              )
+                            }
+                            title={getBlastRadiusLabel(
+                              blastRadiusAssessment.level
+                            )}
+                            value={`Score: ${blastRadiusAssessment.riskScore.toFixed(1)}`}
+                            description={getBlastRadiusDescription(
+                              blastRadiusAssessment.level
+                            )}
+                            tone={
+                              blastRadiusAssessment.level === 'low'
+                                ? 'success'
+                                : blastRadiusAssessment.level === 'medium'
+                                  ? 'warning'
+                                  : 'danger'
+                            }
+                            className={`${getRiskBorderClass(blastRadiusAssessment.level)} ${getRiskBgOpacityClass(blastRadiusAssessment.level, 5)}`}
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side='top'
+                        className='max-w-xs border-border bg-popover'
+                      >
+                        <div className='space-y-2'>
+                          <p className='font-semibold text-popover-foreground'>
+                            {nodeDetailCopy.blastRadius.tooltipTitle}:{' '}
+                            {blastRadiusAssessment.riskScore.toFixed(1)}
+                          </p>
+                          <p className='text-xs text-popover-foreground/80'>
+                            {nodeDetailCopy.blastRadius.tooltipDescription}
+                          </p>
+                          {archMetrics && (
+                            <div className='space-y-1 border-t border-border pt-1 text-xs'>
+                              <p className='text-popover-foreground/80'>
+                                • <strong>Dependents (Ca):</strong>{' '}
+                                {archMetrics.ca}
+                              </p>
+                              <p className='text-popover-foreground/80'>
+                                • <strong>Dependencies (Ce):</strong>{' '}
+                                {archMetrics.ce}
+                              </p>
+                              <p className='pt-1 text-popover-foreground/80'>
+                                Calculation: {archMetrics.ca} + (
+                                {archMetrics.ce} × 0.5) ={' '}
+                                {blastRadiusAssessment.riskScore.toFixed(1)}
+                              </p>
+                            </div>
+                          )}
+                          <div className='border-t border-border pt-1 text-xs'>
+                            <p className='text-popover-foreground/80'>
+                              {blastRadiusSignal.scientificStatusNote}
+                            </p>
+                          </div>
+                          <div className='border-t border-border pt-1 text-xs'>
+                            <p className='text-popover-foreground/80'>
+                              {nodeDetailCopy.blastRadius.tooltipInterpretation}
+                            </p>
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+
+                {archMetrics &&
+                  archMetrics.ce > ARCHITECTURE_THRESHOLDS.GOD_OBJECT_CE && (
+                    <MetricInsightCard
+                      icon={
+                        <Cube
+                          className='h-4 w-4 text-yellow-500'
+                          weight='fill'
+                        />
+                      }
+                      title={nodeDetailCopy.blastRadius.godObjectTitle}
+                      description={nodeDetailCopy.blastRadius.godObjectDescription(
+                        archMetrics.ce
+                      )}
+                      tone='warning'
+                      className='mt-3 border-yellow-500/50 bg-yellow-500/10'
                     />
-                  }
-                  title={nodeDetailCopy.orphan.title}
-                  description={nodeDetailCopy.orphan.description}
-                  footer={nodeDetailCopy.orphan.footer}
-                  tone='default'
-                  className='border-muted bg-muted/10'
-                />
+                  )}
+
+                {archMetrics &&
+                  archMetrics.ca > ARCHITECTURE_THRESHOLDS.BOTTLENECK_CA && (
+                    <MetricInsightCard
+                      icon={
+                        <Target
+                          className='h-4 w-4 text-orange-500'
+                          weight='fill'
+                        />
+                      }
+                      title={nodeDetailCopy.blastRadius.bottleneckTitle}
+                      description={nodeDetailCopy.blastRadius.bottleneckDescription(
+                        archMetrics.ca
+                      )}
+                      tone='warning'
+                      className='mt-3 border-orange-500/50 bg-orange-500/10'
+                    />
+                  )}
               </div>
-            ) : (
-              blastRadiusAssessment && (
+            ) : null}
+
+            {overviewState.showWhyDisclosure ? (
+              <DetailPanelDisclosure
+                title={nodeDetailCopy.disclosure.whyTitle}
+                summary={nodeDetailCopy.disclosure.whySummary}
+              >
                 <div className='space-y-3'>
                   <DetailPanelSectionHeading
-                    title={nodeDetailCopy.blastRadius.sectionTitle}
+                    title={nodeDetailCopy.disclosure.howAssessedTitle}
                   />
-                  {blastRadiusAssessment.isInCycle ? (
-                    // Cycle Override: Critical Warning
-                    <MetricInsightCard
-                      icon={<AlertTriangle className='h-4 w-4 text-red-500' />}
-                      title={nodeDetailCopy.blastRadius.criticalTitle}
-                      description={
-                        nodeDetailCopy.blastRadius.criticalDescription
-                      }
-                      tone='danger'
-                      className='border-red-500/50 bg-red-500/5'
-                    />
-                  ) : (
-                    // Normal Risk Assessment
-                    <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className='cursor-help'>
-                            <MetricInsightCard
-                              icon={
-                                blastRadiusAssessment.level === 'low' ? (
-                                  <CheckCircle className='h-4 w-4 text-green-500' />
-                                ) : (
-                                  <AlertTriangle
-                                    className={`h-4 w-4 ${getRiskTextClass(blastRadiusAssessment.level)}`}
-                                  />
-                                )
-                              }
-                              title={getBlastRadiusLabel(
-                                blastRadiusAssessment.level
-                              )}
-                              value={`Score: ${blastRadiusAssessment.riskScore.toFixed(1)}`}
-                              description={getBlastRadiusDescription(
-                                blastRadiusAssessment.level
-                              )}
-                              tone={
-                                blastRadiusAssessment.level === 'low'
-                                  ? 'success'
-                                  : blastRadiusAssessment.level === 'medium'
-                                    ? 'warning'
-                                    : 'danger'
-                              }
-                              className={`${getRiskBorderClass(blastRadiusAssessment.level)} ${getRiskBgOpacityClass(blastRadiusAssessment.level, 5)}`}
-                            />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side='top'
-                          className='max-w-xs border-border bg-popover'
-                        >
-                          <div className='space-y-2'>
-                            <p className='font-semibold text-popover-foreground'>
-                              Blast Radius:{' '}
-                              {blastRadiusAssessment.riskScore.toFixed(1)}
-                            </p>
-                            <p className='text-xs text-popover-foreground/80'>
-                              Blast Radius estimates how many nearby files may
-                              require verification after this file changes.
-                            </p>
-                            {archMetrics && (
-                              <div className='space-y-1 border-t border-border pt-1 text-xs'>
-                                <p className='text-popover-foreground/80'>
-                                  • <strong>Dependents (Ca):</strong>{' '}
-                                  {archMetrics.ca}
-                                </p>
-                                <p className='text-popover-foreground/80'>
-                                  • <strong>Dependencies (Ce):</strong>{' '}
-                                  {archMetrics.ce}
-                                </p>
-                                <p className='pt-1 text-popover-foreground/80'>
-                                  Calculation: {archMetrics.ca} + (
-                                  {archMetrics.ce} × 0.5) ={' '}
-                                  {blastRadiusAssessment.riskScore.toFixed(1)}
-                                </p>
-                              </div>
-                            )}
-                            <div className='border-t border-border pt-1 text-xs'>
-                              <p className='text-popover-foreground/80'>
-                                These blast-radius bands are product heuristics
-                                for estimating local verification scope.
-                              </p>
-                            </div>
-                            <div className='border-t border-border pt-1 text-xs'>
-                              <p className='text-popover-foreground/80'>
-                                A higher score suggests a broader local impact
-                                and a larger verification surface after a
-                                change.
-                              </p>
-                            </div>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-
-                  {/* God Object Warning: Ce > threshold */}
-                  {archMetrics &&
-                    archMetrics.ce > ARCHITECTURE_THRESHOLDS.GOD_OBJECT_CE && (
-                      <MetricInsightCard
-                        icon={
-                          <Cube
-                            className='h-4 w-4 text-yellow-500'
-                            weight='fill'
-                          />
-                        }
-                        title={nodeDetailCopy.blastRadius.godObjectTitle}
-                        description={nodeDetailCopy.blastRadius.godObjectDescription(
-                          archMetrics.ce
-                        )}
-                        tone='warning'
-                        className='mt-3 border-yellow-500/50 bg-yellow-500/10'
-                      />
-                    )}
-
-                  {/* Bottleneck Warning: Ca > threshold */}
-                  {archMetrics &&
-                    archMetrics.ca > ARCHITECTURE_THRESHOLDS.BOTTLENECK_CA && (
-                      <MetricInsightCard
-                        icon={
-                          <Target
-                            className='h-4 w-4 text-orange-500'
-                            weight='fill'
-                          />
-                        }
-                        title={nodeDetailCopy.blastRadius.bottleneckTitle}
-                        description={nodeDetailCopy.blastRadius.bottleneckDescription(
-                          archMetrics.ca
-                        )}
-                        tone='warning'
-                        className='mt-3 border-orange-500/50 bg-orange-500/10'
-                      />
-                    )}
+                  <InsightBulletList items={getAssessmentMethodItems()} />
                 </div>
-              )
-            )}
 
-            {decisionAssessment ? (
-              (archMetrics || fileEvolution) && (
-                <DetailPanelDisclosure
-                  title={nodeDetailCopy.disclosure.whyTitle}
-                  summary={nodeDetailCopy.disclosure.whySummary}
-                >
-                  <div className='space-y-3'>
-                    <DetailPanelSectionHeading
-                      title={nodeDetailCopy.disclosure.howAssessedTitle}
-                    />
-                    <InsightBulletList items={getAssessmentMethodItems()} />
-                  </div>
-
-                  {archMetrics && (
-                    <div className='space-y-3'>
-                      <DetailPanelSectionHeading
-                        title={
-                          nodeDetailCopy.disclosure.architectureMetricsTitle
-                        }
-                      />
-                      <ArchitectureStats
-                        ca={archMetrics.ca}
-                        ce={archMetrics.ce}
-                        instability={archMetrics.instability}
-                        hasCycle={archMetrics.hasCycle}
-                      />
-                    </div>
-                  )}
-
-                  {fileEvolution && (
-                    <div className='space-y-3'>
-                      <DetailPanelSectionHeading
-                        title={
-                          nodeDetailCopy.disclosure.evolutionaryMetricsTitle
-                        }
-                      />
-                      <div className='grid grid-cols-2 gap-3'>
-                        <MetricValueCard
-                          value={formatRelativeChurn(
-                            fileEvolution.churn30d.relativeChurn
-                          )}
-                          label={METRIC_LABELS.relativeChurn30d}
-                          tooltip={METRIC_TOOLTIPS.relativeChurn30d}
-                        />
-                        <MetricValueCard
-                          value={formatRelativeChurn(
-                            fileEvolution.churn90d.relativeChurn
-                          )}
-                          label={METRIC_LABELS.relativeChurn90d}
-                          tooltip={METRIC_TOOLTIPS.relativeChurn90d}
-                        />
-                        <MetricValueCard
-                          value={fileEvolution.churn30d.commitCount}
-                          label={METRIC_LABELS.commits30d}
-                          tooltip={METRIC_TOOLTIPS.commits30d}
-                        />
-                        <MetricValueCard
-                          value={fileEvolution.hotspotScore.toFixed(2)}
-                          label={METRIC_LABELS.evolutionaryHotspotScore}
-                          tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
-                          helper={
-                            <HotspotStatusLabel
-                              status={fileEvolution.hotspotStatus}
-                              className='text-[11px] text-muted-foreground'
-                            />
-                          }
-                        />
-                      </div>
-                    </div>
-                  )}
-                </DetailPanelDisclosure>
-              )
-            ) : (
-              <>
-                {archMetrics && (
+                {overviewState.showArchitectureMetrics && archMetrics ? (
                   <div className='space-y-3'>
                     <DetailPanelSectionHeading
                       title={nodeDetailCopy.disclosure.architectureMetricsTitle}
@@ -933,9 +904,9 @@ const NodeDetailPanel = memo(
                       hasCycle={archMetrics.hasCycle}
                     />
                   </div>
-                )}
+                ) : null}
 
-                {fileEvolution && (
+                {overviewState.showEvolutionMetrics && fileEvolution ? (
                   <div className='space-y-3'>
                     <DetailPanelSectionHeading
                       title={nodeDetailCopy.disclosure.evolutionaryMetricsTitle}
@@ -973,64 +944,17 @@ const NodeDetailPanel = memo(
                       />
                     </div>
                   </div>
-                )}
-              </>
-            )}
+                ) : null}
+              </DetailPanelDisclosure>
+            ) : null}
 
             {/* Actions */}
-            {onFocusSubgraph &&
-              (decisionAssessment ? (
-                <DetailPanelDisclosure
-                  title={nodeDetailCopy.graphTools.title}
-                  summary={nodeDetailCopy.graphTools.summary}
-                >
-                  <div className='space-y-3'>
-                    <div className='grid grid-cols-2 gap-2'>
-                      <Button
-                        variant={
-                          focusDirection === 'inward' ? 'secondary' : 'outline'
-                        }
-                        size='sm'
-                        onClick={() => setFocusDirection('inward')}
-                        className='w-full justify-start'
-                      >
-                        <ArrowLeft className='mr-2 h-3 w-3' />{' '}
-                        {nodeDetailCopy.graphTools.inward}
-                      </Button>
-                      <Button
-                        variant={
-                          focusDirection === 'outward' ? 'secondary' : 'outline'
-                        }
-                        size='sm'
-                        onClick={() => setFocusDirection('outward')}
-                        className='w-full justify-start'
-                      >
-                        {nodeDetailCopy.graphTools.outward}{' '}
-                        <ArrowRight className='ml-2 h-3 w-3' />
-                      </Button>
-                    </div>
-                    <Button
-                      variant='default'
-                      size='sm'
-                      onClick={() =>
-                        onFocusSubgraph(resolvedNodeId, focusDirection)
-                      }
-                      className='w-full'
-                    >
-                      <Focus className='mr-2 h-3 w-3' />
-                      {nodeDetailCopy.graphTools.focusPrefix}{' '}
-                      {focusDirection === 'inward'
-                        ? nodeDetailCopy.graphTools.focusDependencies
-                        : nodeDetailCopy.graphTools.focusDependents}{' '}
-                      {nodeDetailCopy.graphTools.focusSuffix}
-                    </Button>
-                  </div>
-                </DetailPanelDisclosure>
-              ) : (
+            {onFocusSubgraph ? (
+              <DetailPanelDisclosure
+                title={nodeDetailCopy.graphTools.title}
+                summary={nodeDetailCopy.graphTools.summary}
+              >
                 <div className='space-y-3'>
-                  <DetailPanelSectionHeading
-                    title={nodeDetailCopy.graphTools.legacyTitle}
-                  />
                   <div className='grid grid-cols-2 gap-2'>
                     <Button
                       variant={
@@ -1071,7 +995,8 @@ const NodeDetailPanel = memo(
                     {nodeDetailCopy.graphTools.focusSuffix}
                   </Button>
                 </div>
-              ))}
+              </DetailPanelDisclosure>
+            ) : null}
           </TabsContent>
 
           <TabsContent value='dependencies' className='m-0 flex-1'>
@@ -1083,14 +1008,7 @@ const NodeDetailPanel = memo(
           </TabsContent>
 
           <TabsContent value='source' className='m-0 flex-1 overflow-hidden'>
-            {isReportMode ? (
-              <DetailPanelState
-                title={nodeDetailCopy.source.reportModeTitle}
-                description={nodeDetailCopy.source.reportModeDescription}
-              />
-            ) : (
-              renderSourceContent()
-            )}
+            {renderSourceContent()}
           </TabsContent>
         </Tabs>
 

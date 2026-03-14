@@ -63,7 +63,6 @@ export function useAppLogic() {
       analysisData,
       filesInCycle,
       orphanFilesSet,
-      riskProfileMap,
       brokenFilesSet,
       newOrphansSet,
       dataUpdatedAt: analysisLoadedAt

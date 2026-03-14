@@ -10,9 +10,18 @@ import {
 } from 'react'
 
 import { useAnalysisData } from '@/shared/hooks/useAnalysisData'
-import { getValueFromMap, normalizePath } from '@/shared/lib/utils'
+import {
+  buildFileReviewStoryMap,
+  getValueFromMap,
+  normalizePath
+} from '@/shared/lib/utils'
 
-import type { AnalysisNode } from '@/shared/types/analysis'
+import {
+  createAliasedPathSet,
+  createPathAliasLookup
+} from '../lib/analysis-paths'
+
+import type { FileReviewStory } from '@/shared/lib/utils/file-review-story'
 import type { FileRiskProfile } from '@/shared/types/risk'
 
 // Helper functions for stable hashing
@@ -35,6 +44,7 @@ interface FileAnalysisContextValue {
   filesInCycle: Set<string>
   orphanFilesSet: Set<string>
   riskProfileMap: Map<string, FileRiskProfile>
+  fileReviewStoryMap: Map<string, FileReviewStory>
 
   // Simulation results state
   brokenFilesSet: Set<string>
@@ -98,6 +108,10 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
 
   // Get analysis data from React Query
   const { analysisData, riskAnalysis } = useAnalysisData()
+  const pathAliasLookup = useMemo(
+    () => createPathAliasLookup(analysisData?.nodes ?? []),
+    [analysisData?.nodes]
+  )
 
   // Computed: files in circular dependencies
   const circularDepsHash = useMemo(() => {
@@ -117,8 +131,12 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
     const allFilesInCycles = analysisData.issues.circularDependencies.flatMap(
       (dep) => dep.files
     )
-    return new Set(allFilesInCycles)
-  }, [circularDepsHash, analysisData?.issues?.circularDependencies]) // Kept circularDepsHash but ignoring warning as it is used for stability check logic conceptually or remove if not needed?
+    return createAliasedPathSet(allFilesInCycles, pathAliasLookup)
+  }, [
+    circularDepsHash,
+    analysisData?.issues?.circularDependencies,
+    pathAliasLookup
+  ]) // Kept circularDepsHash but ignoring warning as it is used for stability check logic conceptually or remove if not needed?
   // Actually the warning says it is unnecessary if we depend on analysisData...circularDependencies.
   // But the goal was to stabilize it.
   // The linter is right, `circularDepsHash` is a primitive, but `analysisData...` is an array.
@@ -142,8 +160,8 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
     if (!analysisData?.issues?.orphans) {
       return new Set<string>()
     }
-    return new Set(analysisData.issues.orphans)
-  }, [orphanFilesHash, analysisData?.issues?.orphans])
+    return createAliasedPathSet(analysisData.issues.orphans, pathAliasLookup)
+  }, [orphanFilesHash, analysisData?.issues?.orphans, pathAliasLookup])
 
   // Computed: risk profile map with path normalization
   const riskAnalysisHash = useMemo(() => {
@@ -154,43 +172,38 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
     const map = new Map<string, FileRiskProfile>()
 
     // Build node path lookup for label mapping
-    const nodePathLookup = new Map<string, string>()
-    if (analysisData?.nodes) {
-      analysisData.nodes.forEach((node: AnalysisNode) => {
-        if (!node?.id) {
-          return
-        }
-        const normalizedId = normalizePath(node.id)
-        const relativeLabel =
-          typeof node.label === 'string' ? normalizePath(node.label) : ''
-        nodePathLookup.set(normalizedId, relativeLabel)
-      })
-    }
-
     // Map risk profiles
     riskAnalysis.forEach((profile) => {
       const normalizedFile = normalizePath(profile.file)
       map.set(normalizedFile, profile)
 
       // Also map by relative label
-      const relativeLabel = nodePathLookup.get(normalizedFile)
-      if (relativeLabel) {
-        map.set(relativeLabel, profile)
-      }
+      pathAliasLookup.get(normalizedFile)?.forEach((alias) => {
+        map.set(alias, profile)
+      })
     })
 
     return map
-  }, [riskAnalysisHash, analysisData]) // Still depends on analysisData for nodes
+  }, [riskAnalysisHash, pathAliasLookup])
+
+  const fileReviewStoryMap = useMemo(() => {
+    return buildFileReviewStoryMap(analysisData)
+  }, [analysisData, riskAnalysisHash])
 
   // Computed: simulation result sets
   const brokenFilesSet = useMemo(
-    () => new Set(simulationResult?.brokenFiles || []),
-    [simulationResult]
+    () =>
+      createAliasedPathSet(
+        simulationResult?.brokenFiles || [],
+        pathAliasLookup
+      ),
+    [simulationResult, pathAliasLookup]
   )
 
   const newOrphansSet = useMemo(
-    () => new Set(simulationResult?.newOrphans || []),
-    [simulationResult]
+    () =>
+      createAliasedPathSet(simulationResult?.newOrphans || [], pathAliasLookup),
+    [simulationResult, pathAliasLookup]
   )
 
   // Utility: get risk profile for a file
@@ -215,6 +228,7 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
       filesInCycle,
       orphanFilesSet,
       riskProfileMap,
+      fileReviewStoryMap,
       brokenFilesSet,
       newOrphansSet,
       setSimulationResult,
@@ -229,6 +243,7 @@ export function FileAnalysisProvider({ children }: FileAnalysisProviderProps) {
       filesInCycle,
       orphanFilesSet,
       riskProfileMap,
+      fileReviewStoryMap,
       brokenFilesSet,
       newOrphansSet,
       isSimulating,

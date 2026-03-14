@@ -13,21 +13,24 @@ import { CycleBadge } from './CycleBadge'
 import { InstabilityBadge } from './InstabilityBadge'
 
 import type { FolderArchitectureMetrics } from '../types/architecture'
+import type { ReviewThresholdCalibration } from '@/shared/lib/metric-thresholds'
 
 interface FolderMetricsRowProps {
   folder: FolderArchitectureMetrics
+  thresholdCalibration?: ReviewThresholdCalibration
 }
 
-/**
- * Get color class for propagation-risk dot based on risk level.
- * Uses same scheme as HighRiskModules panel.
- */
-function getRiskDotColor(score: number): string {
-  const level = getRiskLevel(score)
-  return getRiskColorClass(level)
+function getCalibratedRiskDotColor(
+  score: number,
+  thresholdCalibration?: ReviewThresholdCalibration
+): string {
+  return getRiskColorClass(getRiskLevel(score, thresholdCalibration))
 }
 
-export function FolderMetricsRow({ folder }: FolderMetricsRowProps) {
+export function FolderMetricsRow({
+  folder,
+  thresholdCalibration
+}: FolderMetricsRowProps) {
   const [expanded, setExpanded] = useState(false)
   const riskScore = calculateRiskScore(folder.ca, folder.instability)
 
@@ -58,7 +61,10 @@ export function FolderMetricsRow({ folder }: FolderMetricsRowProps) {
           <div className='flex items-center justify-center gap-2'>
             <span className='font-mono text-sm'>{riskScore.toFixed(1)}</span>
             <span
-              className={`h-2 w-2 rounded-full ${getRiskDotColor(riskScore)}`}
+              className={`h-2 w-2 rounded-full ${getCalibratedRiskDotColor(
+                riskScore,
+                thresholdCalibration
+              )}`}
               title={`Propagation Risk: ${riskScore.toFixed(1)}`}
             />
           </div>

@@ -12,7 +12,6 @@ export function useReportExplorer() {
     setSelectedFileId,
     filesInCycle,
     orphanFilesSet,
-    riskProfileMap,
     brokenFilesSet,
     newOrphansSet
   } = useFileAnalysisContext()
@@ -22,7 +21,6 @@ export function useReportExplorer() {
       analysisData,
       filesInCycle,
       orphanFilesSet,
-      riskProfileMap,
       brokenFilesSet,
       newOrphansSet
     })

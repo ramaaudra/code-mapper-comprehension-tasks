@@ -1,3 +1,4 @@
+import { describeStructuralPositionStory } from '@/features/architecture/lib/structural-position-story'
 import {
   Card,
   CardContent,
@@ -19,7 +20,6 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
-import { RISK_THRESHOLDS } from '@/shared/lib/utils/risk'
 
 import { dashboardCopy } from '../content/dashboardCopy'
 
@@ -94,26 +94,9 @@ export function ArchitectureHealthScore({
     breakdown,
     riskMetrics
   )
-
-  const getStructuralProfileLabel = (value: number) => {
-    if (value <= 0.3) {
-      return dashboardCopy.architectureHealth.profile.foundational
-    }
-    if (value <= 0.6) {
-      return dashboardCopy.architectureHealth.profile.balanced
-    }
-    return dashboardCopy.architectureHealth.profile.outward
-  }
-
-  const getStructuralProfileDescription = (value: number) => {
-    if (value <= 0.3) {
-      return 'More foundational than outward-facing. Shared changes may need careful review.'
-    }
-    if (value <= 0.6) {
-      return 'A mix of shared and outward-facing modules. Review needs are more balanced.'
-    }
-    return 'More outward-facing than foundational. This is common in UI-heavy areas and does not automatically mean poor design.'
-  }
+  const structuralProfile = describeStructuralPositionStory(
+    breakdown.stabilityScore
+  )
 
   const getInsightIcon = (type: CriticalInsight['type']) => {
     switch (type) {
@@ -221,12 +204,12 @@ export function ArchitectureHealthScore({
                     {dashboardCopy.architectureHealth.labels.changeProfile}
                   </span>{' '}
                   <span className='font-medium'>
-                    {getStructuralProfileLabel(breakdown.stabilityScore)}
+                    {structuralProfile.summaryLabel}
                   </span>
                 </span>
               </div>
               <p className='pl-6 text-xs leading-relaxed text-muted-foreground'>
-                {getStructuralProfileDescription(breakdown.stabilityScore)}
+                {structuralProfile.description}
               </p>
 
               <div className='flex items-center gap-2'>
@@ -297,7 +280,8 @@ export function ArchitectureHealthScore({
                           </li>
                           <li>
                             <strong>High propagation-risk modules:</strong>{' '}
-                            Modules with Ca × I ≥ {RISK_THRESHOLDS.HIGH}
+                            Modules already in the High or Critical spread-risk
+                            band
                           </li>
                           <li>
                             <strong>God objects:</strong> Files with 15+

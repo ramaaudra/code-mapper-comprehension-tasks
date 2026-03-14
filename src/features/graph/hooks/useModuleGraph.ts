@@ -1,7 +1,10 @@
 import { useMemo } from 'react'
 
-import { useArchitectureFolders } from '@/features/architecture/hooks/useArchitectureMetrics'
-import { RISK_THRESHOLDS, calculateRiskScore } from '@/shared/lib/utils/risk'
+import {
+  useArchitectureFolders,
+  useModuleReviewThresholdCalibration
+} from '@/features/architecture'
+import { calculateRiskScore, getRiskLevel } from '@/shared/lib/utils/risk'
 
 import type { ModuleEdgeData, ModuleNodeData } from '../utils/moduleAggregation'
 import type { Edge, Node } from '@xyflow/react'
@@ -16,6 +19,7 @@ export interface ModuleGraphEdge extends Edge<ModuleEdgeData> {
 
 export function useModuleGraph() {
   const { data, isLoading, error } = useArchitectureFolders()
+  const moduleThresholdCalibration = useModuleReviewThresholdCalibration()
 
   const { nodes, edges } = useMemo(() => {
     if (!data?.folders) {
@@ -40,7 +44,8 @@ export function useModuleGraph() {
           outgoingModules: Object.keys(folder.couplingTo || {}),
           riskScore,
           instability: folder.instability,
-          isZoneOfPain: riskScore >= RISK_THRESHOLDS.CRITICAL,
+          isZoneOfPain:
+            getRiskLevel(riskScore, moduleThresholdCalibration) === 'critical',
           hotspotScore: folder.evolution?.hotspotScore ?? 0,
           hotspotStatus: folder.evolution?.hotspotStatus ?? 'stable'
         }
@@ -74,7 +79,7 @@ export function useModuleGraph() {
     }
 
     return { nodes: graphNodes, edges: graphEdges }
-  }, [data])
+  }, [data, moduleThresholdCalibration])
 
   return {
     nodes,

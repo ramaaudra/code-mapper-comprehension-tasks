@@ -1,93 +1,94 @@
+import {
+  getAssessmentMethodItemsFromCatalog,
+  getChangePressureBandLabel,
+  getExternalRelianceBandLabel,
+  getImpactScopeThresholdCatalog,
+  getImpactScopeBandLabel,
+  getReviewSignalDefinition,
+  getStructuralPositionBandLabel
+} from '@/shared/lib/metric-thresholds'
+
 import type {
   ChangePressure,
-  DecisionTitle,
   ExternalReliance,
   ImpactScope,
   StructuralPosition
-} from '@/shared/lib/utils/decision-assessment'
+} from '@/shared/lib/metric-thresholds'
+import type { DecisionTitle } from '@/shared/lib/utils/decision-assessment'
 
 type Subject = 'file' | 'module'
+type DependencyUnit = 'file' | 'module'
+
+const impactScopeSignal = getImpactScopeThresholdCatalog('file')
+const changePressureSignal = getReviewSignalDefinition('changePressure')
+const externalRelianceSignal = getReviewSignalDefinition('externalReliance')
+const structuralPositionSignal = getReviewSignalDefinition('structuralPosition')
 
 export const decisionCopy = {
   evidence: {
     labels: {
-      impactScope: 'Impact Scope',
-      changeActivity: 'Change Activity',
-      dependencies: 'Dependencies',
-      architectureRole: 'Architecture Role'
+      impactScope: impactScopeSignal.label,
+      changeActivity: changePressureSignal.label,
+      dependencies: externalRelianceSignal.label,
+      architectureRole: structuralPositionSignal.label
     },
-    assessmentMethodItems: [
-      'Change Activity uses Relative Churn (30d).',
-      'Impact Scope uses Dependents (Ca).',
-      'Dependencies uses Ce.',
-      'Architecture Role uses Instability (I).',
-      'Decision labels are product heuristics built from repository signals, not universal scientific thresholds.'
-    ]
+    assessmentMethodItems: getAssessmentMethodItemsFromCatalog()
   }
 } as const
 
 export function formatImpactScopeValueCopy(impactScope: ImpactScope): string {
-  switch (impactScope) {
-    case 'Broad':
-      return 'Broad Impact'
-    case 'Moderate':
-      return 'Moderate Impact'
-    default:
-      return 'Local Impact'
-  }
+  return getImpactScopeBandLabel(impactScope)
 }
 
 export function formatChangePressureValueCopy(
   changePressure: ChangePressure
 ): string {
-  switch (changePressure) {
-    case 'High':
-      return 'High Activity'
-    case 'Moderate':
-      return 'Moderate Activity'
-    default:
-      return 'Low Activity'
-  }
+  return getChangePressureBandLabel(changePressure)
 }
 
 export function formatExternalRelianceValueCopy(
   externalReliance: ExternalReliance
 ): string {
-  switch (externalReliance) {
-    case 'High':
-      return 'Many Dependencies'
-    case 'Moderate':
-      return 'Some Dependencies'
-    default:
-      return 'Few Dependencies'
-  }
+  return getExternalRelianceBandLabel(externalReliance)
 }
 
 export function formatStructuralPositionValueCopy(
   structuralPosition: StructuralPosition
 ): string {
-  switch (structuralPosition) {
-    case 'Foundation-like':
-      return 'Foundation Role'
-    case 'Balanced':
-      return 'Balanced Role'
-    default:
-      return 'Dependency-heavy Role'
-  }
+  return getStructuralPositionBandLabel(structuralPosition)
 }
 
-export function formatImpactScopeHelperCopy(ca: number): string {
+export function formatImpactScopeHelperCopy(
+  ca: number,
+  unit: DependencyUnit = 'file'
+): string {
+  if (unit === 'module') {
+    return `${ca} incoming cross-module dependency ${ca === 1 ? 'edge points' : 'edges point'} here`
+  }
+
   return `${ca} ${ca === 1 ? 'file depends' : 'files depend'} on this`
 }
 
 export function formatChangePressureHelperCopy(relativeChurn: number): string {
-  return `${(relativeChurn * 100).toFixed(1)}% changed in 30 days`
+  return `Relative churn (30d): ${(relativeChurn * 100).toFixed(1)}% of current size`
 }
 
-export function formatExternalRelianceHelperCopy(ce: number): string {
+export function formatExternalRelianceHelperCopy(
+  ce: number,
+  unit: DependencyUnit = 'file'
+): string {
+  if (unit === 'module') {
+    return ce === 0
+      ? 'Depends on no outgoing cross-module dependencies'
+      : `Depends on ${ce} outgoing cross-module dependency ${ce === 1 ? 'edge' : 'edges'}`
+  }
+
+  const singular = 'internal file'
+  const plural = 'internal files'
+
   return ce === 0
-    ? 'Imports no internal files'
-    : `Imports ${ce} ${ce === 1 ? 'internal file' : 'internal files'}`
+    ? `Depends on no ${plural}`
+    : `Depends on ${ce} ${ce === 1 ? singular : plural}`
 }
 
 export function formatStructuralPositionHelperCopy(

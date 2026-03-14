@@ -4,6 +4,8 @@ import { useContext } from 'react'
 import { DataContext } from '@/shared/context/DataContext'
 import { architectureApi } from '@/shared/lib/api'
 
+import { shouldFetchFileArchitectureMetrics } from '../lib/architecture-metrics-source'
+
 export function useArchitectureFolders() {
   const context = useContext(DataContext)
 
@@ -57,11 +59,13 @@ export function useArchitectureFiles() {
 
 export function useFileArchitectureMetrics(filePath: string | null) {
   const context = useContext(DataContext)
+  const architectureData = context?.architectureData ?? null
+  const hasStaticArchitectureData = architectureData != null
 
   // Report mode: cari file di context
   const reportData =
-    context?.architectureData && filePath
-      ? context.architectureData.files.find(
+    hasStaticArchitectureData && filePath
+      ? architectureData.files.find(
           (f) => f.filePath === filePath || f.filePath.endsWith('/' + filePath)
         )
       : null
@@ -69,53 +73,58 @@ export function useFileArchitectureMetrics(filePath: string | null) {
   const liveQuery = useQuery({
     queryKey: ['architecture', 'file', filePath],
     queryFn: () => architectureApi.getFileMetrics(filePath ?? ''),
-    enabled: !!filePath && !reportData,
+    enabled: shouldFetchFileArchitectureMetrics({
+      hasFilePath: !!filePath,
+      hasStaticArchitectureData
+    }),
     staleTime: 5 * 60 * 1000
   })
 
-  if (reportData) {
+  if (hasStaticArchitectureData) {
     return {
-      data: reportData,
+      data: reportData ?? undefined,
       isLoading: false,
       isError: false,
       error: null,
-      isSuccess: true
+      isSuccess: reportData != null
     }
   }
 
-  // Live mode, or the file was not found in the report context
+  // Live mode
   return liveQuery
 }
 
 export function useFolderDetail(folderPath: string | null) {
   const context = useContext(DataContext)
+  const architectureData = context?.architectureData ?? null
+  const hasStaticArchitectureData = architectureData != null
 
   // Report mode: look up the folder and its files from report context
   const reportFolder =
-    context?.architectureData && folderPath
-      ? context.architectureData.folders.find(
-          (f) => f.folderPath === folderPath
-        )
+    hasStaticArchitectureData && folderPath
+      ? architectureData.folders.find((f) => f.folderPath === folderPath)
       : null
   const reportFiles =
-    context?.architectureData && folderPath
-      ? context.architectureData.files.filter((f) => f.moduleKey === folderPath)
+    hasStaticArchitectureData && folderPath
+      ? architectureData.files.filter((f) => f.moduleKey === folderPath)
       : []
 
   const liveQuery = useQuery({
     queryKey: ['architecture', 'folder', folderPath],
     queryFn: () => architectureApi.getFolderDetail(folderPath ?? ''),
-    enabled: !!folderPath && !reportFolder,
+    enabled: !!folderPath && !hasStaticArchitectureData,
     staleTime: 5 * 60 * 1000
   })
 
-  if (reportFolder) {
+  if (hasStaticArchitectureData) {
     return {
-      data: { folder: reportFolder, files: reportFiles },
+      data: reportFolder
+        ? { folder: reportFolder, files: reportFiles }
+        : undefined,
       isLoading: false,
       isError: false,
       error: null,
-      isSuccess: true
+      isSuccess: reportFolder != null
     }
   }
 

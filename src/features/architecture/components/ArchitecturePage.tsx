@@ -22,9 +22,16 @@ import {
 import { Input } from '@/shared/components/ui/input'
 import { MetricCard } from '@/shared/components/ui/metric-card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import {
+  formatReviewSignalBandRange,
+  getStructuralPositionBandLabel,
+  resolveStructuralPosition
+} from '@/shared/lib/metric-thresholds'
 
 import { architectureCopy } from '../content/architectureCopy'
 import { useArchitectureFolders } from '../hooks/useArchitectureMetrics'
+import { useModuleReviewThresholdCalibration } from '../hooks/useReviewThresholdCalibration'
+import { describeStructuralPositionStory } from '../lib/structural-position-story'
 import { ArchitectureTable } from './ArchitectureTable'
 
 import type {
@@ -57,6 +64,7 @@ export function ArchitecturePage({
   onShowMetricsGuide
 }: ArchitecturePageProps) {
   const { data, isLoading, error } = useArchitectureFolders()
+  const moduleThresholdCalibration = useModuleReviewThresholdCalibration()
   const [searchQuery, setSearchQuery] = useState('')
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: 'riskScore',
@@ -115,10 +123,17 @@ export function ArchitecturePage({
   const avgInstability =
     folders.reduce((sum, f) => sum + f.instability, 0) / totalModules
   const modulesWithCycles = folders.filter((f) => f.hasCycle).length
-  const unstableModules = folders.filter((f) => f.instability >= 0.7).length
+  const unstableModules = folders.filter(
+    (f) => resolveStructuralPosition(f.instability) === 'Outward-Dependent'
+  ).length
   const hotspotModules = folders.filter(
     (f) => f.evolution?.hotspotStatus === 'critical-hotspot'
   ).length
+  const averageStructuralStory = describeStructuralPositionStory(avgInstability)
+  const outwardFacingRange = formatReviewSignalBandRange(
+    'structuralPosition',
+    'Outward-Dependent'
+  )
 
   // Filter folders by search query
   const filteredFolders = folders.filter((f) =>
@@ -142,12 +157,7 @@ export function ArchitecturePage({
     {
       label: architectureCopy.summaryCards.averageStructuralPosition,
       value: avgInstability.toFixed(2),
-      subValue:
-        avgInstability > 0.6
-          ? 'More outward-facing overall'
-          : avgInstability > 0.4
-            ? 'Balanced overall'
-            : 'More foundational overall',
+      subValue: averageStructuralStory.summaryLabel,
       icon: <TrendingUp className='h-4 w-4' />,
       status: 'default'
     },
@@ -156,8 +166,8 @@ export function ArchitecturePage({
       value: unstableModules,
       subValue:
         unstableModules > 0
-          ? 'Modules above I >= 0.70'
-          : 'None above I >= 0.70',
+          ? `Modules in the ${outwardFacingRange} instability band`
+          : `No modules in the ${outwardFacingRange} instability band`,
       icon: <Wind className='h-4 w-4' />,
       status: 'default'
     },
@@ -228,25 +238,33 @@ export function ArchitecturePage({
                       {architectureCopy.readingGuide.expandedTitle}
                     </h3>
                     <p className='mb-4 text-sm leading-relaxed text-muted-foreground'>
-                      Do not treat the <strong>Flexible / Unstable</strong>{' '}
-                      label as a defect. In dependency metrics, instability
-                      describes a module's structural position in the dependency
-                      graph, not code quality or direct propagation risk. Use{' '}
-                      <strong>Propagation Risk</strong> to estimate how strongly
-                      a modification may propagate.
+                      Do not treat the{' '}
+                      <strong>
+                        {getStructuralPositionBandLabel('Outward-Dependent')}
+                      </strong>{' '}
+                      band as a defect. In dependency metrics, instability
+                      describes a module&apos;s structural position in the
+                      dependency graph, not code quality or direct propagation
+                      risk. Use <strong>Propagation Risk</strong> to estimate
+                      how strongly a modification may propagate.
                     </p>
                     <div className='grid gap-4 md:grid-cols-3'>
                       <div className='space-y-2'>
                         <div className='flex items-center gap-2'>
                           <ShieldCheck className='h-5 w-5 text-blue-600 dark:text-blue-400' />
                           <span className='text-sm font-medium text-foreground'>
-                            0.00 — Rigid / Stable
+                            {formatReviewSignalBandRange(
+                              'structuralPosition',
+                              'Foundation-like'
+                            )}{' '}
+                            -{' '}
+                            {getStructuralPositionBandLabel('Foundation-like')}
                           </span>
                         </div>
                         <p className='pl-7 text-xs leading-relaxed text-muted-foreground'>
-                          At this extreme, other modules depend on this module
-                          more than it depends on them. Changes here often
-                          deserve careful regression testing.
+                          At this extreme, more incoming cross-module dependency
+                          edges point into this module than out of it. Changes
+                          here often deserve careful regression testing.
                         </p>
                         <p className='pl-7 text-xs font-medium text-blue-600 dark:text-blue-400'>
                           Common in: shared foundations, domain logic,
@@ -257,7 +275,11 @@ export function ArchitecturePage({
                         <div className='flex items-center gap-2'>
                           <Layers className='h-5 w-5 text-slate-500 dark:text-slate-300' />
                           <span className='text-sm font-medium text-foreground'>
-                            0.40 to &lt; 0.70 - Balanced
+                            {formatReviewSignalBandRange(
+                              'structuralPosition',
+                              'Balanced'
+                            )}{' '}
+                            - {getStructuralPositionBandLabel('Balanced')}
                           </span>
                         </div>
                         <p className='pl-7 text-xs leading-relaxed text-muted-foreground'>
@@ -274,13 +296,20 @@ export function ArchitecturePage({
                         <div className='flex items-center gap-2'>
                           <Wind className='h-5 w-5 text-emerald-600 dark:text-emerald-400' />
                           <span className='text-sm font-medium text-foreground'>
-                            1.00 — Flexible / Unstable
+                            {formatReviewSignalBandRange(
+                              'structuralPosition',
+                              'Outward-Dependent'
+                            )}{' '}
+                            -{' '}
+                            {getStructuralPositionBandLabel(
+                              'Outward-Dependent'
+                            )}
                           </span>
                         </div>
                         <p className='pl-7 text-xs leading-relaxed text-muted-foreground'>
-                          At this extreme, the module depends on others while no
-                          other modules depend on it directly. These modules are
-                          often easier to replace or refactor.
+                          At this extreme, outgoing cross-module dependency
+                          edges dominate while incoming ones are limited. These
+                          modules are often easier to replace or refactor.
                         </p>
                         <p className='pl-7 text-xs font-medium text-emerald-600 dark:text-emerald-400'>
                           Common in: presentation layers, route modules, UI
@@ -392,6 +421,7 @@ export function ArchitecturePage({
               folders={filteredFolders}
               sortConfig={sortConfig}
               onSort={handleSort}
+              thresholdCalibration={moduleThresholdCalibration}
             />
           </CardContent>
         </Card>

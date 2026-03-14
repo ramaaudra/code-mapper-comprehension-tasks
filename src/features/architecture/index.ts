@@ -16,6 +16,10 @@ export {
   useFileArchitectureMetrics,
   useFolderDetail
 } from './hooks/useArchitectureMetrics'
+export {
+  useFileReviewThresholdCalibration,
+  useModuleReviewThresholdCalibration
+} from './hooks/useReviewThresholdCalibration'
 
 // Types
 export type {

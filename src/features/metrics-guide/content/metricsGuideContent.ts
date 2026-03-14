@@ -1,3 +1,5 @@
+import { getReviewSignalDefinition } from '@/shared/lib/metric-thresholds'
+
 export interface MetricsGuideMetric {
   id: string
   title: string
@@ -41,9 +43,13 @@ export interface MetricsGuideDecisionState {
 
 export const metricsGuidePrinciples = [
   'Instability is a structural position metric, not a defect score.',
-  'Propagation Risk, Blast Radius, and Hotspot Priority are derived product heuristics, not universal scientific truths.',
+  `${getReviewSignalDefinition('propagationRisk').label}, ${getReviewSignalDefinition('blastRadius').label}, and ${getReviewSignalDefinition('hotspotStatus').label} are derived product heuristics, not universal scientific truths.`,
   'Read metrics as decision support: what is happening, why it matters, and what to do next.'
 ]
+
+const propagationRiskSignal = getReviewSignalDefinition('propagationRisk')
+const blastRadiusSignal = getReviewSignalDefinition('blastRadius')
+const hotspotStatusSignal = getReviewSignalDefinition('hotspotStatus')
 
 export const metricsGuideQuickVisuals: MetricsGuideQuickVisual[] = [
   {
@@ -171,12 +177,10 @@ export const metricsGuideMetrics: MetricsGuideMetric[] = [
     family: 'Derived Heuristic',
     shortDefinition:
       'A derived heuristic that estimates how strongly change may spread through dependents.',
-    whyItMatters:
-      'It helps identify shared modules where a change may need broader verification.',
+    whyItMatters: propagationRiskSignal.whyItExists,
     practicalRead:
       'Use this to find areas that deserve broader regression checks before merging.',
-    caveat:
-      'Low propagation risk does not mean no review is needed. High Ca can still widen review scope.',
+    caveat: propagationRiskSignal.scientificStatusNote,
     visualAnalogyTitle: 'Shared reuse plus outward pull can widen spread',
     visualAnalogyDescription:
       'Propagation Risk combines structural reuse and structural position to estimate how widely a change may travel.',
@@ -189,12 +193,10 @@ export const metricsGuideMetrics: MetricsGuideMetric[] = [
     family: 'Derived Heuristic',
     shortDefinition:
       'A file-level heuristic that estimates the nearby verification scope after a change.',
-    whyItMatters:
-      'It is useful when deciding whether a change is likely to stay local or ripple into nearby files.',
+    whyItMatters: blastRadiusSignal.whyItExists,
     practicalRead:
-      'Use this in file detail views when planning refactors or choosing test scope.',
-    caveat:
-      'This is a product heuristic for local review scope, not a universal engineering standard.',
+      'Use this as a supporting verification signal in file detail views when planning refactors or choosing test scope.',
+    caveat: blastRadiusSignal.scientificStatusNote,
     visualAnalogyTitle: 'A local ring of nearby verification effort',
     visualAnalogyDescription:
       'Blast Radius is about nearby impact around one file change, not repository-wide spread.',
@@ -226,12 +228,10 @@ export const metricsGuideMetrics: MetricsGuideMetric[] = [
     family: 'Review Heuristic',
     shortDefinition:
       'A readable review band built from hotspot score percentiles in the current repository.',
-    whyItMatters:
-      'It gives a quick review signal without forcing users to interpret raw scores first.',
+    whyItMatters: hotspotStatusSignal.whyItExists,
     practicalRead:
       'Treat it as a prioritization band: critical first, active later, stable lower priority.',
-    caveat:
-      'Hotspot Status is a ranking heuristic, not proof that an area is defective.',
+    caveat: hotspotStatusSignal.scientificStatusNote,
     visualAnalogyTitle: 'A readable review band on top of ranking data',
     visualAnalogyDescription:
       'Status labels translate numeric ranking into quick review language so you can decide faster.',
@@ -268,7 +268,7 @@ export const metricsGuideScreenHelp: MetricsGuideScreenHelp[] = [
       'Use this panel for decision support before you edit a file or module.',
     bullets: [
       'Read the diagnosis first, then the action guidance, then the top drivers.',
-      'Evidence cards summarize the structural and evolutionary signals behind the verdict.',
+      'Evidence cards and Blast Radius provide supporting context behind the diagnosis, not a separate verdict.',
       'Open Why this recommendation when you need formulas, thresholds, or scientific context.'
     ]
   },
@@ -288,8 +288,8 @@ export const metricsGuideScreenHelp: MetricsGuideScreenHelp[] = [
 export const metricsGuideCaveats = [
   'High instability does not mean poor design.',
   'Low propagation risk does not mean zero review effort.',
-  'Hotspot scores and statuses are repo-relative heuristics.',
-  'Thresholds in this product are review cutoffs, not universal scientific standards.',
+  hotspotStatusSignal.scientificStatusNote,
+  propagationRiskSignal.scientificStatusNote,
   'Metrics support engineering judgment; they do not replace context.'
 ]
 

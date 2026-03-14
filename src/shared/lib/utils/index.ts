@@ -145,6 +145,11 @@ export {
 // Re-export decision assessment utilities
 export { createDecisionAssessment } from './decision-assessment'
 export {
+  buildFileReviewStoryMap,
+  createFileReviewStory,
+  createFileReviewThresholdCalibrationFromAnalysisData
+} from './file-review-story'
+export {
   getChangePressureTone,
   getAssessmentMethodItems,
   getExternalRelianceTone,
@@ -164,6 +169,17 @@ export {
 export type {
   DecisionAssessment,
   DecisionStatusTone,
-  ImpactScopeThresholds,
   ReviewPriority
 } from './decision-assessment'
+export type { FileReviewStory, FileReviewStoryTone } from './file-review-story'
+export type {
+  ChangePressure,
+  ExternalReliance,
+  ImpactScope,
+  ReviewThresholdCalibration,
+  StructuralPosition
+} from '../metric-thresholds'
+export {
+  createFileReviewThresholdCalibration,
+  createModuleReviewThresholdCalibration
+} from '../metric-thresholds'

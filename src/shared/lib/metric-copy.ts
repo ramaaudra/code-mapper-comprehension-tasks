@@ -1,3 +1,9 @@
+import { getReviewSignalDefinition } from '@/shared/lib/metric-thresholds'
+
+const propagationRiskSignal = getReviewSignalDefinition('propagationRisk')
+const blastRadiusSignal = getReviewSignalDefinition('blastRadius')
+const hotspotStatusSignal = getReviewSignalDefinition('hotspotStatus')
+
 export const METRIC_LABELS = {
   dependentsCa: 'Dependents (Ca)',
   dependenciesCe: 'Dependencies (Ce)',
@@ -21,10 +27,8 @@ export const METRIC_TOOLTIPS = {
     'Structural metric calculated as I = Ce / (Ca + Ce). It describes structural position, not defect severity.',
   dependentImpact:
     'Interpretive indicator based on Dependents (Ca). Higher values mean more files or modules may need review when this item changes.',
-  propagationRisk:
-    'Derived heuristic calculated as Ca x I. It estimates how strongly change pressure may propagate through dependents.',
-  blastRadius:
-    'Derived heuristic that estimates the nearby verification scope after a file change.',
+  propagationRisk: `${propagationRiskSignal.whyItExists} ${propagationRiskSignal.scientificStatusNote}`,
+  blastRadius: `${blastRadiusSignal.whyItExists} ${blastRadiusSignal.scientificStatusNote}`,
   commits30d:
     'Number of commits in the last 30 days that touched this file within the analyzed Git history window.',
   relativeChurn30d:
@@ -33,8 +37,7 @@ export const METRIC_TOOLTIPS = {
     'Medium-term code change pressure over the last 90 days, normalized by effective lines of code.',
   evolutionaryHotspotScore:
     'Product heuristic that combines recent relative churn with structural propagation risk to prioritize review hotspots.',
-  hotspotStatus:
-    'Repo-relative hotspot band derived from hotspot score percentiles. Use it for prioritization, not as a universal defect claim.'
+  hotspotStatus: `${hotspotStatusSignal.whyItExists} ${hotspotStatusSignal.scientificStatusNote}`
 } as const
 
 export const HEURISTIC_LABELS = {

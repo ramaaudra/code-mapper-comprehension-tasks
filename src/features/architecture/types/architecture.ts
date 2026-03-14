@@ -1,7 +1,6 @@
 import type {
-  ChurnWindowMetrics,
   FileEvolutionMetrics,
-  HotspotStatus
+  FolderEvolutionMetrics
 } from '@/shared/types/analysis'
 
 export interface CouplingMetrics {
@@ -22,17 +21,7 @@ export interface FolderArchitectureMetrics extends CouplingMetrics {
   fileCount: number
   couplingTo: Record<string, number>
   couplingFrom: Record<string, number>
-  evolution?: {
-    effectiveLoc: number
-    churn30d: ChurnWindowMetrics
-    churn90d: ChurnWindowMetrics
-    relativeChurnPercentile: number
-    structuralRiskPercentile: number
-    hotspotScore: number
-    hotspotPercentile: number
-    hotspotStatus: HotspotStatus
-    changedFileCount30d: number
-  }
+  evolution: FolderEvolutionMetrics
 }
 
 export interface FolderDetailResponse {

@@ -1,3 +1,8 @@
+import {
+  getGraphHotspotStatusLabel as getGraphHotspotStatusLabelFromCatalog,
+  getHotspotStatusLabel as getHotspotStatusLabelFromCatalog,
+  getHotspotStatusPriority
+} from '@/shared/lib/metric-thresholds'
 import { calculateRiskScore } from '@/shared/lib/utils/risk'
 
 import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
@@ -12,29 +17,11 @@ export function formatRelativeChurn(value: number): string {
 }
 
 export function getHotspotStatusLabel(status: HotspotStatus): string {
-  switch (status) {
-    case 'critical-hotspot':
-      return 'Critical Hotspot'
-    case 'high-review-needed':
-      return 'High Review Priority'
-    case 'active':
-      return 'Active Change Area'
-    default:
-      return 'Stable Change Area'
-  }
+  return getHotspotStatusLabelFromCatalog(status)
 }
 
 export function getGraphHotspotStatusLabel(status: HotspotStatus): string {
-  switch (status) {
-    case 'critical-hotspot':
-      return 'Highest hotspot band'
-    case 'high-review-needed':
-      return 'Needs closer review'
-    case 'active':
-      return 'Recently active'
-    default:
-      return 'Lower hotspot band'
-  }
+  return getGraphHotspotStatusLabelFromCatalog(status)
 }
 
 export function getHotspotTone(
@@ -55,6 +42,7 @@ export interface EvolutionaryHotspotItem {
   relativeChurn30d: number
   propagationRisk: number
   hotspotScore: number
+  hotspotPercentile: number
   hotspotStatus: HotspotStatus
   changedFileCount30d: number
 }
@@ -69,10 +57,33 @@ export function buildEvolutionaryHotspots(
       relativeChurn30d: folder.evolution?.churn30d.relativeChurn ?? 0,
       propagationRisk: calculateRiskScore(folder.ca, folder.instability),
       hotspotScore: folder.evolution?.hotspotScore ?? 0,
+      hotspotPercentile: folder.evolution?.hotspotPercentile ?? 0,
       hotspotStatus: folder.evolution?.hotspotStatus ?? 'stable',
       changedFileCount30d: folder.evolution?.changedFileCount30d ?? 0
     }))
-    .sort((left, right) => right.hotspotScore - left.hotspotScore)
+    .sort((left, right) => {
+      const priorityDelta =
+        getHotspotStatusPriority(right.hotspotStatus) -
+        getHotspotStatusPriority(left.hotspotStatus)
+
+      if (priorityDelta !== 0) {
+        return priorityDelta
+      }
+
+      const percentileDelta = right.hotspotPercentile - left.hotspotPercentile
+
+      if (percentileDelta !== 0) {
+        return percentileDelta
+      }
+
+      const scoreDelta = right.hotspotScore - left.hotspotScore
+
+      if (scoreDelta !== 0) {
+        return scoreDelta
+      }
+
+      return right.relativeChurn30d - left.relativeChurn30d
+    })
 }
 
 export function getFileEvolutionMetrics(

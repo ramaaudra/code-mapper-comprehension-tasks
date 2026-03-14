@@ -1,3 +1,16 @@
+import {
+  BLAST_RADIUS_THRESHOLDS,
+  PROPAGATION_RISK_THRESHOLDS,
+  getPropagationRiskThresholds,
+  getBlastRadiusBandDescription,
+  getBlastRadiusBandLabel,
+  getPropagationRiskBandDescription,
+  getPropagationRiskBandLabel,
+  resolveBlastRadiusLevel,
+  resolvePropagationRiskLevel
+} from '@/shared/lib/metric-thresholds'
+
+import type { ReviewThresholdCalibration } from '@/shared/lib/metric-thresholds'
 import type {
   FileRiskProfile,
   RiskLevel,
@@ -10,23 +23,14 @@ import type {
  * Unified Propagation Risk Thresholds (Ca × I heuristic)
  * Derived from dependency metrics inspired by Robert C. Martin's package metrics.
  */
-export const RISK_THRESHOLDS: RiskThresholds = {
-  CRITICAL: 30,
-  HIGH: 15, // Elevated propagation risk
-  MEDIUM: 5 // Moderate propagation risk
-} as const
+export const RISK_THRESHOLDS: RiskThresholds = PROPAGATION_RISK_THRESHOLDS
 
 /**
  * Blast Radius Thresholds (Ca + Ce × 0.5)
  * Heuristic estimate of blast radius / nearby verification scope
  * Used in Node Detail Panel (Micro level)
  */
-export const BLAST_RADIUS_THRESHOLDS = {
-  CRITICAL: 15, // >15: Core/backbone of the system
-  HIGH: 9, // 9-15: Hooks, shared components, global UI
-  MEDIUM: 4, // 4-8: Components used in several places
-  LOW: 3 // ≤3: Lower expected verification scope
-} as const
+export { BLAST_RADIUS_THRESHOLDS }
 
 /**
  * Calculate Blast Radius
@@ -46,18 +50,10 @@ export function calculateBlastRadius(ca: number, ce: number): number {
  */
 export function getBlastRadiusLevel(
   score: number,
-  hasCycle: boolean
+  hasCycle: boolean,
+  calibration?: ReviewThresholdCalibration
 ): RiskLevel {
-  if (hasCycle || score > BLAST_RADIUS_THRESHOLDS.CRITICAL) {
-    return 'critical'
-  }
-  if (score >= BLAST_RADIUS_THRESHOLDS.HIGH) {
-    return 'high'
-  }
-  if (score >= BLAST_RADIUS_THRESHOLDS.MEDIUM) {
-    return 'medium'
-  }
-  return 'low'
+  return resolveBlastRadiusLevel(score, hasCycle, calibration)
 }
 
 /**
@@ -81,30 +77,31 @@ export function calculateRiskScore(ca: number, instability: number): number {
 /**
  * Determine risk level from score
  */
-export function getRiskLevel(score: number): RiskLevel {
-  if (score >= RISK_THRESHOLDS.CRITICAL) {
-    return 'critical'
-  }
-  if (score >= RISK_THRESHOLDS.HIGH) {
-    return 'high'
-  }
-  if (score >= RISK_THRESHOLDS.MEDIUM) {
-    return 'medium'
-  }
-  return 'low'
+export function getRiskLevel(
+  score: number,
+  calibration?: ReviewThresholdCalibration
+): RiskLevel {
+  return resolvePropagationRiskLevel(score, calibration)
+}
+
+export function getPropagationRiskLevel(
+  score: number,
+  calibration?: ReviewThresholdCalibration
+): RiskLevel {
+  return resolvePropagationRiskLevel(score, calibration)
+}
+
+export function getCalibratedPropagationRiskThresholds(
+  calibration?: ReviewThresholdCalibration
+): RiskThresholds {
+  return getPropagationRiskThresholds(calibration)
 }
 
 /**
  * Get human-readable label for risk level
  */
 export function getRiskLabel(level: RiskLevel): string {
-  const labels: Record<RiskLevel, string> = {
-    critical: 'Critical',
-    high: 'High',
-    medium: 'Medium',
-    low: 'Low'
-  }
-  return labels[level]
+  return getPropagationRiskBandLabel(level)
 }
 
 /**
@@ -185,8 +182,12 @@ export function isActionableRisk(level: RiskLevel): boolean {
 /**
  * Check if risk score meets actionable threshold
  */
-export function isActionableRiskScore(score: number): boolean {
-  return score >= RISK_THRESHOLDS.HIGH
+export function isActionableRiskScore(
+  score: number,
+  calibration?: ReviewThresholdCalibration
+): boolean {
+  const level = getPropagationRiskLevel(score, calibration)
+  return isActionableRisk(level)
 }
 
 /**
@@ -194,12 +195,13 @@ export function isActionableRiskScore(score: number): boolean {
  */
 export function createRiskProfile(
   path: string,
-  metrics: RiskMetrics
+  metrics: RiskMetrics,
+  calibration?: ReviewThresholdCalibration
 ): RiskProfile {
   const riskScore = calculateRiskScore(metrics.ca, metrics.instability)
 
   // Cycle override: any circular dependency is at least high risk
-  let level = getRiskLevel(riskScore)
+  let level = getPropagationRiskLevel(riskScore, calibration)
   if (metrics.hasCycle && level !== 'critical') {
     level = 'high' // Elevate to high if in cycle
   }
@@ -222,51 +224,32 @@ export function sortByRiskScore(profiles: RiskProfile[]): RiskProfile[] {
 /**
  * Filter actionable risk items for triage panel
  */
-export function filterActionableRisks(profiles: RiskProfile[]): RiskProfile[] {
-  return profiles.filter((p) => isActionableRisk(p.level))
+export function filterActionableRisks(
+  profiles: RiskProfile[],
+  calibration?: ReviewThresholdCalibration
+): RiskProfile[] {
+  return profiles.filter((p) => isActionableRiskScore(p.riskScore, calibration))
 }
 
 /**
  * Get description text for propagation-risk level.
  */
 export function getRiskDescription(level: RiskLevel): string {
-  const descriptions: Record<RiskLevel, string> = {
-    critical:
-      'Critical propagation risk. Dependents and outward dependency pressure can spread change impact widely.',
-    high: 'High propagation risk. Review dependents and outgoing dependency pressure before changing this item.',
-    medium:
-      'Moderate propagation risk. Changes may travel through part of the dependency graph.',
-    low: 'Low propagation risk. Outward dependency pressure is limited, but Dependents (Ca) may still require review.'
-  }
-  return descriptions[level]
+  return getPropagationRiskBandDescription(level)
 }
 
 /**
  * Get human-readable label for blast-radius level.
  */
 export function getBlastRadiusLabel(level: RiskLevel): string {
-  const labels: Record<RiskLevel, string> = {
-    critical: 'Critical Blast Radius',
-    high: 'High Blast Radius',
-    medium: 'Medium Blast Radius',
-    low: 'Low Blast Radius'
-  }
-  return labels[level]
+  return getBlastRadiusBandLabel(level)
 }
 
 /**
  * Get description text for blast-radius level.
  */
 export function getBlastRadiusDescription(level: RiskLevel): string {
-  const descriptions: Record<RiskLevel, string> = {
-    critical:
-      'Very large blast radius. Editing this file may require verification across many nearby connected files.',
-    high: 'High blast radius. Plan targeted regression checks after editing this file.',
-    medium:
-      'Moderate blast radius. Review nearby dependencies before refactoring.',
-    low: 'Low blast radius. Effects should stay localized.'
-  }
-  return descriptions[level]
+  return getBlastRadiusBandDescription(level)
 }
 
 /**

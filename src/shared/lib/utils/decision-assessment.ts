@@ -17,6 +17,21 @@ import {
   getOrphanDecisionCopy,
   getSharedFoundationDecisionCopy
 } from '@/shared/content/decisionCopy'
+import {
+  resolveChangePressure,
+  resolveExternalReliance,
+  resolveImpactScope,
+  resolveStructuralPosition
+} from '@/shared/lib/metric-thresholds'
+
+import type {
+  ChangePressure,
+  ExternalReliance,
+  ImpactScope,
+  ReviewThresholdCalibration,
+  StructuralPosition,
+  ThresholdSubject
+} from '@/shared/lib/metric-thresholds'
 
 export type DecisionStatusTone =
   | 'default'
@@ -26,6 +41,7 @@ export type DecisionStatusTone =
   | 'danger'
 
 export type DecisionTitle =
+  | 'Circular Dependency'
   | 'Possibly Unused File'
   | 'Critical Hotspot'
   | 'Active but Local'
@@ -33,18 +49,10 @@ export type DecisionTitle =
   | 'Likely Local Change'
 
 export type ReviewPriority =
-  | 'Critical Hotspot'
+  | 'Critical Review Priority'
   | 'High Review Priority'
   | 'Normal Review Priority'
   | 'Low Review Priority'
-
-export type ImpactScope = 'Broad' | 'Moderate' | 'Local'
-export type ChangePressure = 'High' | 'Moderate' | 'Low'
-export type ExternalReliance = 'High' | 'Moderate' | 'Low'
-export type StructuralPosition =
-  | 'Foundation-like'
-  | 'Balanced'
-  | 'Outward-Dependent'
 
 export interface DecisionAssessment {
   headline: string
@@ -84,16 +92,22 @@ export function formatStructuralPositionValue(
   return formatStructuralPositionValueCopy(structuralPosition)
 }
 
-export function formatImpactScopeHelper(ca: number): string {
-  return formatImpactScopeHelperCopy(ca)
+export function formatImpactScopeHelper(
+  ca: number,
+  unit: 'file' | 'module' = 'file'
+): string {
+  return formatImpactScopeHelperCopy(ca, unit)
 }
 
 export function formatChangePressureHelper(relativeChurn: number): string {
   return formatChangePressureHelperCopy(relativeChurn)
 }
 
-export function formatExternalRelianceHelper(ce: number): string {
-  return formatExternalRelianceHelperCopy(ce)
+export function formatExternalRelianceHelper(
+  ce: number,
+  unit: 'file' | 'module' = 'file'
+): string {
+  return formatExternalRelianceHelperCopy(ce, unit)
 }
 
 export function formatStructuralPositionHelper(instability: number): string {
@@ -108,7 +122,7 @@ export function getReviewPriorityTone(
   reviewPriority: ReviewPriority
 ): DecisionStatusTone {
   switch (reviewPriority) {
-    case 'Critical Hotspot':
+    case 'Critical Review Priority':
       return 'danger'
     case 'High Review Priority':
       return 'warning'
@@ -171,71 +185,15 @@ export function getStructuralPositionTone(
   }
 }
 
-export interface ImpactScopeThresholds {
-  broad: number
-  moderate: number
-}
-
 export interface DecisionAssessmentInput {
-  kind: 'file' | 'module'
+  kind: ThresholdSubject
   hasCycle: boolean
   ca: number
   ce: number
   instability: number
   relativeChurn30d: number
-  impactScopeThresholds: ImpactScopeThresholds
   isOrphan?: boolean
-}
-
-function getImpactScope(
-  ca: number,
-  thresholds: ImpactScopeThresholds
-): ImpactScope {
-  if (ca >= thresholds.broad) {
-    return 'Broad'
-  }
-
-  if (ca >= thresholds.moderate) {
-    return 'Moderate'
-  }
-
-  return 'Local'
-}
-
-function getChangePressure(relativeChurn: number): ChangePressure {
-  if (relativeChurn >= 0.3) {
-    return 'High'
-  }
-
-  if (relativeChurn >= 0.1) {
-    return 'Moderate'
-  }
-
-  return 'Low'
-}
-
-function getExternalReliance(ce: number): ExternalReliance {
-  if (ce >= 10) {
-    return 'High'
-  }
-
-  if (ce >= 4) {
-    return 'Moderate'
-  }
-
-  return 'Low'
-}
-
-function getStructuralPosition(instability: number): StructuralPosition {
-  if (instability >= 0.7) {
-    return 'Outward-Dependent'
-  }
-
-  if (instability >= 0.4) {
-    return 'Balanced'
-  }
-
-  return 'Foundation-like'
+  thresholdCalibration?: ReviewThresholdCalibration
 }
 
 function getDecisionTitle(
@@ -303,7 +261,11 @@ function getDecisionTone(
   title: DecisionTitle,
   hasCycle: boolean
 ): DecisionStatusTone {
-  if (hasCycle || title === 'Critical Hotspot') {
+  if (
+    hasCycle ||
+    title === 'Critical Hotspot' ||
+    title === 'Circular Dependency'
+  ) {
     return 'danger'
   }
 
@@ -331,8 +293,12 @@ function getReviewPriority(params: {
     return 'Low Review Priority'
   }
 
-  if (hasCycle || title === 'Critical Hotspot') {
-    return 'Critical Hotspot'
+  if (
+    hasCycle ||
+    title === 'Critical Hotspot' ||
+    title === 'Circular Dependency'
+  ) {
+    return 'Critical Review Priority'
   }
 
   if (title === 'Active but Local' || title === 'Shared Foundation') {
@@ -356,15 +322,23 @@ export function createDecisionAssessment(
     ce,
     instability,
     relativeChurn30d,
-    impactScopeThresholds,
-    isOrphan = false
+    isOrphan = false,
+    thresholdCalibration
   } = input
 
   const subject = kind === 'file' ? 'file' : 'module'
-  const impactScope = getImpactScope(ca, impactScopeThresholds)
-  const changePressure = getChangePressure(relativeChurn30d)
-  const externalReliance = getExternalReliance(ce)
-  const structuralPosition = getStructuralPosition(instability)
+  const impactScope = resolveImpactScope(ca, kind, thresholdCalibration)
+  const changePressure = resolveChangePressure(
+    relativeChurn30d,
+    thresholdCalibration,
+    kind
+  )
+  const externalReliance = resolveExternalReliance(
+    ce,
+    thresholdCalibration,
+    kind
+  )
+  const structuralPosition = resolveStructuralPosition(instability)
 
   if (isOrphan) {
     const copy = getOrphanDecisionCopy()
@@ -393,7 +367,7 @@ export function createDecisionAssessment(
   }
 
   const title = hasCycle
-    ? 'Critical Hotspot'
+    ? 'Circular Dependency'
     : getDecisionTitle(impactScope, changePressure)
   const reviewPriority = getReviewPriority({
     title,

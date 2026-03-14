@@ -25,6 +25,7 @@ import type {
   SortConfig,
   SortKey
 } from '../types/architecture'
+import type { ReviewThresholdCalibration } from '@/shared/lib/metric-thresholds'
 
 interface Column {
   key: SortKey
@@ -69,6 +70,7 @@ interface ArchitectureTableProps {
   folders: FolderArchitectureMetrics[]
   sortConfig: SortConfig
   onSort: (key: SortKey) => void
+  thresholdCalibration?: ReviewThresholdCalibration
 }
 
 function ExpandedRow({ folderPath }: { folderPath: string }) {
@@ -154,7 +156,8 @@ function ExpandedRow({ folderPath }: { folderPath: string }) {
 export function ArchitectureTable({
   folders,
   sortConfig,
-  onSort
+  onSort,
+  thresholdCalibration
 }: ArchitectureTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
@@ -217,7 +220,7 @@ export function ArchitectureTable({
    * Uses same scheme as HighRiskModules panel.
    */
   const getRiskDotColor = (score: number) => {
-    const level = getRiskLevel(score)
+    const level = getRiskLevel(score, thresholdCalibration)
     return getRiskColorClass(level)
   }
 

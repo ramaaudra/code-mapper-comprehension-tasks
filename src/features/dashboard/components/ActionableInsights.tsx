@@ -13,10 +13,15 @@ import {
   Lightbulb,
   RefreshCw
 } from '@/shared/components/ui/icons'
+import {
+  getHotspotStatusPriority,
+  isActionableHotspotStatus
+} from '@/shared/lib/metric-thresholds'
 import { getRiskBgOpacityClass } from '@/shared/lib/utils/risk'
 
 import { dashboardCopy } from '../content/dashboardCopy'
 
+import type { HotspotStatus } from '@/shared/types/analysis'
 import type { RiskLevel } from '@/shared/types/risk'
 
 interface RiskItem {
@@ -30,6 +35,8 @@ interface HotspotItem {
   modulePath: string
   relativeChurn30d: number
   hotspotScore: number
+  hotspotPercentile: number
+  hotspotStatus: HotspotStatus
 }
 
 interface GodObjectItem {
@@ -73,7 +80,7 @@ function getBasename(path: string): string {
 /**
  * Triage Priority Order (highest to lowest):
  * 1. Circular Dependencies (BLOCKER - system integrity)
- * 2. Critical Propagation Risk Modules
+ * 2. Broad Spread-Risk Modules
  * 3. God Objects (architectural smell)
  * 4. High Propagation-Risk Modules
  * 5. Orphans (cleanup)
@@ -163,11 +170,15 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
     })
   }
 
-  if (topHotspot && topHotspot.hotspotScore >= 0.6) {
+  if (topHotspot && isActionableHotspotStatus(topHotspot.hotspotStatus)) {
     insights.push({
       priority: 3,
       type: 'warning',
-      level: topHotspot.hotspotScore >= 0.85 ? 'critical' : 'high',
+      level:
+        getHotspotStatusPriority(topHotspot.hotspotStatus) >=
+        getHotspotStatusPriority('critical-hotspot')
+          ? 'critical'
+          : 'high',
       icon: <AlertTriangle className='h-4 w-4 text-orange-500' />,
       message: dashboardCopy.actionableInsights.hotspot.message(
         topHotspot.modulePath

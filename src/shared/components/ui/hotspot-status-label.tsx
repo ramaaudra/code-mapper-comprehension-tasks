@@ -4,6 +4,7 @@ import {
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
 import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
+import { getHotspotStatusDescription } from '@/shared/lib/metric-thresholds'
 import {
   cn,
   getGraphHotspotStatusLabel,
@@ -16,19 +17,6 @@ interface HotspotStatusLabelProps {
   status: HotspotStatus
   className?: string
   variant?: 'default' | 'graph'
-}
-
-function getHotspotStatusDescription(status: HotspotStatus): string {
-  switch (status) {
-    case 'critical-hotspot':
-      return 'This item sits in the highest repo-relative hotspot band and deserves the broadest review attention.'
-    case 'high-review-needed':
-      return 'This item is above the normal hotspot band, so changes here deserve closer review.'
-    case 'active':
-      return 'This item shows recent change activity, but it is not in the strongest hotspot band.'
-    default:
-      return 'This item sits in a lower hotspot band relative to the rest of the repository.'
-  }
 }
 
 export function HotspotStatusLabel({

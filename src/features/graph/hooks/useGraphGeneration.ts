@@ -2,42 +2,26 @@ import { MarkerType } from '@xyflow/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
+  buildFileReviewStoryMap,
   getFileEvolutionMetrics,
   getBasename,
-  getValueFromMap,
   hasMatchInSet,
   matchesFile,
   normalizePath
 } from '@/shared/lib/utils'
 import { LRUCache } from '@/shared/lib/utils/lruCache'
 import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
-import { getRiskLevel } from '@/shared/lib/utils/risk'
 
 import { graphCopy } from '../content/graphCopy'
+import { createGraphStatusSignature } from '../lib/graph-state'
 
 import type { DependencyEdgeData, DependencyNodeData } from '../types/graph'
 import type { AnalysisData, DependencyInfo } from '@/shared/types/analysis'
-import type { FileRiskProfile } from '@/shared/types/risk'
 import type { Edge, Node } from '@xyflow/react'
 
 interface BadgeInfo {
   label: string
   tone: 'info' | 'warning' | 'danger' | 'success'
-}
-
-function getGraphRiskBadgeLabel(
-  level: ReturnType<typeof getRiskLevel>
-): string {
-  switch (level) {
-    case 'critical':
-      return graphCopy.node.risk.critical
-    case 'high':
-      return graphCopy.node.risk.high
-    case 'medium':
-      return graphCopy.node.risk.medium
-    default:
-      return graphCopy.node.risk.low
-  }
 }
 
 function formatUsedByCount(count: number): string {
@@ -54,15 +38,12 @@ export interface UseGraphGenerationOptions {
   analysisData: AnalysisData | null
   filesInCycle: Set<string>
   orphanFilesSet: Set<string>
-  riskProfileMap: Map<string, FileRiskProfile>
   brokenFilesSet: Set<string>
   newOrphansSet: Set<string>
   dataUpdatedAt?: number | null
 }
 
 const BATCH_THRESHOLD = 100 // Nodes - use batching if more than this (increased for SWC speed)
-// Global badge cache - shared across all component instances
-const badgeCache = new Map<string, BadgeInfo[]>()
 
 function getSimplifiedEdgeStyle(isLargeGraph: boolean) {
   if (isLargeGraph) {
@@ -120,7 +101,6 @@ export function useGraphGeneration({
   analysisData,
   filesInCycle,
   orphanFilesSet,
-  riskProfileMap,
   brokenFilesSet,
   newOrphansSet,
   dataUpdatedAt
@@ -132,6 +112,7 @@ export function useGraphGeneration({
   })
 
   const graphCache = useRef(new LRUCache<string, GraphElements>(50)) // Keep 50 graphs max
+  const focusedGraphNodeIdRef = useRef<string | null>(null)
 
   const edgeStyles = useMemo(
     () => ({
@@ -204,6 +185,21 @@ export function useGraphGeneration({
     []
   )
 
+  const fileReviewStoryMap = useMemo(() => {
+    return buildFileReviewStoryMap(analysisData)
+  }, [analysisData])
+
+  const graphStatusSignature = useMemo(
+    () =>
+      createGraphStatusSignature({
+        filesInCycle,
+        orphanFilesSet,
+        brokenFilesSet,
+        newOrphansSet
+      }),
+    [filesInCycle, orphanFilesSet, brokenFilesSet, newOrphansSet]
+  )
+
   const generateGraphForFile = useCallback(
     (
       fileId: string | null,
@@ -214,23 +210,20 @@ export function useGraphGeneration({
       try {
         const currentData = sourceData ?? analysisData
         if (!fileId || !currentData) {
+          focusedGraphNodeIdRef.current = null
           setGraphElements({ nodes: [], edges: [], focusNodeId: null })
           return null
         }
+        const currentFileReviewStoryMap =
+          sourceData != null
+            ? buildFileReviewStoryMap(sourceData)
+            : fileReviewStoryMap
 
         const getEvolution = (targetPath: string) =>
           getFileEvolutionMetrics(
             targetPath,
             currentData.evolutionaryMetrics.files
           )
-
-        // Check cache first
-        const cached = graphCache.current.get(fileId)
-        if (cached) {
-          console.info('Graph loaded from cache:', fileId)
-          setGraphElements(cached)
-          return cached.focusNodeId
-        }
 
         const dependencyMap = currentData.dependencyMap || {}
         const candidates = Object.keys(dependencyMap)
@@ -239,6 +232,16 @@ export function useGraphGeneration({
         )
         const actualFileId = matchedEntry ?? fileId
         const normalizedActual = normalizePath(actualFileId)
+
+        if (!sourceData) {
+          const cached = graphCache.current.get(normalizedActual)
+          if (cached) {
+            console.info('Graph loaded from cache:', normalizedActual)
+            focusedGraphNodeIdRef.current = cached.focusNodeId
+            setGraphElements(cached)
+            return cached.focusNodeId
+          }
+        }
 
         const outgoing = dependencyMap[actualFileId] ?? []
         const incomingEntries = Object.entries(dependencyMap).filter(
@@ -250,6 +253,7 @@ export function useGraphGeneration({
 
         const nodesMap = new Map<string, Node<DependencyNodeData>>()
         const edges: Edge<DependencyEdgeData>[] = []
+        const badgeCache = new Map<string, BadgeInfo[]>()
 
         // Pre-calculate large graph mode for simplified node styling
         const isLargeGraphMode = outgoing.length + incomingEntries.length > 100
@@ -266,7 +270,6 @@ export function useGraphGeneration({
             return normalizedPath
           }
 
-          // Check cache first
           let badges = badgeCache.get(normalizedPath)
 
           if (!badges) {
@@ -289,25 +292,16 @@ export function useGraphGeneration({
               badges.push({ label: 'Sim Result: Orphan', tone: 'info' })
             }
 
-            const riskProfile = getValueFromMap(riskProfileMap, normalizedPath)
-            if (riskProfile) {
-              // Calculate risk level from score for unified styling
-              const level = getRiskLevel(riskProfile.score)
-              const tone: BadgeInfo['tone'] =
-                level === 'critical'
-                  ? 'danger'
-                  : level === 'high'
-                    ? 'warning'
-                    : level === 'medium'
-                      ? 'info'
-                      : 'success'
+            const reviewStory =
+              currentFileReviewStoryMap.get(normalizedPath) ??
+              currentFileReviewStoryMap.get(rawPath)
+            if (reviewStory?.showGraphBadge && reviewStory.graphBadgeLabel) {
               badges.push({
-                label: getGraphRiskBadgeLabel(level),
-                tone
+                label: reviewStory.graphBadgeLabel,
+                tone: reviewStory.badgeTone
               })
             }
 
-            // Cache for future
             badgeCache.set(normalizedPath, badges)
           }
 
@@ -441,6 +435,7 @@ export function useGraphGeneration({
         })
 
         const totalNodeCount = nodesMap.size
+        focusedGraphNodeIdRef.current = normalizedActual
 
         let filteredNodes: Node<DependencyNodeData>[] = []
 
@@ -462,11 +457,13 @@ export function useGraphGeneration({
           })
 
           // Cache the generated graph
-          graphCache.current.set(normalizedActual, {
-            nodes: nodesToRender,
-            edges,
-            focusNodeId: normalizedActual
-          })
+          if (!sourceData) {
+            graphCache.current.set(normalizedActual, {
+              nodes: nodesToRender,
+              edges,
+              focusNodeId: normalizedActual
+            })
+          }
 
           console.info(
             `Graph generated and cached: ${nodesToRender.length} nodes, ${edges.length} edges`
@@ -527,7 +524,7 @@ export function useGraphGeneration({
       orphanFilesSet,
       brokenFilesSet,
       newOrphansSet,
-      riskProfileMap,
+      fileReviewStoryMap,
       markerEnds,
       labelBgStyle,
       labelStyle
@@ -535,15 +532,24 @@ export function useGraphGeneration({
   )
 
   const clearGraph = useCallback(() => {
+    focusedGraphNodeIdRef.current = null
     setGraphElements({ nodes: [], edges: [], focusNodeId: null })
     graphCache.current.clear()
   }, [])
 
   useEffect(() => {
-    // Clear cache when analysis data changes
-    badgeCache.clear()
     graphCache.current.clear()
   }, [analysisData, dataUpdatedAt])
+
+  useEffect(() => {
+    graphCache.current.clear()
+
+    if (!focusedGraphNodeIdRef.current) {
+      return
+    }
+
+    generateGraphForFile(focusedGraphNodeIdRef.current)
+  }, [analysisData, dataUpdatedAt, graphStatusSignature, generateGraphForFile])
 
   return {
     graphElements,

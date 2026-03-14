@@ -11,6 +11,7 @@ import type {
   SortConfig,
   SortKey
 } from '../types/architecture'
+import type { ReviewThresholdCalibration } from '@/shared/lib/metric-thresholds'
 
 interface Column {
   key: SortKey
@@ -46,12 +47,14 @@ interface FolderMetricsTableProps {
   folders: FolderArchitectureMetrics[]
   sortConfig: SortConfig
   onSort: (key: SortKey) => void
+  thresholdCalibration?: ReviewThresholdCalibration
 }
 
 export function FolderMetricsTable({
   folders,
   sortConfig,
-  onSort
+  onSort,
+  thresholdCalibration
 }: FolderMetricsTableProps) {
   const sortedFolders = useMemo(() => {
     return [...folders].sort((a, b) => {
@@ -119,7 +122,11 @@ export function FolderMetricsTable({
       </thead>
       <tbody>
         {sortedFolders.map((folder) => (
-          <FolderMetricsRow key={folder.folderPath} folder={folder} />
+          <FolderMetricsRow
+            key={folder.folderPath}
+            folder={folder}
+            thresholdCalibration={thresholdCalibration}
+          />
         ))}
       </tbody>
     </table>

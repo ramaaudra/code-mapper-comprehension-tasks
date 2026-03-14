@@ -17,20 +17,19 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
-import { getFileIcon } from '@/shared/lib/utils'
-import { getRiskColorClass, getRiskLevel } from '@/shared/lib/utils/risk'
+import { getFileIcon, hasMatchInSet, normalizePath } from '@/shared/lib/utils'
 
 import { useFileAnalysisContext } from '../context/FileAnalysisContext'
 import { FileSearchBar, type FileSearchBarRef } from './FileSearchBar'
 
+import type { FileReviewStory } from '@/shared/lib/utils/file-review-story'
 import type { FileTreeNode } from '@/shared/types/analysis'
-import type { FileRiskProfile, RiskLevel } from '@/shared/types/risk'
 import type { NodeApi, NodeRendererProps, TreeApi } from 'react-arborist'
 
 const createNodeRenderer = (
   filesInCycle: Set<string>,
   orphanFilesSet: Set<string>,
-  riskProfileMap: Map<string, FileRiskProfile>,
+  fileReviewStoryMap: Map<string, FileReviewStory>,
   hoveredFile: string | null,
   setHoveredFile: (fileId: string | null) => void,
   onSimulateDelete: (fileId: string) => void,
@@ -44,20 +43,21 @@ const createNodeRenderer = (
       : node.isOpen
         ? FolderOpen
         : Folder
-    const isInCycle = filesInCycle.has(node.id)
-    const isOrphan = orphanFilesSet.has(node.id)
+    const normalizedNodeId = normalizePath(node.id)
+    const isInCycle = hasMatchInSet(filesInCycle, normalizedNodeId)
+    const isOrphan = hasMatchInSet(orphanFilesSet, normalizedNodeId)
     const isHovered = hoveredFile === node.id
-    const isBroken = brokenFilesSet.has(node.id)
-    const isNewOrphan = newOrphansSet.has(node.id)
-    const normalizedNodeId = node.id.replace(/\\/g, '/')
-    const riskProfile =
-      riskProfileMap.get(normalizedNodeId) || riskProfileMap.get(node.id)
+    const isBroken = hasMatchInSet(brokenFilesSet, normalizedNodeId)
+    const isNewOrphan = hasMatchInSet(newOrphansSet, normalizedNodeId)
+    const reviewStory =
+      fileReviewStoryMap.get(normalizedNodeId) ||
+      fileReviewStoryMap.get(node.id)
 
     const hasStatus = isInCycle || isOrphan || isBroken || isNewOrphan
-    const riskLevel: RiskLevel | null = riskProfile
-      ? getRiskLevel(riskProfile.score)
-      : null
-    const hasHighRisk = riskLevel === 'critical' || riskLevel === 'high'
+    const showReviewIndicator = Boolean(
+      reviewStory?.showTreeIndicator &&
+      (reviewStory.alwaysShowTreeIndicator || node.isSelected || isHovered)
+    )
 
     return (
       <div
@@ -117,16 +117,15 @@ const createNodeRenderer = (
         {/* Status indicators - show if selected, hovered, has status, or has high risk */}
         <div
           className={`flex items-center gap-1 ${
-            node.isSelected || isHovered || hasStatus || hasHighRisk
+            node.isSelected || isHovered || hasStatus || showReviewIndicator
               ? 'opacity-100'
               : 'opacity-0 group-hover:opacity-100'
           } transition-opacity`}
         >
-          {/* Risk indicator dot */}
-          {riskProfile && riskLevel && (
-            <RiskIndicator
-              level={riskLevel}
-              score={riskProfile.score}
+          {/* Review indicator dot */}
+          {reviewStory?.showTreeIndicator && (
+            <ReviewIndicator
+              story={reviewStory}
               isSelected={node.isSelected}
               isHovered={isHovered}
             />
@@ -227,36 +226,29 @@ const createNodeRenderer = (
     )
   })
 
-// Helper component for risk indicator dots
-interface RiskIndicatorProps {
-  level: RiskLevel
-  score: number
+// Helper component for diagnosis-first review indicator dots
+interface ReviewIndicatorProps {
+  story: FileReviewStory
   isSelected: boolean
   isHovered: boolean
 }
 
-function RiskIndicator({
-  level,
-  score,
+function ReviewIndicator({
+  story,
   isSelected,
   isHovered
-}: RiskIndicatorProps) {
-  // Always show for Critical and High risk
-  const alwaysShow = level === 'critical' || level === 'high'
+}: ReviewIndicatorProps) {
+  const alwaysShow = story.alwaysShowTreeIndicator
 
-  // Don't show if not always visible and not hovered/selected
   if (!alwaysShow && !isSelected && !isHovered) {
     return null
   }
 
-  const getLabel = (lvl: RiskLevel): string => {
-    const labels: Record<RiskLevel, string> = {
-      critical: 'Critical Propagation Risk',
-      high: 'High Propagation Risk',
-      medium: 'Medium Propagation Risk',
-      low: 'Low Propagation Risk'
-    }
-    return labels[lvl]
+  const toneClass: Record<FileReviewStory['badgeTone'], string> = {
+    danger: 'bg-red-500',
+    warning: 'bg-orange-500',
+    info: 'bg-blue-500',
+    success: 'bg-green-500'
   }
 
   return (
@@ -264,15 +256,16 @@ function RiskIndicator({
       <Tooltip>
         <TooltipTrigger asChild>
           <span
-            className={`inline-block h-2 w-2 rounded-full ${getRiskColorClass(level)} cursor-help`}
+            className={`inline-block h-2 w-2 cursor-help rounded-full ${toneClass[story.badgeTone]}`}
           />
         </TooltipTrigger>
         <TooltipContent side='right'>
           <div className='space-y-1'>
-            <p className='font-medium'>{getLabel(level)}</p>
+            <p className='font-medium'>{story.assessment.title}</p>
             <p className='text-xs text-muted-foreground'>
-              Propagation Risk: {score.toFixed(1)}
+              {story.assessment.reviewPriority}
             </p>
+            <p className='text-xs text-muted-foreground'>{story.shortReason}</p>
           </div>
         </TooltipContent>
       </Tooltip>
@@ -312,7 +305,7 @@ export const FileTreeView = forwardRef<FileTreeViewRef, FileTreeViewProps>(
       searchQuery,
       filesInCycle,
       orphanFilesSet,
-      riskProfileMap,
+      fileReviewStoryMap,
       brokenFilesSet,
       newOrphansSet,
       isSimulating
@@ -321,7 +314,7 @@ export const FileTreeView = forwardRef<FileTreeViewRef, FileTreeViewProps>(
     const NodeRenderer = createNodeRenderer(
       filesInCycle,
       orphanFilesSet,
-      riskProfileMap,
+      fileReviewStoryMap,
       hoveredFile,
       (id) => {
         setHoveredFile(id)

@@ -157,11 +157,6 @@ export const dashboardCopy = {
       changeProfile: 'Change Profile:',
       cycles: 'Cycles:',
       criticalRisks: 'Critical Risks:'
-    },
-    profile: {
-      foundational: 'More foundational',
-      balanced: 'Balanced',
-      outward: 'More outward-facing'
     }
   },
   couplingSnapshot: {

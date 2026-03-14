@@ -18,6 +18,7 @@ import {
 
 import { dashboardCopy } from '../content/dashboardCopy'
 
+import type { ReviewThresholdCalibration } from '@/shared/lib/metric-thresholds'
 import type { EvolutionaryHotspotItem } from '@/shared/lib/utils/evolution'
 
 interface EvolutionaryHotspotsProps {
@@ -25,6 +26,7 @@ interface EvolutionaryHotspotsProps {
   isAvailable: boolean
   unavailableReason?: string | null
   onViewModule?: (modulePath: string) => void
+  thresholdCalibration?: ReviewThresholdCalibration
 }
 
 function getToneClasses(hotspot: EvolutionaryHotspotItem): string {
@@ -43,7 +45,8 @@ export function EvolutionaryHotspots({
   hotspots,
   isAvailable,
   unavailableReason,
-  onViewModule
+  onViewModule,
+  thresholdCalibration
 }: EvolutionaryHotspotsProps) {
   if (!isAvailable) {
     return (
@@ -110,7 +113,10 @@ export function EvolutionaryHotspots({
           </div>
         ) : (
           items.map((hotspot) => {
-            const riskLevel = getRiskLevel(hotspot.propagationRisk)
+            const riskLevel = getRiskLevel(
+              hotspot.propagationRisk,
+              thresholdCalibration
+            )
 
             return (
               <button

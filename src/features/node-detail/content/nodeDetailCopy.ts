@@ -24,10 +24,15 @@ export const nodeDetailCopy = {
     errorTitle: 'Failed to load source code',
     noContentTitle: 'No source content available',
     noContentDescription:
-      'The analysis result does not include readable source content for this file.',
+      'The source viewer could not load readable content for this file from the current workspace.',
     reportModeTitle: 'Source viewer unavailable in static report mode',
     reportModeDescription:
-      'Open the live application to inspect source content interactively.'
+      'Open the live application to inspect source code from the local workspace.'
+  },
+  diagnosisUnavailable: {
+    title: 'Diagnosis unavailable',
+    description:
+      'The panel cannot build a review verdict because architecture metrics for this file are unavailable in the current dataset.'
   },
   orphan: {
     sectionTitle: 'File Status',
@@ -38,7 +43,12 @@ export const nodeDetailCopy = {
       'Tip: Verify whether this is a test file, a script, or a dynamic import before deleting it. False positives may occur.'
   },
   blastRadius: {
-    sectionTitle: 'Blast Radius',
+    sectionTitle: 'Supporting Verification Signal',
+    tooltipTitle: 'Blast Radius',
+    tooltipDescription:
+      'Blast Radius estimates how many nearby files may require verification after this file changes.',
+    tooltipInterpretation:
+      'A higher score suggests a broader local impact and a larger verification surface after a change.',
     criticalTitle: 'Critical Circular Dependency',
     criticalDescription:
       'This file is part of a circular dependency chain. Changes can increase initialization, runtime, and maintenance risks.',
@@ -61,7 +71,6 @@ export const nodeDetailCopy = {
     title: 'Graph tools',
     summary:
       'Focus inward or outward relationships without leaving this panel.',
-    legacyTitle: 'Graph Actions',
     inward: 'Inward',
     outward: 'Outward',
     focusPrefix: 'Focus',

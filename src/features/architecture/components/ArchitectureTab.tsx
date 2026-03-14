@@ -4,6 +4,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton'
 
 import { architectureCopy } from '../content/architectureCopy'
 import { useArchitectureFolders } from '../hooks/useArchitectureMetrics'
+import { useModuleReviewThresholdCalibration } from '../hooks/useReviewThresholdCalibration'
 import { FolderMetricsTable } from './FolderMetricsTable'
 
 import type {
@@ -26,6 +27,7 @@ function ArchitectureSkeleton() {
 
 export function ArchitectureTab() {
   const { data, isLoading, error } = useArchitectureFolders()
+  const moduleThresholdCalibration = useModuleReviewThresholdCalibration()
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: 'riskScore',
     direction: 'desc' // Default: show highest risk first (Ca × I formula)
@@ -97,6 +99,7 @@ export function ArchitectureTab() {
           folders={data.folders}
           sortConfig={sortConfig}
           onSort={handleSort}
+          thresholdCalibration={moduleThresholdCalibration}
         />
       </div>
     </div>

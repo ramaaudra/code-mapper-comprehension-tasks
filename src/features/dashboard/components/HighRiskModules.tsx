@@ -9,14 +9,17 @@ import {
 import { AlertTriangle } from '@/shared/components/ui/icons'
 import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
 import { HEURISTIC_LABELS, METRIC_LABELS } from '@/shared/lib/metric-copy'
+import { formatReviewSignalBandRange } from '@/shared/lib/metric-thresholds'
 import { truncateMiddle } from '@/shared/lib/utils'
 import {
-  RISK_THRESHOLDS,
   getRiskColorClass,
+  getRiskDescription,
   getRiskLevel
 } from '@/shared/lib/utils/risk'
 
 import { dashboardCopy } from '../content/dashboardCopy'
+
+import type { ReviewThresholdCalibration } from '@/shared/lib/metric-thresholds'
 
 interface RiskModule {
   path: string
@@ -29,17 +32,22 @@ interface HighRiskModulesProps {
   modules: RiskModule[]
   onViewModule?: (modulePath: string) => void
   onViewArchitecture?: () => void
+  thresholdCalibration?: ReviewThresholdCalibration
 }
 
 // Get color class from unified risk system
-function getRiskScoreColor(score: number): string {
-  return getRiskColorClass(getRiskLevel(score))
+function getRiskScoreColor(
+  score: number,
+  thresholdCalibration?: ReviewThresholdCalibration
+): string {
+  return getRiskColorClass(getRiskLevel(score, thresholdCalibration))
 }
 
 export function HighRiskModules({
   modules,
   onViewModule,
-  onViewArchitecture
+  onViewArchitecture,
+  thresholdCalibration
 }: HighRiskModulesProps) {
   // Sort by derived propagation-risk heuristic (Ca × I)
   const sortedModules = [...modules]
@@ -122,24 +130,40 @@ export function HighRiskModules({
                 <p className='text-popover-foreground/80'>
                   •{' '}
                   <span className='font-medium text-red-500'>
-                    ≥{RISK_THRESHOLDS.CRITICAL}
+                    {formatReviewSignalBandRange(
+                      'propagationRisk',
+                      'critical',
+                      thresholdCalibration
+                    )}
                   </span>
                   : Critical — {HEURISTIC_LABELS.criticalPropagationRiskBand}
                   <br />•{' '}
                   <span className='font-medium text-orange-500'>
-                    {RISK_THRESHOLDS.HIGH} to &lt;{RISK_THRESHOLDS.CRITICAL}
+                    {formatReviewSignalBandRange(
+                      'propagationRisk',
+                      'high',
+                      thresholdCalibration
+                    )}
                   </span>
-                  : High spread risk
+                  : {getRiskDescription('high')}
                   <br />•{' '}
                   <span className='font-medium text-yellow-500'>
-                    {RISK_THRESHOLDS.MEDIUM} to &lt;{RISK_THRESHOLDS.HIGH}
+                    {formatReviewSignalBandRange(
+                      'propagationRisk',
+                      'medium',
+                      thresholdCalibration
+                    )}
                   </span>
-                  : Medium spread risk
+                  : {getRiskDescription('medium')}
                   <br />•{' '}
                   <span className='font-medium text-green-500'>
-                    &lt;{RISK_THRESHOLDS.MEDIUM}
+                    {formatReviewSignalBandRange(
+                      'propagationRisk',
+                      'low',
+                      thresholdCalibration
+                    )}
                   </span>
-                  : Low spread risk
+                  : {getRiskDescription('low')}
                 </p>
               </div>
               <p className='border-t border-border pt-1 text-xs text-popover-foreground/80'>
@@ -194,7 +218,7 @@ export function HighRiskModules({
                 >
                   <div className='relative h-1.5 w-full overflow-hidden rounded-full bg-primary/20'>
                     <div
-                      className={`h-full transition-all ${getRiskScoreColor(module.riskScore)}`}
+                      className={`h-full transition-all ${getRiskScoreColor(module.riskScore, thresholdCalibration)}`}
                       style={{ width: `${barWidth}%` }}
                     />
                   </div>

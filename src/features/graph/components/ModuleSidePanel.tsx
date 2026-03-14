@@ -1,4 +1,7 @@
-import { useFolderDetail } from '@/features/architecture'
+import {
+  useModuleReviewThresholdCalibration,
+  useFolderDetail
+} from '@/features/architecture'
 import { DetailPanelDisclosure } from '@/shared/components/ui/detail-panel-disclosure'
 import { DetailPanelHeader } from '@/shared/components/ui/detail-panel-header'
 import { DetailPanelSectionHeading } from '@/shared/components/ui/detail-panel-section-heading'
@@ -22,6 +25,14 @@ import { Tabs, TabsContent } from '@/shared/components/ui/tabs'
 import { decisionCopy } from '@/shared/content/decisionCopy'
 import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
 import {
+  formatReviewSignalBandRange,
+  getImpactScopeThresholdCatalog,
+  getReviewSignalDefinition,
+  getStructuralPositionBands,
+  resolveImpactScope,
+  resolveStructuralPosition
+} from '@/shared/lib/metric-thresholds'
+import {
   createDecisionAssessment,
   formatChangePressureHelper,
   formatChangePressureValue,
@@ -40,7 +51,6 @@ import {
   truncateMiddle
 } from '@/shared/lib/utils'
 import {
-  RISK_THRESHOLDS,
   calculateRiskScore,
   createRiskProfile,
   getRiskBgOpacityClass,
@@ -51,12 +61,11 @@ import {
 } from '@/shared/lib/utils/risk'
 
 import { graphCopy } from '../content/graphCopy'
+import { describeDependentImpact } from '../lib/dependent-impact-story'
 
 import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
-import type {
-  DecisionStatusTone,
-  ImpactScopeThresholds
-} from '@/shared/lib/utils'
+import type { ReviewThresholdCalibration } from '@/shared/lib/metric-thresholds'
+import type { DecisionStatusTone } from '@/shared/lib/utils'
 import type { RiskLevel } from '@/shared/types/risk'
 
 interface ModuleSidePanelProps {
@@ -77,18 +86,6 @@ interface InstabilityConfig {
   description: string
 }
 
-type DependentImpactLevel = 'low' | 'medium' | 'high' | 'critical'
-
-interface DependentImpactConfig {
-  level: DependentImpactLevel
-  title: string
-  description: string
-  tone: 'default' | 'warning' | 'danger'
-  borderClass: string
-  bgClass: string
-  textClass: string
-}
-
 const DECISION_CARD_TONE_ICON = {
   danger: <AlertTriangle className='h-4 w-4 text-red-500' />,
   warning: <AlertTriangle className='h-4 w-4 text-orange-500' />,
@@ -97,19 +94,27 @@ const DECISION_CARD_TONE_ICON = {
   default: <CheckCircle className='h-4 w-4 text-green-500' />
 } satisfies Record<DecisionStatusTone, React.ReactNode>
 
-const MODULE_IMPACT_SCOPE_THRESHOLDS: ImpactScopeThresholds = {
-  broad: 30,
-  moderate: 10
-}
+const propagationRiskSignal = getReviewSignalDefinition('propagationRisk')
+const moduleImpactScopeSignal = getImpactScopeThresholdCatalog('module')
+const structuralPositionSignal = getReviewSignalDefinition('structuralPosition')
+const structuralPositionBands = getStructuralPositionBands()
+
+const balancedBand = structuralPositionBands.find(
+  (band) => band.id === 'Balanced'
+)
+const outwardDependentBand = structuralPositionBands.find(
+  (band) => band.id === 'Outward-Dependent'
+)
 
 function getInstabilityBand(instability: number): InstabilityBand {
-  if (instability >= 0.7) {
-    return 'flexible'
+  switch (resolveStructuralPosition(instability)) {
+    case 'Outward-Dependent':
+      return 'flexible'
+    case 'Balanced':
+      return 'balanced'
+    default:
+      return 'rigid'
   }
-  if (instability >= 0.4) {
-    return 'balanced'
-  }
-  return 'rigid'
 }
 
 function getInstabilityConfig(instability: number): InstabilityConfig {
@@ -124,7 +129,7 @@ function getInstabilityConfig(instability: number): InstabilityConfig {
         textClass: 'text-sky-600',
         label: 'Flexible / Unstable',
         description:
-          'This module depends on other modules more than other modules depend on it. High instability is common in UI, route, and adapter layers and does not automatically mean high propagation risk.'
+          'This module points to more outgoing cross-module dependency edges than it receives. High instability is common in UI, route, and adapter layers and does not automatically mean high propagation risk.'
       }
     case 'balanced':
       return {
@@ -134,7 +139,7 @@ function getInstabilityConfig(instability: number): InstabilityConfig {
         textClass: 'text-slate-600',
         label: 'Balanced',
         description:
-          'This module both depends on others and is depended on by others. Review both dependents and outgoing dependencies before changing it.'
+          'Incoming and outgoing cross-module dependency edges are both meaningful. Review both dependents and outgoing dependencies before changing it.'
       }
     default:
       return {
@@ -144,7 +149,7 @@ function getInstabilityConfig(instability: number): InstabilityConfig {
         textClass: 'text-indigo-600',
         label: 'Rigid / Stable',
         description:
-          'Other modules may rely on this module more than this module relies on them. Low instability often appears in shared or foundational layers, so change impact depends heavily on Ca.'
+          'More incoming cross-module dependency edges point into this module than out of it. Low instability often appears in shared or foundational layers, so change impact depends heavily on Ca.'
       }
   }
 }
@@ -158,18 +163,24 @@ function InstabilityTooltipContent({ band }: { band: InstabilityBand }) {
       </p>
       <div className='space-y-1 border-t border-border pt-2 text-popover-foreground/80'>
         <p>
-          <strong>Rigid / Stable</strong>: I {'<'} 0.40. Other modules depend on
-          this module more than it depends on them.
+          <strong>Rigid / Stable</strong>: I {'<'}{' '}
+          {balancedBand?.min.toFixed(2) ?? '0.40'}. Incoming cross-module
+          dependency edges point here more than this module points outward.
         </p>
         <p>
-          <strong>Balanced</strong>: 0.40 to {'<'} 0.70. Incoming and outgoing
-          coupling are both significant.
+          <strong>Balanced</strong>: {balancedBand?.min.toFixed(2) ?? '0.40'} to{' '}
+          {'<'} {outwardDependentBand?.min.toFixed(2) ?? '0.70'}. Incoming and
+          outgoing coupling are both significant.
         </p>
         <p>
-          <strong>Flexible / Unstable</strong>: I {'>='} 0.70. This module
-          depends on external modules more than they depend on it.
+          <strong>Flexible / Unstable</strong>: I {'>='}{' '}
+          {outwardDependentBand?.min.toFixed(2) ?? '0.70'}. Outgoing
+          cross-module dependency edges dominate over incoming ones.
         </p>
       </div>
+      <p className='border-t border-border pt-2 text-popover-foreground/80'>
+        {structuralPositionSignal.scientificStatusNote}
+      </p>
       <p className='border-t border-border pt-2 text-popover-foreground/80'>
         <strong>Current interpretation:</strong> {band}. High instability does
         not automatically mean a risky change. Review{' '}
@@ -180,17 +191,22 @@ function InstabilityTooltipContent({ band }: { band: InstabilityBand }) {
   )
 }
 
-function PropagationRiskTooltipContent({ level }: { level: RiskLevel }) {
+function PropagationRiskTooltipContent({
+  level,
+  thresholdCalibration
+}: {
+  level: RiskLevel
+  thresholdCalibration?: ReviewThresholdCalibration
+}) {
   return (
     <div className='space-y-2 text-xs text-popover-foreground'>
       <p>
-        Propagation Risk is a derived heuristic that estimates how strongly
-        change pressure may travel through dependents. It is calculated as
+        {propagationRiskSignal.whyItExists} It is calculated as
         <strong> Ca x I</strong>.
       </p>
       <div className='space-y-1 border-t border-border pt-2 text-popover-foreground/80'>
         <p>
-          <strong>Ca</strong>: number of incoming cross-module dependencies.
+          <strong>Ca</strong>: number of incoming cross-module dependency edges.
         </p>
         <p>
           <strong>I</strong>: instability, calculated as Ce / (Ca + Ce).
@@ -198,25 +214,40 @@ function PropagationRiskTooltipContent({ level }: { level: RiskLevel }) {
       </div>
       <div className='space-y-1 border-t border-border pt-2 text-popover-foreground/80'>
         <p>
-          <strong>Critical</strong>: {'>='}
-          {RISK_THRESHOLDS.CRITICAL}
+          <strong>Critical</strong>:{' '}
+          {formatReviewSignalBandRange(
+            'propagationRisk',
+            'critical',
+            thresholdCalibration
+          )}
         </p>
         <p>
-          <strong>High</strong>: {RISK_THRESHOLDS.HIGH} to {'<'}
-          {RISK_THRESHOLDS.CRITICAL}
+          <strong>High</strong>:{' '}
+          {formatReviewSignalBandRange(
+            'propagationRisk',
+            'high',
+            thresholdCalibration
+          )}
         </p>
         <p>
-          <strong>Medium</strong>: {RISK_THRESHOLDS.MEDIUM} to {'<'}
-          {RISK_THRESHOLDS.HIGH}
+          <strong>Medium</strong>:{' '}
+          {formatReviewSignalBandRange(
+            'propagationRisk',
+            'medium',
+            thresholdCalibration
+          )}
         </p>
         <p>
-          <strong>Low</strong>: {'<'}
-          {RISK_THRESHOLDS.MEDIUM}
+          <strong>Low</strong>:{' '}
+          {formatReviewSignalBandRange(
+            'propagationRisk',
+            'low',
+            thresholdCalibration
+          )}
         </p>
       </div>
       <p className='border-t border-border pt-2 text-popover-foreground/80'>
-        These thresholds are product heuristics for review prioritization, not
-        universal scientific cutoffs.
+        {propagationRiskSignal.scientificStatusNote}
       </p>
       <p className='border-t border-border pt-2 text-popover-foreground/80'>
         <strong>Current interpretation:</strong> {getRiskLabel(level)}. A high
@@ -227,59 +258,13 @@ function PropagationRiskTooltipContent({ level }: { level: RiskLevel }) {
   )
 }
 
-function getDependentImpactConfig(ca: number): DependentImpactConfig {
-  if (ca >= 100) {
-    return {
-      level: 'critical',
-      title: 'Very High Dependent Impact',
-      description:
-        'Many other modules depend on this module. Even small changes may require broad review and regression testing.',
-      tone: 'danger',
-      borderClass: 'border-red-500/40',
-      bgClass: 'bg-red-500/5',
-      textClass: 'text-red-500'
-    }
-  }
-
-  if (ca >= 30) {
-    return {
-      level: 'high',
-      title: 'High Dependent Impact',
-      description:
-        'A substantial number of modules depend on this module. Plan careful verification before changing it.',
-      tone: 'warning',
-      borderClass: 'border-orange-500/40',
-      bgClass: 'bg-orange-500/5',
-      textClass: 'text-orange-500'
-    }
-  }
-
-  if (ca >= 10) {
-    return {
-      level: 'medium',
-      title: 'Moderate Dependent Impact',
-      description:
-        'Several modules depend on this module. Review likely dependents before changing it.',
-      tone: 'warning',
-      borderClass: 'border-yellow-500/40',
-      bgClass: 'bg-yellow-500/5',
-      textClass: 'text-yellow-500'
-    }
-  }
-
-  return {
-    level: 'low',
-    title: 'Low Dependent Impact',
-    description:
-      'Few other modules depend on this module, so review scope should stay relatively localized.',
-    tone: 'default',
-    borderClass: 'border-slate-500/40',
-    bgClass: 'bg-slate-500/5',
-    textClass: 'text-slate-500'
-  }
-}
-
-function DependentImpactTooltipContent({ ca }: { ca: number }) {
+function DependentImpactTooltipContent({
+  ca,
+  thresholdCalibration
+}: {
+  ca: number
+  thresholdCalibration?: ReviewThresholdCalibration
+}) {
   return (
     <div className='space-y-2 text-xs text-popover-foreground'>
       <p>
@@ -288,17 +273,45 @@ function DependentImpactTooltipContent({ ca }: { ca: number }) {
       </p>
       <div className='space-y-1 border-t border-border pt-2 text-popover-foreground/80'>
         <p>
-          <strong>Dependents (Ca)</strong>: number of modules that depend on
-          this module.
+          <strong>Dependents (Ca)</strong>: incoming cross-module dependency
+          edges that point into this module.
         </p>
         <p>
-          Higher values mean more modules may need review after a change,
-          regardless of Instability.
+          Higher values mean more downstream edges may need review after a
+          change, regardless of Instability.
+        </p>
+      </div>
+      <div className='space-y-1 border-t border-border pt-2 text-popover-foreground/80'>
+        <p>
+          <strong>Broad</strong>:{' '}
+          {formatReviewSignalBandRange(
+            'impactScope',
+            'Broad',
+            'module',
+            thresholdCalibration
+          )}
+        </p>
+        <p>
+          <strong>Moderate</strong>:{' '}
+          {formatReviewSignalBandRange(
+            'impactScope',
+            'Moderate',
+            'module',
+            thresholdCalibration
+          )}
+        </p>
+        <p>
+          <strong>Local</strong>:{' '}
+          {formatReviewSignalBandRange(
+            'impactScope',
+            'Local',
+            'module',
+            thresholdCalibration
+          )}
         </p>
       </div>
       <p className='border-t border-border pt-2 text-popover-foreground/80'>
-        The current impact bands are product heuristics chosen for readability
-        in the module panel.
+        {moduleImpactScopeSignal.scientificStatusNote}
       </p>
       <p className='border-t border-border pt-2 text-popover-foreground/80'>
         <strong>Current value:</strong> Ca = {ca}
@@ -368,10 +381,14 @@ function InstabilityCard({ moduleData }: InstabilityCardProps) {
 
 interface PropagationRiskCardProps {
   moduleData: FolderArchitectureMetrics
+  thresholdCalibration?: ReviewThresholdCalibration
 }
 
-function DependentImpactCard({ moduleData }: PropagationRiskCardProps) {
-  const config = getDependentImpactConfig(moduleData.ca)
+function DependentImpactCard({
+  moduleData,
+  thresholdCalibration
+}: PropagationRiskCardProps) {
+  const config = describeDependentImpact(moduleData.ca, thresholdCalibration)
 
   return (
     <MetricInsightCard
@@ -379,7 +396,7 @@ function DependentImpactCard({ moduleData }: PropagationRiskCardProps) {
       title={config.title}
       value={`Ca: ${moduleData.ca}`}
       description={config.description}
-      footer='Interpretation based on Dependents (Ca). High dependent impact can coexist with low propagation risk.'
+      footer={config.footer}
       tone={config.tone}
       titleSuffix={
         <InfoTooltip
@@ -389,7 +406,10 @@ function DependentImpactCard({ moduleData }: PropagationRiskCardProps) {
           className='max-w-sm'
           iconClassName={config.textClass}
         >
-          <DependentImpactTooltipContent ca={moduleData.ca} />
+          <DependentImpactTooltipContent
+            ca={moduleData.ca}
+            thresholdCalibration={thresholdCalibration}
+          />
         </InfoTooltip>
       }
       className={`${config.borderClass} ${config.bgClass}`}
@@ -397,18 +417,27 @@ function DependentImpactCard({ moduleData }: PropagationRiskCardProps) {
   )
 }
 
-function PropagationRiskCard({ moduleData }: PropagationRiskCardProps) {
-  const riskProfile = createRiskProfile(moduleData.folderPath, {
-    ca: moduleData.ca,
-    ce: moduleData.ce,
-    instability: moduleData.instability,
-    hasCycle: moduleData.hasCycle
-  })
+function PropagationRiskCard({
+  moduleData,
+  thresholdCalibration
+}: PropagationRiskCardProps) {
+  const riskProfile = createRiskProfile(
+    moduleData.folderPath,
+    {
+      ca: moduleData.ca,
+      ce: moduleData.ce,
+      instability: moduleData.instability,
+      hasCycle: moduleData.hasCycle
+    },
+    thresholdCalibration
+  )
   const description = moduleData.hasCycle
     ? 'This module participates in a circular dependency. Break the cycle first because changes can feed back into the same dependency chain.'
     : getRiskDescription(riskProfile.level)
   const isLowPropagationWithHighDependents =
-    riskProfile.level === 'low' && moduleData.ca >= 30
+    riskProfile.level === 'low' &&
+    resolveImpactScope(moduleData.ca, 'module', thresholdCalibration) ===
+      'Broad'
   const propagationDescription = isLowPropagationWithHighDependents
     ? 'Low propagation risk. Outward dependency pressure is limited, but many dependents still rely on this module and should be reviewed before changes.'
     : description
@@ -443,7 +472,10 @@ function PropagationRiskCard({ moduleData }: PropagationRiskCardProps) {
           className='max-w-sm'
           iconClassName={getRiskTextClass(riskProfile.level)}
         >
-          <PropagationRiskTooltipContent level={riskProfile.level} />
+          <PropagationRiskTooltipContent
+            level={riskProfile.level}
+            thresholdCalibration={thresholdCalibration}
+          />
         </InfoTooltip>
       }
       className={`${getRiskBorderClass(riskProfile.level)} ${getRiskBgOpacityClass(riskProfile.level, 5)}`}
@@ -453,22 +485,21 @@ function PropagationRiskCard({ moduleData }: PropagationRiskCardProps) {
 
 interface OverviewTabProps {
   moduleData: FolderArchitectureMetrics
+  thresholdCalibration?: ReviewThresholdCalibration
 }
 
-function OverviewTab({ moduleData }: OverviewTabProps) {
+function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
   const evolution = moduleData.evolution
   const riskScore = calculateRiskScore(moduleData.ca, moduleData.instability)
-  const decisionAssessment = evolution
-    ? createDecisionAssessment({
-        kind: 'module',
-        hasCycle: moduleData.hasCycle,
-        ca: moduleData.ca,
-        ce: moduleData.ce,
-        instability: moduleData.instability,
-        relativeChurn30d: evolution.churn30d.relativeChurn,
-        impactScopeThresholds: MODULE_IMPACT_SCOPE_THRESHOLDS
-      })
-    : null
+  const decisionAssessment = createDecisionAssessment({
+    kind: 'module',
+    hasCycle: moduleData.hasCycle,
+    ca: moduleData.ca,
+    ce: moduleData.ce,
+    instability: moduleData.instability,
+    relativeChurn30d: evolution?.churn30d.relativeChurn ?? 0,
+    thresholdCalibration
+  })
 
   return (
     <div className='space-y-4 p-4'>
@@ -508,7 +539,7 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
               tone={getImpactScopeTone(decisionAssessment.impactScope)}
               helper={
                 <span className='text-[11px] text-muted-foreground'>
-                  {formatImpactScopeHelper(moduleData.ca)}
+                  {formatImpactScopeHelper(moduleData.ca, 'module')}
                 </span>
               }
             />
@@ -538,7 +569,7 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
               )}
               helper={
                 <span className='text-[11px] text-muted-foreground'>
-                  {formatExternalRelianceHelper(moduleData.ce)}
+                  {formatExternalRelianceHelper(moduleData.ce, 'module')}
                 </span>
               }
             />
@@ -575,7 +606,10 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
           <div className='space-y-3'>
             <InstabilityCard moduleData={moduleData} />
             <DependentImpactCard moduleData={moduleData} />
-            <PropagationRiskCard moduleData={moduleData} />
+            <PropagationRiskCard
+              moduleData={moduleData}
+              thresholdCalibration={thresholdCalibration}
+            />
           </div>
           <div className='space-y-3'>
             <DetailPanelSectionHeading
@@ -636,7 +670,10 @@ function OverviewTab({ moduleData }: OverviewTabProps) {
         <>
           <InstabilityCard moduleData={moduleData} />
           <DependentImpactCard moduleData={moduleData} />
-          <PropagationRiskCard moduleData={moduleData} />
+          <PropagationRiskCard
+            moduleData={moduleData}
+            thresholdCalibration={thresholdCalibration}
+          />
           <div className='grid grid-cols-2 gap-3'>
             <MetricValueCard
               value={moduleData.fileCount}
@@ -868,6 +905,8 @@ export function ModuleSidePanel({
   onViewFile,
   moduleData
 }: ModuleSidePanelProps) {
+  const moduleThresholdCalibration = useModuleReviewThresholdCalibration()
+
   return (
     <div className='flex h-full w-full flex-col bg-background'>
       <ModuleHeader modulePath={modulePath} onClose={onClose} />
@@ -889,7 +928,10 @@ export function ModuleSidePanel({
           className='mt-0 min-h-0 flex-1 overflow-y-auto'
         >
           {moduleData ? (
-            <OverviewTab moduleData={moduleData} />
+            <OverviewTab
+              moduleData={moduleData}
+              thresholdCalibration={moduleThresholdCalibration}
+            />
           ) : (
             <div className='p-4'>
               <DetailPanelState

@@ -14,11 +14,12 @@ import {
   TrendingUp
 } from '@/shared/components/ui/icons'
 import { MetricCard } from '@/shared/components/ui/metric-card'
+import { createModuleReviewThresholdCalibration } from '@/shared/lib/metric-thresholds'
 import {
   buildEvolutionaryHotspots,
   summarizeEvolutionAvailability
 } from '@/shared/lib/utils'
-import { RISK_THRESHOLDS, calculateRiskScore } from '@/shared/lib/utils/risk'
+import { calculateRiskScore, getRiskLevel } from '@/shared/lib/utils/risk'
 
 import { dashboardCopy } from '../content/dashboardCopy'
 import { ActionableInsights } from './ActionableInsights'
@@ -99,6 +100,24 @@ export const ProjectDashboard = memo(
     const { data: architectureData } = useArchitectureFolders()
     const evolutionarySummary =
       analysisData?.evolutionaryMetrics.summary ?? null
+    const moduleThresholdCalibration = useMemo(() => {
+      if (!architectureData?.folders) {
+        return undefined
+      }
+
+      return createModuleReviewThresholdCalibration({
+        impactScopeValues: architectureData.folders.map((folder) => folder.ca),
+        changePressureValues: architectureData.folders.map(
+          (folder) => folder.evolution.churn30d.relativeChurn
+        ),
+        externalRelianceValues: architectureData.folders.map(
+          (folder) => folder.ce
+        ),
+        propagationRiskValues: architectureData.folders.map((folder) =>
+          calculateRiskScore(folder.ca, folder.instability)
+        )
+      })
+    }, [architectureData?.folders])
 
     // Calculate health breakdown
     const healthBreakdown = useMemo(() => {
@@ -130,24 +149,22 @@ export const ProjectDashboard = memo(
           instability: f.instability,
           fanIn: f.ca,
           riskScore: calculateRiskScore(f.ca, f.instability),
-          hasCycle: f.hasCycle
+          hasCycle: f.hasCycle,
+          level: getRiskLevel(
+            calculateRiskScore(f.ca, f.instability),
+            moduleThresholdCalibration
+          )
         }))
         .sort((a, b) => b.riskScore - a.riskScore)
-    }, [architectureData])
+    }, [architectureData, moduleThresholdCalibration])
 
     // Segmented risk lists for Actionable Insights (triage view)
     const criticalRisks = useMemo(() => {
-      return allRiskProfiles.filter(
-        (r) => r.riskScore >= RISK_THRESHOLDS.CRITICAL
-      )
+      return allRiskProfiles.filter((r) => r.level === 'critical')
     }, [allRiskProfiles])
 
     const warningRisks = useMemo(() => {
-      return allRiskProfiles.filter(
-        (r) =>
-          r.riskScore >= RISK_THRESHOLDS.HIGH &&
-          r.riskScore < RISK_THRESHOLDS.CRITICAL
-      )
+      return allRiskProfiles.filter((r) => r.level === 'high')
     }, [allRiskProfiles])
 
     const hotspotAvailability = useMemo(() => {
@@ -373,12 +390,14 @@ export const ProjectDashboard = memo(
                   modules={allRiskProfiles.slice(0, 5)}
                   onViewModule={onShowModuleGraph}
                   onViewArchitecture={onShowArchitecture}
+                  thresholdCalibration={moduleThresholdCalibration}
                 />
                 <EvolutionaryHotspots
                   hotspots={evolutionaryHotspots}
                   isAvailable={hotspotAvailability.isAvailable}
                   unavailableReason={hotspotAvailability.message}
                   onViewModule={onShowModuleGraph}
+                  thresholdCalibration={moduleThresholdCalibration}
                 />
               </div>
             </div>

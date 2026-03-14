@@ -25,6 +25,18 @@ export interface FileEvolutionMetrics {
   hotspotStatus: HotspotStatus
 }
 
+export interface FolderEvolutionMetrics {
+  effectiveLoc: number
+  churn30d: ChurnWindowMetrics
+  churn90d: ChurnWindowMetrics
+  relativeChurnPercentile: number
+  structuralRiskPercentile: number
+  hotspotScore: number
+  hotspotPercentile: number
+  hotspotStatus: HotspotStatus
+  changedFileCount30d: number
+}
+
 export interface EvolutionarySummary {
   availability: 'available' | 'unavailable'
   unavailableReason: string | null
