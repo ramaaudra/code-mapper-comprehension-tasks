@@ -54,10 +54,11 @@ interface ActionableInsightsProps {
   onNavigateToFile?: (fileId: string) => void
   onViewModule?: (modulePath: string) => void
   onShowArchitecture?: () => void
+  onShowCycleTriage?: (cycleId?: string) => void
 }
 
 interface InsightTarget {
-  kind: 'file' | 'module' | 'architecture'
+  kind: 'file' | 'module' | 'architecture' | 'cycles'
   value?: string
   ctaLabel: string
 }
@@ -106,8 +107,8 @@ function generateInsights(props: ActionableInsightsProps): Insight[] {
       message: dashboardCopy.actionableInsights.cycle.message(cycleCount),
       action: dashboardCopy.actionableInsights.cycle.action,
       target: {
-        kind: 'architecture',
-        ctaLabel: dashboardCopy.actionableInsights.cta.architecture
+        kind: 'cycles',
+        ctaLabel: dashboardCopy.actionableInsights.cta.cycles
       }
     })
   }
@@ -245,6 +246,11 @@ export function ActionableInsights(props: ActionableInsightsProps) {
 
     if (target.kind === 'architecture') {
       props.onShowArchitecture?.()
+      return
+    }
+
+    if (target.kind === 'cycles') {
+      props.onShowCycleTriage?.()
     }
   }
 
@@ -262,6 +268,7 @@ export function ActionableInsights(props: ActionableInsightsProps) {
       <CardContent className='space-y-3'>
         {insights.map((insight, index) => {
           const interactive = Boolean(insight.target)
+          const insightKey = `${insight.priority}-${insight.type}-${insight.message}`
 
           const content = (
             <>
@@ -299,7 +306,7 @@ export function ActionableInsights(props: ActionableInsightsProps) {
           if (interactive) {
             return (
               <button
-                key={index}
+                key={insightKey}
                 type='button'
                 onClick={() => handleInsightSelect(insight.target)}
                 className={`${className} w-full text-left`}
@@ -310,7 +317,7 @@ export function ActionableInsights(props: ActionableInsightsProps) {
           }
 
           return (
-            <div key={index} className={className}>
+            <div key={insightKey} className={className}>
               {content}
             </div>
           )

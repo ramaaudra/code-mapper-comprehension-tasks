@@ -27,6 +27,8 @@ export function useAppLogic() {
     setHighlightedModule,
     focusedModulePath,
     setFocusedModulePath,
+    selectedCycleId,
+    setSelectedCycleId,
     isTreeCollapsed,
     setIsTreeCollapsed,
     toggleTreeView,
@@ -88,6 +90,7 @@ export function useAppLogic() {
       if (!fileId || !analysisData) {
         setSelectedFileId(null)
         setSelectedNode(null)
+        setSelectedCycleId(null)
         setViewMode('overview')
         clearGraph()
         return
@@ -96,6 +99,7 @@ export function useAppLogic() {
       setViewMode('graph')
       setGraphViewMode('file')
       setFocusedModulePath(null)
+      setSelectedCycleId(null)
 
       const resolvedFileId = generateGraphForFile(fileId) || fileId
       setSelectedFileId(resolvedFileId)
@@ -115,6 +119,7 @@ export function useAppLogic() {
       generateGraphForFile,
       setFocusedModulePath,
       setGraphViewMode,
+      setSelectedCycleId,
       setSelectedFileId,
       setSelectedNode,
       setViewMode
@@ -160,6 +165,7 @@ export function useAppLogic() {
       } else {
         setSelectedNode(null)
         setHoveredFile(null)
+        setSelectedCycleId(null)
         setViewMode('overview')
       }
     }
@@ -178,6 +184,7 @@ export function useAppLogic() {
     reanalyze,
     selectedFileId,
     setHoveredFile,
+    setSelectedCycleId,
     setSelectedNode,
     setViewMode
   ])
@@ -241,6 +248,7 @@ export function useAppLogic() {
     metricsGuideMode,
     setMetricsGuideMode,
     highlightedModule,
+    selectedCycleId,
     focusedModulePath,
     setFocusedModulePath,
     clearFocusedModule,
@@ -258,6 +266,7 @@ export function useAppLogic() {
     setSelectedNode,
     setViewMode,
     setHighlightedModule,
+    setSelectedCycleId,
     setIsTreeCollapsed
   }
 }

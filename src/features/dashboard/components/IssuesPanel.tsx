@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 
+import { useCycleTriageItems } from '@/features/cycle-triage'
 import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
 import {
   Card,
   CardContent,
@@ -14,41 +16,47 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/shared/components/ui/dialog'
-import {
-  AlertTriangle,
-  ArrowRight,
-  Ghost,
-  WarningCircle
-} from '@/shared/components/ui/icons'
+import { AlertTriangle, ArrowRight, Ghost } from '@/shared/components/ui/icons'
 import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
 import { getBasename, getRelativePath } from '@/shared/lib/utils'
 
 import { dashboardCopy } from '../content/dashboardCopy'
 
-import type { AnalysisData } from '@/shared/types/analysis'
+import type {
+  AnalysisData,
+  CircularDependencyInfo
+} from '@/shared/types/analysis'
 
 interface IssuesPanelProps {
   data: AnalysisData | null
   onNavigateToFile?: (file: string) => void
+  onShowCycleTriage?: (cycleId?: string) => void
 }
 
-// Helper function to get severity badge variant
-const getSeverityBadgeVariant = (
-  severity: 'high' | 'medium' | 'low'
-): 'destructive' | 'default' | 'outline' => {
-  switch (severity) {
-    case 'high':
-      return 'destructive'
-    case 'medium':
-      return 'default'
-    case 'low':
-      return 'outline'
+const severityVariantMap = {
+  high: 'destructive',
+  medium: 'default',
+  low: 'outline'
+} as const
+
+function buildFallbackCycleTitle(depInfo: CircularDependencyInfo) {
+  const files = depInfo.files.map(getBasename)
+
+  if (files.length === 2) {
+    return `${files[0]} <-> ${files[1]} loop`
   }
+
+  return `${depInfo.cycle.slice(0, -1).map(getBasename).join(' -> ')} loop`
 }
 
-export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
-  const [circularDialogOpen, setCircularDialogOpen] = useState(false)
+export function IssuesPanel({
+  data,
+  onNavigateToFile,
+  onShowCycleTriage
+}: IssuesPanelProps) {
   const [orphansDialogOpen, setOrphansDialogOpen] = useState(false)
+  const { items: cycleItems } = useCycleTriageItems(data)
+
   if (!data?.issues) {
     return (
       <Card className='h-full'>
@@ -69,7 +77,6 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
 
   const { circularDependencies, orphans } = data.issues
 
-  // Count by severity
   const severityCounts = circularDependencies.reduce(
     (acc, dep) => {
       acc[dep.severity] = (acc[dep.severity] || 0) + 1
@@ -78,15 +85,31 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
     {} as Record<'high' | 'medium' | 'low', number>
   )
 
+  const previewItems =
+    cycleItems.length > 0
+      ? cycleItems.slice(0, 3).map((item) => ({
+          key: item.id,
+          title: item.title,
+          subtitle: item.priorityReason,
+          fixPriority: item.fixPriority,
+          onClick: () => onShowCycleTriage?.(item.id)
+        }))
+      : circularDependencies.slice(0, 3).map((depInfo, index) => ({
+          key: `${depInfo.severity}-${index}`,
+          title: buildFallbackCycleTitle(depInfo),
+          subtitle: `${depInfo.files.length} files in the loop.`,
+          fixPriority: depInfo.severity,
+          onClick: () => onShowCycleTriage?.()
+        }))
+
   return (
     <div className='space-y-4 overflow-x-hidden'>
-      {/* Circular Dependencies */}
-      <Card className='overflow-hidden'>
+      <Card className='overflow-hidden border-red-500/20 bg-red-500/5'>
         <CardHeader className='pb-3'>
-          <div className='flex items-center justify-between'>
+          <div className='flex flex-wrap items-start justify-between gap-3'>
             <div className='space-y-1'>
               <div className='flex items-center gap-2'>
-                <AlertTriangle className='h-4 w-4 text-muted-foreground' />
+                <AlertTriangle className='h-4 w-4 text-red-500' />
                 <span className='text-sm font-medium'>
                   {dashboardCopy.issuesPanel.cycles.title}
                 </span>
@@ -95,138 +118,38 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                 {dashboardCopy.issuesPanel.cycles.description}
               </p>
             </div>
-            <div className='flex items-center gap-2'>
-              {/* Severity badges in header */}
+
+            <div className='flex flex-wrap items-center justify-end gap-2'>
               {(['high', 'medium', 'low'] as const).map((severity) => {
                 const count = severityCounts[severity] || 0
                 if (count === 0) {
                   return null
                 }
+
                 return (
                   <Badge
                     key={severity}
-                    variant={getSeverityBadgeVariant(severity)}
-                    className='px-1.5 py-0 text-[10px]'
+                    variant={severityVariantMap[severity]}
+                    className='px-2 py-0.5 text-[10px]'
                   >
                     {count} {severity}
                   </Badge>
                 )
               })}
-              <Dialog
-                open={circularDialogOpen}
-                onOpenChange={setCircularDialogOpen}
-              >
-                <DialogTrigger asChild>
-                  <Badge
-                    variant={
-                      circularDependencies.length > 0
-                        ? 'destructive'
-                        : 'secondary'
-                    }
-                    className='cursor-pointer hover:opacity-80'
-                  >
-                    {circularDependencies.length}
-                  </Badge>
-                </DialogTrigger>
-                <DialogContent className='max-h-[80vh] max-w-4xl'>
-                  <DialogHeader>
-                    <DialogTitle className='flex items-center gap-2'>
-                      <AlertTriangle className='h-5 w-5 text-orange-500' />
-                      {dashboardCopy.issuesPanel.cycles.dialogTitle(
-                        circularDependencies.length
-                      )}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className='space-y-4 overflow-y-auto p-2'>
-                    {circularDependencies.length === 0 ? (
-                      <div className='py-8 text-center text-muted-foreground'>
-                        <AlertTriangle className='mx-auto h-12 w-12 opacity-50' />
-                        <p>✅ No circular dependencies found!</p>
-                        <p className='mt-1 text-xs'>
-                          Your codebase has a clean dependency structure.
-                        </p>
-                      </div>
-                    ) : (
-                      circularDependencies.map((depInfo, index) => (
-                        <div
-                          key={index}
-                          className='space-y-3 rounded-lg bg-muted/20 p-4'
-                        >
-                          <div className='flex items-center justify-between'>
-                            <div className='flex items-center gap-2'>
-                              <span className='text-sm font-semibold'>
-                                Cycle #{index + 1}
-                              </span>
-                              <Badge
-                                variant={getSeverityBadgeVariant(
-                                  depInfo.severity
-                                )}
-                                className='px-2 py-1 text-xs'
-                              >
-                                {depInfo.severity.toUpperCase()}
-                              </Badge>
-                            </div>
-                            <div className='text-xs text-muted-foreground'>
-                              Length: {depInfo.length} • Files:{' '}
-                              {depInfo.files.length}
-                            </div>
-                          </div>
 
-                          <div className='rounded-md bg-muted/50 p-3'>
-                            <p className='mb-2 text-xs font-medium text-muted-foreground'>
-                              Dependency Flow:
-                            </p>
-                            <div className='flex flex-wrap items-center gap-2 font-mono text-xs'>
-                              {depInfo.cycle.map((file, fileIndex) => (
-                                <React.Fragment key={fileIndex}>
-                                  <button
-                                    type='button'
-                                    onClick={() => {
-                                      onNavigateToFile?.(file)
-                                      setCircularDialogOpen(false)
-                                    }}
-                                    className='rounded bg-muted/30 px-2 py-1 text-left text-xs transition hover:bg-muted/50 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
-                                    title={file}
-                                  >
-                                    <span className='truncate'>
-                                      {getBasename(file)}
-                                    </span>
-                                  </button>
-                                  {fileIndex < depInfo.cycle.length - 1 && (
-                                    <ArrowRight className='h-3 w-3 text-muted-foreground' />
-                                  )}
-                                </React.Fragment>
-                              ))}
-                            </div>
-                          </div>
+              {circularDependencies.length > 0 ? (
+                <Button
+                  size='sm'
+                  onClick={() => onShowCycleTriage?.()}
+                  className='h-8 gap-1.5'
+                >
+                  {dashboardCopy.issuesPanel.cycles.cta}
+                  <ArrowRight className='h-3.5 w-3.5' />
+                </Button>
+              ) : (
+                <Badge variant='secondary'>{circularDependencies.length}</Badge>
+              )}
 
-                          <div>
-                            <p className='mb-2 text-xs font-medium text-muted-foreground'>
-                              Files Involved:
-                            </p>
-                            <div className='flex flex-wrap gap-1'>
-                              {depInfo.files.map((file, fileIndex) => (
-                                <Badge
-                                  key={fileIndex}
-                                  variant='outline'
-                                  className='cursor-pointer text-xs hover:border-primary/50 hover:text-primary'
-                                  onClick={() => {
-                                    onNavigateToFile?.(file)
-                                    setCircularDialogOpen(false)
-                                  }}
-                                  title={file}
-                                >
-                                  {getBasename(file)}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
               <InfoTooltip title='What is Circular Dependency?' side='top'>
                 <div className='space-y-2'>
                   <p className='text-xs text-popover-foreground'>
@@ -240,170 +163,129 @@ export function IssuesPanel({ data, onNavigateToFile }: IssuesPanelProps) {
                     <p className='text-popover-foreground/80'>
                       • Creates tight coupling between modules
                       <br />• Makes code harder to test in isolation
-                      <br />• Can cause stack overflow errors
-                      <br />• Difficult to extract and reuse code
+                      <br />• Can cause initialization surprises
+                      <br />• Makes refactors less predictable
                     </p>
                   </div>
-                  <p className='pt-1 text-xs text-popover-foreground/80'>
-                    Break cycles by introducing abstractions or restructuring
-                    dependencies.
-                  </p>
                 </div>
               </InfoTooltip>
             </div>
           </div>
         </CardHeader>
-        {circularDependencies.length === 0 && (
-          <CardContent>
+
+        <CardContent className='space-y-3'>
+          {circularDependencies.length === 0 ? (
             <div className='rounded-md border border-emerald-500/20 bg-emerald-500/5 px-3 py-3 text-sm text-muted-foreground'>
               {dashboardCopy.issuesPanel.cycles.empty}
             </div>
-          </CardContent>
-        )}
-      </Card>
-
-      <div className='space-y-4'>
-        {/* Orphaned Files */}
-        <Card className='overflow-hidden'>
-          <CardHeader className='pb-3'>
-            <div className='flex items-center justify-between'>
-              <div className='space-y-1'>
-                <div className='flex items-center gap-2'>
-                  <Ghost className='h-4 w-4 text-muted-foreground' />
-                  <span className='text-sm font-medium'>
-                    {dashboardCopy.issuesPanel.cleanup.title}
-                  </span>
-                </div>
-                <p className='text-xs text-muted-foreground'>
-                  {dashboardCopy.issuesPanel.cleanup.description}
-                </p>
-              </div>
-              <div className='flex items-center gap-2'>
-                <Dialog
-                  open={orphansDialogOpen}
-                  onOpenChange={setOrphansDialogOpen}
-                >
-                  <DialogTrigger asChild>
-                    <Badge
-                      variant={orphans.length > 0 ? 'outline' : 'secondary'}
-                      className='cursor-pointer hover:opacity-80'
-                    >
-                      {orphans.length}
-                    </Badge>
-                  </DialogTrigger>
-                  <DialogContent className='max-w-2xl'>
-                    <DialogHeader>
-                      <DialogTitle className='flex items-center gap-2'>
-                        <Ghost className='h-5 w-5 text-gray-500' />
-                        Orphaned Files ({orphans.length})
-                      </DialogTitle>
-                    </DialogHeader>
-                    <div className='max-h-96 space-y-2 overflow-y-auto p-2'>
-                      {orphans.length === 0 ? (
-                        <div className='py-8 text-center text-muted-foreground'>
-                          <Ghost className='mx-auto h-12 w-12 opacity-50' />
-                          <p>✅ No orphaned files found!</p>
-                          <p className='mt-1 text-xs'>
-                            All files are properly referenced.
-                          </p>
-                        </div>
-                      ) : (
-                        orphans.map((file: string, index: number) => (
-                          <button
-                            key={index}
-                            type='button'
-                            onClick={() => {
-                              onNavigateToFile?.(file)
-                              setOrphansDialogOpen(false)
-                            }}
-                            className='w-full rounded-lg bg-muted/20 px-3 py-3 text-left transition hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
-                            title={file}
-                          >
-                            <span className='mb-1 block truncate text-sm font-medium'>
-                              {getBasename(file)}
-                            </span>
-                            <span className='block break-all font-mono text-xs leading-tight text-foreground/70'>
-                              {getRelativePath(file)}
-                            </span>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <InfoTooltip title='What are Orphaned Files?' side='top'>
-                  <div className='space-y-2'>
-                    <p className='text-xs text-popover-foreground'>
-                      Orphaned files are files that are not reachable from any
-                      entry point. They are not imported by other files and are
-                      not application entry points.
-                    </p>
-                    <div className='space-y-1 border-t border-border pt-1 text-xs'>
-                      <p className='font-semibold text-popover-foreground'>
-                        Why should you care?
-                      </p>
-                      <p className='text-popover-foreground/80'>
-                        • Increases bundle size without being used
-                        <br />• Confuses developers about codebase structure
-                        <br />• May be dead code that was forgotten
-                      </p>
-                    </div>
-                    <div className='space-y-1 border-t border-border pt-1 text-xs'>
-                      <div className='flex items-center gap-1'>
-                        <WarningCircle
-                          className='h-3 w-3 text-yellow-500'
-                          weight='fill'
-                        />
-                        <p className='font-semibold text-popover-foreground'>
-                          False Positives (check before deleting!)
+          ) : (
+            <>
+              <div className='space-y-2'>
+                {previewItems.map((item) => (
+                  <button
+                    key={item.key}
+                    type='button'
+                    onClick={item.onClick}
+                    className='w-full rounded-lg border border-border/60 bg-background/70 px-3 py-3 text-left transition hover:border-primary/35 hover:bg-background'
+                  >
+                    <div className='flex flex-wrap items-start justify-between gap-2'>
+                      <div className='min-w-0 space-y-1'>
+                        <p className='truncate text-sm font-medium text-foreground'>
+                          {item.title}
+                        </p>
+                        <p className='text-xs text-muted-foreground'>
+                          {item.subtitle}
                         </p>
                       </div>
-                      <p className='text-popover-foreground/80'>
-                        • Test files (*.test.ts, *.spec.tsx)
-                        <br />• Scripts (build, deploy, migration)
-                        <br />• Dynamic imports (import('./module'))
-                        <br />• Config files (vite.config.ts, etc.)
-                        <br />• Type definition files (*.d.ts)
-                      </p>
+                      <Badge
+                        variant={severityVariantMap[item.fixPriority]}
+                        className='px-2 py-0.5 text-[10px] uppercase'
+                      >
+                        {item.fixPriority}
+                      </Badge>
                     </div>
-                    <p className='pt-1 text-xs text-popover-foreground/80'>
-                      Review before deleting - make sure it's not a test file or
-                      script that is intentionally standalone.
-                    </p>
-                  </div>
-                </InfoTooltip>
-              </div>
-            </div>
-          </CardHeader>
-          {orphans.length > 0 && (
-            <CardContent>
-              <div className='space-y-2'>
-                {orphans.slice(0, 4).map((file, index) => (
-                  <button
-                    key={index}
-                    type='button'
-                    onClick={() => onNavigateToFile?.(file)}
-                    className='w-full rounded-md bg-muted/20 px-3 py-2 text-left text-sm transition hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
-                    title={file}
-                  >
-                    <span className='block truncate font-medium'>
-                      {getBasename(file)}
-                    </span>
-                    <span className='block break-all font-mono text-xs leading-tight text-foreground/70'>
-                      {getRelativePath(file)}
-                    </span>
                   </button>
                 ))}
-                {orphans.length > 4 && (
-                  <p className='text-center text-xs text-muted-foreground'>
-                    +{orphans.length - 4} more files
-                  </p>
-                )}
               </div>
-            </CardContent>
+
+              <p className='text-xs text-muted-foreground'>
+                {dashboardCopy.issuesPanel.cycles.previewHint}
+              </p>
+            </>
           )}
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
+
+      <Card className='overflow-hidden'>
+        <CardHeader className='pb-3'>
+          <div className='flex items-center justify-between gap-3'>
+            <div className='space-y-1'>
+              <div className='flex items-center gap-2'>
+                <Ghost className='h-4 w-4 text-muted-foreground' />
+                <span className='text-sm font-medium'>
+                  {dashboardCopy.issuesPanel.cleanup.title}
+                </span>
+              </div>
+              <p className='text-xs text-muted-foreground'>
+                {dashboardCopy.issuesPanel.cleanup.description}
+              </p>
+            </div>
+
+            <Dialog
+              open={orphansDialogOpen}
+              onOpenChange={setOrphansDialogOpen}
+            >
+              <DialogTrigger asChild>
+                <Badge
+                  variant={orphans.length > 0 ? 'outline' : 'secondary'}
+                  className='cursor-pointer hover:opacity-80'
+                >
+                  {orphans.length}
+                </Badge>
+              </DialogTrigger>
+              <DialogContent className='max-w-2xl'>
+                <DialogHeader>
+                  <DialogTitle className='flex items-center gap-2'>
+                    <Ghost className='h-5 w-5 text-gray-500' />
+                    Orphaned Files ({orphans.length})
+                  </DialogTitle>
+                </DialogHeader>
+                <div className='max-h-96 space-y-2 overflow-y-auto p-2'>
+                  {orphans.length === 0 ? (
+                    <div className='py-8 text-center text-muted-foreground'>
+                      <Ghost className='mx-auto h-12 w-12 opacity-50' />
+                      <p>✅ No orphaned files found!</p>
+                      <p className='mt-1 text-xs'>
+                        All files are properly referenced.
+                      </p>
+                    </div>
+                  ) : (
+                    orphans.map((file: string) => (
+                      <button
+                        key={file}
+                        type='button'
+                        onClick={() => {
+                          onNavigateToFile?.(file)
+                          setOrphansDialogOpen(false)
+                        }}
+                        className='w-full rounded-lg bg-muted/20 px-3 py-3 text-left transition hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
+                        title={file}
+                      >
+                        <p className='text-sm font-medium text-foreground'>
+                          {getBasename(file)}
+                        </p>
+                        <p className='mt-1 truncate text-xs text-muted-foreground'>
+                          {getRelativePath(file)}
+                        </p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+      </Card>
     </div>
   )
 }

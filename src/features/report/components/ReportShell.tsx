@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react'
 
 import { ArchitecturePage } from '@/features/architecture/components/ArchitecturePage'
+import { CycleTriageWorkspace } from '@/features/cycle-triage'
 import { DashboardSkeleton } from '@/features/dashboard'
 import { ProjectDashboard } from '@/features/dashboard/components/ProjectDashboard'
 import { FileTreeSkeleton } from '@/features/file-analysis'
@@ -99,6 +100,14 @@ export function ReportShell() {
         onModeChange={explorer.handleMetricsGuideModeChange}
       />
     </Suspense>
+  ) : explorer.viewMode === 'cycle-triage' ? (
+    <CycleTriageWorkspace
+      analysisData={analysisData}
+      selectedCycleId={explorer.selectedCycleId}
+      onSelectedCycleIdChange={explorer.handleCycleSelection}
+      onBack={explorer.handleBackFromUtility}
+      onNavigateToFile={explorer.navigateToFile}
+    />
   ) : explorer.viewMode === 'setup-guide' ? (
     <Suspense fallback={<DashboardSkeleton />}>
       <SetupGuidePage
@@ -119,6 +128,9 @@ export function ReportShell() {
         onNavigateToFile={explorer.navigateToFile}
         onShowArchitecture={explorer.handleShowArchitecture}
         onShowMetricsGuide={() => explorer.handleShowMetricsGuide('overview')}
+        onShowCycleTriage={(cycleId) =>
+          explorer.handleShowCycleTriage(cycleId, 'overview')
+        }
         onShowModuleGraph={explorer.handleShowModuleGraph}
         isLayoutTransitioning={ui.isLayoutTransitioning}
       />
@@ -139,7 +151,9 @@ export function ReportShell() {
       onShowGraph={explorer.handleShowGraph}
       onShowArchitecture={explorer.handleShowArchitecture}
       onShowMetricsGuide={explorer.handleShowMetricsGuide}
-      isTreeCollapsed={explorer.isTreeCollapsed}
+      isTreeCollapsed={
+        explorer.viewMode === 'cycle-triage' || explorer.isTreeCollapsed
+      }
       onToggleTree={explorer.toggleTreeView}
       onShowSetupGuide={explorer.handleShowSetupGuide}
       hasUnresolvedImports={explorer.hasUnresolvedImports}

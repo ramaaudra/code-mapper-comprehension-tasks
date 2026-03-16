@@ -18,15 +18,10 @@ import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
 import { getBasename, getRelativePath } from '@/shared/lib/utils'
 
 import { dashboardCopy } from '../content/dashboardCopy'
-
-interface CouplingBucket {
-  label: string
-  range: string
-  count: number
-  percentage: number
-  color: string
-  files: Array<{ path: string; count: number }>
-}
+import {
+  couplingBucketDefinitions,
+  type CouplingBucket
+} from '../lib/couplingBuckets'
 
 interface CouplingDistributionProps {
   avgDependencies: number
@@ -78,19 +73,17 @@ export function CouplingDistribution({
                 <p className='font-semibold text-popover-foreground'>
                   Coupling Levels:
                 </p>
-                <p className='text-popover-foreground/80'>
-                  • <span className='font-medium text-green-500'>Loose</span>:
-                  0-2 dependencies — healthy
-                  <br />•{' '}
-                  <span className='font-medium text-yellow-500'>Medium</span>:
-                  3-6 dependencies — moderate
-                  <br />•{' '}
-                  <span className='font-medium text-orange-500'>Tight</span>:
-                  7-10 dependencies — high
-                  <br />•{' '}
-                  <span className='font-medium text-red-500'>Heavy</span>: 10+
-                  dependencies — very high
-                </p>
+                <div className='space-y-0.5 text-popover-foreground/80'>
+                  {couplingBucketDefinitions.map((bucket) => (
+                    <p key={bucket.label}>
+                      •{' '}
+                      <span className={`font-medium ${bucket.textColor}`}>
+                        {bucket.label}
+                      </span>
+                      : {bucket.range} dependencies — {bucket.descriptor}
+                    </p>
+                  ))}
+                </div>
               </div>
               <p className='pt-1 text-xs text-popover-foreground/80'>
                 Lower coupling improves maintainability and reduces the impact

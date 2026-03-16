@@ -22,6 +22,10 @@ import {
 import { calculateRiskScore, getRiskLevel } from '@/shared/lib/utils/risk'
 
 import { dashboardCopy } from '../content/dashboardCopy'
+import {
+  buildCouplingDistribution,
+  type CouplingBucketFile
+} from '../lib/couplingBuckets'
 import { ActionableInsights } from './ActionableInsights'
 import { ArchitectureHealthScore } from './ArchitectureHealthScore'
 import { CouplingDistribution } from './CouplingDistribution'
@@ -36,11 +40,6 @@ interface OverviewSectionHeaderProps {
   eyebrow: string
   title: string
   description: string
-}
-
-interface CouplingBucketFile {
-  path: string
-  count: number
 }
 
 function OverviewSectionHeader({
@@ -78,6 +77,7 @@ interface ProjectDashboardProps {
   onNavigateToFile: (fileId: string) => void
   onShowArchitecture?: () => void
   onShowMetricsGuide?: () => void
+  onShowCycleTriage?: (cycleId?: string) => void
   onShowModuleGraph?: (modulePath: string) => void
   isLayoutTransitioning?: boolean
 }
@@ -94,6 +94,7 @@ export const ProjectDashboard = memo(
     onNavigateToFile,
     onShowArchitecture,
     onShowMetricsGuide,
+    onShowCycleTriage,
     onShowModuleGraph,
     isLayoutTransitioning
   }: ProjectDashboardProps) {
@@ -128,7 +129,7 @@ export const ProjectDashboard = memo(
       const folders = architectureData.folders
       const avgInstability =
         folders.reduce((sum, f) => sum + f.instability, 0) / folders.length
-      const cycleCount = folders.filter((f) => f.hasCycle).length
+      const cycleCount = analysisData?.issues?.circularDependencies.length ?? 0
 
       return {
         stabilityScore: avgInstability,
@@ -190,29 +191,16 @@ export const ProjectDashboard = memo(
         }
       }
 
-      const depCounts = Object.entries(analysisData.dependencyMap).map(
-        ([path, deps]) => ({
-          path,
-          count: deps.length
-        })
-      )
+      const depCounts: CouplingBucketFile[] = Object.entries(
+        analysisData.dependencyMap
+      ).map(([path, deps]) => ({
+        path,
+        count: deps.length
+      }))
 
       const sortedByCount = [...depCounts].sort((a, b) => b.count - a.count)
 
-      const toBucketFiles = (items: CouplingBucketFile[]) =>
-        [...items].sort((a, b) => b.count - a.count)
-
       const total = depCounts.length
-      const looseFiles = depCounts.filter((d) => d.count <= 2)
-      const mediumFiles = depCounts.filter((d) => d.count > 2 && d.count <= 6)
-      const tightFiles = depCounts.filter((d) => d.count > 6 && d.count <= 10)
-      const heavyFiles = depCounts.filter((d) => d.count > 10)
-
-      const loose = looseFiles.length
-      const medium = mediumFiles.length
-      const tight = tightFiles.length
-      const heavy = heavyFiles.length
-
       const avgDeps =
         depCounts.reduce((sum, d) => sum + d.count, 0) / Math.max(total, 1)
       const mostCoupled = sortedByCount[0]
@@ -228,40 +216,7 @@ export const ProjectDashboard = memo(
       return {
         avgDependencies: avgDeps,
         godObjects,
-        distribution: [
-          {
-            label: 'Loose',
-            range: '1-2',
-            count: loose,
-            percentage: (loose / total) * 100,
-            color: 'bg-green-500',
-            files: toBucketFiles(looseFiles)
-          },
-          {
-            label: 'Medium',
-            range: '3-5',
-            count: medium,
-            percentage: (medium / total) * 100,
-            color: 'bg-yellow-500',
-            files: toBucketFiles(mediumFiles)
-          },
-          {
-            label: 'Tight',
-            range: '6-10',
-            count: tight,
-            percentage: (tight / total) * 100,
-            color: 'bg-orange-500',
-            files: toBucketFiles(tightFiles)
-          },
-          {
-            label: 'Heavy',
-            range: '10+',
-            count: heavy,
-            percentage: (heavy / total) * 100,
-            color: 'bg-red-500',
-            files: toBucketFiles(heavyFiles)
-          }
-        ],
+        distribution: buildCouplingDistribution(depCounts),
         mostCoupledFile: mostCoupled
       }
     }, [analysisData])
@@ -357,6 +312,7 @@ export const ProjectDashboard = memo(
                 onNavigateToFile={onNavigateToFile}
                 onViewModule={onShowModuleGraph}
                 onShowArchitecture={onShowArchitecture}
+                onShowCycleTriage={onShowCycleTriage}
               />
             </div>
 
@@ -411,6 +367,7 @@ export const ProjectDashboard = memo(
               <IssuesPanel
                 data={analysisData}
                 onNavigateToFile={onNavigateToFile}
+                onShowCycleTriage={onShowCycleTriage}
               />
             </div>
 

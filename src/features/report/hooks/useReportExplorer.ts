@@ -44,6 +44,8 @@ export function useReportExplorer() {
     setHighlightedModule: ui.setHighlightedModule,
     focusedModulePath: ui.focusedModulePath,
     setFocusedModulePath: ui.setFocusedModulePath,
+    selectedCycleId: ui.selectedCycleId,
+    setSelectedCycleId: ui.setSelectedCycleId,
     clearGraph,
     generateGraphForFile,
     isTreeCollapsed: ui.isTreeCollapsed,

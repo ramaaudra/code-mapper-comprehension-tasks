@@ -49,6 +49,12 @@ export function resolveExplorerContextChip({
   currentHash: _currentHash,
   hasUnresolvedImports: _hasUnresolvedImports
 }: ResolveExplorerContextChipOptions): ExplorerContextChip | null {
+  if (viewMode === 'cycle-triage') {
+    return {
+      label: shellCopy.contextChips.cycles.triage
+    }
+  }
+
   if (viewMode === 'graph') {
     if (graphViewMode === 'module') {
       return {

@@ -42,6 +42,8 @@ interface UseExplorerControllerOptions {
   setFocusedModulePath:
     | Dispatch<SetStateAction<string | null>>
     | ((value: string | null) => void)
+  selectedCycleId: string | null
+  setSelectedCycleId: Dispatch<SetStateAction<string | null>>
   clearFocusedModule?: () => void
   clearGraph: () => void
   generateGraphForFile: (
@@ -71,6 +73,8 @@ export function useExplorerController({
   setHighlightedModule,
   focusedModulePath,
   setFocusedModulePath,
+  selectedCycleId,
+  setSelectedCycleId,
   clearFocusedModule,
   clearGraph,
   generateGraphForFile,
@@ -162,6 +166,7 @@ export function useExplorerController({
         clearUtilityHash()
         setSelectedFileId(null)
         setSelectedNode(null)
+        setSelectedCycleId(null)
         resetModulePanel()
         setViewMode('overview')
         clearGraph()
@@ -172,6 +177,7 @@ export function useExplorerController({
       setViewMode('graph')
       setGraphViewMode('file')
       setFocusedModulePath(null)
+      setSelectedCycleId(null)
       resetModulePanel()
 
       const matchedFileId = resolveFileId(fileId)
@@ -192,6 +198,7 @@ export function useExplorerController({
       resolveNode,
       setFocusedModulePath,
       setGraphViewMode,
+      setSelectedCycleId,
       setSelectedFileId,
       setSelectedNode,
       setViewMode
@@ -225,10 +232,12 @@ export function useExplorerController({
     setViewMode('overview')
     setSelectedFileId(null)
     setSelectedNode(null)
+    setSelectedCycleId(null)
     clearGraph()
   }, [
     clearGraph,
     clearUtilityHash,
+    setSelectedCycleId,
     setSelectedFileId,
     setSelectedNode,
     setViewMode
@@ -239,22 +248,32 @@ export function useExplorerController({
     setViewMode('graph')
     setGraphViewMode('file')
     setHighlightedModule(null)
-  }, [clearUtilityHash, setGraphViewMode, setHighlightedModule, setViewMode])
+    setSelectedCycleId(null)
+  }, [
+    clearUtilityHash,
+    setGraphViewMode,
+    setHighlightedModule,
+    setSelectedCycleId,
+    setViewMode
+  ])
 
   const handleShowArchitecture = useCallback(() => {
     clearUtilityHash()
+    setSelectedCycleId(null)
     setViewMode('architecture')
-  }, [clearUtilityHash, setViewMode])
+  }, [clearUtilityHash, setSelectedCycleId, setViewMode])
 
   const handleShowSetupGuide = useCallback(
     (sourceView?: NonUtilityViewMode) => {
       clearUtilityHash()
+      setSelectedCycleId(null)
       setUtilityReturnViewMode(resolveUtilitySourceView(sourceView))
       setViewMode('setup-guide')
     },
     [
       clearUtilityHash,
       resolveUtilitySourceView,
+      setSelectedCycleId,
       setUtilityReturnViewMode,
       setViewMode
     ]
@@ -270,6 +289,7 @@ export function useExplorerController({
       const nextMode = hashMode ?? 'quick'
 
       setUtilityReturnViewMode(nextSource)
+      setSelectedCycleId(null)
       setMetricsGuideMode(nextMode)
       if (typeof window !== 'undefined') {
         window.history.replaceState(null, '', buildMetricsGuideHash(nextMode))
@@ -279,6 +299,23 @@ export function useExplorerController({
     [
       resolveUtilitySourceView,
       setMetricsGuideMode,
+      setSelectedCycleId,
+      setUtilityReturnViewMode,
+      setViewMode
+    ]
+  )
+
+  const handleShowCycleTriage = useCallback(
+    (cycleId?: string | null, sourceView?: NonUtilityViewMode) => {
+      clearUtilityHash()
+      setUtilityReturnViewMode(resolveUtilitySourceView(sourceView))
+      setSelectedCycleId(cycleId ?? null)
+      setViewMode('cycle-triage')
+    },
+    [
+      clearUtilityHash,
+      resolveUtilitySourceView,
+      setSelectedCycleId,
       setUtilityReturnViewMode,
       setViewMode
     ]
@@ -303,6 +340,7 @@ export function useExplorerController({
       setGraphViewMode('module')
       setFocusedModulePath(modulePath)
       setHighlightedModule(modulePath)
+      setSelectedCycleId(null)
 
       setTimeout(() => {
         setHighlightedModule(null)
@@ -313,6 +351,7 @@ export function useExplorerController({
       setFocusedModulePath,
       setGraphViewMode,
       setHighlightedModule,
+      setSelectedCycleId,
       setViewMode
     ]
   )
@@ -348,7 +387,11 @@ export function useExplorerController({
   }, [isPrimaryViewMode, viewMode])
 
   const activeUtilityViewMode = useMemo<UtilityExplorerViewMode | null>(() => {
-    if (viewMode === 'metrics-guide' || viewMode === 'setup-guide') {
+    if (
+      viewMode === 'metrics-guide' ||
+      viewMode === 'setup-guide' ||
+      viewMode === 'cycle-triage'
+    ) {
       return viewMode
     }
 
@@ -377,6 +420,7 @@ export function useExplorerController({
     focusedModulePath,
     isTreeCollapsed,
     selectedNode,
+    selectedCycleId,
     selectedModuleForPanel,
     selectedModuleData,
     fileCount,
@@ -386,6 +430,7 @@ export function useExplorerController({
     handleShowOverview,
     handleShowGraph,
     handleShowArchitecture,
+    handleShowCycleTriage,
     handleShowSetupGuide,
     handleShowMetricsGuide,
     handleBackFromUtility,
@@ -395,6 +440,7 @@ export function useExplorerController({
     handleModulePanelClose,
     handleModuleViewFile,
     handleGraphViewModeChange,
+    handleCycleSelection: setSelectedCycleId,
     handleDetailClose,
     toggleTreeView
   }

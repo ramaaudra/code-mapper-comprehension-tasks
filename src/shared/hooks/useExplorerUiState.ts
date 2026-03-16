@@ -35,6 +35,8 @@ export interface ExplorerUiState {
   setHighlightedModule: Dispatch<SetStateAction<string | null>>
   focusedModulePath: string | null
   setFocusedModulePath: Dispatch<SetStateAction<string | null>>
+  selectedCycleId: string | null
+  setSelectedCycleId: Dispatch<SetStateAction<string | null>>
   isTreeCollapsed: boolean
   setIsTreeCollapsed: Dispatch<SetStateAction<boolean>>
   toggleTreeView: () => void
@@ -65,6 +67,7 @@ export function useExplorerUiState({
   const [focusedModulePath, setFocusedModulePath] = useState<string | null>(
     null
   )
+  const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null)
   const [isTreeCollapsed, setIsTreeCollapsed] = useState(initialTreeCollapsed)
 
   const toggleTreeView = useCallback(() => {
@@ -89,6 +92,8 @@ export function useExplorerUiState({
     setHighlightedModule,
     focusedModulePath,
     setFocusedModulePath,
+    selectedCycleId,
+    setSelectedCycleId,
     isTreeCollapsed,
     setIsTreeCollapsed,
     toggleTreeView,

@@ -2,7 +2,10 @@ export type ExplorerRuntimeMode = 'live' | 'report'
 
 export type PrimaryExplorerViewMode = 'overview' | 'graph' | 'architecture'
 
-export type UtilityExplorerViewMode = 'metrics-guide' | 'setup-guide'
+export type UtilityExplorerViewMode =
+  | 'metrics-guide'
+  | 'setup-guide'
+  | 'cycle-triage'
 
 export type ExplorerViewMode = PrimaryExplorerViewMode | UtilityExplorerViewMode
 

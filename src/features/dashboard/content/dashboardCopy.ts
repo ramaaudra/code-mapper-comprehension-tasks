@@ -45,7 +45,8 @@ export const dashboardCopy = {
     cta: {
       file: 'Open file',
       module: 'Open module',
-      architecture: 'Open architecture'
+      architecture: 'Open architecture',
+      cycles: 'Review cycles'
     },
     cycle: {
       message: (count: number) =>
@@ -140,9 +141,12 @@ export const dashboardCopy = {
     emptyStateDescription: 'No analysis data available',
     cycles: {
       title: 'Dependency cycles to fix',
-      description: 'Break these first to reduce coordination and testing cost.',
+      description:
+        'Break these first to reduce coordination cost and make refactors easier to reason about.',
       empty: 'No dependency cycles detected.',
-      dialogTitle: (count: number) => `Circular Dependencies (${count})`
+      cta: 'Review cycles',
+      previewHint:
+        'Open the triage workspace to compare loops, inspect the cycle graph, and decide where to investigate first.'
     },
     cleanup: {
       title: 'Cleanup candidates',

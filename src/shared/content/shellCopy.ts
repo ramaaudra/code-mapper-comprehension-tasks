@@ -40,6 +40,9 @@ export const shellCopy = {
     setup: {
       ready: 'Setup: Analysis Ready',
       warnings: 'Setup: Warnings Detected'
+    },
+    cycles: {
+      triage: 'Cycles: Triage Workspace'
     }
   },
   actions: {
