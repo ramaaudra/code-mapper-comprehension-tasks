@@ -1,6 +1,7 @@
 import { getRelativePath } from '@/shared/lib/utils'
 
 import { cycleTriageCopy } from '../content/cycleTriageCopy'
+import { CYCLE_GRAPH_CHEVRON_MARKER } from '../lib/cycle-graph-marker'
 import {
   buildCycleGraphModel,
   type CycleGraphEdgeModel
@@ -15,6 +16,17 @@ interface CycleGraphProps {
 
 const NODE_WIDTH = 140
 const NODE_HEIGHT = 40
+
+function buildLoopSummary(item: CycleTriageItem) {
+  if (item.files.length === 2) {
+    const [firstFile = '', secondFile = ''] = item.files
+    const firstBasename = firstFile.split('/').pop() ?? firstFile
+    const secondBasename = secondFile.split('/').pop() ?? secondFile
+    return `${firstBasename} imports ${secondBasename}, and ${secondBasename} imports ${firstBasename}.`
+  }
+
+  return `Follow the loop in order: ${item.routeLabel}.`
+}
 
 function renderEdge(
   edge: CycleGraphEdgeModel,
@@ -55,90 +67,55 @@ export function CycleGraph({ item, showNearbyDependents }: CycleGraphProps) {
   return (
     <div className='overflow-hidden rounded-xl border border-border/70 bg-muted/20'>
       <div className='border-b border-border/60 bg-background/60 px-4 py-3'>
-        <div className='flex flex-wrap items-center gap-2 text-xs'>
-          <span className='rounded-full border border-border/70 bg-background px-2 py-0.5 font-medium text-foreground'>
-            {cycleTriageCopy.detail.routeLabel}
-          </span>
-          <code className='whitespace-normal break-all rounded-md border border-border/70 bg-muted/40 px-2.5 py-1 text-[11px] text-foreground'>
-            {item.routeLabel}
-          </code>
-        </div>
+        <p className='text-sm text-foreground'>{buildLoopSummary(item)}</p>
         <p className='mt-2 text-xs text-muted-foreground'>
           {cycleTriageCopy.detail.directionHint}
           {showNearbyDependents && model.hiddenNearbyCount > 0
             ? ` ${cycleTriageCopy.detail.nearbyLimitHint.replace('{visible}', String(model.visibleNearbyCount)).replace('{total}', String(item.nearbyFiles.length))}`
             : ''}
         </p>
-        <div className='mt-2 flex flex-wrap items-center gap-2 text-[11px]'>
-          <span className='rounded-full border border-border/70 bg-background px-2 py-0.5 font-medium text-foreground'>
-            {cycleTriageCopy.detail.cycleRoutesShown}
-          </span>
-          {model.cycleRouteLabels.map((route) => (
-            <code
-              key={`${route.source}->${route.target}`}
-              className='rounded-md border border-border/70 bg-muted/40 px-2.5 py-1 text-foreground'
-            >
-              {route.label}
-            </code>
-          ))}
-        </div>
-        {model.recommendedRouteLabel ? (
-          <div className='mt-2 flex flex-wrap items-center gap-2 text-[11px]'>
-            <span className='rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 font-medium text-red-600 dark:text-red-300'>
-              {cycleTriageCopy.detail.inspectFirst}
-            </span>
-            <code className='rounded-md border border-red-500/25 bg-red-500/5 px-2.5 py-1 text-foreground'>
-              {model.recommendedRouteLabel}
-            </code>
-          </div>
-        ) : null}
-        {showNearbyDependents && model.nearbyRouteLabels.length > 0 ? (
-          <div className='mt-2 flex flex-wrap items-center gap-2 text-[11px]'>
-            <span className='rounded-full border border-border/70 bg-background px-2 py-0.5 font-medium text-foreground'>
-              {cycleTriageCopy.detail.nearbyRoutesShown}
-            </span>
-            {model.nearbyRouteLabels.map((route) => (
-              <code
-                key={`${route.source}->${route.target}`}
-                className='rounded-md border border-border/70 bg-muted/30 px-2.5 py-1 text-muted-foreground'
-              >
-                {route.label}
-              </code>
-            ))}
-          </div>
-        ) : null}
       </div>
       <svg
         viewBox={`0 0 ${model.width} ${model.height}`}
-        className='h-[360px] w-full'
+        className={
+          item.files.length === 2 ? 'h-[300px] w-full' : 'h-[360px] w-full'
+        }
         role='img'
         aria-label='Cycle graph'
       >
         <defs>
           <marker
             id={cycleMarkerId}
-            markerWidth='18'
-            markerHeight='14'
-            refX='14'
-            refY='7'
+            markerWidth={String(CYCLE_GRAPH_CHEVRON_MARKER.width)}
+            markerHeight={String(CYCLE_GRAPH_CHEVRON_MARKER.height)}
+            refX={String(CYCLE_GRAPH_CHEVRON_MARKER.refX)}
+            refY={String(CYCLE_GRAPH_CHEVRON_MARKER.refY)}
             orient='auto'
           >
             <path
-              d='M0,1 L18,7 L0,13 L4.5,7 Z'
-              fill='hsl(var(--destructive))'
+              d={CYCLE_GRAPH_CHEVRON_MARKER.path}
+              fill='none'
+              stroke='hsl(var(--destructive))'
+              strokeWidth={String(CYCLE_GRAPH_CHEVRON_MARKER.strokeWidth)}
+              strokeLinecap='round'
+              strokeLinejoin='round'
             />
           </marker>
           <marker
             id={nearbyMarkerId}
-            markerWidth='18'
-            markerHeight='14'
-            refX='14'
-            refY='7'
+            markerWidth={String(CYCLE_GRAPH_CHEVRON_MARKER.width)}
+            markerHeight={String(CYCLE_GRAPH_CHEVRON_MARKER.height)}
+            refX={String(CYCLE_GRAPH_CHEVRON_MARKER.refX)}
+            refY={String(CYCLE_GRAPH_CHEVRON_MARKER.refY)}
             orient='auto'
           >
             <path
-              d='M0,1 L18,7 L0,13 L4.5,7 Z'
-              fill='hsl(var(--muted-foreground))'
+              d={CYCLE_GRAPH_CHEVRON_MARKER.path}
+              fill='none'
+              stroke='hsl(var(--muted-foreground))'
+              strokeWidth={String(CYCLE_GRAPH_CHEVRON_MARKER.strokeWidth)}
+              strokeLinecap='round'
+              strokeLinejoin='round'
             />
           </marker>
         </defs>
@@ -199,7 +176,7 @@ export function CycleGraph({ item, showNearbyDependents }: CycleGraphProps) {
                   x={edge.labelX}
                   y={edge.labelY}
                   textAnchor='middle'
-                  fontSize='11'
+                  fontSize='12'
                   fill='hsl(var(--muted-foreground))'
                 >
                   {route.label}
@@ -257,6 +234,47 @@ export function CycleGraph({ item, showNearbyDependents }: CycleGraphProps) {
           )
         })}
       </svg>
+      {showNearbyDependents &&
+      (model.importsIntoLoop.length > 0 || model.importsFromLoop.length > 0) ? (
+        <div className='border-t border-border/60 bg-background/40 px-4 py-4'>
+          <div className='grid gap-4 lg:grid-cols-2'>
+            {model.importsIntoLoop.length > 0 ? (
+              <div className='space-y-2'>
+                <p className='text-xs font-medium text-foreground'>
+                  {cycleTriageCopy.detail.importsIntoLoop}
+                </p>
+                <div className='space-y-1.5'>
+                  {model.importsIntoLoop.map((route) => (
+                    <div
+                      key={`${route.source}->${route.target}`}
+                      className='rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground'
+                    >
+                      {route.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            {model.importsFromLoop.length > 0 ? (
+              <div className='space-y-2'>
+                <p className='text-xs font-medium text-foreground'>
+                  {cycleTriageCopy.detail.importsFromLoop}
+                </p>
+                <div className='space-y-1.5'>
+                  {model.importsFromLoop.map((route) => (
+                    <div
+                      key={`${route.source}->${route.target}`}
+                      className='rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground'
+                    >
+                      {route.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

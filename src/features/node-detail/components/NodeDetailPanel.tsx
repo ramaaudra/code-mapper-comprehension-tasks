@@ -59,6 +59,7 @@ import {
   getExternalRelianceTone,
   getFileEvolutionMetrics,
   getFileIcon,
+  isEvolutionaryMetricsAvailable,
   formatImpactScopeHelper,
   formatImpactScopeValue,
   formatStructuralPositionHelper,
@@ -158,6 +159,9 @@ const NodeDetailPanel = memo(
       nodeId ?? null,
       data?.evolutionaryMetrics.files ?? {}
     )
+    const changeHistoryAvailable = isEvolutionaryMetricsAvailable(
+      data?.evolutionaryMetrics.summary
+    )
     const fileThresholdCalibration = useFileReviewThresholdCalibration(data)
 
     // Architecture metrics
@@ -221,9 +225,16 @@ const NodeDetailPanel = memo(
         ce: archMetrics.ce,
         instability: archMetrics.instability,
         relativeChurn30d: fileEvolution?.churn30d.relativeChurn ?? 0,
+        changeHistoryAvailable,
         thresholdCalibration: fileThresholdCalibration
       })
-    }, [archMetrics, fileEvolution, fileThresholdCalibration, isOrphan])
+    }, [
+      archMetrics,
+      changeHistoryAvailable,
+      fileEvolution,
+      fileThresholdCalibration,
+      isOrphan
+    ])
 
     const overviewState = useMemo(
       () =>
@@ -687,19 +698,31 @@ const NodeDetailPanel = memo(
                     }
                   />
                   <MetricValueCard
-                    value={formatChangePressureValue(
-                      decisionAssessment.changePressure
-                    )}
+                    value={
+                      changeHistoryAvailable
+                        ? formatChangePressureValue(
+                            decisionAssessment.changePressure
+                          )
+                        : 'Unavailable'
+                    }
                     label={decisionCopy.evidence.labels.changeActivity}
-                    tone={getChangePressureTone(
-                      decisionAssessment.changePressure
-                    )}
+                    tone={
+                      changeHistoryAvailable
+                        ? getChangePressureTone(
+                            decisionAssessment.changePressure
+                          )
+                        : 'default'
+                    }
                     helper={
-                      fileEvolution ? (
+                      changeHistoryAvailable && fileEvolution ? (
                         <span className='text-[11px] text-muted-foreground'>
                           {formatChangePressureHelper(
                             fileEvolution.churn30d.relativeChurn
                           )}
+                        </span>
+                      ) : !changeHistoryAvailable ? (
+                        <span className='text-[11px] text-muted-foreground'>
+                          Git history is unavailable for recent change signals.
                         </span>
                       ) : null
                     }
@@ -906,7 +929,17 @@ const NodeDetailPanel = memo(
                   </div>
                 ) : null}
 
-                {overviewState.showEvolutionMetrics && fileEvolution ? (
+                {overviewState.showEvolutionMetrics &&
+                !changeHistoryAvailable ? (
+                  <DetailPanelState
+                    title='Evolutionary metrics unavailable'
+                    description='Git history is unavailable for change activity and hotspot metrics in this file.'
+                  />
+                ) : null}
+
+                {overviewState.showEvolutionMetrics &&
+                fileEvolution &&
+                changeHistoryAvailable ? (
                   <div className='space-y-3'>
                     <DetailPanelSectionHeading
                       title={nodeDetailCopy.disclosure.evolutionaryMetricsTitle}
@@ -1035,7 +1068,7 @@ const NodeDetailPanel = memo(
                   </div>
                   <div className='flex flex-col gap-2'>
                     {tracedPath.map((file, index) => (
-                      <div key={index} className='flex items-center gap-3'>
+                      <div key={file} className='flex items-center gap-3'>
                         <div className='flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground'>
                           {index + 1}
                         </div>

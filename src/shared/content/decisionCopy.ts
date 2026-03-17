@@ -148,15 +148,23 @@ export function getDecisionHeadlineCopy(params: {
 export function getDecisionBasisSummaryCopy(params: {
   hasCycle: boolean
   isOrphan: boolean
+  changeHistoryAvailable?: boolean
 }): string {
-  const { hasCycle, isOrphan } = params
+  const { hasCycle, isOrphan, changeHistoryAvailable = true } = params
 
   if (isOrphan) {
     return 'Based on graph isolation in the current analysis.'
   }
 
   if (hasCycle) {
+    if (!changeHistoryAvailable) {
+      return 'Based on cycle participation and downstream impact. Git history is unavailable for recent change signals.'
+    }
     return 'Based on cycle participation, downstream impact, and recent change pressure.'
+  }
+
+  if (!changeHistoryAvailable) {
+    return 'Based on downstream impact, external reliance, and structural position. Git history is unavailable for recent change signals.'
   }
 
   return 'Based on repository signals: change pressure, downstream impact, external reliance, and structural position.'
@@ -259,8 +267,27 @@ export function getActiveButLocalDecisionCopy(params: {
 export function getSharedFoundationDecisionCopy(params: {
   subject: Subject
   changePressure: ChangePressure
+  changeHistoryAvailable?: boolean
 }) {
-  const { subject, changePressure } = params
+  const { subject, changePressure, changeHistoryAvailable = true } = params
+
+  if (!changeHistoryAvailable) {
+    return {
+      summary: `This ${subject} is shared across the codebase, but recent change history is unavailable.`,
+      whyItMatters:
+        'Many other parts still rely on it, so review scope can widen even without Git-backed activity data.',
+      actions: [
+        'Proceed carefully with clear intent.',
+        'Review downstream dependents before merging.',
+        'Prefer incremental changes over broad rewrites.'
+      ],
+      topDrivers: [
+        'Many other parts rely on this area.',
+        'Recent change history is unavailable, so this read is based on structural signals.',
+        'Verification scope can widen quickly because the area is broadly shared.'
+      ]
+    }
+  }
 
   if (changePressure === 'Moderate') {
     return {
@@ -301,8 +328,48 @@ export function getLikelyLocalDecisionCopy(params: {
   subject: Subject
   impactScope: ImpactScope
   changePressure: ChangePressure
+  changeHistoryAvailable?: boolean
 }) {
-  const { subject, impactScope, changePressure } = params
+  const {
+    subject,
+    impactScope,
+    changePressure,
+    changeHistoryAvailable = true
+  } = params
+
+  if (!changeHistoryAvailable) {
+    if (impactScope === 'Moderate') {
+      return {
+        summary: `This ${subject} is more contained than a broad shared area, but some downstream coordination is still likely.`,
+        whyItMatters:
+          'Recent change history is unavailable, so this read is based on structural impact rather than churn.',
+        actions: [
+          'Use normal review and testing discipline.',
+          'Check the closest dependents before merging.'
+        ],
+        topDrivers: [
+          'Some downstream coordination is still likely here.',
+          'Recent change history is unavailable, so this read is structural only.',
+          'Impact is narrower than in a broad shared area.'
+        ]
+      }
+    }
+
+    return {
+      summary: `This ${subject} appears relatively contained based on the current dependency graph.`,
+      whyItMatters:
+        'Recent change history is unavailable, so this read is based on structural impact rather than churn.',
+      actions: [
+        'A focused feature change or local refactor is more feasible here.',
+        'Use normal review and testing discipline.'
+      ],
+      topDrivers: [
+        'Downstream impact is relatively contained.',
+        'Recent change history is unavailable, so this read is structural only.',
+        'A focused change is easier to isolate than in shared hotspots.'
+      ]
+    }
+  }
 
   if (impactScope === 'Moderate' && changePressure === 'Moderate') {
     return {

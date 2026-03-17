@@ -6,6 +6,7 @@ import {
   getFileEvolutionMetrics,
   getBasename,
   hasMatchInSet,
+  isEvolutionaryMetricsAvailable,
   matchesFile,
   normalizePath
 } from '@/shared/lib/utils'
@@ -218,6 +219,9 @@ export function useGraphGeneration({
           sourceData != null
             ? buildFileReviewStoryMap(sourceData)
             : fileReviewStoryMap
+        const changeHistoryAvailable = isEvolutionaryMetricsAvailable(
+          currentData.evolutionaryMetrics.summary
+        )
 
         const getEvolution = (targetPath: string) =>
           getFileEvolutionMetrics(
@@ -264,7 +268,9 @@ export function useGraphGeneration({
           subtitle?: string
         ): string => {
           const normalizedPath = normalizePath(rawPath)
-          const evolution = getEvolution(normalizedPath)
+          const evolution = changeHistoryAvailable
+            ? getEvolution(normalizedPath)
+            : null
           const existing = nodesMap.get(normalizedPath)
           if (existing) {
             return normalizedPath

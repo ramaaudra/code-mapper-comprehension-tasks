@@ -16,6 +16,12 @@ export function formatRelativeChurn(value: number): string {
   return `${(value * 100).toFixed(1)}%`
 }
 
+export function isEvolutionaryMetricsAvailable(
+  summary: EvolutionarySummary | null | undefined
+): boolean {
+  return summary?.availability === 'available'
+}
+
 export function getHotspotStatusLabel(status: HotspotStatus): string {
   return getHotspotStatusLabelFromCatalog(status)
 }
@@ -107,7 +113,7 @@ export function summarizeEvolutionAvailability(
     }
   }
 
-  if (summary.availability === 'unavailable') {
+  if (!isEvolutionaryMetricsAvailable(summary)) {
     return {
       isAvailable: false,
       message:

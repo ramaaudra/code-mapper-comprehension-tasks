@@ -1,10 +1,17 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { buildEvolutionaryHotspots } from '../../../../src/shared/lib/utils/evolution'
+import {
+  buildEvolutionaryHotspots,
+  isEvolutionaryMetricsAvailable,
+  summarizeEvolutionAvailability
+} from '../../../../src/shared/lib/utils/evolution'
 
 import type { FolderArchitectureMetrics } from '../../../../src/features/architecture/types/architecture'
-import type { HotspotStatus } from '../../../../src/shared/types/analysis'
+import type {
+  EvolutionarySummary,
+  HotspotStatus
+} from '../../../../src/shared/types/analysis'
 
 function createFolderMetrics(params: {
   folderPath: string
@@ -72,4 +79,23 @@ test('buildEvolutionaryHotspots prioritizes hotspot status before raw hotspot sc
 
   assert.equal(hotspots[0]?.modulePath, 'src/critical')
   assert.equal(hotspots[0]?.hotspotStatus, 'critical-hotspot')
+})
+
+test('isEvolutionaryMetricsAvailable returns false when summary is unavailable', () => {
+  const summary: EvolutionarySummary = {
+    availability: 'unavailable',
+    unavailableReason: 'fatal: not a git repository',
+    averageRelativeChurn30d: 0,
+    averageRelativeChurn90d: 0,
+    filesWithChurn30d: 0,
+    filesWithCriticalHotspots: 0,
+    filesWithHighHotspots: 0,
+    defaultWindowDays: 30
+  }
+
+  assert.equal(isEvolutionaryMetricsAvailable(summary), false)
+  assert.deepEqual(summarizeEvolutionAvailability(summary), {
+    isAvailable: false,
+    message: 'fatal: not a git repository'
+  })
 })

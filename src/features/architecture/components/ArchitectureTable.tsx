@@ -71,9 +71,16 @@ interface ArchitectureTableProps {
   sortConfig: SortConfig
   onSort: (key: SortKey) => void
   thresholdCalibration?: ReviewThresholdCalibration
+  evolutionaryMetricsAvailable?: boolean
 }
 
-function ExpandedRow({ folderPath }: { folderPath: string }) {
+function ExpandedRow({
+  folderPath,
+  evolutionaryMetricsAvailable = true
+}: {
+  folderPath: string
+  evolutionaryMetricsAvailable?: boolean
+}) {
   const { data, isLoading } = useFolderDetail(folderPath)
 
   if (isLoading) {
@@ -141,9 +148,9 @@ function ExpandedRow({ folderPath }: { folderPath: string }) {
                 </div>
               </td>
               <td className='py-2 text-center'>
-                {file.evolution
+                {file.evolution && evolutionaryMetricsAvailable
                   ? formatRelativeChurn(file.evolution.churn30d.relativeChurn)
-                  : 'n/a'}
+                  : 'Unavailable'}
               </td>
             </tr>
           ))}
@@ -157,7 +164,8 @@ export function ArchitectureTable({
   folders,
   sortConfig,
   onSort,
-  thresholdCalibration
+  thresholdCalibration,
+  evolutionaryMetricsAvailable = true
 }: ArchitectureTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
@@ -324,7 +332,7 @@ export function ArchitectureTable({
                         })()}
                       </td>
                       <td className='px-4 py-3 text-center font-mono text-xs'>
-                        {folder.evolution ? (
+                        {folder.evolution && evolutionaryMetricsAvailable ? (
                           <div className='flex flex-col items-center gap-1'>
                             <span>
                               {folder.evolution.hotspotScore.toFixed(2)}
@@ -335,7 +343,7 @@ export function ArchitectureTable({
                             />
                           </div>
                         ) : (
-                          'n/a'
+                          'Unavailable'
                         )}
                       </td>
                     </tr>
@@ -343,7 +351,12 @@ export function ArchitectureTable({
                   <CollapsibleContent asChild>
                     <tr>
                       <td colSpan={6} className='p-0'>
-                        <ExpandedRow folderPath={folder.folderPath} />
+                        <ExpandedRow
+                          folderPath={folder.folderPath}
+                          evolutionaryMetricsAvailable={
+                            evolutionaryMetricsAvailable
+                          }
+                        />
                       </td>
                     </tr>
                   </CollapsibleContent>

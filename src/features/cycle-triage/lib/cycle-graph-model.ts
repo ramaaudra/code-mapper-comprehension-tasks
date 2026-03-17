@@ -26,7 +26,8 @@ export interface CycleGraphModel {
   cycleEdges: CycleGraphEdgeModel[]
   nearbyEdges: CycleGraphEdgeModel[]
   cycleRouteLabels: CycleGraphRouteLabel[]
-  nearbyRouteLabels: CycleGraphRouteLabel[]
+  importsIntoLoop: CycleGraphRouteLabel[]
+  importsFromLoop: CycleGraphRouteLabel[]
   recommendedRouteLabel?: string
   visibleNearbyCount: number
   hiddenNearbyCount: number
@@ -75,13 +76,13 @@ function buildTwoNodeCycleNodes(files: string[]): CycleGraphNodeModel[] {
   return [
     {
       filePath: files[0] ?? '',
-      x: CENTER_X - 150,
+      x: CENTER_X - 176,
       y: CENTER_Y,
       isCycleNode: true
     },
     {
       filePath: files[1] ?? '',
-      x: CENTER_X + 150,
+      x: CENTER_X + 176,
       y: CENTER_Y,
       isCycleNode: true
     }
@@ -122,10 +123,7 @@ function resolveVisibleNearbyFiles(item: CycleTriageItem): string[] {
   return rankedFiles.slice(0, limit)
 }
 
-function buildNodeMap(
-  item: CycleTriageItem,
-  _visibleNearbyFiles: string[]
-): Map<string, CycleGraphNodeModel> {
+function buildNodeMap(item: CycleTriageItem): Map<string, CycleGraphNodeModel> {
   const cycleNodes =
     item.files.length === 2
       ? buildTwoNodeCycleNodes(item.files)
@@ -133,6 +131,36 @@ function buildNodeMap(
   const nodeMap = new Map(cycleNodes.map((node) => [node.filePath, node]))
 
   return nodeMap
+}
+
+function buildVisibleNearbyRouteGroups(params: {
+  item: CycleTriageItem
+  visibleNearbyFiles: string[]
+}): {
+  importsIntoLoop: CycleGraphRouteLabel[]
+  importsFromLoop: CycleGraphRouteLabel[]
+} {
+  const { item, visibleNearbyFiles } = params
+  const visibleNearbySet = new Set(visibleNearbyFiles)
+  const importsIntoLoop = item.neighborEdges
+    .filter(
+      (edge) =>
+        visibleNearbySet.has(edge.source) && item.files.includes(edge.target)
+    )
+    .map(buildRouteLabel)
+    .sort((routeA, routeB) => routeA.label.localeCompare(routeB.label))
+  const importsFromLoop = item.neighborEdges
+    .filter(
+      (edge) =>
+        item.files.includes(edge.source) && visibleNearbySet.has(edge.target)
+    )
+    .map(buildRouteLabel)
+    .sort((routeA, routeB) => routeA.label.localeCompare(routeB.label))
+
+  return {
+    importsIntoLoop,
+    importsFromLoop
+  }
 }
 
 function buildCurvedEdge(
@@ -154,9 +182,9 @@ function buildCurvedEdge(
 
   return {
     ...edge,
-    path: `M ${startX} ${y} A 118 98 0 0 1 ${endX} ${y}`,
+    path: `M ${startX} ${y} A 144 112 0 0 1 ${endX} ${y}`,
     labelX: CENTER_X,
-    labelY: CENTER_Y + (isTopRoute ? -108 : 108)
+    labelY: CENTER_Y + (isTopRoute ? -122 : 122)
   }
 }
 
@@ -184,7 +212,7 @@ export function buildCycleGraphModel(params: {
   const visibleNearbyFiles = showNearbyDependents
     ? resolveVisibleNearbyFiles(item)
     : []
-  const nodeMap = buildNodeMap(item, visibleNearbyFiles)
+  const nodeMap = buildNodeMap(item)
   const cycleEdges = item.cycleEdges
     .map((edge) => {
       const source = nodeMap.get(edge.source)
@@ -201,19 +229,10 @@ export function buildCycleGraphModel(params: {
     .filter((edge): edge is CycleGraphEdgeModel => edge != null)
   const nearbyEdges: CycleGraphEdgeModel[] = []
   const cycleRouteLabels = item.cycleEdges.map(buildRouteLabel)
-  const visibleNearbySet = new Set(visibleNearbyFiles)
-  const nearbyRouteLabels = item.neighborEdges
-    .filter((edge) => {
-      const sourceIsCycle = item.files.includes(edge.source)
-      const targetIsCycle = item.files.includes(edge.target)
-
-      return (
-        (sourceIsCycle && visibleNearbySet.has(edge.target)) ||
-        (targetIsCycle && visibleNearbySet.has(edge.source))
-      )
-    })
-    .map(buildRouteLabel)
-    .sort((routeA, routeB) => routeA.label.localeCompare(routeB.label))
+  const { importsIntoLoop, importsFromLoop } = buildVisibleNearbyRouteGroups({
+    item,
+    visibleNearbyFiles
+  })
   const recommendedRouteLabel = item.suggestedInvestigation.candidateEdge
     ? buildRouteLabel(item.suggestedInvestigation.candidateEdge).label
     : undefined
@@ -225,7 +244,8 @@ export function buildCycleGraphModel(params: {
     cycleEdges,
     nearbyEdges,
     cycleRouteLabels,
-    nearbyRouteLabels,
+    importsIntoLoop,
+    importsFromLoop,
     recommendedRouteLabel,
     visibleNearbyCount: visibleNearbyFiles.length,
     hiddenNearbyCount: Math.max(

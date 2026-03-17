@@ -192,14 +192,20 @@ export interface DecisionAssessmentInput {
   ce: number
   instability: number
   relativeChurn30d: number
+  changeHistoryAvailable?: boolean
   isOrphan?: boolean
   thresholdCalibration?: ReviewThresholdCalibration
 }
 
 function getDecisionTitle(
   impactScope: ImpactScope,
-  changePressure: ChangePressure
+  changePressure: ChangePressure,
+  changeHistoryAvailable: boolean
 ): Exclude<DecisionTitle, 'Possibly Unused File'> {
+  if (!changeHistoryAvailable) {
+    return impactScope === 'Broad' ? 'Shared Foundation' : 'Likely Local Change'
+  }
+
   const hasBroadImpact = impactScope === 'Broad'
   const hasHighChangePressure = changePressure === 'High'
 
@@ -231,6 +237,7 @@ function getDiagnosisHeadline(params: {
 function getBasisSummary(params: {
   hasCycle: boolean
   isOrphan: boolean
+  changeHistoryAvailable?: boolean
 }): string {
   return getDecisionBasisSummaryCopy(params)
 }
@@ -245,6 +252,7 @@ function createActiveButLocalCopy(params: {
 function createSharedFoundationCopy(params: {
   subject: 'file' | 'module'
   changePressure: ChangePressure
+  changeHistoryAvailable?: boolean
 }) {
   return getSharedFoundationDecisionCopy(params)
 }
@@ -253,6 +261,7 @@ function createLikelyLocalChangeCopy(params: {
   subject: 'file' | 'module'
   impactScope: ImpactScope
   changePressure: ChangePressure
+  changeHistoryAvailable?: boolean
 }) {
   return getLikelyLocalDecisionCopy(params)
 }
@@ -322,6 +331,7 @@ export function createDecisionAssessment(
     ce,
     instability,
     relativeChurn30d,
+    changeHistoryAvailable = true,
     isOrphan = false,
     thresholdCalibration
   } = input
@@ -352,7 +362,11 @@ export function createDecisionAssessment(
         isOrphan
       }),
       title: 'Possibly Unused File',
-      basisSummary: getBasisSummary({ hasCycle, isOrphan }),
+      basisSummary: getBasisSummary({
+        hasCycle,
+        isOrphan,
+        changeHistoryAvailable
+      }),
       summary: copy.summary,
       whyItMatters: copy.whyItMatters,
       actions: copy.actions,
@@ -368,7 +382,7 @@ export function createDecisionAssessment(
 
   const title = hasCycle
     ? 'Circular Dependency'
-    : getDecisionTitle(impactScope, changePressure)
+    : getDecisionTitle(impactScope, changePressure, changeHistoryAvailable)
   const reviewPriority = getReviewPriority({
     title,
     hasCycle,
@@ -384,7 +398,11 @@ export function createDecisionAssessment(
     hasCycle,
     isOrphan
   })
-  const basisSummary = getBasisSummary({ hasCycle, isOrphan })
+  const resolvedBasisSummary = getBasisSummary({
+    hasCycle,
+    isOrphan,
+    changeHistoryAvailable
+  })
 
   if (hasCycle) {
     const copy = getCycleDecisionCopy(subject)
@@ -392,7 +410,7 @@ export function createDecisionAssessment(
     return {
       headline,
       title,
-      basisSummary,
+      basisSummary: resolvedBasisSummary,
       summary: copy.summary,
       whyItMatters: copy.whyItMatters,
       actions: copy.actions,
@@ -412,7 +430,7 @@ export function createDecisionAssessment(
     return {
       headline,
       title,
-      basisSummary,
+      basisSummary: resolvedBasisSummary,
       summary: copy.summary,
       whyItMatters: copy.whyItMatters,
       actions: copy.actions,
@@ -432,7 +450,7 @@ export function createDecisionAssessment(
     return {
       headline,
       title,
-      basisSummary,
+      basisSummary: resolvedBasisSummary,
       summary: copy.summary,
       whyItMatters: copy.whyItMatters,
       actions: copy.actions,
@@ -447,12 +465,16 @@ export function createDecisionAssessment(
   }
 
   if (title === 'Shared Foundation') {
-    const copy = createSharedFoundationCopy({ subject, changePressure })
+    const copy = createSharedFoundationCopy({
+      subject,
+      changePressure,
+      changeHistoryAvailable
+    })
 
     return {
       headline,
       title,
-      basisSummary,
+      basisSummary: resolvedBasisSummary,
       summary: copy.summary,
       whyItMatters: copy.whyItMatters,
       actions: copy.actions,
@@ -469,13 +491,14 @@ export function createDecisionAssessment(
   const copy = createLikelyLocalChangeCopy({
     subject,
     impactScope,
-    changePressure
+    changePressure,
+    changeHistoryAvailable
   })
 
   return {
     headline,
     title,
-    basisSummary,
+    basisSummary: resolvedBasisSummary,
     summary: copy.summary,
     whyItMatters: copy.whyItMatters,
     actions: copy.actions,

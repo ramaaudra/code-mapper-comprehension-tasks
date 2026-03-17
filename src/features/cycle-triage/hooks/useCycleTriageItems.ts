@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 
 import { useArchitectureFiles } from '@/features/architecture'
+import { isEvolutionaryMetricsAvailable } from '@/shared/lib/utils'
 
 import { buildCycleTriageItems } from '../lib/cycle-triage'
 
@@ -31,6 +32,8 @@ export function useCycleTriageItems(analysisData: AnalysisData | null) {
       architectureFilesQuery.isLoading &&
       Boolean(analysisData?.issues?.circularDependencies?.length),
     hasCycleData: Boolean(analysisData?.issues?.circularDependencies?.length),
-    hasMeasuredSignals: fileMetrics.length > 0
+    hasMeasuredSignals:
+      fileMetrics.length > 0 &&
+      isEvolutionaryMetricsAvailable(analysisData?.evolutionaryMetrics.summary)
   }
 }

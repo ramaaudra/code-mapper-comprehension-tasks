@@ -98,20 +98,26 @@ test('limits nearby nodes so the graph stays readable', () => {
         { source: 'src/user-service.ts', target: 'src/payment-service.ts' }
       ],
       neighborEdges: [
-        { source: 'src/logger.ts', target: 'src/payment-service.ts' },
-        { source: 'src/order-service.ts', target: 'src/payment-service.ts' },
         { source: 'src/api-aggregator.ts', target: 'src/user-service.ts' },
-        { source: 'src/user-store.ts', target: 'src/user-service.ts' },
+        {
+          source: 'src/payment-service.ts',
+          target: 'src/contracts/auth-contract.ts'
+        },
+        {
+          source: 'src/user-service.ts',
+          target: 'src/contracts/billing-contract.ts'
+        },
         { source: 'src/master-service.ts', target: 'src/payment-service.ts' },
-        { source: 'src/event-emitter.ts', target: 'src/user-service.ts' }
+        { source: 'src/event-emitter.ts', target: 'src/user-service.ts' },
+        { source: 'src/logger.ts', target: 'src/payment-service.ts' }
       ],
       nearbyFiles: [
-        'src/logger.ts',
-        'src/order-service.ts',
         'src/api-aggregator.ts',
-        'src/user-store.ts',
+        'src/contracts/auth-contract.ts',
+        'src/contracts/billing-contract.ts',
         'src/master-service.ts',
-        'src/event-emitter.ts'
+        'src/event-emitter.ts',
+        'src/logger.ts'
       ],
       suggestedInvestigation: {
         summary: '',
@@ -132,12 +138,17 @@ test('limits nearby nodes so the graph stays readable', () => {
   assert.equal(model.nodes.length, 2)
   assert.equal(model.nearbyEdges.length, 0)
   assert.deepEqual(
-    model.nearbyRouteLabels.map((route) => route.label),
+    model.importsIntoLoop.map((route) => route.label),
     [
       'api-aggregator.ts -> user-service.ts',
-      'event-emitter.ts -> user-service.ts',
-      'logger.ts -> payment-service.ts',
-      'master-service.ts -> payment-service.ts'
+      'event-emitter.ts -> user-service.ts'
+    ]
+  )
+  assert.deepEqual(
+    model.importsFromLoop.map((route) => route.label),
+    [
+      'payment-service.ts -> auth-contract.ts',
+      'user-service.ts -> billing-contract.ts'
     ]
   )
 })

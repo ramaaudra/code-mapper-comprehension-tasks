@@ -23,6 +23,7 @@ import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Tabs, TabsContent } from '@/shared/components/ui/tabs'
 import { decisionCopy } from '@/shared/content/decisionCopy'
+import { useDataContext } from '@/shared/context/DataContext'
 import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
 import {
   formatReviewSignalBandRange,
@@ -47,6 +48,7 @@ import {
   getChangePressureTone,
   getExternalRelianceTone,
   getImpactScopeTone,
+  isEvolutionaryMetricsAvailable,
   getStructuralPositionTone,
   truncateMiddle
 } from '@/shared/lib/utils'
@@ -489,7 +491,11 @@ interface OverviewTabProps {
 }
 
 function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
+  const { analysisData } = useDataContext()
   const evolution = moduleData.evolution
+  const changeHistoryAvailable = isEvolutionaryMetricsAvailable(
+    analysisData?.evolutionaryMetrics.summary
+  )
   const riskScore = calculateRiskScore(moduleData.ca, moduleData.instability)
   const decisionAssessment = createDecisionAssessment({
     kind: 'module',
@@ -498,6 +504,7 @@ function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
     ce: moduleData.ce,
     instability: moduleData.instability,
     relativeChurn30d: evolution?.churn30d.relativeChurn ?? 0,
+    changeHistoryAvailable,
     thresholdCalibration
   })
 
@@ -544,17 +551,27 @@ function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
               }
             />
             <MetricValueCard
-              value={formatChangePressureValue(
-                decisionAssessment.changePressure
-              )}
+              value={
+                changeHistoryAvailable
+                  ? formatChangePressureValue(decisionAssessment.changePressure)
+                  : 'Unavailable'
+              }
               label={decisionCopy.evidence.labels.changeActivity}
-              tone={getChangePressureTone(decisionAssessment.changePressure)}
+              tone={
+                changeHistoryAvailable
+                  ? getChangePressureTone(decisionAssessment.changePressure)
+                  : 'default'
+              }
               helper={
-                evolution ? (
+                changeHistoryAvailable && evolution ? (
                   <span className='text-[11px] text-muted-foreground'>
                     {formatChangePressureHelper(
                       evolution.churn30d.relativeChurn
                     )}
+                  </span>
+                ) : !changeHistoryAvailable ? (
+                  <span className='text-[11px] text-muted-foreground'>
+                    Git history is unavailable for recent change signals.
                   </span>
                 ) : null
               }
@@ -643,23 +660,31 @@ function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
               />
               <MetricValueCard
                 value={
-                  evolution
+                  evolution && changeHistoryAvailable
                     ? formatRelativeChurn(evolution.churn30d.relativeChurn)
-                    : 'n/a'
+                    : 'Unavailable'
                 }
                 label={METRIC_LABELS.relativeChurn30d}
                 tooltip={METRIC_TOOLTIPS.relativeChurn30d}
               />
               <MetricValueCard
-                value={evolution ? evolution.hotspotScore.toFixed(2) : 'n/a'}
+                value={
+                  evolution && changeHistoryAvailable
+                    ? evolution.hotspotScore.toFixed(2)
+                    : 'Unavailable'
+                }
                 label={METRIC_LABELS.evolutionaryHotspotScore}
                 tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
                 helper={
-                  evolution ? (
+                  evolution && changeHistoryAvailable ? (
                     <HotspotStatusLabel
                       status={evolution.hotspotStatus}
                       className='text-[11px] text-muted-foreground'
                     />
+                  ) : !changeHistoryAvailable ? (
+                    <span className='text-[11px] text-muted-foreground'>
+                      Git history is unavailable for hotspot ranking.
+                    </span>
                   ) : null
                 }
               />
@@ -702,23 +727,31 @@ function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
             />
             <MetricValueCard
               value={
-                evolution
+                evolution && changeHistoryAvailable
                   ? formatRelativeChurn(evolution.churn30d.relativeChurn)
-                  : 'n/a'
+                  : 'Unavailable'
               }
               label={METRIC_LABELS.relativeChurn30d}
               tooltip={METRIC_TOOLTIPS.relativeChurn30d}
             />
             <MetricValueCard
-              value={evolution ? evolution.hotspotScore.toFixed(2) : 'n/a'}
+              value={
+                evolution && changeHistoryAvailable
+                  ? evolution.hotspotScore.toFixed(2)
+                  : 'Unavailable'
+              }
               label={METRIC_LABELS.evolutionaryHotspotScore}
               tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
               helper={
-                evolution ? (
+                evolution && changeHistoryAvailable ? (
                   <HotspotStatusLabel
                     status={evolution.hotspotStatus}
                     className='text-[11px] text-muted-foreground'
                   />
+                ) : !changeHistoryAvailable ? (
+                  <span className='text-[11px] text-muted-foreground'>
+                    Git history is unavailable for hotspot ranking.
+                  </span>
                 ) : null
               }
             />
@@ -732,9 +765,14 @@ function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
 interface FilesTabProps {
   modulePath: string
   onViewFile: (filePath: string) => void
+  changeHistoryAvailable?: boolean
 }
 
-function FilesTab({ modulePath, onViewFile }: FilesTabProps) {
+function FilesTab({
+  modulePath,
+  onViewFile,
+  changeHistoryAvailable = true
+}: FilesTabProps) {
   const { data: folderDetail, isLoading } = useFolderDetail(modulePath)
 
   const sortedFiles = [...(folderDetail?.files ?? [])].sort((a, b) => {
@@ -789,7 +827,7 @@ function FilesTab({ modulePath, onViewFile }: FilesTabProps) {
                     riskScore,
                     file.ca,
                     file.instability,
-                    file.evolution
+                    changeHistoryAvailable && file.evolution
                       ? formatRelativeChurn(
                           file.evolution.churn30d.relativeChurn
                         )
@@ -905,7 +943,11 @@ export function ModuleSidePanel({
   onViewFile,
   moduleData
 }: ModuleSidePanelProps) {
+  const { analysisData } = useDataContext()
   const moduleThresholdCalibration = useModuleReviewThresholdCalibration()
+  const changeHistoryAvailable = isEvolutionaryMetricsAvailable(
+    analysisData?.evolutionaryMetrics.summary
+  )
 
   return (
     <div className='flex h-full w-full flex-col bg-background'>
@@ -943,7 +985,11 @@ export function ModuleSidePanel({
         </TabsContent>
 
         <TabsContent value='files' className='mt-0 min-h-0 flex-1'>
-          <FilesTab modulePath={modulePath} onViewFile={onViewFile} />
+          <FilesTab
+            modulePath={modulePath}
+            onViewFile={onViewFile}
+            changeHistoryAvailable={changeHistoryAvailable}
+          />
         </TabsContent>
 
         <TabsContent value='connections' className='mt-0 min-h-0 flex-1'>

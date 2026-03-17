@@ -139,6 +139,7 @@ export {
   getGraphHotspotStatusLabel,
   getHotspotStatusLabel,
   getHotspotTone,
+  isEvolutionaryMetricsAvailable,
   summarizeEvolutionAvailability
 } from './evolution'
 

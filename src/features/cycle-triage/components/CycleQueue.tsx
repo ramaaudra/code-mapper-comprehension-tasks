@@ -3,6 +3,7 @@ import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { cn } from '@/shared/lib/utils'
 
 import { cycleTriageCopy } from '../content/cycleTriageCopy'
+import { getPriorityDriverChipLabel } from '../content/priorityDriverCopy'
 
 import type { CycleTriageItem, FixPriority } from '../types/cycle-triage'
 
@@ -52,7 +53,7 @@ export function CycleQueue({
             >
               <div className='flex items-start justify-between gap-3'>
                 <div className='min-w-0'>
-                  <p className='break-words text-sm font-semibold leading-5 text-foreground'>
+                  <p className='whitespace-normal break-normal text-sm font-semibold leading-5 text-foreground'>
                     {item.title}
                   </p>
                 </div>
@@ -76,12 +77,12 @@ export function CycleQueue({
                 </span>
                 {item.entryLikeFiles.length > 0 ? (
                   <span className='rounded-full border border-border/60 bg-background/70 px-2 py-0.5'>
-                    Entry-like
+                    Includes entry wiring
                   </span>
                 ) : null}
                 {item.priorityDrivers[0] ? (
                   <span className='rounded-full border border-border/60 bg-background/70 px-2 py-0.5'>
-                    {item.priorityDrivers[0]}
+                    {getPriorityDriverChipLabel(item.priorityDrivers[0])}
                   </span>
                 ) : null}
               </div>

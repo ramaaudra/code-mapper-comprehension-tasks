@@ -22,11 +22,16 @@ import {
 import { Input } from '@/shared/components/ui/input'
 import { MetricCard } from '@/shared/components/ui/metric-card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { useAnalysisData } from '@/shared/hooks/useAnalysisData'
 import {
   formatReviewSignalBandRange,
   getStructuralPositionBandLabel,
   resolveStructuralPosition
 } from '@/shared/lib/metric-thresholds'
+import {
+  isEvolutionaryMetricsAvailable,
+  summarizeEvolutionAvailability
+} from '@/shared/lib/utils'
 
 import { architectureCopy } from '../content/architectureCopy'
 import { useArchitectureFolders } from '../hooks/useArchitectureMetrics'
@@ -45,13 +50,20 @@ interface ArchitecturePageProps {
 }
 
 function ArchitecturePageSkeleton() {
+  const skeletonIds = [
+    'summary-total',
+    'summary-structure',
+    'summary-outward',
+    'summary-cycles'
+  ] as const
+
   return (
     <div className='h-full overflow-y-auto bg-background'>
       <div className='mx-auto max-w-full space-y-6 px-6 py-6 md:px-8 lg:px-12'>
         <Skeleton className='h-8 w-64' />
         <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className='h-24' />
+          {skeletonIds.map((skeletonId) => (
+            <Skeleton key={skeletonId} className='h-24' />
           ))}
         </div>
         <Skeleton className='h-96' />
@@ -64,6 +76,7 @@ export function ArchitecturePage({
   onShowMetricsGuide
 }: ArchitecturePageProps) {
   const { data, isLoading, error } = useArchitectureFolders()
+  const { evolutionarySummary } = useAnalysisData()
   const moduleThresholdCalibration = useModuleReviewThresholdCalibration()
   const [searchQuery, setSearchQuery] = useState('')
   const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -129,6 +142,10 @@ export function ArchitecturePage({
   const hotspotModules = folders.filter(
     (f) => f.evolution?.hotspotStatus === 'critical-hotspot'
   ).length
+  const evolutionAvailability =
+    summarizeEvolutionAvailability(evolutionarySummary)
+  const changeHistoryAvailable =
+    isEvolutionaryMetricsAvailable(evolutionarySummary)
   const averageStructuralStory = describeStructuralPositionStory(avgInstability)
   const outwardFacingRange = formatReviewSignalBandRange(
     'structuralPosition',
@@ -183,13 +200,15 @@ export function ArchitecturePage({
     },
     {
       label: architectureCopy.summaryCards.criticalReviewAreas,
-      value: hotspotModules,
-      subValue:
-        hotspotModules > 0
+      value: changeHistoryAvailable ? hotspotModules : 'Unavailable',
+      subValue: changeHistoryAvailable
+        ? hotspotModules > 0
           ? 'Recent change pressure plus high propagation sensitivity'
-          : 'No critical hotspot areas detected',
+          : 'No critical hotspot areas detected'
+        : evolutionAvailability.message,
       icon: <TrendingUp className='h-4 w-4' />,
-      status: hotspotModules > 0 ? 'warning' : 'default'
+      status:
+        changeHistoryAvailable && hotspotModules > 0 ? 'warning' : 'default'
     }
   ]
 
@@ -422,6 +441,7 @@ export function ArchitecturePage({
               sortConfig={sortConfig}
               onSort={handleSort}
               thresholdCalibration={moduleThresholdCalibration}
+              evolutionaryMetricsAvailable={changeHistoryAvailable}
             />
           </CardContent>
         </Card>

@@ -19,11 +19,12 @@ import {
 import { getRelativePath } from '@/shared/lib/utils'
 
 import { cycleTriageCopy } from '../content/cycleTriageCopy'
+import { getPriorityDriverChipLabel } from '../content/priorityDriverCopy'
 import { useCycleTriageItems } from '../hooks/useCycleTriageItems'
 import { CycleGraph } from './CycleGraph'
 import { CycleQueue } from './CycleQueue'
 
-import type { FixPriority } from '../types/cycle-triage'
+import type { CycleTriageItem, FixPriority } from '../types/cycle-triage'
 import type { AnalysisData } from '@/shared/types/analysis'
 
 interface CycleTriageWorkspaceProps {
@@ -49,7 +50,6 @@ export function CycleTriageWorkspace({
   onNavigateToFile
 }: CycleTriageWorkspaceProps) {
   const { items, hasMeasuredSignals } = useCycleTriageItems(analysisData)
-  const [showNearbyDependents, setShowNearbyDependents] = useState(false)
   const highPriorityCount = items.filter(
     (item) => item.fixPriority === 'high'
   ).length
@@ -70,10 +70,6 @@ export function CycleTriageWorkspace({
       onSelectedCycleIdChange?.(items[0]?.id ?? null)
     }
   }, [items, onSelectedCycleIdChange, selectedCycleId])
-
-  useEffect(() => {
-    setShowNearbyDependents(false)
-  }, [selectedCycleId])
 
   const selectedItem = useMemo(() => {
     if (!items.length) {
@@ -159,166 +155,11 @@ export function CycleTriageWorkspace({
 
             <div className='space-y-4'>
               {selectedItem ? (
-                <>
-                  <Card className='overflow-hidden border-primary/20 bg-primary/5'>
-                    <CardHeader className='gap-3'>
-                      <div className='flex flex-wrap items-start justify-between gap-3'>
-                        <div className='space-y-1.5'>
-                          <CardTitle className='text-xl'>
-                            {selectedItem.title}
-                          </CardTitle>
-                          <CardDescription className='max-w-3xl text-sm text-muted-foreground'>
-                            {selectedItem.whatIsHappening}
-                          </CardDescription>
-                          <code className='inline-flex whitespace-normal break-all rounded-md border border-border/70 bg-background/70 px-2.5 py-1 text-[11px] text-foreground'>
-                            {selectedItem.routeLabel}
-                          </code>
-                        </div>
-                        <Badge
-                          variant='outline'
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${priorityToneClass[selectedItem.fixPriority]}`}
-                        >
-                          Fix priority: {selectedItem.fixPriority}
-                        </Badge>
-                      </div>
-                      <div className='flex flex-wrap gap-2'>
-                        {selectedItem.priorityDrivers.map((driver) => (
-                          <Badge
-                            key={driver}
-                            variant='outline'
-                            className='bg-background/70'
-                          >
-                            {driver}
-                          </Badge>
-                        ))}
-                        <Badge variant='outline' className='bg-background/70'>
-                          {selectedItem.uniqueFileCount} files
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className='gap-3 pb-3'>
-                      <div className='flex flex-wrap items-center justify-between gap-3'>
-                        <div className='space-y-1'>
-                          <CardTitle className='flex items-center gap-2 text-base'>
-                            <Network className='h-4 w-4' />
-                            {cycleTriageCopy.detail.cycleGraph}
-                          </CardTitle>
-                          <CardDescription>
-                            {selectedItem.whyItMatters}
-                          </CardDescription>
-                        </div>
-                        <Button
-                          variant={
-                            showNearbyDependents ? 'secondary' : 'outline'
-                          }
-                          size='sm'
-                          onClick={() =>
-                            setShowNearbyDependents((current) => !current)
-                          }
-                        >
-                          {showNearbyDependents
-                            ? cycleTriageCopy.detail.hideNearby
-                            : cycleTriageCopy.detail.showNearby}
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className='space-y-4'>
-                      <CycleGraph
-                        item={selectedItem}
-                        showNearbyDependents={showNearbyDependents}
-                      />
-                      <details className='rounded-lg border border-border/60 bg-background/70 px-3 py-2'>
-                        <summary className='cursor-pointer text-xs font-medium text-foreground'>
-                          {cycleTriageCopy.detail.loopPath}
-                        </summary>
-                        <div className='mt-3 flex flex-wrap items-center gap-2 text-xs'>
-                          {selectedItem.cyclePath.map((filePath, index) => (
-                            <div
-                              key={`${filePath}-${index}`}
-                              className='flex items-center gap-2'
-                            >
-                              <button
-                                type='button'
-                                onClick={() => onNavigateToFile?.(filePath)}
-                                className='rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-xs text-foreground transition hover:border-primary/35 hover:text-primary'
-                              >
-                                {getRelativePath(filePath)}
-                              </button>
-                              {index < selectedItem.cyclePath.length - 1 ? (
-                                <ArrowRight className='h-3 w-3 text-muted-foreground' />
-                              ) : null}
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    </CardContent>
-                  </Card>
-
-                  <div className='grid gap-4 lg:grid-cols-2'>
-                    <Card className='border-amber-500/20 bg-amber-500/5'>
-                      <CardHeader className='pb-3'>
-                        <div className='flex flex-wrap items-center justify-between gap-2'>
-                          <CardTitle className='text-base'>
-                            {cycleTriageCopy.detail.suggestedInvestigation}
-                          </CardTitle>
-                          <Badge variant='outline' className='bg-background/80'>
-                            {cycleTriageCopy.detail.confidence}:{' '}
-                            {selectedItem.suggestedInvestigation.confidence}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className='space-y-3 text-sm leading-relaxed'>
-                        <p className='font-medium text-foreground'>
-                          {selectedItem.suggestedInvestigation.summary}
-                        </p>
-                        {selectedItem.suggestedInvestigation.candidateEdge ? (
-                          <div className='rounded-lg border border-amber-500/20 bg-background/80 px-3 py-2 text-xs text-muted-foreground'>
-                            {cycleTriageCopy.detail.candidateEdge}:{' '}
-                            {getRelativePath(
-                              selectedItem.suggestedInvestigation.candidateEdge
-                                .source
-                            )}{' '}
-                            -&gt;{' '}
-                            {getRelativePath(
-                              selectedItem.suggestedInvestigation.candidateEdge
-                                .target
-                            )}
-                          </div>
-                        ) : null}
-                        <details className='text-xs text-muted-foreground'>
-                          <summary className='cursor-pointer font-medium text-foreground/80'>
-                            Why this suggestion?
-                          </summary>
-                          <p className='mt-2'>
-                            {selectedItem.suggestedInvestigation.detail}
-                          </p>
-                        </details>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader className='pb-3'>
-                        <CardTitle className='flex items-center gap-2 text-base'>
-                          <AlertTriangle className='h-4 w-4 text-muted-foreground' />
-                          {cycleTriageCopy.detail.verifyAfterFix}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className='space-y-2 text-sm leading-relaxed text-muted-foreground'>
-                          {selectedItem.verificationChecks.map((check) => (
-                            <li key={check} className='flex items-start gap-2'>
-                              <span className='mt-1 h-1.5 w-1.5 rounded-full bg-muted-foreground/70' />
-                              <span>{check}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </>
+                <SelectedCyclePanel
+                  key={selectedItem.id}
+                  item={selectedItem}
+                  onNavigateToFile={onNavigateToFile}
+                />
               ) : (
                 <Card>
                   <CardContent className='py-12 text-center text-sm text-muted-foreground'>
@@ -331,5 +172,168 @@ export function CycleTriageWorkspace({
         )}
       </div>
     </div>
+  )
+}
+
+interface SelectedCyclePanelProps {
+  item: CycleTriageItem
+  onNavigateToFile?: (filePath: string) => void
+}
+
+function SelectedCyclePanel({
+  item,
+  onNavigateToFile
+}: SelectedCyclePanelProps) {
+  const [showNearbyDependents, setShowNearbyDependents] = useState(false)
+
+  return (
+    <>
+      <Card className='overflow-hidden border-primary/20 bg-primary/5'>
+        <CardHeader className='gap-3'>
+          <div className='flex flex-wrap items-start justify-between gap-3'>
+            <div className='space-y-1.5'>
+              <CardTitle className='text-xl'>{item.title}</CardTitle>
+              <CardDescription className='max-w-3xl text-sm text-muted-foreground'>
+                {item.whatIsHappening}
+              </CardDescription>
+            </div>
+            <Badge
+              variant='outline'
+              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${priorityToneClass[item.fixPriority]}`}
+            >
+              Fix priority: {item.fixPriority}
+            </Badge>
+          </div>
+          <div className='flex flex-wrap gap-2'>
+            {item.priorityDrivers.map((driver) => (
+              <Badge
+                key={driver}
+                variant='outline'
+                className='bg-background/70'
+              >
+                {getPriorityDriverChipLabel(driver)}
+              </Badge>
+            ))}
+            <Badge variant='outline' className='bg-background/70'>
+              {item.uniqueFileCount} files
+            </Badge>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <Card>
+        <CardHeader className='gap-3 pb-3'>
+          <div className='flex flex-wrap items-center justify-between gap-3'>
+            <div className='space-y-1'>
+              <CardTitle className='flex items-center gap-2 text-base'>
+                <Network className='h-4 w-4' />
+                {cycleTriageCopy.detail.cycleGraph}
+              </CardTitle>
+              <CardDescription>{item.whyItMatters}</CardDescription>
+            </div>
+            <Button
+              variant={showNearbyDependents ? 'secondary' : 'outline'}
+              size='sm'
+              onClick={() => setShowNearbyDependents((current) => !current)}
+            >
+              {showNearbyDependents
+                ? cycleTriageCopy.detail.hideNearby
+                : cycleTriageCopy.detail.showNearby}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <CycleGraph item={item} showNearbyDependents={showNearbyDependents} />
+          {item.files.length > 2 ? (
+            <details className='rounded-lg border border-border/60 bg-background/70 px-3 py-2'>
+              <summary className='cursor-pointer text-xs font-medium text-foreground'>
+                {cycleTriageCopy.detail.loopPath}
+              </summary>
+              <div className='mt-3 flex flex-wrap items-center gap-2 text-xs'>
+                {item.cyclePath.map((filePath, index) => {
+                  const nextFilePath = item.cyclePath[index + 1]
+                  const stepKey = nextFilePath
+                    ? `${filePath}->${nextFilePath}`
+                    : `${filePath}::end`
+
+                  return (
+                    <div key={stepKey} className='flex items-center gap-2'>
+                      <button
+                        type='button'
+                        onClick={() => onNavigateToFile?.(filePath)}
+                        className='rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-xs text-foreground transition hover:border-primary/35 hover:text-primary'
+                      >
+                        {getRelativePath(filePath)}
+                      </button>
+                      {nextFilePath ? (
+                        <ArrowRight className='h-3 w-3 text-muted-foreground' />
+                      ) : null}
+                    </div>
+                  )
+                })}
+              </div>
+            </details>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <div className='grid gap-4 lg:grid-cols-2'>
+        <Card className='border-amber-500/20 bg-amber-500/5'>
+          <CardHeader className='pb-3'>
+            <div className='flex flex-wrap items-center justify-between gap-2'>
+              <CardTitle className='text-base'>
+                {cycleTriageCopy.detail.suggestedInvestigation}
+              </CardTitle>
+              <Badge variant='outline' className='bg-background/80'>
+                {cycleTriageCopy.detail.confidence}:{' '}
+                {item.suggestedInvestigation.confidence}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-3 text-sm leading-relaxed'>
+            <p className='font-medium text-foreground'>
+              {item.suggestedInvestigation.summary}
+            </p>
+            {item.suggestedInvestigation.candidateEdge ? (
+              <div className='rounded-lg border border-amber-500/20 bg-background/80 px-3 py-2 text-xs text-muted-foreground'>
+                {cycleTriageCopy.detail.candidateEdge}:{' '}
+                {getRelativePath(
+                  item.suggestedInvestigation.candidateEdge.source
+                )}{' '}
+                -&gt;{' '}
+                {getRelativePath(
+                  item.suggestedInvestigation.candidateEdge.target
+                )}
+              </div>
+            ) : null}
+            <details className='text-xs text-muted-foreground'>
+              <summary className='cursor-pointer font-medium text-foreground/80'>
+                Why this suggestion?
+              </summary>
+              <p className='mt-2'>{item.suggestedInvestigation.detail}</p>
+            </details>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className='pb-3'>
+            <CardTitle className='flex items-center gap-2 text-base'>
+              <AlertTriangle className='h-4 w-4 text-muted-foreground' />
+              {cycleTriageCopy.detail.verifyAfterFix}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className='space-y-2 text-sm leading-relaxed text-muted-foreground'>
+              {item.verificationChecks.map((check) => (
+                <li key={check} className='flex items-start gap-2'>
+                  <span className='mt-1 h-1.5 w-1.5 rounded-full bg-muted-foreground/70' />
+                  <span>{check}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   )
 }

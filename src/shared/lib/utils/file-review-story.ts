@@ -4,6 +4,7 @@ import {
   createDecisionAssessment,
   getReviewPriorityTone
 } from './decision-assessment'
+import { isEvolutionaryMetricsAvailable } from './evolution'
 import { normalizePath } from './file-status'
 
 import type { DecisionAssessment, ReviewPriority } from './decision-assessment'
@@ -32,6 +33,7 @@ interface CreateFileReviewStoryInput {
   filePath: string
   riskProfile: FileRiskProfile
   evolutionMetrics?: FileEvolutionMetrics | null
+  changeHistoryAvailable?: boolean
   hasCycle?: boolean
   isOrphan?: boolean
   thresholdCalibration?: ReviewThresholdCalibration
@@ -126,6 +128,7 @@ export function createFileReviewStory(
     filePath,
     riskProfile,
     evolutionMetrics,
+    changeHistoryAvailable = true,
     hasCycle = false,
     isOrphan = false,
     thresholdCalibration
@@ -139,6 +142,7 @@ export function createFileReviewStory(
     ce: riskProfile.factors.ce,
     instability: riskProfile.factors.instability,
     relativeChurn30d: evolutionMetrics?.churn30d.relativeChurn ?? 0,
+    changeHistoryAvailable,
     thresholdCalibration
   })
   const graphBadgeLabel = createGraphBadgeLabel(assessment)
@@ -174,6 +178,9 @@ export function buildFileReviewStoryMap(
   const storyMap = new Map<string, FileReviewStory>()
   const thresholdCalibration =
     createFileReviewThresholdCalibrationFromAnalysisData(analysisData)
+  const changeHistoryAvailable = isEvolutionaryMetricsAvailable(
+    analysisData.evolutionaryMetrics.summary
+  )
   const aliases = buildNodeAliasMap(analysisData.nodes)
   const filesInCycle = new Set(
     analysisData.issues.circularDependencies.flatMap((dependency) =>
@@ -194,6 +201,7 @@ export function buildFileReviewStoryMap(
       filePath: normalizedPath,
       riskProfile,
       evolutionMetrics,
+      changeHistoryAvailable,
       hasCycle: filesInCycle.has(normalizedPath),
       isOrphan: orphanFiles.has(normalizedPath),
       thresholdCalibration

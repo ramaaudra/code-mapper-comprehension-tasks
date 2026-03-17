@@ -77,6 +77,22 @@ test('createDecisionAssessment uses repo-relative calibration when provided', ()
   assert.equal(assessment.title, 'Critical Hotspot')
 })
 
+test('createDecisionAssessment avoids churn-driven wording when change history is unavailable', () => {
+  const assessment = createDecisionAssessment({
+    kind: 'module',
+    hasCycle: false,
+    ca: 12,
+    ce: 2,
+    instability: 2 / 14,
+    relativeChurn30d: 0,
+    changeHistoryAvailable: false
+  })
+
+  assert.equal(assessment.title, 'Likely Local Change')
+  assert.match(assessment.basisSummary, /Git history is unavailable/i)
+  assert.doesNotMatch(assessment.summary, /recent change|lower recent change/i)
+})
+
 test('formatChangePressureHelper describes relative churn instead of percent changed', () => {
   assert.equal(
     formatChangePressureHelper(1.25),
