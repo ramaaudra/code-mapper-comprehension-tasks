@@ -3,6 +3,8 @@ import { getRelativePath } from '@/shared/lib/utils'
 import { cycleTriageCopy } from '../content/cycleTriageCopy'
 import { CYCLE_GRAPH_CHEVRON_MARKER } from '../lib/cycle-graph-marker'
 import {
+  CYCLE_GRAPH_NODE_HEIGHT,
+  CYCLE_GRAPH_NODE_WIDTH,
   buildCycleGraphModel,
   type CycleGraphEdgeModel
 } from '../lib/cycle-graph-model'
@@ -13,9 +15,6 @@ interface CycleGraphProps {
   item: CycleTriageItem
   showNearbyDependents: boolean
 }
-
-const NODE_WIDTH = 140
-const NODE_HEIGHT = 40
 
 function buildLoopSummary(item: CycleTriageItem) {
   if (item.files.length === 2) {
@@ -200,10 +199,10 @@ export function CycleGraph({ item, showNearbyDependents }: CycleGraphProps) {
           return (
             <g key={node.filePath}>
               <rect
-                x={node.x - NODE_WIDTH / 2}
-                y={node.y - NODE_HEIGHT / 2}
-                width={NODE_WIDTH}
-                height={NODE_HEIGHT}
+                x={node.x - CYCLE_GRAPH_NODE_WIDTH / 2}
+                y={node.y - CYCLE_GRAPH_NODE_HEIGHT / 2}
+                width={CYCLE_GRAPH_NODE_WIDTH}
+                height={CYCLE_GRAPH_NODE_HEIGHT}
                 rx={16}
                 fill={fill}
                 fillOpacity={0.96}

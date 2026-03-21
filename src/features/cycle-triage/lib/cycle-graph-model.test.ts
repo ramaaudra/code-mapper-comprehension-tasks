@@ -3,6 +3,21 @@ import test from 'node:test'
 
 import { buildCycleGraphModel } from './cycle-graph-model'
 
+function parseLinePath(path: string) {
+  const match = path.match(
+    /^M\s*(-?\d+(?:\.\d+)?)\s*(-?\d+(?:\.\d+)?)\s+L\s*(-?\d+(?:\.\d+)?)\s*(-?\d+(?:\.\d+)?)$/
+  )
+
+  assert.ok(match, `Expected a simple line path, got: ${path}`)
+
+  return {
+    startX: Number(match[1]),
+    startY: Number(match[2]),
+    endX: Number(match[3]),
+    endY: Number(match[4])
+  }
+}
+
 test('builds a readable two-node loop as a literal oval with explicit directions', () => {
   const model = buildCycleGraphModel({
     item: {
@@ -151,4 +166,68 @@ test('limits nearby nodes so the graph stays readable', () => {
       'user-service.ts -> billing-contract.ts'
     ]
   )
+})
+
+test('shortens multi-node cycle edges so arrowheads stay visible outside node bodies', () => {
+  const model = buildCycleGraphModel({
+    item: {
+      id: 'discount-service->user-service->payment-service->discount-service',
+      title:
+        'discount-service.ts -> user-service.ts -> payment-service.ts loop',
+      routeLabel:
+        'discount-service.ts -> user-service.ts -> payment-service.ts -> discount-service.ts',
+      fixPriority: 'high',
+      priorityReason: 'High priority because broad downstream usage.',
+      priorityDrivers: ['broad downstream usage'],
+      whatIsHappening: '',
+      whyItMatters: '',
+      cyclePath: [
+        'src/discount-service.ts',
+        'src/user-service.ts',
+        'src/payment-service.ts',
+        'src/discount-service.ts'
+      ],
+      files: [
+        'src/discount-service.ts',
+        'src/user-service.ts',
+        'src/payment-service.ts'
+      ],
+      uniqueFileCount: 3,
+      entryLikeFiles: [],
+      moduleKeys: ['src'],
+      cycleEdges: [
+        { source: 'src/discount-service.ts', target: 'src/user-service.ts' },
+        { source: 'src/user-service.ts', target: 'src/payment-service.ts' },
+        { source: 'src/payment-service.ts', target: 'src/discount-service.ts' }
+      ],
+      neighborEdges: [],
+      nearbyFiles: [],
+      suggestedInvestigation: {
+        summary: '',
+        detail: '',
+        confidence: 'medium',
+        candidateEdge: {
+          source: 'src/discount-service.ts',
+          target: 'src/user-service.ts'
+        }
+      },
+      verificationChecks: []
+    },
+    showNearbyDependents: false
+  })
+
+  const nodeMap = new Map(model.nodes.map((node) => [node.filePath, node]))
+
+  model.cycleEdges.forEach((edge) => {
+    const source = nodeMap.get(edge.source)
+    const target = nodeMap.get(edge.target)
+
+    assert.ok(source)
+    assert.ok(target)
+
+    const { startX, startY, endX, endY } = parseLinePath(edge.path)
+
+    assert.ok(startX !== source.x || startY !== source.y)
+    assert.ok(endX !== target.x || endY !== target.y)
+  })
 })

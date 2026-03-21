@@ -37,9 +37,11 @@ const GRAPH_WIDTH = 640
 const GRAPH_HEIGHT = 360
 const CENTER_X = GRAPH_WIDTH / 2
 const CENTER_Y = GRAPH_HEIGHT / 2
-const NODE_WIDTH = 140
+export const CYCLE_GRAPH_NODE_WIDTH = 140
+export const CYCLE_GRAPH_NODE_HEIGHT = 40
 const MAX_TWO_NODE_NEARBY_FILES = 4
 const MAX_MULTI_NODE_NEARBY_FILES = 6
+const MULTI_NODE_EDGE_GAP = 10
 
 function getBasename(filePath: string): string {
   const segments = filePath.replace(/\\/g, '/').split('/')
@@ -87,6 +89,34 @@ function buildTwoNodeCycleNodes(files: string[]): CycleGraphNodeModel[] {
       isCycleNode: true
     }
   ]
+}
+
+function getNodeBoundaryDistance(unitX: number, unitY: number) {
+  const horizontalDistance =
+    Math.abs(unitX) > Number.EPSILON
+      ? CYCLE_GRAPH_NODE_WIDTH / 2 / Math.abs(unitX)
+      : Number.POSITIVE_INFINITY
+  const verticalDistance =
+    Math.abs(unitY) > Number.EPSILON
+      ? CYCLE_GRAPH_NODE_HEIGHT / 2 / Math.abs(unitY)
+      : Number.POSITIVE_INFINITY
+
+  return Math.min(horizontalDistance, verticalDistance)
+}
+
+function projectPointFromNodeCenter(params: {
+  node: CycleGraphNodeModel
+  unitX: number
+  unitY: number
+  gap?: number
+}) {
+  const { node, unitX, unitY, gap = 0 } = params
+  const distance = getNodeBoundaryDistance(unitX, unitY) + gap
+
+  return {
+    x: node.x + unitX * distance,
+    y: node.y + unitY * distance
+  }
 }
 
 function rankNearbyFiles(item: CycleTriageItem): string[] {
@@ -172,12 +202,12 @@ function buildCurvedEdge(
   const isTopRoute = horizontalDirection === 1
   const startX =
     horizontalDirection === 1
-      ? source.x + NODE_WIDTH / 2
-      : source.x - NODE_WIDTH / 2
+      ? source.x + CYCLE_GRAPH_NODE_WIDTH / 2
+      : source.x - CYCLE_GRAPH_NODE_WIDTH / 2
   const endX =
     horizontalDirection === 1
-      ? target.x - NODE_WIDTH / 2
-      : target.x + NODE_WIDTH / 2
+      ? target.x - CYCLE_GRAPH_NODE_WIDTH / 2
+      : target.x + CYCLE_GRAPH_NODE_WIDTH / 2
   const y = source.y + (isTopRoute ? -10 : 10)
 
   return {
@@ -193,12 +223,39 @@ function buildLineEdge(
   source: CycleGraphNodeModel,
   target: CycleGraphNodeModel
 ): CycleGraphEdgeModel {
-  const midX = (source.x + target.x) / 2
-  const midY = (source.y + target.y) / 2
+  const dx = target.x - source.x
+  const dy = target.y - source.y
+  const length = Math.hypot(dx, dy)
+
+  if (length <= Number.EPSILON) {
+    return {
+      ...edge,
+      path: `M ${source.x} ${source.y} L ${target.x} ${target.y}`,
+      labelX: source.x,
+      labelY: source.y
+    }
+  }
+
+  const unitX = dx / length
+  const unitY = dy / length
+  const start = projectPointFromNodeCenter({
+    node: source,
+    unitX,
+    unitY,
+    gap: MULTI_NODE_EDGE_GAP / 2
+  })
+  const end = projectPointFromNodeCenter({
+    node: target,
+    unitX: -unitX,
+    unitY: -unitY,
+    gap: MULTI_NODE_EDGE_GAP
+  })
+  const midX = (start.x + end.x) / 2
+  const midY = (start.y + end.y) / 2
 
   return {
     ...edge,
-    path: `M ${source.x} ${source.y} L ${target.x} ${target.y}`,
+    path: `M ${start.x} ${start.y} L ${end.x} ${end.y}`,
     labelX: midX,
     labelY: midY
   }

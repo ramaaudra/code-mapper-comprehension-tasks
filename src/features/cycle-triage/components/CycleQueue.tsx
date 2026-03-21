@@ -34,8 +34,8 @@ export function CycleQueue({
   }
 
   return (
-    <ScrollArea className='h-[min(70vh,720px)]'>
-      <div className='space-y-3 pr-4'>
+    <ScrollArea className='h-full min-h-0'>
+      <div className='space-y-3 pb-4 pr-4'>
         {items.map((item) => {
           const isSelected = selectedCycleId === item.id
 

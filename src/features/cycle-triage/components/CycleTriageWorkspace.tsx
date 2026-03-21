@@ -135,7 +135,7 @@ export function CycleTriageWorkspace({
           </Card>
         ) : (
           <div className='grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]'>
-            <Card className='overflow-hidden'>
+            <Card className='flex min-h-0 flex-col overflow-hidden xl:sticky xl:top-6 xl:h-[calc(100dvh-8rem)] xl:self-start'>
               <CardHeader className='pb-3'>
                 <CardTitle className='text-lg'>
                   {cycleTriageCopy.queue.title}
@@ -144,7 +144,7 @@ export function CycleTriageWorkspace({
                   {cycleTriageCopy.queue.description}
                 </CardDescription>
               </CardHeader>
-              <CardContent className='pt-0'>
+              <CardContent className='flex min-h-0 flex-1 overflow-hidden pt-0'>
                 <CycleQueue
                   items={items}
                   selectedCycleId={selectedItem?.id ?? null}
