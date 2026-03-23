@@ -178,7 +178,7 @@ export function HighRiskModules({
       </CardHeader>
       <CardContent className='space-y-3'>
         {/* Column Headers */}
-        <div className='flex items-center gap-4 px-4 text-[10px] uppercase tracking-wider text-muted-foreground'>
+        <div className='flex items-center gap-4 px-4 text-[11px] font-medium text-muted-foreground'>
           <div className='flex-1'>
             {dashboardCopy.highRiskModules.columns.spreadRisk}
           </div>
@@ -199,8 +199,8 @@ export function HighRiskModules({
               onClick={() => onViewModule?.(module.path)}
               className={cn(
                 'w-full rounded-lg bg-muted/20 p-4 text-left',
-                'hover:bg-muted/30 hover:ring-2 hover:ring-[hsl(var(--primary))]/50',
-                'cursor-pointer transition-all'
+                'cursor-pointer transition-colors duration-200 hover:bg-muted/30',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
               )}
             >
               <div className='mb-3'>
@@ -244,7 +244,7 @@ export function HighRiskModules({
         {onViewArchitecture && (
           <button
             onClick={onViewArchitecture}
-            className='w-full py-2 text-center text-xs text-primary hover:underline'
+            className='w-full rounded-md py-2 text-center text-sm font-medium text-primary transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
           >
             {dashboardCopy.highRiskModules.footerCta}
           </button>

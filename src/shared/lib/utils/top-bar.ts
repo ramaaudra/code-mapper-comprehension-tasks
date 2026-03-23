@@ -1,6 +1,9 @@
 import { shellCopy } from '../../content/shellCopy.ts'
 
-import type { ExplorerRuntimeMode } from '../../types/explorer.ts'
+import type {
+  ExplorerContextChip,
+  ExplorerRuntimeMode
+} from '../../types/explorer.ts'
 
 interface ResolveTopBarActionGroupsOptions {
   hasData: boolean
@@ -49,4 +52,14 @@ export function resolveTopBarIconLabels({
         ? shellCopy.actions.reloadChanged(totalChanges)
         : shellCopy.actions.reload
   }
+}
+
+export function shouldShowTopBarContextChip(
+  contextChip: ExplorerContextChip | null
+) {
+  if (!contextChip) {
+    return false
+  }
+
+  return contextChip.label !== shellCopy.contextChips.cycles.triage
 }

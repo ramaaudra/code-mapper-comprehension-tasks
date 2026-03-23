@@ -2,12 +2,12 @@ import {
   useModuleReviewThresholdCalibration,
   useFolderDetail
 } from '@/features/architecture'
+import { DecisionStorySection } from '@/shared/components/ui/decision-story-section'
 import { DetailPanelDisclosure } from '@/shared/components/ui/detail-panel-disclosure'
 import { DetailPanelHeader } from '@/shared/components/ui/detail-panel-header'
 import { DetailPanelSectionHeading } from '@/shared/components/ui/detail-panel-section-heading'
 import { DetailPanelState } from '@/shared/components/ui/detail-panel-state'
 import { DetailPanelTabs } from '@/shared/components/ui/detail-panel-tabs'
-import { DiagnosisCard } from '@/shared/components/ui/diagnosis-card'
 import { HotspotStatusLabel } from '@/shared/components/ui/hotspot-status-label'
 import {
   AlertTriangle,
@@ -22,7 +22,6 @@ import { MetricInsightCard } from '@/shared/components/ui/metric-insight-card'
 import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Tabs, TabsContent } from '@/shared/components/ui/tabs'
-import { decisionCopy } from '@/shared/content/decisionCopy'
 import { useDataContext } from '@/shared/context/DataContext'
 import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
 import {
@@ -36,20 +35,12 @@ import {
 import {
   createDecisionAssessment,
   formatChangePressureHelper,
-  formatChangePressureValue,
   formatExternalRelianceHelper,
-  formatExternalRelianceValue,
   formatRelativeChurn,
   formatImpactScopeHelper,
-  formatImpactScopeValue,
   formatStructuralPositionHelper,
-  formatStructuralPositionValue,
   getAssessmentMethodItems,
-  getChangePressureTone,
-  getExternalRelianceTone,
-  getImpactScopeTone,
   isEvolutionaryMetricsAvailable,
-  getStructuralPositionTone,
   truncateMiddle
 } from '@/shared/lib/utils'
 import {
@@ -512,57 +503,21 @@ function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
     <div className='space-y-4 p-4'>
       {decisionAssessment ? (
         <div className='space-y-3'>
-          <DiagnosisCard
+          <DecisionStorySection
+            assessment={decisionAssessment}
             icon={DECISION_CARD_TONE_ICON[decisionAssessment.tone]}
-            headline={decisionAssessment.headline}
-            taxonomyLabel={decisionAssessment.title}
-            reviewPriority={decisionAssessment.reviewPriority}
-            summary={decisionAssessment.summary}
-            basisSummary={decisionAssessment.basisSummary}
-            actionLead={
-              decisionAssessment.actions[0] ?? 'Review this module carefully.'
+            changeActivityValue={
+              changeHistoryAvailable ? undefined : 'Unavailable'
             }
-            actionList={
-              decisionAssessment.actions.length > 1 ? (
-                <InsightBulletList
-                  items={decisionAssessment.actions.slice(1)}
-                />
-              ) : undefined
-            }
-            driversLead={decisionAssessment.topDrivers[0] ?? ''}
-            driversList={
-              decisionAssessment.topDrivers.length > 1 ? (
-                <InsightBulletList
-                  items={decisionAssessment.topDrivers.slice(1)}
-                />
-              ) : undefined
-            }
-            tone={decisionAssessment.tone}
-          />
-          <div className='grid grid-cols-2 gap-3'>
-            <MetricValueCard
-              value={formatImpactScopeValue(decisionAssessment.impactScope)}
-              label={decisionCopy.evidence.labels.impactScope}
-              tone={getImpactScopeTone(decisionAssessment.impactScope)}
-              helper={
+            changeActivityTone={changeHistoryAvailable ? undefined : 'default'}
+            fallbackActionLead='Review this module carefully.'
+            evidenceHelpers={{
+              impactScope: (
                 <span className='text-[11px] text-muted-foreground'>
                   {formatImpactScopeHelper(moduleData.ca, 'module')}
                 </span>
-              }
-            />
-            <MetricValueCard
-              value={
-                changeHistoryAvailable
-                  ? formatChangePressureValue(decisionAssessment.changePressure)
-                  : 'Unavailable'
-              }
-              label={decisionCopy.evidence.labels.changeActivity}
-              tone={
-                changeHistoryAvailable
-                  ? getChangePressureTone(decisionAssessment.changePressure)
-                  : 'default'
-              }
-              helper={
+              ),
+              changeActivity:
                 changeHistoryAvailable && evolution ? (
                   <span className='text-[11px] text-muted-foreground'>
                     {formatChangePressureHelper(
@@ -573,38 +528,19 @@ function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
                   <span className='text-[11px] text-muted-foreground'>
                     Git history is unavailable for recent change signals.
                   </span>
-                ) : null
-              }
-            />
-            <MetricValueCard
-              value={formatExternalRelianceValue(
-                decisionAssessment.externalReliance
-              )}
-              label={decisionCopy.evidence.labels.dependencies}
-              tone={getExternalRelianceTone(
-                decisionAssessment.externalReliance
-              )}
-              helper={
+                ) : null,
+              dependencies: (
                 <span className='text-[11px] text-muted-foreground'>
                   {formatExternalRelianceHelper(moduleData.ce, 'module')}
                 </span>
-              }
-            />
-            <MetricValueCard
-              value={formatStructuralPositionValue(
-                decisionAssessment.structuralPosition
-              )}
-              label={decisionCopy.evidence.labels.architectureRole}
-              tone={getStructuralPositionTone(
-                decisionAssessment.structuralPosition
-              )}
-              helper={
+              ),
+              architectureRole: (
                 <span className='text-[11px] text-muted-foreground'>
                   {formatStructuralPositionHelper(moduleData.instability)}
                 </span>
-              }
-            />
-          </div>
+              )
+            }}
+          />
         </div>
       ) : null}
 

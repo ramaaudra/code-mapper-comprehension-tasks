@@ -61,6 +61,22 @@ function createCycleId(cyclePath: string[]): string {
   return cyclePath.map(normalizePath).join('->')
 }
 
+function findDependencyReference(params: {
+  dependencyMap: Record<
+    string,
+    { target: string; strength: number; line: number }[]
+  >
+  source: string
+  target: string
+}) {
+  const { dependencyMap, source, target } = params
+  const dependencies = dependencyMap[source] ?? []
+
+  return dependencies.find(
+    (dependency) => normalizePath(dependency.target) === normalizePath(target)
+  )
+}
+
 function percentile(values: number[], percentileRank: number): number {
   if (values.length === 0) {
     return 0
@@ -364,10 +380,21 @@ export function buildCycleTriageItems({
       const cyclePath = normalizeCyclePath(cycleInfo.cycle)
       const files = uniquePaths(cyclePath.slice(0, -1))
       const filesSet = new Set(files)
-      const cycleEdges = cyclePath.slice(0, -1).map((source, index) => ({
-        source,
-        target: cyclePath[index + 1] ?? source
-      }))
+      const cycleEdges = cyclePath.slice(0, -1).map((source, index) => {
+        const target = cyclePath[index + 1] ?? source
+        const dependencyReference = findDependencyReference({
+          dependencyMap,
+          source,
+          target
+        })
+
+        return {
+          source,
+          target,
+          line: dependencyReference?.line,
+          strength: dependencyReference?.strength
+        }
+      })
       const metrics = files
         .map((filePath) => metricsByPath.get(filePath))
         .filter((metric): metric is CycleFileMetric => metric != null)
@@ -434,6 +461,7 @@ export function buildCycleTriageItems({
         id: createCycleId(cyclePath),
         title: buildTitle(files, cyclePath),
         routeLabel: buildRouteLabel(cyclePath),
+        detectionSeverity: cycleInfo.severity,
         fixPriority,
         priorityReason,
         priorityDrivers,

@@ -24,6 +24,7 @@ test('builds a readable two-node loop as a literal oval with explicit directions
       id: 'order-service->payment-service->order-service',
       title: 'order-service.ts <-> payment-service.ts loop',
       routeLabel: 'order-service.ts -> payment-service.ts -> order-service.ts',
+      detectionSeverity: 'medium',
       fixPriority: 'high',
       priorityReason: 'High priority because broad downstream usage.',
       priorityDrivers: ['broad downstream usage'],
@@ -94,6 +95,7 @@ test('limits nearby nodes so the graph stays readable', () => {
       id: 'payment-service->user-service->payment-service',
       title: 'payment-service.ts <-> user-service.ts loop',
       routeLabel: 'payment-service.ts -> user-service.ts -> payment-service.ts',
+      detectionSeverity: 'medium',
       fixPriority: 'high',
       priorityReason: 'High priority because broad downstream usage.',
       priorityDrivers: ['broad downstream usage'],
@@ -176,6 +178,7 @@ test('shortens multi-node cycle edges so arrowheads stay visible outside node bo
         'discount-service.ts -> user-service.ts -> payment-service.ts loop',
       routeLabel:
         'discount-service.ts -> user-service.ts -> payment-service.ts -> discount-service.ts',
+      detectionSeverity: 'medium',
       fixPriority: 'high',
       priorityReason: 'High priority because broad downstream usage.',
       priorityDrivers: ['broad downstream usage'],

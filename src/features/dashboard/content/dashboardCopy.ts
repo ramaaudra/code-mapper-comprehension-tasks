@@ -2,91 +2,43 @@ export const dashboardCopy = {
   page: {
     title: 'Project Overview',
     description:
-      'Dependency analysis summary and repair priorities for your project.'
+      'Review the safest next moves before you open the graph or edit a shared area.'
   },
   sections: {
     quickSnapshot: {
       eyebrow: 'Quick Snapshot',
-      title: 'Project size and recent activity',
+      title: 'Repository size and recent pressure',
       description:
-        'Use this row to orient yourself before diving into the review queues below.'
+        'Use this row for orientation only. It should confirm scale, not decide your next review step.'
     },
     reviewFirst: {
-      eyebrow: 'Review First',
-      title: 'Shared and active areas that deserve attention',
+      eyebrow: 'Start Here',
+      title: 'Start with the next safe review move',
       description:
-        'Use these two views together: the left list shows where changes can spread, and the right list shows where recent change pressure is highest.'
+        'This ranked list already combines shared spread risk and recent change pressure, so you only need to read one decision surface first.'
     },
     currentIssues: {
       eyebrow: 'Current Issues',
-      title: 'Blockers and cleanup candidates',
+      title: 'Blockers and cleanup follow-up',
       description:
-        'Check cycles first, then review orphaned files when you have maintenance time.'
+        'Open blockers first, then return to lower-risk cleanup when the urgent review work is under control.'
     },
     systemContext: {
-      eyebrow: 'System Context',
-      title: 'Overall change safety and dependency load',
+      eyebrow: 'Supporting Context',
+      title: 'Why the queue is prioritizing these areas',
       description:
-        'These summaries help you understand the broader system condition after triaging the urgent areas above.'
+        'Use these summaries when you need more evidence about shared impact, coupling, or overall refactor safety.'
     }
   },
   guideTeaser: {
-    title: 'New to Instability Metrics?',
+    title: 'Need help reading the metrics?',
     description:
-      "Learn why Unstable doesn't mean broken — and why high instability is often a good thing for UI code.",
-    cta: 'Read Guide'
+      'Open the guide if you want the meaning behind spread risk, churn, and stability labels.',
+    cta: 'Open Guide'
   },
-  actionableInsights: {
-    title: 'Start Here',
-    description:
-      'Review these first to reduce change risk and avoid broader regressions.',
-    primaryLabel: 'Do this first',
-    secondaryLabel: 'Then review',
-    cta: {
-      file: 'Open file',
-      module: 'Open module',
-      architecture: 'Open architecture',
-      cycles: 'Review cycles'
-    },
-    cycle: {
-      message: (count: number) =>
-        `Break ${count} dependency ${count === 1 ? 'cycle' : 'cycles'} before broader refactors`,
-      action:
-        'Cycles increase coordination and testing cost. Start with the smallest loop and remove one back-reference first.'
-    },
-    criticalRisk: {
-      message: (path: string) => `Review ${path} before editing shared flows`,
-      action:
-        'This area is widely reused and structurally able to spread change, so expect broader verification than a local edit.'
-    },
-    godObject: {
-      message: (name: string) =>
-        `Split ${name} before adding more responsibilities`,
-      action: (count: number) =>
-        `${count} direct dependencies suggest this file is carrying too many concerns.`
-    },
-    warningRisk: {
-      message: (path: string) => `Plan broader checks before editing ${path}`,
-      action:
-        'Changes here can reach more dependents than a local module update, so review nearby consumers before merging.'
-    },
-    hotspot: {
-      message: (path: string) =>
-        `Review ${path} carefully before editing this active area`,
-      action: (percent: number) =>
-        `Recent change activity is ${percent}% in the last 30 days, so this area deserves closer review while it is still changing.`
-    },
-    orphans: {
-      message: (count: number) =>
-        `Validate ${count} cleanup ${count === 1 ? 'candidate' : 'candidates'} when no blocker remains`,
-      actionHigh:
-        'These files may be removable, but confirm dynamic imports, tests, and scripts before cleanup.',
-      actionLow: 'Low urgency. Review them during maintenance or cleanup work.'
-    },
-    success: {
-      message: 'No urgent review blockers detected',
-      action: 'You can start with normal feature work and focused local review.'
-    }
+  priorityReviewQueue: {
+    primaryBadge: 'Primary next move',
+    supportingBadge: 'Supporting follow-up'
   },
   highRiskModules: {
     title: 'Shared areas that can spread change',
@@ -154,23 +106,32 @@ export const dashboardCopy = {
     }
   },
   architectureHealth: {
-    title: 'Overall Change Safety',
+    title: 'Change Safety Summary',
     description:
-      'A summary of cycle pressure, shared-change risk, and code hygiene signals across the repository.',
-    labels: {
-      changeProfile: 'Change Profile:',
-      cycles: 'Cycles:',
-      criticalRisks: 'Critical Risks:'
+      'A story-first summary of the blockers and shared-risk signals affecting refactor safety.',
+    reviewPostureLabel: 'Review posture',
+    reviewPostureDetail: (score: number) =>
+      `Secondary score: ${score}/100. Use it only as a compact cross-check after reading the story above.`,
+    scoreTooltip: {
+      title: 'How this summary is scored',
+      description:
+        'This secondary score compresses cycle pressure, shared risk, and cleanup pressure into one supporting signal.',
+      baselineLabel: 'Baseline',
+      cyclesLabel: (count: number) => `Cycles (${count})`,
+      sharedRiskLabel: 'Shared risk areas',
+      cleanupLabel: 'Cleanup pressure',
+      finalLabel: 'Final score'
     }
   },
   couplingSnapshot: {
     title: 'Coupling Snapshot',
     description:
       'Use this to understand how dependency load is distributed across files.',
-    averagePrefix: 'Average:',
-    averageSuffix: 'outgoing dependencies per file',
-    bucketHelper: 'Click a bucket to inspect matching files.',
-    mostCoupled: 'Highest outgoing dependency count:',
+    averagePrefix: 'Average',
+    averageSuffix: 'outgoing dependencies per file.',
+    bucketHelper: 'Select a bucket to inspect matching files.',
+    mostCoupledPrefix: 'Highest:',
+    mostCoupledValue: (count: number) => `${count} outgoing dependencies`,
     dialogTitle: (label: string, count: number) =>
       `${label} coupling files (${count})`,
     dialogDescription: (label: string, range: string) =>

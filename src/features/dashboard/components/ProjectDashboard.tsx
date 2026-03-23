@@ -26,12 +26,13 @@ import {
   buildCouplingDistribution,
   type CouplingBucketFile
 } from '../lib/couplingBuckets'
-import { ActionableInsights } from './ActionableInsights'
-import { ArchitectureHealthScore } from './ArchitectureHealthScore'
-import { CouplingDistribution } from './CouplingDistribution'
-import { EvolutionaryHotspots } from './EvolutionaryHotspots'
-import { HighRiskModules } from './HighRiskModules'
+import {
+  buildOverviewReviewQueue,
+  getOverviewSectionOrder
+} from '../lib/overview-priority'
 import { IssuesPanel } from './IssuesPanel'
+import { PriorityReviewQueue } from './PriorityReviewQueue'
+import { SupportingContextSection } from './SupportingContextSection'
 
 import type { AnalysisData } from '@/shared/types/analysis'
 import type { Edge, Node } from '@xyflow/react'
@@ -49,12 +50,12 @@ function OverviewSectionHeader({
 }: OverviewSectionHeaderProps) {
   return (
     <div className='space-y-1.5'>
-      <p className='text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground/85'>
+      <p className='text-xs font-medium tracking-[0.08em] text-muted-foreground/85'>
         {eyebrow}
       </p>
       <div className='space-y-1'>
         <h2 className='text-lg font-semibold text-foreground'>{title}</h2>
-        <p className='max-w-3xl text-sm text-muted-foreground/90'>
+        <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground/90'>
           {description}
         </p>
       </div>
@@ -92,7 +93,7 @@ export const ProjectDashboard = memo(
     viewMode,
     selectedFileId,
     onNavigateToFile,
-    onShowArchitecture,
+    onShowArchitecture: _onShowArchitecture,
     onShowMetricsGuide,
     onShowCycleTriage,
     onShowModuleGraph,
@@ -179,6 +180,21 @@ export const ProjectDashboard = memo(
     }, [architectureData])
 
     const topHotspot = evolutionaryHotspots[0] ?? null
+    const reviewQueue = useMemo(() => {
+      return buildOverviewReviewQueue({
+        cycleCount: healthBreakdown.cycleCount,
+        orphanCount: healthBreakdown.orphanCount,
+        criticalRisks,
+        warningRisks,
+        topHotspot
+      })
+    }, [
+      criticalRisks,
+      healthBreakdown.cycleCount,
+      healthBreakdown.orphanCount,
+      topHotspot,
+      warningRisks
+    ])
 
     // Calculate coupling distribution
     const couplingDistribution = useMemo(() => {
@@ -243,19 +259,22 @@ export const ProjectDashboard = memo(
         {
           label: 'Total Files',
           value: snapshot.totalFiles.toLocaleString(),
+          subValue: 'Repository scale only',
           icon: <FileText className='h-4 w-4' />
         },
         {
           label: 'Dependencies',
           value: snapshot.totalDependencies.toLocaleString(),
+          subValue: 'Structural breadth',
           icon: <Network className='h-4 w-4' />
         },
         {
           label: 'Avg. Dependencies / File',
           value:
             typeof snapshot.averageDependenciesPerFile === 'number'
-              ? `${snapshot.averageDependenciesPerFile}`
+              ? snapshot.averageDependenciesPerFile.toFixed(2)
               : snapshot.averageDependenciesPerFile,
+          subValue: 'Coupling density',
           icon: <TrendingUp className='h-4 w-4' />
         },
         {
@@ -263,31 +282,14 @@ export const ProjectDashboard = memo(
           value: hotspotAvailability.isAvailable
             ? `${(snapshot.averageRelativeChurn30d * 100).toFixed(1)}%`
             : 'Unavailable',
+          subValue: hotspotAvailability.isAvailable
+            ? 'Recent change pressure'
+            : 'Git history unavailable',
           icon: <TrendingUp className='h-4 w-4' />
         }
       ]
 
-      // Generate critical insights for Health Card
-      const criticalInsights = []
-      if (healthBreakdown.cycleCount > 0) {
-        criticalInsights.push({
-          type: 'critical' as const,
-          message: `${healthBreakdown.cycleCount} circular ${healthBreakdown.cycleCount === 1 ? 'dependency' : 'dependencies'} need attention`
-        })
-      }
-      const highRiskCount = criticalRisks.length + warningRisks.length
-      if (highRiskCount > 0) {
-        criticalInsights.push({
-          type: 'warning' as const,
-          message: `${highRiskCount} module${highRiskCount > 1 ? 's' : ''} with elevated propagation risk detected`
-        })
-      }
-      if (criticalInsights.length === 0) {
-        criticalInsights.push({
-          type: 'success' as const,
-          message: 'Architecture is in excellent shape'
-        })
-      }
+      const overviewSectionOrder = getOverviewSectionOrder()
 
       return (
         <div className='h-full w-full overflow-y-auto overflow-x-hidden bg-background'>
@@ -301,124 +303,118 @@ export const ProjectDashboard = memo(
               </p>
             </div>
 
-            <div className='space-y-3'>
-              <ActionableInsights
-                cycleCount={healthBreakdown.cycleCount}
-                orphanCount={healthBreakdown.orphanCount}
-                criticalRisks={criticalRisks}
-                warningRisks={warningRisks}
-                godObjects={couplingDistribution.godObjects}
-                topHotspot={topHotspot}
-                onNavigateToFile={onNavigateToFile}
-                onViewModule={onShowModuleGraph}
-                onShowArchitecture={onShowArchitecture}
-                onShowCycleTriage={onShowCycleTriage}
-              />
-            </div>
+            {overviewSectionOrder.map((sectionId) => {
+              if (sectionId === 'start-here') {
+                return (
+                  <section key={sectionId} className='space-y-4'>
+                    <OverviewSectionHeader
+                      eyebrow={dashboardCopy.sections.reviewFirst.eyebrow}
+                      title={dashboardCopy.sections.reviewFirst.title}
+                      description={
+                        dashboardCopy.sections.reviewFirst.description
+                      }
+                    />
+                    <PriorityReviewQueue
+                      items={reviewQueue}
+                      onViewModule={onShowModuleGraph}
+                      onShowCycleTriage={onShowCycleTriage}
+                    />
+                  </section>
+                )
+              }
 
-            <div className='space-y-4'>
-              <OverviewSectionHeader
-                eyebrow={dashboardCopy.sections.quickSnapshot.eyebrow}
-                title={dashboardCopy.sections.quickSnapshot.title}
-                description={dashboardCopy.sections.quickSnapshot.description}
-              />
-              <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
-                {overviewCards.map(({ label, value, icon }) => (
-                  <MetricCard
-                    key={label}
-                    label={label}
-                    value={value}
-                    icon={icon}
-                    variant='minimal'
+              if (sectionId === 'current-issues') {
+                return (
+                  <section key={sectionId} className='space-y-4'>
+                    <OverviewSectionHeader
+                      eyebrow={dashboardCopy.sections.currentIssues.eyebrow}
+                      title={dashboardCopy.sections.currentIssues.title}
+                      description={
+                        dashboardCopy.sections.currentIssues.description
+                      }
+                    />
+                    <IssuesPanel
+                      data={analysisData}
+                      onNavigateToFile={onNavigateToFile}
+                      onShowCycleTriage={onShowCycleTriage}
+                    />
+                  </section>
+                )
+              }
+
+              if (sectionId === 'system-context') {
+                return (
+                  <section key={sectionId} className='space-y-4'>
+                    <OverviewSectionHeader
+                      eyebrow={dashboardCopy.sections.systemContext.eyebrow}
+                      title={dashboardCopy.sections.systemContext.title}
+                      description={
+                        dashboardCopy.sections.systemContext.description
+                      }
+                    />
+                    <SupportingContextSection
+                      breakdown={healthBreakdown}
+                      riskMetrics={{
+                        criticalCount: criticalRisks.length,
+                        warningCount: warningRisks.length,
+                        godObjectCount: couplingDistribution.godObjects.length
+                      }}
+                      couplingDistribution={couplingDistribution}
+                      onNavigateToFile={onNavigateToFile}
+                    />
+                  </section>
+                )
+              }
+
+              return (
+                <section key={sectionId} className='space-y-4'>
+                  <OverviewSectionHeader
+                    eyebrow={dashboardCopy.sections.quickSnapshot.eyebrow}
+                    title={dashboardCopy.sections.quickSnapshot.title}
+                    description={
+                      dashboardCopy.sections.quickSnapshot.description
+                    }
                   />
-                ))}
-              </div>
-            </div>
-
-            <div className='space-y-4'>
-              <OverviewSectionHeader
-                eyebrow={dashboardCopy.sections.reviewFirst.eyebrow}
-                title={dashboardCopy.sections.reviewFirst.title}
-                description={dashboardCopy.sections.reviewFirst.description}
-              />
-              <div className='grid gap-6 lg:grid-cols-2'>
-                <HighRiskModules
-                  modules={allRiskProfiles.slice(0, 5)}
-                  onViewModule={onShowModuleGraph}
-                  onViewArchitecture={onShowArchitecture}
-                  thresholdCalibration={moduleThresholdCalibration}
-                />
-                <EvolutionaryHotspots
-                  hotspots={evolutionaryHotspots}
-                  isAvailable={hotspotAvailability.isAvailable}
-                  unavailableReason={hotspotAvailability.message}
-                  onViewModule={onShowModuleGraph}
-                  thresholdCalibration={moduleThresholdCalibration}
-                />
-              </div>
-            </div>
-
-            <div className='space-y-4'>
-              <OverviewSectionHeader
-                eyebrow={dashboardCopy.sections.currentIssues.eyebrow}
-                title={dashboardCopy.sections.currentIssues.title}
-                description={dashboardCopy.sections.currentIssues.description}
-              />
-              <IssuesPanel
-                data={analysisData}
-                onNavigateToFile={onNavigateToFile}
-                onShowCycleTriage={onShowCycleTriage}
-              />
-            </div>
-
-            <div className='space-y-4'>
-              <OverviewSectionHeader
-                eyebrow={dashboardCopy.sections.systemContext.eyebrow}
-                title={dashboardCopy.sections.systemContext.title}
-                description={dashboardCopy.sections.systemContext.description}
-              />
-              <div className='grid gap-6 lg:grid-cols-2'>
-                <ArchitectureHealthScore
-                  breakdown={healthBreakdown}
-                  riskMetrics={{
-                    criticalCount: criticalRisks.length,
-                    warningCount: warningRisks.length,
-                    godObjectCount: couplingDistribution.godObjects.length
-                  }}
-                  criticalInsights={criticalInsights}
-                />
-                <CouplingDistribution
-                  {...couplingDistribution}
-                  onNavigateToFile={onNavigateToFile}
-                />
-              </div>
-            </div>
+                  <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
+                    {overviewCards.map(({ label, value, subValue, icon }) => (
+                      <MetricCard
+                        key={label}
+                        label={label}
+                        value={value}
+                        subValue={subValue}
+                        icon={icon}
+                        variant='minimal'
+                      />
+                    ))}
+                  </div>
+                </section>
+              )
+            })}
 
             {/* Instability Teaser Card */}
             {onShowMetricsGuide && (
               <button
                 onClick={onShowMetricsGuide}
-                className='group relative w-full overflow-hidden rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 transition-all duration-300 hover:border-blue-500/40 hover:shadow-lg dark:from-blue-950/30 dark:to-cyan-950/20'
+                className='group relative w-full overflow-hidden rounded-xl border border-border/70 bg-muted/25 transition-colors duration-200 hover:bg-muted/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
               >
-                <div className='absolute inset-0 bg-blue-400/5 dark:bg-blue-400/10' />
                 <div className='relative flex items-center gap-4 p-4'>
-                  <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 transition-transform duration-300 group-hover:scale-110 dark:from-blue-500/30 dark:to-cyan-500/30'>
-                    <Lightbulb className='h-6 w-6 text-blue-600 dark:text-blue-400' />
+                  <div className='flex h-11 w-11 items-center justify-center rounded-xl border border-border/70 bg-background/70 transition-transform duration-200 group-hover:translate-x-0.5'>
+                    <Lightbulb className='h-5 w-5 text-foreground' />
                   </div>
                   <div className='min-w-0 flex-1 text-left'>
                     <h3 className='mb-0.5 text-base font-semibold text-foreground'>
                       {dashboardCopy.guideTeaser.title}
                     </h3>
-                    <p className='text-sm text-muted-foreground'>
+                    <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground'>
                       {dashboardCopy.guideTeaser.description}
                     </p>
                   </div>
                   <div className='flex flex-shrink-0 items-center gap-2'>
-                    <span className='text-sm font-medium text-blue-600 dark:text-blue-400'>
+                    <span className='text-sm font-medium text-foreground'>
                       {dashboardCopy.guideTeaser.cta}
                     </span>
-                    <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 transition-colors group-hover:bg-blue-500/20 dark:bg-blue-500/20 dark:group-hover:bg-blue-500/30'>
-                      <CaretRight className='h-4 w-4 text-blue-600 transition-transform group-hover:translate-x-0.5 dark:text-blue-400' />
+                    <div className='flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-background/70 transition-colors duration-200 group-hover:bg-background'>
+                      <CaretRight className='h-4 w-4 text-foreground transition-transform duration-200 group-hover:translate-x-0.5' />
                     </div>
                   </div>
                 </div>

@@ -14,6 +14,7 @@ import type { CycleTriageItem } from '../types/cycle-triage'
 interface CycleGraphProps {
   item: CycleTriageItem
   showNearbyDependents: boolean
+  onNavigateToFile?: (filePath: string) => void
 }
 
 function buildLoopSummary(item: CycleTriageItem) {
@@ -21,10 +22,10 @@ function buildLoopSummary(item: CycleTriageItem) {
     const [firstFile = '', secondFile = ''] = item.files
     const firstBasename = firstFile.split('/').pop() ?? firstFile
     const secondBasename = secondFile.split('/').pop() ?? secondFile
-    return `${firstBasename} imports ${secondBasename}, and ${secondBasename} imports ${firstBasename}.`
+    return `Mutual import between ${firstBasename} and ${secondBasename}.`
   }
 
-  return `Follow the loop in order: ${item.routeLabel}.`
+  return `${item.uniqueFileCount} files in one dependency loop.`
 }
 
 function renderEdge(
@@ -55,20 +56,36 @@ function renderEdge(
   )
 }
 
-export function CycleGraph({ item, showNearbyDependents }: CycleGraphProps) {
+export function CycleGraph({
+  item,
+  showNearbyDependents,
+  onNavigateToFile
+}: CycleGraphProps) {
   const model = buildCycleGraphModel({ item, showNearbyDependents })
   const recommendedEdge = item.suggestedInvestigation.candidateEdge
+  const recommendedEdgeModel = recommendedEdge
+    ? model.cycleEdges.find(
+        (edge) =>
+          edge.source === recommendedEdge.source &&
+          edge.target === recommendedEdge.target
+      )
+    : null
   const cycleMarkerId = `cycle-marker-${item.id}`
   const nearbyMarkerId = `nearby-marker-${item.id}`
   const centerX = model.width / 2
   const centerY = model.height / 2
+  const graphHint = recommendedEdge
+    ? `${cycleTriageCopy.detail.directionHint} ${cycleTriageCopy.detail.recommendedEdgeHint}`
+    : cycleTriageCopy.detail.directionHint
 
   return (
     <div className='overflow-hidden rounded-xl border border-border/70 bg-muted/20'>
       <div className='border-b border-border/60 bg-background/60 px-4 py-3'>
-        <p className='text-sm text-foreground'>{buildLoopSummary(item)}</p>
-        <p className='mt-2 text-xs text-muted-foreground'>
-          {cycleTriageCopy.detail.directionHint}
+        <p className='font-mono text-base leading-6 text-foreground'>
+          {buildLoopSummary(item)}
+        </p>
+        <p className='mt-2 text-sm leading-6 text-muted-foreground'>
+          {graphHint}
           {showNearbyDependents && model.hiddenNearbyCount > 0
             ? ` ${cycleTriageCopy.detail.nearbyLimitHint.replace('{visible}', String(model.visibleNearbyCount)).replace('{total}', String(item.nearbyFiles.length))}`
             : ''}
@@ -157,6 +174,19 @@ export function CycleGraph({ item, showNearbyDependents }: CycleGraphProps) {
             )
           )
         )}
+        {recommendedEdge ? (
+          <text
+            x={recommendedEdgeModel?.labelX ?? centerX}
+            y={(recommendedEdgeModel?.labelY ?? centerY) - 18}
+            textAnchor='middle'
+            fontSize='11'
+            fontWeight='600'
+            fill='hsl(var(--destructive))'
+            fontFamily='JetBrains Mono, monospace'
+          >
+            Start here
+          </text>
+        ) : null}
         {item.files.length === 2
           ? model.cycleEdges.map((edge) => {
               const route = model.cycleRouteLabels.find(
@@ -177,6 +207,7 @@ export function CycleGraph({ item, showNearbyDependents }: CycleGraphProps) {
                   textAnchor='middle'
                   fontSize='12'
                   fill='hsl(var(--muted-foreground))'
+                  fontFamily='JetBrains Mono, monospace'
                 >
                   {route.label}
                 </text>
@@ -208,6 +239,10 @@ export function CycleGraph({ item, showNearbyDependents }: CycleGraphProps) {
                 fillOpacity={0.96}
                 stroke={stroke}
                 strokeOpacity={strokeOpacity}
+                style={{
+                  cursor: onNavigateToFile ? 'pointer' : 'default'
+                }}
+                onClick={() => onNavigateToFile?.(node.filePath)}
               />
               <text
                 x={node.x}
@@ -216,6 +251,11 @@ export function CycleGraph({ item, showNearbyDependents }: CycleGraphProps) {
                 fontSize='12'
                 fontWeight={node.isCycleNode ? '600' : '500'}
                 fill={textFill}
+                fontFamily='JetBrains Mono, monospace'
+                style={{
+                  cursor: onNavigateToFile ? 'pointer' : 'default'
+                }}
+                onClick={() => onNavigateToFile?.(node.filePath)}
               >
                 {(() => {
                   const relativePath = getRelativePath(node.filePath)
@@ -229,6 +269,7 @@ export function CycleGraph({ item, showNearbyDependents }: CycleGraphProps) {
                   return `${basename.slice(0, 9)}…${basename.slice(-7)}`
                 })()}
               </text>
+              <title>{getRelativePath(node.filePath)}</title>
             </g>
           )
         })}
@@ -236,42 +277,48 @@ export function CycleGraph({ item, showNearbyDependents }: CycleGraphProps) {
       {showNearbyDependents &&
       (model.importsIntoLoop.length > 0 || model.importsFromLoop.length > 0) ? (
         <div className='border-t border-border/60 bg-background/40 px-4 py-4'>
-          <div className='grid gap-4 lg:grid-cols-2'>
-            {model.importsIntoLoop.length > 0 ? (
-              <div className='space-y-2'>
-                <p className='text-xs font-medium text-foreground'>
-                  {cycleTriageCopy.detail.importsIntoLoop}
-                </p>
-                <div className='space-y-1.5'>
-                  {model.importsIntoLoop.map((route) => (
-                    <div
-                      key={`${route.source}->${route.target}`}
-                      className='rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground'
-                    >
-                      {route.label}
-                    </div>
-                  ))}
+          <details className='space-y-4'>
+            <summary className='cursor-pointer text-xs font-medium text-foreground'>
+              {cycleTriageCopy.detail.nearbyRoutes}
+              {`: ${model.importsIntoLoop.length} in, ${model.importsFromLoop.length} out`}
+            </summary>
+            <div className='grid gap-4 lg:grid-cols-2'>
+              {model.importsIntoLoop.length > 0 ? (
+                <div className='space-y-2'>
+                  <p className='text-xs font-medium text-foreground'>
+                    {cycleTriageCopy.detail.importsIntoLoop}
+                  </p>
+                  <div className='space-y-1.5'>
+                    {model.importsIntoLoop.map((route) => (
+                      <div
+                        key={`${route.source}->${route.target}`}
+                        className='rounded-md border border-border/60 bg-muted/20 px-3 py-2 font-mono text-xs text-muted-foreground'
+                      >
+                        {route.label}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : null}
-            {model.importsFromLoop.length > 0 ? (
-              <div className='space-y-2'>
-                <p className='text-xs font-medium text-foreground'>
-                  {cycleTriageCopy.detail.importsFromLoop}
-                </p>
-                <div className='space-y-1.5'>
-                  {model.importsFromLoop.map((route) => (
-                    <div
-                      key={`${route.source}->${route.target}`}
-                      className='rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground'
-                    >
-                      {route.label}
-                    </div>
-                  ))}
+              ) : null}
+              {model.importsFromLoop.length > 0 ? (
+                <div className='space-y-2'>
+                  <p className='text-xs font-medium text-foreground'>
+                    {cycleTriageCopy.detail.importsFromLoop}
+                  </p>
+                  <div className='space-y-1.5'>
+                    {model.importsFromLoop.map((route) => (
+                      <div
+                        key={`${route.source}->${route.target}`}
+                        className='rounded-md border border-border/60 bg-muted/20 px-3 py-2 font-mono text-xs text-muted-foreground'
+                      >
+                        {route.label}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : null}
-          </div>
+              ) : null}
+            </div>
+          </details>
         </div>
       ) : null}
     </div>

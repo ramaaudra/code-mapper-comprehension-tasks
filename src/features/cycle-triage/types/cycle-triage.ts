@@ -37,6 +37,8 @@ export interface CycleFileMetric {
 export interface CycleGraphEdge {
   source: string
   target: string
+  line?: number
+  strength?: number
 }
 
 export interface SuggestedInvestigation {
@@ -50,6 +52,7 @@ export interface CycleTriageItem {
   id: string
   title: string
   routeLabel: string
+  detectionSeverity: CycleSeverity
   fixPriority: FixPriority
   priorityReason: string
   priorityDrivers: string[]

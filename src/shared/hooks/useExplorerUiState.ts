@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 
+import { parseCycleTriageSearch } from '@/features/cycle-triage/lib/cycle-triage-url'
+
 import type { FileTreeViewRef } from '@/features/file-analysis'
 import type { AnalysisNode } from '@/shared/types/analysis'
 import type {
@@ -37,6 +39,8 @@ export interface ExplorerUiState {
   setFocusedModulePath: Dispatch<SetStateAction<string | null>>
   selectedCycleId: string | null
   setSelectedCycleId: Dispatch<SetStateAction<string | null>>
+  showCycleNearbyImports: boolean
+  setShowCycleNearbyImports: Dispatch<SetStateAction<boolean>>
   isTreeCollapsed: boolean
   setIsTreeCollapsed: Dispatch<SetStateAction<boolean>>
   toggleTreeView: () => void
@@ -49,12 +53,22 @@ export function useExplorerUiState({
   initialGraphViewMode = 'file',
   initialTreeCollapsed = false
 }: UseExplorerUiStateOptions = {}): ExplorerUiState {
+  const initialCycleTriageState =
+    typeof window === 'undefined'
+      ? {
+          viewMode: null,
+          selectedCycleId: null,
+          showNearbyImports: false
+        }
+      : parseCycleTriageSearch(window.location.search)
   const treeRef = useRef<FileTreeViewRef | null>(null)
   const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR'>(
     initialLayoutDirection
   )
   const [selectedNode, setSelectedNode] = useState<AnalysisNode | null>(null)
-  const [viewMode, setViewMode] = useState<ExplorerViewMode>(initialViewMode)
+  const [viewMode, setViewMode] = useState<ExplorerViewMode>(
+    initialCycleTriageState.viewMode ?? initialViewMode
+  )
   const [graphViewMode, setGraphViewMode] =
     useState<GraphViewMode>(initialGraphViewMode)
   const [utilityReturnViewMode, setUtilityReturnViewMode] =
@@ -67,7 +81,12 @@ export function useExplorerUiState({
   const [focusedModulePath, setFocusedModulePath] = useState<string | null>(
     null
   )
-  const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null)
+  const [selectedCycleId, setSelectedCycleId] = useState<string | null>(
+    initialCycleTriageState.selectedCycleId
+  )
+  const [showCycleNearbyImports, setShowCycleNearbyImports] = useState(
+    initialCycleTriageState.showNearbyImports
+  )
   const [isTreeCollapsed, setIsTreeCollapsed] = useState(initialTreeCollapsed)
 
   const toggleTreeView = useCallback(() => {
@@ -94,6 +113,8 @@ export function useExplorerUiState({
     setFocusedModulePath,
     selectedCycleId,
     setSelectedCycleId,
+    showCycleNearbyImports,
+    setShowCycleNearbyImports,
     isTreeCollapsed,
     setIsTreeCollapsed,
     toggleTreeView,

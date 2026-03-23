@@ -118,7 +118,11 @@ export {
   parseMetricsGuideHash,
   resolveExplorerContextChip
 } from './explorer-shell'
-export { resolveTopBarActionGroups, resolveTopBarIconLabels } from './top-bar'
+export {
+  resolveTopBarActionGroups,
+  resolveTopBarIconLabels,
+  shouldShowTopBarContextChip
+} from './top-bar'
 
 // Re-export file status utilities
 export {

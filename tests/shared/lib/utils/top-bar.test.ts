@@ -3,7 +3,8 @@ import test from 'node:test'
 
 import {
   resolveTopBarActionGroups,
-  resolveTopBarIconLabels
+  resolveTopBarIconLabels,
+  shouldShowTopBarContextChip
 } from '../../../../src/shared/lib/utils/top-bar.ts'
 
 test('resolveTopBarActionGroups shows help, export, and operations in live mode with data', () => {
@@ -77,4 +78,24 @@ test('resolveTopBarIconLabels reuses shell copy for sidebar and refresh actions'
       refresh: 'Loading…'
     }
   )
+})
+
+test('shouldShowTopBarContextChip hides the redundant cycle triage chip', () => {
+  assert.equal(
+    shouldShowTopBarContextChip({
+      label: 'Cycles: Triage Workspace',
+      tone: 'default'
+    }),
+    false
+  )
+
+  assert.equal(
+    shouldShowTopBarContextChip({
+      label: 'Graph: Module View',
+      tone: 'default'
+    }),
+    true
+  )
+
+  assert.equal(shouldShowTopBarContextChip(null), false)
 })

@@ -6,44 +6,28 @@ import {
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
-import { CircularProgress } from '@/shared/components/ui/circular-progress'
-import {
-  AlertTriangle,
-  CheckCircle,
-  Ghost,
-  Lightbulb,
-  RefreshCw
-} from '@/shared/components/ui/icons'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/shared/components/ui/tooltip'
+import { AlertTriangle, CheckCircle } from '@/shared/components/ui/icons'
+import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
+import { TooltipProvider } from '@/shared/components/ui/tooltip'
 
 import { dashboardCopy } from '../content/dashboardCopy'
+import { getOverviewHealthStory } from '../lib/overview-health-story'
 
-interface HealthBreakdown {
+export interface HealthBreakdown {
   stabilityScore: number
   cycleCount: number
   orphanCount: number
 }
 
-interface RiskMetrics {
+export interface RiskMetrics {
   criticalCount: number
   warningCount: number
   godObjectCount: number
 }
 
-interface CriticalInsight {
-  type: 'success' | 'warning' | 'critical'
-  message: string
-}
-
 interface ArchitectureHealthScoreProps {
   breakdown: HealthBreakdown
   riskMetrics: RiskMetrics
-  criticalInsights?: CriticalInsight[]
 }
 
 interface ScoreBreakdown {
@@ -83,12 +67,9 @@ function calculateHealthScore(
   }
 }
 
-const EMPTY_INSIGHTS: CriticalInsight[] = []
-
 export function ArchitectureHealthScore({
   breakdown,
-  riskMetrics,
-  criticalInsights = EMPTY_INSIGHTS
+  riskMetrics
 }: ArchitectureHealthScoreProps) {
   const { pfatal, prisk, phygiene, finalScore } = calculateHealthScore(
     breakdown,
@@ -97,221 +78,147 @@ export function ArchitectureHealthScore({
   const structuralProfile = describeStructuralPositionStory(
     breakdown.stabilityScore
   )
+  const healthStory = getOverviewHealthStory({
+    cycleCount: breakdown.cycleCount,
+    criticalRiskCount: riskMetrics.criticalCount,
+    warningRiskCount: riskMetrics.warningCount,
+    orphanCount: breakdown.orphanCount,
+    stabilityScore: breakdown.stabilityScore
+  })
 
-  const getInsightIcon = (type: CriticalInsight['type']) => {
-    switch (type) {
-      case 'critical':
-        return <AlertTriangle className='h-3.5 w-3.5 text-red-500' />
-      case 'warning':
-        return <AlertTriangle className='h-3.5 w-3.5 text-orange-500' />
-      case 'success':
-        return <CheckCircle className='h-3.5 w-3.5 text-green-500' />
-      default:
-        return <Lightbulb className='h-3.5 w-3.5 text-muted-foreground' />
-    }
-  }
+  const toneClassName =
+    healthStory.tone === 'critical'
+      ? 'border-red-500/30 bg-red-500/10 text-red-500'
+      : healthStory.tone === 'warning'
+        ? 'border-orange-500/30 bg-orange-500/10 text-orange-500'
+        : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
 
   return (
     <Card>
       <CardHeader className='pb-2'>
-        <CardTitle className='text-base font-medium'>
-          {dashboardCopy.architectureHealth.title}
-        </CardTitle>
-        <CardDescription>
-          {dashboardCopy.architectureHealth.description}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className='flex items-center gap-8'>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className='flex-shrink-0 cursor-help'>
-                  <CircularProgress
-                    value={finalScore}
-                    max={100}
-                    size={120}
-                    strokeWidth={10}
-                  >
-                    <div className='text-center'>
-                      <div className='text-4xl font-bold tabular-nums'>
-                        {finalScore}
-                      </div>
-                    </div>
-                  </CircularProgress>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent
-                side='right'
-                className='w-64 border-border bg-popover'
-              >
-                <div className='space-y-3 text-xs'>
-                  <p className='border-b border-border pb-2 font-semibold text-popover-foreground'>
-                    Indicator Breakdown
-                  </p>
-                  <div className='space-y-1.5'>
-                    <div className='flex justify-between'>
-                      <span className='text-popover-foreground'>Baseline:</span>
-                      <span className='font-medium text-popover-foreground'>
-                        100
-                      </span>
-                    </div>
-                    {pfatal > 0 && (
-                      <div className='flex justify-between text-red-500'>
-                        <span className='text-popover-foreground'>
-                          Circular Dependencies ({breakdown.cycleCount}× 15):
-                        </span>
-                        <span className='text-red-500'>-{pfatal}</span>
-                      </div>
-                    )}
-                    {prisk > 0 && (
-                      <div className='flex justify-between text-orange-500'>
-                        <span className='text-popover-foreground'>
-                          Propagation Risk Modules ({riskMetrics.criticalCount}
-                          ×5 + {riskMetrics.warningCount}×2):
-                        </span>
-                        <span className='text-orange-500'>-{prisk}</span>
-                      </div>
-                    )}
-                    {phygiene > 0 && (
-                      <div className='flex justify-between text-yellow-500'>
-                        <span className='text-popover-foreground'>
-                          Code Hygiene (Orphans + Gods):
-                        </span>
-                        <span className='text-yellow-500'>-{phygiene}</span>
-                      </div>
-                    )}
-                    <div className='mt-2 flex justify-between border-t border-border pt-2 font-semibold'>
-                      <span className='text-popover-foreground'>
-                        Final Score:
-                      </span>
-                      <span className='text-popover-foreground'>
-                        {finalScore}/100
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <div className='grid flex-1 grid-cols-2 gap-x-8 gap-y-4'>
-            <div className='space-y-3'>
-              <div className='flex items-center gap-2'>
-                <Lightbulb className='h-4 w-4 text-blue-500' />
-                <span className='text-sm'>
-                  <span className='text-muted-foreground'>
-                    {dashboardCopy.architectureHealth.labels.changeProfile}
-                  </span>{' '}
-                  <span className='font-medium'>
-                    {structuralProfile.summaryLabel}
-                  </span>
-                </span>
-              </div>
-              <p className='pl-6 text-xs leading-relaxed text-muted-foreground'>
-                {structuralProfile.description}
-              </p>
-
-              <div className='flex items-center gap-2'>
-                {breakdown.cycleCount === 0 ? (
-                  <CheckCircle className='h-4 w-4 text-green-500' />
-                ) : (
-                  <RefreshCw className='h-4 w-4 text-red-500' />
-                )}
-                <span className='text-sm'>
-                  <span className='text-muted-foreground'>
-                    {dashboardCopy.architectureHealth.labels.cycles}
-                  </span>{' '}
-                  <span className='font-medium'>{breakdown.cycleCount}</span>
-                </span>
-              </div>
-
-              <div className='flex items-center gap-2'>
-                {riskMetrics.criticalCount === 0 ? (
-                  <CheckCircle className='h-4 w-4 text-green-500' />
-                ) : (
-                  <AlertTriangle className='h-4 w-4 text-red-500' />
-                )}
-                <span className='text-sm'>
-                  <span className='text-muted-foreground'>
-                    {dashboardCopy.architectureHealth.labels.criticalRisks}
-                  </span>{' '}
-                  <span className='font-medium'>
-                    {riskMetrics.criticalCount}
-                  </span>
-                </span>
-              </div>
-
-              <div className='flex items-center gap-2'>
-                {breakdown.orphanCount <= 5 ? (
-                  <CheckCircle className='h-4 w-4 text-green-500' />
-                ) : (
-                  <Ghost className='h-4 w-4 text-muted-foreground' />
-                )}
-                <span className='text-sm'>
-                  <span className='text-muted-foreground'>Orphans:</span>{' '}
-                  <span className='font-medium'>{breakdown.orphanCount}</span>
-                </span>
-              </div>
-            </div>
-
-            {criticalInsights.length > 0 && (
-              <div className='space-y-2'>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <p className='inline-flex cursor-help items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground'>
-                        Main drivers
-                        <span className='text-[8px]'>ⓘ</span>
-                      </p>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side='top'
-                      className='max-w-xs border-border bg-popover'
-                    >
-                      <div className='space-y-2'>
-                        <p className='text-xs font-semibold text-popover-foreground'>
-                          Main signals affecting this summary:
-                        </p>
-                        <ul className='list-inside list-disc space-y-0.5 text-xs text-popover-foreground'>
-                          <li>
-                            <strong>Circular dependencies:</strong> Any cycles
-                            detected in your codebase
-                          </li>
-                          <li>
-                            <strong>High propagation-risk modules:</strong>{' '}
-                            Modules already in the High or Critical spread-risk
-                            band
-                          </li>
-                          <li>
-                            <strong>God objects:</strong> Files with 15+
-                            dependencies
-                          </li>
-                        </ul>
-                        <p className='border-t border-border pt-1 text-xs text-popover-foreground/80'>
-                          These are calculated from your dependency graph
-                          analysis.
-                        </p>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                {criticalInsights.slice(0, 2).map((insight, index) => (
-                  <div
-                    key={`${insight.type}-${index}`}
-                    className='flex items-start gap-2'
-                  >
-                    <div className='mt-0.5 shrink-0'>
-                      {getInsightIcon(insight.type)}
-                    </div>
-                    <p className='text-xs leading-relaxed text-foreground/90'>
-                      {insight.message}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
+        <div className='flex items-start justify-between gap-3'>
+          <div className='space-y-1'>
+            <CardTitle className='text-base font-medium'>
+              {dashboardCopy.architectureHealth.title}
+            </CardTitle>
+            <CardDescription className='max-w-2xl leading-relaxed'>
+              {dashboardCopy.architectureHealth.description}
+            </CardDescription>
           </div>
+          <TooltipProvider>
+            <InfoTooltip
+              title={dashboardCopy.architectureHealth.scoreTooltip.title}
+              side='left'
+              align='end'
+            >
+              <div className='space-y-3 text-xs'>
+                <p className='leading-relaxed text-popover-foreground'>
+                  {dashboardCopy.architectureHealth.scoreTooltip.description}
+                </p>
+                <div className='space-y-1.5 border-t border-border pt-2'>
+                  <div className='flex justify-between gap-4'>
+                    <span className='text-popover-foreground'>
+                      {
+                        dashboardCopy.architectureHealth.scoreTooltip
+                          .baselineLabel
+                      }
+                    </span>
+                    <span className='font-medium text-popover-foreground'>
+                      100
+                    </span>
+                  </div>
+                  {pfatal > 0 ? (
+                    <div className='flex justify-between gap-4'>
+                      <span className='text-popover-foreground'>
+                        {dashboardCopy.architectureHealth.scoreTooltip.cyclesLabel(
+                          breakdown.cycleCount
+                        )}
+                      </span>
+                      <span className='text-red-500'>-{pfatal}</span>
+                    </div>
+                  ) : null}
+                  {prisk > 0 ? (
+                    <div className='flex justify-between gap-4'>
+                      <span className='text-popover-foreground'>
+                        {
+                          dashboardCopy.architectureHealth.scoreTooltip
+                            .sharedRiskLabel
+                        }
+                      </span>
+                      <span className='text-orange-500'>-{prisk}</span>
+                    </div>
+                  ) : null}
+                  {phygiene > 0 ? (
+                    <div className='flex justify-between gap-4'>
+                      <span className='text-popover-foreground'>
+                        {
+                          dashboardCopy.architectureHealth.scoreTooltip
+                            .cleanupLabel
+                        }
+                      </span>
+                      <span className='text-yellow-500'>-{phygiene}</span>
+                    </div>
+                  ) : null}
+                  <div className='flex justify-between gap-4 border-t border-border pt-2 font-semibold'>
+                    <span className='text-popover-foreground'>
+                      {dashboardCopy.architectureHealth.scoreTooltip.finalLabel}
+                    </span>
+                    <span className='text-popover-foreground'>
+                      {finalScore}/100
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </InfoTooltip>
+          </TooltipProvider>
+        </div>
+      </CardHeader>
+      <CardContent className='space-y-4'>
+        <div className='flex flex-wrap items-center gap-2'>
+          <span
+            className={`rounded-full border px-2.5 py-1 text-xs font-medium ${toneClassName}`}
+          >
+            {healthStory.headline}
+          </span>
+        </div>
+
+        <div className='space-y-3'>
+          <p className='max-w-2xl text-lg font-semibold leading-relaxed text-foreground'>
+            {healthStory.summary}
+          </p>
+          <div className='space-y-2.5'>
+            {healthStory.drivers.map((driver) => (
+              <div key={driver} className='flex items-start gap-2.5'>
+                <span className='mt-0.5 shrink-0'>
+                  {healthStory.tone === 'critical' ? (
+                    <AlertTriangle className='h-3.5 w-3.5 text-red-500' />
+                  ) : healthStory.tone === 'warning' ? (
+                    <AlertTriangle className='h-3.5 w-3.5 text-orange-500' />
+                  ) : (
+                    <CheckCircle className='h-3.5 w-3.5 text-green-500' />
+                  )}
+                </span>
+                <p className='text-sm leading-relaxed text-muted-foreground'>
+                  {driver}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className='border-t border-border/70 pt-3'>
+          <p className='text-xs font-medium text-muted-foreground'>
+            {dashboardCopy.architectureHealth.reviewPostureLabel}
+          </p>
+          <p className='mt-1 max-w-2xl text-sm leading-relaxed text-foreground/90'>
+            <span className='font-medium text-foreground'>
+              {structuralProfile.summaryLabel}.
+            </span>{' '}
+            {structuralProfile.description}
+          </p>
+          <p className='mt-2 text-xs leading-relaxed text-muted-foreground'>
+            {dashboardCopy.architectureHealth.reviewPostureDetail(finalScore)}
+          </p>
         </div>
       </CardContent>
     </Card>

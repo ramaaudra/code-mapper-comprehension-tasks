@@ -1,10 +1,18 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 import { CouplingDistribution } from '../../../src/features/dashboard/components/CouplingDistribution'
 import { buildCouplingDistribution } from '../../../src/features/dashboard/lib/couplingBuckets'
+
+function toVisibleText(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
 
 test('buildCouplingDistribution keeps bucket ranges aligned with coupling boundary logic', () => {
   const distribution = buildCouplingDistribution([
@@ -72,6 +80,7 @@ test('CouplingDistribution renders the corrected bucket ranges in the visible UI
       mostCoupledFile={{ path: 'src/twelve.ts', count: 12 }}
     />
   )
+  const text = toVisibleText(html)
 
   assert.match(html, /Loose \(0-2\)/)
   assert.match(html, /Medium \(3-6\)/)
@@ -81,4 +90,9 @@ test('CouplingDistribution renders the corrected bucket ranges in the visible UI
   assert.doesNotMatch(html, /Medium \(3-5\)/)
   assert.doesNotMatch(html, /Tight \(6-10\)/)
   assert.doesNotMatch(html, /Heavy \(10\+\)/)
+  assert.match(text, /Average 6\.00 outgoing dependencies per file\./)
+  assert.match(text, /Highest: twelve\.ts \(12 outgoing dependencies\)\./)
+  assert.match(text, /Select a bucket to inspect matching files\./)
+  assert.doesNotMatch(text, /Highest outgoing dependency count:/)
+  assert.doesNotMatch(text, /Click a bucket to inspect matching files\./)
 })

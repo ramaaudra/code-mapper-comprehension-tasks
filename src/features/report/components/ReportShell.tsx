@@ -105,6 +105,8 @@ export function ReportShell() {
       analysisData={analysisData}
       selectedCycleId={explorer.selectedCycleId}
       onSelectedCycleIdChange={explorer.handleCycleSelection}
+      showNearbyImports={explorer.showCycleNearbyImports}
+      onShowNearbyImportsChange={explorer.handleCycleNearbyImportsChange}
       onBack={explorer.handleBackFromUtility}
       onNavigateToFile={explorer.navigateToFile}
     />

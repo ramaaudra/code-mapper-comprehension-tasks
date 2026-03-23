@@ -7,12 +7,12 @@ import {
   useFileArchitectureMetrics
 } from '@/features/architecture'
 import { Button } from '@/shared/components/ui/button'
+import { DecisionStorySection } from '@/shared/components/ui/decision-story-section'
 import { DetailPanelDisclosure } from '@/shared/components/ui/detail-panel-disclosure'
 import { DetailPanelHeader } from '@/shared/components/ui/detail-panel-header'
 import { DetailPanelSectionHeading } from '@/shared/components/ui/detail-panel-section-heading'
 import { DetailPanelState } from '@/shared/components/ui/detail-panel-state'
 import { DetailPanelTabs } from '@/shared/components/ui/detail-panel-tabs'
-import { DiagnosisCard } from '@/shared/components/ui/diagnosis-card'
 import {
   Dialog,
   DialogContent,
@@ -42,7 +42,6 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
-import { decisionCopy } from '@/shared/content/decisionCopy'
 import { DataContext } from '@/shared/context/DataContext'
 import { architectureApi } from '@/shared/lib/api/architecture'
 import { findDependencyPath } from '@/shared/lib/api/pathfinding'
@@ -51,23 +50,15 @@ import { getReviewSignalDefinition } from '@/shared/lib/metric-thresholds'
 import {
   createDecisionAssessment,
   formatChangePressureHelper,
-  formatChangePressureValue,
   formatExternalRelianceHelper,
-  formatExternalRelianceValue,
   getBasename,
-  getChangePressureTone,
-  getExternalRelianceTone,
   getFileEvolutionMetrics,
   getFileIcon,
   isEvolutionaryMetricsAvailable,
   formatImpactScopeHelper,
-  formatImpactScopeValue,
   formatStructuralPositionHelper,
-  formatStructuralPositionValue,
   getAssessmentMethodItems,
-  getImpactScopeTone,
   getRelativePath,
-  getStructuralPositionTone,
   formatRelativeChurn,
   truncateMiddle
 } from '@/shared/lib/utils'
@@ -652,117 +643,45 @@ const NodeDetailPanel = memo(
             className='m-0 flex-1 space-y-6 overflow-y-auto p-4'
           >
             {overviewState.showDiagnosis && decisionAssessment ? (
-              <div className='space-y-3'>
-                <DiagnosisCard
-                  icon={DECISION_CARD_TONE_ICON[decisionAssessment.tone]}
-                  headline={decisionAssessment.headline}
-                  taxonomyLabel={decisionAssessment.title}
-                  reviewPriority={decisionAssessment.reviewPriority}
-                  summary={decisionAssessment.summary}
-                  basisSummary={decisionAssessment.basisSummary}
-                  actionLead={
-                    decisionAssessment.actions[0] ??
-                    'Review this area carefully.'
-                  }
-                  actionList={
-                    decisionAssessment.actions.length > 1 ? (
-                      <InsightBulletList
-                        items={decisionAssessment.actions.slice(1)}
-                      />
-                    ) : undefined
-                  }
-                  driversLead={decisionAssessment.topDrivers[0] ?? ''}
-                  driversList={
-                    decisionAssessment.topDrivers.length > 1 ? (
-                      <InsightBulletList
-                        items={decisionAssessment.topDrivers.slice(1)}
-                      />
-                    ) : undefined
-                  }
-                  tone={decisionAssessment.tone}
-                />
-
-                <div className='grid grid-cols-2 gap-3'>
-                  <MetricValueCard
-                    value={formatImpactScopeValue(
-                      decisionAssessment.impactScope
-                    )}
-                    label={decisionCopy.evidence.labels.impactScope}
-                    tone={getImpactScopeTone(decisionAssessment.impactScope)}
-                    helper={
-                      archMetrics ? (
-                        <span className='text-[11px] text-muted-foreground'>
-                          {formatImpactScopeHelper(archMetrics.ca)}
-                        </span>
-                      ) : null
-                    }
-                  />
-                  <MetricValueCard
-                    value={
-                      changeHistoryAvailable
-                        ? formatChangePressureValue(
-                            decisionAssessment.changePressure
-                          )
-                        : 'Unavailable'
-                    }
-                    label={decisionCopy.evidence.labels.changeActivity}
-                    tone={
-                      changeHistoryAvailable
-                        ? getChangePressureTone(
-                            decisionAssessment.changePressure
-                          )
-                        : 'default'
-                    }
-                    helper={
-                      changeHistoryAvailable && fileEvolution ? (
-                        <span className='text-[11px] text-muted-foreground'>
-                          {formatChangePressureHelper(
-                            fileEvolution.churn30d.relativeChurn
-                          )}
-                        </span>
-                      ) : !changeHistoryAvailable ? (
-                        <span className='text-[11px] text-muted-foreground'>
-                          Git history is unavailable for recent change signals.
-                        </span>
-                      ) : null
-                    }
-                  />
-                  <MetricValueCard
-                    value={formatExternalRelianceValue(
-                      decisionAssessment.externalReliance
-                    )}
-                    label={decisionCopy.evidence.labels.dependencies}
-                    tone={getExternalRelianceTone(
-                      decisionAssessment.externalReliance
-                    )}
-                    helper={
-                      archMetrics ? (
-                        <span className='text-[11px] text-muted-foreground'>
-                          {formatExternalRelianceHelper(archMetrics.ce)}
-                        </span>
-                      ) : null
-                    }
-                  />
-                  <MetricValueCard
-                    value={formatStructuralPositionValue(
-                      decisionAssessment.structuralPosition
-                    )}
-                    label={decisionCopy.evidence.labels.architectureRole}
-                    tone={getStructuralPositionTone(
-                      decisionAssessment.structuralPosition
-                    )}
-                    helper={
-                      archMetrics ? (
-                        <span className='text-[11px] text-muted-foreground'>
-                          {formatStructuralPositionHelper(
-                            archMetrics.instability
-                          )}
-                        </span>
-                      ) : null
-                    }
-                  />
-                </div>
-              </div>
+              <DecisionStorySection
+                assessment={decisionAssessment}
+                icon={DECISION_CARD_TONE_ICON[decisionAssessment.tone]}
+                changeActivityValue={
+                  changeHistoryAvailable ? undefined : 'Unavailable'
+                }
+                changeActivityTone={
+                  changeHistoryAvailable ? undefined : 'default'
+                }
+                evidenceHelpers={{
+                  impactScope: archMetrics ? (
+                    <span className='text-[11px] text-muted-foreground'>
+                      {formatImpactScopeHelper(archMetrics.ca)}
+                    </span>
+                  ) : null,
+                  changeActivity:
+                    changeHistoryAvailable && fileEvolution ? (
+                      <span className='text-[11px] text-muted-foreground'>
+                        {formatChangePressureHelper(
+                          fileEvolution.churn30d.relativeChurn
+                        )}
+                      </span>
+                    ) : !changeHistoryAvailable ? (
+                      <span className='text-[11px] text-muted-foreground'>
+                        Git history is unavailable for recent change signals.
+                      </span>
+                    ) : null,
+                  dependencies: archMetrics ? (
+                    <span className='text-[11px] text-muted-foreground'>
+                      {formatExternalRelianceHelper(archMetrics.ce)}
+                    </span>
+                  ) : null,
+                  architectureRole: archMetrics ? (
+                    <span className='text-[11px] text-muted-foreground'>
+                      {formatStructuralPositionHelper(archMetrics.instability)}
+                    </span>
+                  ) : null
+                }}
+              />
             ) : null}
 
             {overviewState.showDiagnosisUnavailableState ? (

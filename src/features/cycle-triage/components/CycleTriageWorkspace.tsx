@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
   Card,
@@ -16,49 +15,121 @@ import {
   CheckCircle,
   Network
 } from '@/shared/components/ui/icons'
+import { useKeyboardShortcut } from '@/shared/hooks/useKeyboardShortcut'
 import { getRelativePath } from '@/shared/lib/utils'
 
 import { cycleTriageCopy } from '../content/cycleTriageCopy'
-import { getPriorityDriverChipLabel } from '../content/priorityDriverCopy'
 import { useCycleTriageItems } from '../hooks/useCycleTriageItems'
+import { useCycleTriageReviewState } from '../hooks/useCycleTriageReviewState'
+import {
+  getCycleEvidenceItems,
+  getCycleFixPriorityLabel,
+  getCycleReviewStatusLabel,
+  getCycleWorkspaceSummary,
+  getLoopPathDefaultExpanded,
+  getNearbyImportsToggleLabel
+} from '../lib/cycle-triage-presentation'
+import { CycleEvidenceList } from './CycleEvidenceList'
 import { CycleGraph } from './CycleGraph'
 import { CycleQueue } from './CycleQueue'
 
-import type { CycleTriageItem, FixPriority } from '../types/cycle-triage'
+import type { CycleReviewStatus } from '../lib/cycle-triage-review-state'
+import type { CycleTriageItem } from '../types/cycle-triage'
 import type { AnalysisData } from '@/shared/types/analysis'
 
 interface CycleTriageWorkspaceProps {
   analysisData: AnalysisData | null
   selectedCycleId?: string | null
   onSelectedCycleIdChange?: (cycleId: string | null) => void
+  showNearbyImports?: boolean
+  onShowNearbyImportsChange?: (value: boolean) => void
   onBack?: () => void
   onNavigateToFile?: (filePath: string) => void
 }
 
-const priorityToneClass: Record<FixPriority, string> = {
-  high: 'border-red-500/35 bg-red-500/10 text-red-600 dark:text-red-300',
-  medium:
-    'border-amber-500/35 bg-amber-500/10 text-amber-700 dark:text-amber-300',
-  low: 'border-slate-500/25 bg-slate-500/10 text-slate-700 dark:text-slate-300'
+function getBasename(filePath: string): string {
+  const relativePath = getRelativePath(filePath)
+  return relativePath.split('/').pop() ?? relativePath
 }
 
 export function CycleTriageWorkspace({
   analysisData,
   selectedCycleId,
   onSelectedCycleIdChange,
+  showNearbyImports = false,
+  onShowNearbyImportsChange,
   onBack,
   onNavigateToFile
 }: CycleTriageWorkspaceProps) {
-  const { items, hasMeasuredSignals } = useCycleTriageItems(analysisData)
+  const { items } = useCycleTriageItems(analysisData)
+  const activeSelectedCycleId = selectedCycleId ?? items[0]?.id ?? null
+  const {
+    selectedCycleReviewStatus,
+    progress,
+    selectCycle,
+    selectNextCycle,
+    selectPreviousCycle,
+    markSelectedCycleReviewed,
+    markSelectedCycleUnreviewed
+  } = useCycleTriageReviewState({
+    items,
+    selectedCycleId: activeSelectedCycleId,
+    onSelectedCycleIdChange
+  })
   const highPriorityCount = items.filter(
     (item) => item.fixPriority === 'high'
   ).length
+  const workspaceSummary = getCycleWorkspaceSummary({
+    totalCount: progress.totalCount,
+    highPriorityCount,
+    reviewedCount: progress.reviewedCount,
+    reviewingCount: progress.reviewingCount
+  })
+  const queueKeyboardNavigationEnabled = items.length > 1
+
+  useKeyboardShortcut(
+    {
+      key: 'ArrowDown',
+      preventDefault: true,
+      enabled: queueKeyboardNavigationEnabled,
+      ignoreEditableTargets: true
+    },
+    selectNextCycle
+  )
+  useKeyboardShortcut(
+    {
+      key: 'ArrowUp',
+      preventDefault: true,
+      enabled: queueKeyboardNavigationEnabled,
+      ignoreEditableTargets: true
+    },
+    selectPreviousCycle
+  )
+  useKeyboardShortcut(
+    {
+      key: 'j',
+      preventDefault: true,
+      enabled: queueKeyboardNavigationEnabled,
+      ignoreEditableTargets: true
+    },
+    selectNextCycle
+  )
+  useKeyboardShortcut(
+    {
+      key: 'k',
+      preventDefault: true,
+      enabled: queueKeyboardNavigationEnabled,
+      ignoreEditableTargets: true
+    },
+    selectPreviousCycle
+  )
 
   useEffect(() => {
     if (!items.length) {
       if (selectedCycleId) {
         onSelectedCycleIdChange?.(null)
       }
+      onShowNearbyImportsChange?.(false)
       return
     }
 
@@ -69,7 +140,12 @@ export function CycleTriageWorkspace({
     if (!selectedStillExists) {
       onSelectedCycleIdChange?.(items[0]?.id ?? null)
     }
-  }, [items, onSelectedCycleIdChange, selectedCycleId])
+  }, [
+    items,
+    onSelectedCycleIdChange,
+    onShowNearbyImportsChange,
+    selectedCycleId
+  ])
 
   const selectedItem = useMemo(() => {
     if (!items.length) {
@@ -99,27 +175,15 @@ export function CycleTriageWorkspace({
                 {cycleTriageCopy.page.backToOverview}
               </Button>
             ) : null}
-            <div className='space-y-1'>
-              <h1 className='text-2xl font-semibold text-foreground'>
+            <div className='space-y-3'>
+              <h1 className='font-mono text-3xl font-semibold leading-[1.08] tracking-[-0.03em] text-foreground'>
                 {cycleTriageCopy.page.title}
               </h1>
-              <p className='max-w-3xl text-sm text-muted-foreground'>
-                {cycleTriageCopy.page.description}
-              </p>
-            </div>
-            <div className='flex flex-wrap items-center gap-2'>
-              <Badge variant='outline' className='bg-background/80'>
-                {items.length} cycles
-              </Badge>
-              <Badge
-                variant='outline'
-                className='border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-300'
-              >
-                {highPriorityCount} high priority
-              </Badge>
-              <Badge variant='outline' className='bg-background/80'>
-                {hasMeasuredSignals ? 'Signals ready' : 'Limited signals'}
-              </Badge>
+              <div className='max-w-2xl rounded-2xl border border-border/70 bg-muted/20 px-4 py-3'>
+                <p className='max-w-[48ch] text-base font-medium leading-7 text-foreground'>
+                  {workspaceSummary}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -136,19 +200,16 @@ export function CycleTriageWorkspace({
         ) : (
           <div className='grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]'>
             <Card className='flex min-h-0 flex-col overflow-hidden xl:sticky xl:top-6 xl:h-[calc(100dvh-8rem)] xl:self-start'>
-              <CardHeader className='pb-3'>
-                <CardTitle className='text-lg'>
+              <CardHeader className='pb-2'>
+                <CardTitle className='font-mono text-lg tracking-[-0.01em]'>
                   {cycleTriageCopy.queue.title}
                 </CardTitle>
-                <CardDescription>
-                  {cycleTriageCopy.queue.description}
-                </CardDescription>
               </CardHeader>
               <CardContent className='flex min-h-0 flex-1 overflow-hidden pt-0'>
                 <CycleQueue
                   items={items}
                   selectedCycleId={selectedItem?.id ?? null}
-                  onSelect={(cycleId) => onSelectedCycleIdChange?.(cycleId)}
+                  onSelect={selectCycle}
                 />
               </CardContent>
             </Card>
@@ -158,6 +219,11 @@ export function CycleTriageWorkspace({
                 <SelectedCyclePanel
                   key={selectedItem.id}
                   item={selectedItem}
+                  reviewStatus={selectedCycleReviewStatus}
+                  showNearbyImports={showNearbyImports}
+                  onShowNearbyImportsChange={onShowNearbyImportsChange}
+                  onMarkReviewed={markSelectedCycleReviewed}
+                  onMarkUnreviewed={markSelectedCycleUnreviewed}
                   onNavigateToFile={onNavigateToFile}
                 />
               ) : (
@@ -177,49 +243,134 @@ export function CycleTriageWorkspace({
 
 interface SelectedCyclePanelProps {
   item: CycleTriageItem
+  reviewStatus: CycleReviewStatus
+  showNearbyImports: boolean
+  onShowNearbyImportsChange?: (value: boolean) => void
+  onMarkReviewed?: () => void
+  onMarkUnreviewed?: () => void
   onNavigateToFile?: (filePath: string) => void
 }
 
 function SelectedCyclePanel({
   item,
+  reviewStatus,
+  showNearbyImports,
+  onShowNearbyImportsChange,
+  onMarkReviewed,
+  onMarkUnreviewed,
   onNavigateToFile
 }: SelectedCyclePanelProps) {
-  const [showNearbyDependents, setShowNearbyDependents] = useState(false)
+  const [isLoopPathExpanded, setIsLoopPathExpanded] = useState(() =>
+    getLoopPathDefaultExpanded(item.uniqueFileCount)
+  )
+  const candidateEdge = item.suggestedInvestigation.candidateEdge
+  const evidenceItems = getCycleEvidenceItems(item)
+  const fixPriorityLabel = getCycleFixPriorityLabel(item.fixPriority)
+  const toggleNearbyLabel = getNearbyImportsToggleLabel(
+    item.nearbyFiles.length,
+    showNearbyImports
+  )
+  const shouldShowReviewStatus = reviewStatus !== 'unreviewed'
+  const startHereSummary = candidateEdge
+    ? `Break the loop at ${getBasename(candidateEdge.source)} -> ${getBasename(candidateEdge.target)} first.`
+    : item.suggestedInvestigation.summary
 
   return (
     <>
-      <Card className='overflow-hidden border-primary/20 bg-primary/5'>
-        <CardHeader className='gap-3'>
+      <Card className='overflow-hidden border-amber-500/25 bg-amber-500/[0.04]'>
+        <CardContent className='space-y-4 px-5 py-5'>
           <div className='flex flex-wrap items-start justify-between gap-3'>
-            <div className='space-y-1.5'>
-              <CardTitle className='text-xl'>{item.title}</CardTitle>
-              <CardDescription className='max-w-3xl text-sm text-muted-foreground'>
+            <div className='min-w-0 space-y-2'>
+              <p className='text-[11px] font-medium uppercase tracking-[0.08em] text-amber-200/85'>
+                {cycleTriageCopy.detail.startHere}
+              </p>
+              <p className='max-w-[30ch] font-mono text-[1.375rem] font-semibold leading-[1.35] tracking-[-0.02em] text-foreground'>
+                {startHereSummary}
+              </p>
+            </div>
+            <p className='text-[11px] tabular-nums text-muted-foreground'>
+              {cycleTriageCopy.detail.confidence}:{' '}
+              <span className='font-medium text-foreground'>
+                {item.suggestedInvestigation.confidence}
+              </span>
+            </p>
+          </div>
+          {candidateEdge ? (
+            <div className='rounded-lg border border-amber-500/20 bg-background/80 px-3 py-2 font-mono text-sm leading-6 text-muted-foreground'>
+              {getRelativePath(candidateEdge.source)} -&gt;{' '}
+              {getRelativePath(candidateEdge.target)}
+              {candidateEdge.line ? ` (line ${candidateEdge.line})` : ''}
+              {candidateEdge.strength
+                ? `, import strength ${candidateEdge.strength}`
+                : ''}
+            </div>
+          ) : null}
+          {candidateEdge ? (
+            <div className='flex flex-wrap gap-2'>
+              <Button
+                size='sm'
+                variant='secondary'
+                onClick={() => onNavigateToFile?.(candidateEdge.source)}
+              >
+                Open source file
+              </Button>
+              <Button
+                size='sm'
+                variant='outline'
+                onClick={() => onNavigateToFile?.(candidateEdge.target)}
+              >
+                Open target file
+              </Button>
+            </div>
+          ) : null}
+          <details className='text-sm leading-6 text-muted-foreground'>
+            <summary className='cursor-pointer font-medium text-foreground/80'>
+              {cycleTriageCopy.detail.whySuggestion}
+            </summary>
+            <p className='mt-2 max-w-[64ch]'>
+              {item.suggestedInvestigation.detail}
+            </p>
+          </details>
+        </CardContent>
+      </Card>
+
+      <div className='rounded-2xl border border-border/70 bg-card/70 px-5 py-4'>
+        <div className='flex flex-wrap items-start justify-between gap-4'>
+          <div className='min-w-0 space-y-3'>
+            <div className='flex flex-wrap items-center gap-2'>
+              <span className='rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.08em] text-foreground'>
+                {fixPriorityLabel}
+              </span>
+              {shouldShowReviewStatus ? (
+                <p className='text-[11px] text-muted-foreground'>
+                  {getCycleReviewStatusLabel(reviewStatus)}
+                </p>
+              ) : null}
+            </div>
+            <div className='space-y-2'>
+              <CardTitle className='max-w-[34ch] font-mono text-[1.625rem] leading-[1.2] tracking-[-0.02em] text-foreground'>
+                {item.title}
+              </CardTitle>
+              <CardDescription className='max-w-[62ch] text-sm leading-6 text-muted-foreground'>
                 {item.whatIsHappening}
               </CardDescription>
             </div>
-            <Badge
-              variant='outline'
-              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${priorityToneClass[item.fixPriority]}`}
-            >
-              Fix priority: {item.fixPriority}
-            </Badge>
+            <CycleEvidenceList
+              items={evidenceItems}
+              className='text-[11px] tabular-nums'
+            />
           </div>
-          <div className='flex flex-wrap gap-2'>
-            {item.priorityDrivers.map((driver) => (
-              <Badge
-                key={driver}
-                variant='outline'
-                className='bg-background/70'
-              >
-                {getPriorityDriverChipLabel(driver)}
-              </Badge>
-            ))}
-            <Badge variant='outline' className='bg-background/70'>
-              {item.uniqueFileCount} files
-            </Badge>
-          </div>
-        </CardHeader>
-      </Card>
+          {reviewStatus === 'reviewed' ? (
+            <Button size='sm' variant='outline' onClick={onMarkUnreviewed}>
+              {cycleTriageCopy.detail.markUnreviewed}
+            </Button>
+          ) : (
+            <Button size='sm' variant='secondary' onClick={onMarkReviewed}>
+              {cycleTriageCopy.detail.markReviewed}
+            </Button>
+          )}
+        </div>
+      </div>
 
       <Card>
         <CardHeader className='gap-3 pb-3'>
@@ -229,23 +380,35 @@ function SelectedCyclePanel({
                 <Network className='h-4 w-4' />
                 {cycleTriageCopy.detail.cycleGraph}
               </CardTitle>
-              <CardDescription>{item.whyItMatters}</CardDescription>
+              <CardDescription className='max-w-[52ch] text-sm leading-6 text-muted-foreground'>
+                {item.whyItMatters}
+              </CardDescription>
             </div>
             <Button
-              variant={showNearbyDependents ? 'secondary' : 'outline'}
+              variant={showNearbyImports ? 'secondary' : 'ghost'}
               size='sm'
-              onClick={() => setShowNearbyDependents((current) => !current)}
+              onClick={() => onShowNearbyImportsChange?.(!showNearbyImports)}
+              disabled={item.nearbyFiles.length === 0}
+              className='h-8 px-2.5 text-xs'
             >
-              {showNearbyDependents
-                ? cycleTriageCopy.detail.hideNearby
-                : cycleTriageCopy.detail.showNearby}
+              {toggleNearbyLabel}
             </Button>
           </div>
         </CardHeader>
         <CardContent className='space-y-4'>
-          <CycleGraph item={item} showNearbyDependents={showNearbyDependents} />
+          <CycleGraph
+            item={item}
+            showNearbyDependents={showNearbyImports}
+            onNavigateToFile={onNavigateToFile}
+          />
           {item.files.length > 2 ? (
-            <details className='rounded-lg border border-border/60 bg-background/70 px-3 py-2'>
+            <details
+              open={isLoopPathExpanded}
+              onToggle={(event) =>
+                setIsLoopPathExpanded(event.currentTarget.open)
+              }
+              className='rounded-lg border border-border/60 bg-background/70 px-3 py-2'
+            >
               <summary className='cursor-pointer text-xs font-medium text-foreground'>
                 {cycleTriageCopy.detail.loopPath}
               </summary>
@@ -277,63 +440,24 @@ function SelectedCyclePanel({
         </CardContent>
       </Card>
 
-      <div className='grid gap-4 lg:grid-cols-2'>
-        <Card className='border-amber-500/20 bg-amber-500/5'>
-          <CardHeader className='pb-3'>
-            <div className='flex flex-wrap items-center justify-between gap-2'>
-              <CardTitle className='text-base'>
-                {cycleTriageCopy.detail.suggestedInvestigation}
-              </CardTitle>
-              <Badge variant='outline' className='bg-background/80'>
-                {cycleTriageCopy.detail.confidence}:{' '}
-                {item.suggestedInvestigation.confidence}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className='space-y-3 text-sm leading-relaxed'>
-            <p className='font-medium text-foreground'>
-              {item.suggestedInvestigation.summary}
-            </p>
-            {item.suggestedInvestigation.candidateEdge ? (
-              <div className='rounded-lg border border-amber-500/20 bg-background/80 px-3 py-2 text-xs text-muted-foreground'>
-                {cycleTriageCopy.detail.candidateEdge}:{' '}
-                {getRelativePath(
-                  item.suggestedInvestigation.candidateEdge.source
-                )}{' '}
-                -&gt;{' '}
-                {getRelativePath(
-                  item.suggestedInvestigation.candidateEdge.target
-                )}
-              </div>
-            ) : null}
-            <details className='text-xs text-muted-foreground'>
-              <summary className='cursor-pointer font-medium text-foreground/80'>
-                Why this suggestion?
-              </summary>
-              <p className='mt-2'>{item.suggestedInvestigation.detail}</p>
-            </details>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className='pb-3'>
-            <CardTitle className='flex items-center gap-2 text-base'>
-              <AlertTriangle className='h-4 w-4 text-muted-foreground' />
-              {cycleTriageCopy.detail.verifyAfterFix}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className='space-y-2 text-sm leading-relaxed text-muted-foreground'>
-              {item.verificationChecks.map((check) => (
-                <li key={check} className='flex items-start gap-2'>
-                  <span className='mt-1 h-1.5 w-1.5 rounded-full bg-muted-foreground/70' />
-                  <span>{check}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader className='pb-3'>
+          <CardTitle className='flex items-center gap-2 text-base'>
+            <AlertTriangle className='h-4 w-4 text-muted-foreground' />
+            {cycleTriageCopy.detail.verifyAfterFix}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className='space-y-2 text-sm leading-relaxed text-muted-foreground'>
+            {item.verificationChecks.map((check) => (
+              <li key={check} className='flex items-start gap-2'>
+                <span className='mt-1 h-1.5 w-1.5 rounded-full bg-muted-foreground/70' />
+                <span>{check}</span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
     </>
   )
 }

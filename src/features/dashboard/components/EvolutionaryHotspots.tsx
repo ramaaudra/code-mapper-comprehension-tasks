@@ -124,8 +124,9 @@ export function EvolutionaryHotspots({
                 key={hotspot.modulePath}
                 onClick={() => onViewModule?.(hotspot.modulePath)}
                 className={cn(
-                  'w-full rounded-lg border p-4 text-left transition-all',
-                  'hover:ring-2 hover:ring-[hsl(var(--primary))]/40',
+                  'w-full rounded-lg border p-4 text-left transition-colors duration-200',
+                  'hover:bg-muted/20',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   getToneClasses(hotspot)
                 )}
               >

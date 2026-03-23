@@ -84,6 +84,8 @@ function AppContent() {
     setFocusedModulePath,
     selectedCycleId,
     setSelectedCycleId,
+    showCycleNearbyImports,
+    setShowCycleNearbyImports,
     clearFocusedModule,
     isLayoutTransitioning
   } = useAppLogic()
@@ -120,6 +122,8 @@ function AppContent() {
     setFocusedModulePath,
     selectedCycleId,
     setSelectedCycleId,
+    showCycleNearbyImports,
+    setShowCycleNearbyImports,
     clearFocusedModule,
     clearGraph,
     generateGraphForFile,
@@ -219,6 +223,10 @@ function AppContent() {
               analysisData={analysisData}
               selectedCycleId={explorer.selectedCycleId}
               onSelectedCycleIdChange={explorer.handleCycleSelection}
+              showNearbyImports={explorer.showCycleNearbyImports}
+              onShowNearbyImportsChange={
+                explorer.handleCycleNearbyImportsChange
+              }
               onBack={explorer.handleBackFromUtility}
               onNavigateToFile={explorer.navigateToFile}
             />

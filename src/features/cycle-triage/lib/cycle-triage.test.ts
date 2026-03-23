@@ -238,3 +238,68 @@ test('normalizes malformed cycle paths into a closed readable route', () => {
     'payment-service.ts -> user-service.ts -> payment-service.ts'
   )
 })
+
+test('carries detection severity and import metadata for the suggested edge', () => {
+  const [item] = buildCycleTriageItems({
+    cycles: [
+      {
+        cycle: [
+          'src/services/payment-service.ts',
+          'src/services/user-service.ts',
+          'src/services/payment-service.ts'
+        ],
+        length: 3,
+        files: [
+          'src/services/payment-service.ts',
+          'src/services/user-service.ts'
+        ],
+        severity: 'medium'
+      }
+    ],
+    dependencyMap: {
+      'src/services/payment-service.ts': [
+        { target: 'src/services/user-service.ts', strength: 2, line: 8 }
+      ],
+      'src/services/user-service.ts': [
+        { target: 'src/services/payment-service.ts', strength: 1, line: 14 },
+        { target: 'src/contracts/user-contract.ts', strength: 1, line: 4 }
+      ]
+    },
+    fileMetrics: [
+      {
+        filePath: 'src/services/payment-service.ts',
+        moduleKey: 'src/services',
+        ca: 18,
+        ce: 6,
+        instability: 0.25,
+        evolution: {
+          hotspotStatus: 'critical-hotspot',
+          churn30d: { relativeChurn: 0.82 }
+        }
+      },
+      {
+        filePath: 'src/services/user-service.ts',
+        moduleKey: 'src/services',
+        ca: 12,
+        ce: 5,
+        instability: 0.29,
+        evolution: {
+          hotspotStatus: 'active',
+          churn30d: { relativeChurn: 0.54 }
+        }
+      }
+    ]
+  })
+
+  assert.equal(item.detectionSeverity, 'medium')
+  assert.equal(
+    item.suggestedInvestigation.candidateEdge?.source,
+    'src/services/user-service.ts'
+  )
+  assert.equal(
+    item.suggestedInvestigation.candidateEdge?.target,
+    'src/services/payment-service.ts'
+  )
+  assert.equal(item.suggestedInvestigation.candidateEdge?.line, 14)
+  assert.equal(item.suggestedInvestigation.candidateEdge?.strength, 1)
+})

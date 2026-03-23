@@ -63,7 +63,10 @@ export function CircularProgress({
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap='round'
-          className={cn('transition-all duration-500', getColor())}
+          className={cn(
+            'transition-[stroke-dashoffset,color] duration-500',
+            getColor()
+          )}
         />
       </svg>
       {/* Center content */}

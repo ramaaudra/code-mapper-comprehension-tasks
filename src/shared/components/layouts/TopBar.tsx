@@ -16,7 +16,8 @@ import { shellCopy } from '@/shared/content/shellCopy'
 import {
   cn,
   resolveTopBarActionGroups,
-  resolveTopBarIconLabels
+  resolveTopBarIconLabels,
+  shouldShowTopBarContextChip
 } from '@/shared/lib/utils'
 
 import type {
@@ -224,7 +225,7 @@ export function TopBar({
               </Button>
             </SimpleTooltip>
 
-            {contextChip && (
+            {shouldShowTopBarContextChip(contextChip) && contextChip && (
               <Badge
                 variant='outline'
                 className={cn(

@@ -7,6 +7,23 @@ export interface ShortcutConfig {
   shift?: boolean
   alt?: boolean
   preventDefault?: boolean
+  enabled?: boolean
+  ignoreEditableTargets?: boolean
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+
+  const tagName = target.tagName.toLowerCase()
+
+  return (
+    target.isContentEditable ||
+    tagName === 'input' ||
+    tagName === 'textarea' ||
+    tagName === 'select'
+  )
 }
 
 function matchesShortcut(
@@ -17,20 +34,14 @@ function matchesShortcut(
   const keyMatches = event.key.toLowerCase() === config.key.toLowerCase()
   const shiftMatches = config.shift ? event.shiftKey : !event.shiftKey
   const altMatches = config.alt ? event.altKey : !event.altKey
-  const modifierMatches = isMac
-    ? (config.meta ? event.metaKey : true) &&
-      (config.ctrl ? event.ctrlKey : true)
-    : (config.meta ? event.ctrlKey : true) &&
-      (config.ctrl ? event.ctrlKey : true)
+  const metaMatches = isMac
+    ? event.metaKey === Boolean(config.meta)
+    : !event.metaKey
+  const ctrlMatches = isMac
+    ? event.ctrlKey === Boolean(config.ctrl)
+    : event.ctrlKey === Boolean(config.meta || config.ctrl)
 
-  return (
-    keyMatches &&
-    modifierMatches &&
-    shiftMatches &&
-    altMatches &&
-    // Ensure no extra modifiers are pressed
-    (isMac ? !event.ctrlKey || config.ctrl === true : !event.metaKey)
-  )
+  return keyMatches && metaMatches && ctrlMatches && shiftMatches && altMatches
 }
 
 export function useKeyboardShortcut(
@@ -39,6 +50,14 @@ export function useKeyboardShortcut(
 ): void {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      if (config.enabled === false) {
+        return
+      }
+
+      if (config.ignoreEditableTargets && isEditableTarget(event.target)) {
+        return
+      }
+
       const isMac = /mac|darwin/i.test(navigator.userAgent)
 
       if (matchesShortcut(event, config, isMac)) {
