@@ -89,7 +89,7 @@ export function MetricInsightCard({
         {valueSlot ? (
           valueSlot
         ) : value ? (
-          <span className={cn('font-mono text-sm tabular-nums', style.value)}>
+          <span className={cn('font-data text-sm tabular-nums', style.value)}>
             {value}
           </span>
         ) : null}

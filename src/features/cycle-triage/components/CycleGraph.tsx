@@ -79,7 +79,7 @@ export function CycleGraph({
   return (
     <div className='overflow-hidden rounded-xl border border-border/70 bg-muted/20'>
       <div className='border-b border-border/60 bg-background/60 px-4 py-3'>
-        <p className='font-mono text-base leading-6 text-foreground'>
+        <p className='text-base font-medium leading-6 text-foreground'>
           {buildLoopSummary(item)}
         </p>
         <p className='mt-2 text-sm leading-6 text-muted-foreground'>
@@ -180,7 +180,7 @@ export function CycleGraph({
             fontSize='11'
             fontWeight='600'
             fill='hsl(var(--destructive))'
-            fontFamily='JetBrains Mono, monospace'
+            fontFamily='Recursive, system-ui, sans-serif'
           >
             Start here
           </text>

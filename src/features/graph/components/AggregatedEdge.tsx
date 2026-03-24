@@ -63,7 +63,7 @@ export function AggregatedEdge(props: EdgeProps<AggregatedEdgeType>) {
               border: '1px solid hsl(var(--border))',
               color: 'hsl(var(--foreground))'
             }}
-            className='nodrag nopan font-mono shadow-sm'
+            className='nodrag nopan font-data shadow-sm'
           >
             {weight} deps
           </div>

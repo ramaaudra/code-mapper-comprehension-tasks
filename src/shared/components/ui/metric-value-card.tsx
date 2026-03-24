@@ -61,7 +61,7 @@ export function MetricValueCard({
     >
       <div
         className={cn(
-          'font-mono text-lg font-semibold tabular-nums leading-tight tracking-tight sm:text-xl',
+          'font-data text-lg font-semibold tabular-nums leading-tight tracking-tight sm:text-xl',
           style.value
         )}
       >

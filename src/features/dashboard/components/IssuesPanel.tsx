@@ -190,7 +190,7 @@ export function IssuesPanel({
                   >
                     <div className='flex flex-wrap items-start justify-between gap-2'>
                       <div className='min-w-0 space-y-1'>
-                        <p className='truncate text-sm font-medium text-foreground'>
+                        <p className='truncate font-mono text-sm font-medium text-foreground'>
                           {item.title}
                         </p>
                         <p className='text-xs text-muted-foreground'>
@@ -271,10 +271,10 @@ export function IssuesPanel({
                         className='w-full rounded-lg bg-muted/20 px-3 py-3 text-left transition hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
                         title={file}
                       >
-                        <p className='text-sm font-medium text-foreground'>
+                        <p className='font-mono text-sm font-medium text-foreground'>
                           {getBasename(file)}
                         </p>
-                        <p className='mt-1 truncate text-xs text-muted-foreground'>
+                        <p className='mt-1 truncate font-mono text-xs text-muted-foreground'>
                           {getRelativePath(file)}
                         </p>
                       </button>

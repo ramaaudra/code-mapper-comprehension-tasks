@@ -16,10 +16,10 @@ export default {
       },
       extend: {
         fontFamily: {
-        sans: ['Geist Sans', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
-        data: ['JetBrains Mono', 'monospace']
-      },
+          sans: ['Recursive', 'system-ui', 'sans-serif'],
+          mono: ['JetBrains Mono', 'monospace'],
+          data: ['JetBrains Mono', 'monospace']
+        },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

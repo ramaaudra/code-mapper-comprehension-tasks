@@ -26,7 +26,7 @@ export const MetricCard = memo(function MetricCard({
           </span>
           {icon && <span className='p-1.5 text-muted-foreground'>{icon}</span>}
         </div>
-        <div className='mt-3 font-mono text-metric font-semibold tabular-nums tracking-tight text-foreground lg:text-metric-lg'>
+        <div className='mt-3 font-data text-metric font-semibold tabular-nums tracking-tight text-foreground lg:text-metric-lg'>
           {value}
         </div>
         {subValue && (
@@ -53,7 +53,7 @@ export const MetricCard = memo(function MetricCard({
         {icon && <span className={`p-2 ${statusColors[status]}`}>{icon}</span>}
       </div>
       <div className='mt-3 flex items-baseline gap-2'>
-        <span className='font-mono text-5xl font-semibold tabular-nums tracking-tight text-foreground'>
+        <span className='font-data text-5xl font-semibold tabular-nums tracking-tight text-foreground'>
           {value}
         </span>
         {subValue && (

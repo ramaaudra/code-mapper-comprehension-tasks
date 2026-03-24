@@ -47,22 +47,31 @@ test('CycleTriageWorkspace makes the first action the strongest text block on fi
 
   assert.match(
     source,
-    /max-w-\[30ch\] font-mono text-\[1\.5rem\] font-semibold leading-\[1\.28\] tracking-\[-0\.02em\] text-foreground/
+    /max-w-\[30ch\] font-sans text-\[1\.5rem\] font-semibold leading-\[1\.28\] tracking-\[-0\.02em\] text-foreground/
   )
   assert.match(source, /text-sm font-medium leading-6 text-foreground/)
   assert.match(source, /text-sm leading-6 text-muted-foreground/)
 })
 
-test('CycleQueue and CycleGraph use a cleaner mono type scale without repeating the primary action', () => {
+test('CycleQueue and CycleGraph keep narrative guidance in Recursive Sans while preserving code-like evidence', () => {
   const queueSource = readQueueSource()
   const graphSource = readGraphSource()
+  const workspaceSource = readWorkspaceSource()
 
   assert.match(
     queueSource,
-    /font-mono text-\[0\.95rem\] font-semibold leading-6 text-foreground/
+    /text-\[0\.95rem\] font-semibold leading-6 text-foreground/
   )
-  assert.match(queueSource, /text-\[11px\] leading-5 text-muted-foreground/)
-  assert.match(graphSource, /font-mono text-base leading-6 text-foreground/)
+  assert.match(queueSource, /text-xs leading-5 text-muted-foreground/)
+  assert.match(graphSource, /text-base font-medium leading-6 text-foreground/)
   assert.match(graphSource, /mt-2 text-sm leading-6 text-muted-foreground/)
+  assert.match(
+    graphSource,
+    /rounded-md border border-border\/60 bg-muted\/20 px-3 py-2 font-mono text-xs text-muted-foreground/
+  )
+  assert.match(
+    workspaceSource,
+    /rounded-lg border border-border\/70 bg-background\/70 px-3 py-2 font-mono text-sm leading-6 text-muted-foreground/
+  )
   assert.doesNotMatch(graphSource, /recommendedEdgeHint/)
 })

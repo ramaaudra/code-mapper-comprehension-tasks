@@ -70,7 +70,7 @@ export function ModuleNodeComponent(props: ModuleNodeComponentProps) {
             {data.folderPath}
           </div>
         </div>
-        <div className='flex h-6 w-6 items-center justify-center rounded-full bg-[hsl(var(--muted))] font-mono text-xs font-medium text-[hsl(var(--foreground))]'>
+        <div className='flex h-6 w-6 items-center justify-center rounded-full bg-[hsl(var(--muted))] font-data text-xs font-medium text-[hsl(var(--foreground))]'>
           {data.fileCount}
         </div>
       </div>
@@ -93,14 +93,14 @@ export function ModuleNodeComponent(props: ModuleNodeComponentProps) {
         <div className='mb-3 flex items-center justify-between text-xs'>
           <div className='flex items-center gap-2'>
             <span className='text-[hsl(var(--muted-foreground))]'>◄</span>
-            <span className='font-mono font-medium text-[hsl(var(--foreground))]'>
+            <span className='font-data font-medium text-[hsl(var(--foreground))]'>
               {data.totalIncoming}
             </span>
             <span className='text-[hsl(var(--muted-foreground))]'>in</span>
           </div>
           <div className='flex items-center gap-2'>
             <span className='text-[hsl(var(--muted-foreground))]'>out</span>
-            <span className='font-mono font-medium text-[hsl(var(--foreground))]'>
+            <span className='font-data font-medium text-[hsl(var(--foreground))]'>
               {data.totalOutgoing}
             </span>
             <span className='text-[hsl(var(--muted-foreground))]'>►</span>
@@ -119,7 +119,7 @@ export function ModuleNodeComponent(props: ModuleNodeComponentProps) {
           <span className='text-xs font-medium text-[hsl(var(--destructive))]'>
             Broad spread risk
           </span>
-          <span className='font-mono text-xs text-[hsl(var(--destructive))]/80'>
+          <span className='font-data text-xs text-[hsl(var(--destructive))]/80'>
             ({Math.round(data.riskScore)})
           </span>
         </div>

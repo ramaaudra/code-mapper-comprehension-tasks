@@ -151,19 +151,19 @@ export function EvolutionaryHotspots({
                 <div className='grid gap-2 text-xs text-muted-foreground sm:grid-cols-2'>
                   <span>
                     {dashboardCopy.evolutionaryHotspots.labels.changedIn30d}:{' '}
-                    <strong className='text-foreground'>
+                    <strong className='font-data text-foreground'>
                       {formatRelativeChurn(hotspot.relativeChurn30d)}
                     </strong>
                   </span>
                   <span>
                     {dashboardCopy.evolutionaryHotspots.labels.spreadRisk}:{' '}
-                    <strong className='text-foreground'>
+                    <strong className='font-data text-foreground'>
                       {hotspot.propagationRisk.toFixed(1)}
                     </strong>
                   </span>
                   <span>
                     {dashboardCopy.evolutionaryHotspots.labels.changedFiles}:{' '}
-                    <strong className='text-foreground'>
+                    <strong className='font-data text-foreground'>
                       {hotspot.changedFileCount30d}
                     </strong>
                   </span>

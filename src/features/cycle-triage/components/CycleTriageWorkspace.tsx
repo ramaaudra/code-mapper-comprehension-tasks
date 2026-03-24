@@ -183,7 +183,7 @@ export function CycleTriageWorkspace({
               </Button>
             ) : null}
             <div className='space-y-3'>
-              <h1 className='font-mono text-3xl font-semibold leading-[1.08] tracking-[-0.03em] text-foreground'>
+              <h1 className='font-sans text-3xl font-semibold leading-[1.08] tracking-[-0.03em] text-foreground'>
                 {cycleTriageCopy.page.title}
               </h1>
               <div className='max-w-2xl rounded-2xl border border-border/70 bg-muted/20 px-4 py-3'>
@@ -208,7 +208,7 @@ export function CycleTriageWorkspace({
           <div className='grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]'>
             <Card className='flex min-h-0 flex-col overflow-hidden border-border/70 bg-card/80 xl:sticky xl:top-6 xl:h-[calc(100dvh-8rem)] xl:self-start'>
               <CardHeader className='pb-2'>
-                <CardTitle className='font-mono text-lg tracking-[-0.01em]'>
+                <CardTitle className='font-sans text-lg tracking-[-0.01em]'>
                   {cycleTriageCopy.queue.title}
                 </CardTitle>
               </CardHeader>
@@ -279,10 +279,10 @@ function SelectedCyclePanel({
                 <ReviewPriorityBadge priority={fixPriorityLabel} />
               </div>
               <div className='space-y-2'>
-                <p className='max-w-[30ch] font-mono text-[1.5rem] font-semibold leading-[1.28] tracking-[-0.02em] text-foreground'>
+                <p className='max-w-[30ch] font-sans text-[1.5rem] font-semibold leading-[1.28] tracking-[-0.02em] text-foreground'>
                   {startHereSummary}
                 </p>
-                <p className='text-sm font-medium leading-6 text-foreground'>
+                <p className='font-mono text-sm font-medium leading-6 text-foreground'>
                   {item.title}
                 </p>
                 <p className='max-w-[60ch] text-sm leading-6 text-muted-foreground'>
@@ -378,7 +378,7 @@ function SelectedCyclePanel({
                       <button
                         type='button'
                         onClick={() => onNavigateToFile?.(filePath)}
-                        className='rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-xs text-foreground transition hover:border-primary/35 hover:text-primary'
+                        className='rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 font-mono text-xs text-foreground transition hover:border-primary/35 hover:text-primary'
                       >
                         {getRelativePath(filePath)}
                       </button>

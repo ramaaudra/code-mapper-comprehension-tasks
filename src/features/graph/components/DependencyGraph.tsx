@@ -322,8 +322,9 @@ function ZoomIndicator() {
   }
 
   return (
-    <div className='absolute left-4 top-4 z-20 rounded-md bg-black/70 px-3 py-1 font-mono text-sm text-white shadow-lg'>
-      {percentage}%<div className='mt-1 text-xs opacity-75'>{label}</div>
+    <div className='absolute left-4 top-4 z-20 rounded-md bg-black/70 px-3 py-1 text-white shadow-lg'>
+      <div className='font-data text-sm'>{percentage}%</div>
+      <div className='mt-1 text-xs opacity-75'>{label}</div>
     </div>
   )
 }
@@ -417,13 +418,13 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
           </div>
           <div className='min-w-0 flex-1'>
             <div
-              className='truncate text-sm font-semibold text-[hsl(var(--foreground))]'
+              className='truncate font-mono text-sm font-semibold text-[hsl(var(--foreground))]'
               title={data.label}
             >
               {data.label}
             </div>
             <div
-              className='truncate text-xs text-[hsl(var(--muted-foreground))]'
+              className='truncate font-mono text-xs text-[hsl(var(--muted-foreground))]'
               title={data.fullPath}
             >
               {truncateMiddle(getRelativePath(data.fullPath), 44)}

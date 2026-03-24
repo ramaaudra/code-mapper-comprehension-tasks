@@ -32,7 +32,7 @@ export function CouplingBreakdown({
                 >
                   {folder}
                 </span>
-                <span className='text-muted-foreground'>{count}</span>
+                <span className='font-data text-muted-foreground'>{count}</span>
               </li>
             ))}
           </ul>
@@ -59,7 +59,7 @@ export function CouplingBreakdown({
                 >
                   {folder}
                 </span>
-                <span className='text-muted-foreground'>{count}</span>
+                <span className='font-data text-muted-foreground'>{count}</span>
               </li>
             ))}
           </ul>

@@ -16,20 +16,41 @@ function readTailwindConfig(): string {
   )
 }
 
-test('body typography uses Geist Sans as the primary interface font', () => {
+test('body typography uses Recursive Sans as the primary interface font', () => {
   const css = readIndexCss()
-
-  assert.match(css, /font-family:\s*'Geist Sans',\s*system-ui,\s*sans-serif;/)
-  assert.doesNotMatch(css, /font-family:\s*'JetBrains Mono',\s*monospace;/)
-})
-
-test('tailwind font families use Geist Sans for app copy and JetBrains Mono for code', () => {
-  const config = readTailwindConfig()
+  const bodyBlock =
+    css.match(/body\s*\{[\s\S]*?background-color:[\s\S]*?\n  \}/)?.[0] ?? ''
 
   assert.match(
-    config,
-    /sans:\s*\['Geist Sans',\s*'system-ui',\s*'sans-serif'\]/
+    bodyBlock,
+    /font-family:\s*'Recursive',\s*system-ui,\s*sans-serif;/
   )
+  assert.match(bodyBlock, /font-kerning:\s*normal;/)
+  assert.match(
+    bodyBlock,
+    /font-variation-settings:\s*'MONO'\s*0,\s*'CASL'\s*0\.5,\s*'slnt'\s*0;/
+  )
+  assert.doesNotMatch(
+    bodyBlock,
+    /font-family:\s*'JetBrains Mono',\s*monospace;/
+  )
+  assert.doesNotMatch(css, /font-family:\s*'Geist Sans'/)
+})
+
+test('tailwind font families use Recursive Sans for app copy and JetBrains Mono for code and data', () => {
+  const config = readTailwindConfig()
+
+  assert.match(config, /sans:\s*\['Recursive',\s*'system-ui',\s*'sans-serif'\]/)
   assert.match(config, /mono:\s*\['JetBrains Mono',\s*'monospace'\]/)
   assert.match(config, /data:\s*\['JetBrains Mono',\s*'monospace'\]/)
+})
+
+test('global code-like elements keep JetBrains Mono for evidence surfaces', () => {
+  const css = readIndexCss()
+
+  assert.match(
+    css,
+    /code,\s*kbd,\s*pre,\s*samp\s*\{[\s\S]*font-family:\s*'JetBrains Mono',\s*monospace;/
+  )
+  assert.match(css, /font-variant-ligatures:\s*none;/)
 })

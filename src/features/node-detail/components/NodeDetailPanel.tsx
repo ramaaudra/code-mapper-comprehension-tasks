@@ -391,7 +391,7 @@ const NodeDetailPanel = memo(
                   <div className='min-w-0 flex-1 pr-2'>
                     <div className='flex items-center gap-2'>
                       <ItemFileIcon className='h-4 w-4 shrink-0 text-muted-foreground' />
-                      <span className='truncate text-sm font-medium'>
+                      <span className='truncate font-mono text-sm font-medium'>
                         {item.basename}
                       </span>
                       {item.strength > 1 && (

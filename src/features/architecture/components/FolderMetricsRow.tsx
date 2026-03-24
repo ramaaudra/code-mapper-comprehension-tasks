@@ -52,14 +52,14 @@ export function FolderMetricsRow({
             {folder.hasCycle && <CycleBadge />}
           </span>
         </td>
-        <td className='px-3 py-2 text-center font-mono'>{folder.ca}</td>
-        <td className='px-3 py-2 text-center font-mono'>{folder.ce}</td>
+        <td className='px-3 py-2 text-center font-data'>{folder.ca}</td>
+        <td className='px-3 py-2 text-center font-data'>{folder.ce}</td>
         <td className='px-3 py-2 text-center'>
           <InstabilityBadge value={folder.instability} />
         </td>
         <td className='px-3 py-2'>
           <div className='flex items-center justify-center gap-2'>
-            <span className='font-mono text-sm'>{riskScore.toFixed(1)}</span>
+            <span className='font-data text-sm'>{riskScore.toFixed(1)}</span>
             <span
               className={`h-2 w-2 rounded-full ${getCalibratedRiskDotColor(
                 riskScore,

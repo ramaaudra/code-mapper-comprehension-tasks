@@ -110,7 +110,7 @@ const createNodeRenderer = (
         <Icon className='h-4 w-4 shrink-0 text-muted-foreground' />
 
         {/* Filename */}
-        <span className='flex-1 truncate text-sm text-foreground'>
+        <span className='flex-1 truncate font-mono text-sm text-foreground'>
           {node.data.name}
         </span>
 

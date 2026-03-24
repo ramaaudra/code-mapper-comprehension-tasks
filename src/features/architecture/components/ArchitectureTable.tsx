@@ -132,8 +132,8 @@ function ExpandedRow({
               >
                 {file.filePath.split('/').pop()}
               </td>
-              <td className='py-2 text-center'>{file.ca}</td>
-              <td className='py-2 text-center'>{file.ce}</td>
+              <td className='py-2 text-center font-data'>{file.ca}</td>
+              <td className='py-2 text-center font-data'>{file.ce}</td>
               <td className='py-2'>
                 <div className='flex items-center justify-center gap-2'>
                   <div className='h-1.5 w-16 overflow-hidden rounded-full bg-slate-800'>
@@ -142,7 +142,7 @@ function ExpandedRow({
                       style={{ width: `${file.instability * 100}%` }}
                     />
                   </div>
-                  <span className='w-8 text-xs text-slate-400'>
+                  <span className='w-8 font-data text-xs text-slate-400'>
                     {file.instability.toFixed(2)}
                   </span>
                 </div>
@@ -295,10 +295,10 @@ export function ArchitectureTable({
                           {folder.hasCycle && <CycleBadge />}
                         </span>
                       </td>
-                      <td className='px-4 py-3 text-center font-mono'>
+                      <td className='px-4 py-3 text-center font-data'>
                         {folder.ca}
                       </td>
-                      <td className='px-4 py-3 text-center font-mono'>
+                      <td className='px-4 py-3 text-center font-data'>
                         {folder.ce}
                       </td>
                       <td className='px-4 py-3'>
@@ -320,7 +320,7 @@ export function ArchitectureTable({
                           )
                           return (
                             <div className='flex items-center justify-center gap-2'>
-                              <span className='font-mono text-sm'>
+                              <span className='font-data text-sm'>
                                 {riskScore.toFixed(1)}
                               </span>
                               <span
@@ -331,7 +331,7 @@ export function ArchitectureTable({
                           )
                         })()}
                       </td>
-                      <td className='px-4 py-3 text-center font-mono text-xs'>
+                      <td className='px-4 py-3 text-center font-data text-xs'>
                         {folder.evolution && evolutionaryMetricsAvailable ? (
                           <div className='flex flex-col items-center gap-1'>
                             <span>

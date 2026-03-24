@@ -31,7 +31,7 @@ export function DetailPanelHeader({
         </div>
         <div className='min-w-0'>
           <h2
-            className='truncate text-lg font-semibold text-foreground'
+            className='truncate font-mono text-lg font-semibold text-foreground'
             title={title}
           >
             {title}

@@ -106,7 +106,7 @@ export function CouplingDistribution({
                 <span className='text-muted-foreground'>
                   {dashboardCopy.couplingSnapshot.mostCoupledPrefix}{' '}
                 </span>
-                <span className='font-semibold'>
+                <span className='font-mono font-semibold'>
                   {getBasename(mostCoupledFile.path)}
                 </span>
                 <span className='text-muted-foreground'>
@@ -193,7 +193,7 @@ export function CouplingDistribution({
                       >
                         <div className='flex items-start justify-between gap-3'>
                           <div className='min-w-0'>
-                            <span className='mb-1 block truncate text-sm font-medium'>
+                            <span className='mb-1 block truncate font-mono text-sm font-medium'>
                               {getBasename(file.path)}
                             </span>
                             <span className='block break-all font-mono text-xs leading-tight text-foreground/70'>

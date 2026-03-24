@@ -55,7 +55,7 @@ const FileListItem = ({
           className='w-full rounded-md border bg-background px-3 py-2 text-sm transition hover:border-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
         >
           <div className='mb-1 flex items-center justify-between gap-2'>
-            <span className='flex-1 truncate text-left font-medium text-foreground'>
+            <span className='flex-1 truncate text-left font-mono font-medium text-foreground'>
               {getBasename(file)}
             </span>
             <Badge
@@ -250,7 +250,7 @@ export default function MetricsPanel({
                                   className='w-full rounded-lg border px-3 py-3 text-left transition hover:border-primary/50 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
                                 >
                                   <div className='mb-1 flex items-center justify-between gap-3'>
-                                    <span className='flex-1 truncate text-sm font-medium'>
+                                    <span className='flex-1 truncate font-mono text-sm font-medium'>
                                       {getBasename(item.file)}
                                     </span>
                                     <Badge
@@ -348,7 +348,7 @@ export default function MetricsPanel({
                                   className='w-full rounded-lg border px-3 py-3 text-left transition hover:border-primary/50 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
                                 >
                                   <div className='mb-1 flex items-center justify-between gap-3'>
-                                    <span className='flex-1 truncate text-sm font-medium'>
+                                    <span className='flex-1 truncate font-mono text-sm font-medium'>
                                       {getBasename(item.file)}
                                     </span>
                                     <Badge

@@ -225,14 +225,14 @@ export function HighRiskModules({
                 </div>
                 <div className='flex shrink-0 items-center gap-4 text-xs'>
                   <span
-                    className='w-16 cursor-help text-right tabular-nums text-muted-foreground transition-colors hover:text-foreground'
+                    className='w-16 cursor-help text-right font-data tabular-nums text-muted-foreground transition-colors hover:text-foreground'
                     title={dashboardCopy.highRiskModules.instabilityTitle(
                       module.instability.toFixed(2)
                     )}
                   >
                     {module.instability.toFixed(2)}
                   </span>
-                  <span className='w-20 text-right tabular-nums text-muted-foreground'>
+                  <span className='w-20 text-right font-data tabular-nums text-muted-foreground'>
                     {module.fanIn}
                   </span>
                 </div>
