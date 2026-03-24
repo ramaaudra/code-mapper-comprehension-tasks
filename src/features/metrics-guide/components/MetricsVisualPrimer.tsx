@@ -55,7 +55,7 @@ function DependenciesDiagram() {
 function InstabilityDiagram() {
   return (
     <div className='space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3'>
-      <div className='flex items-center justify-between text-[11px] text-muted-foreground'>
+      <div className='flex items-center justify-between text-xs text-muted-foreground'>
         <span className='inline-flex items-center gap-1'>
           <Layers className='h-3.5 w-3.5' />
           Foundation-like
@@ -70,7 +70,7 @@ function InstabilityDiagram() {
         <span className='absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-slate-500' />
         <span className='absolute right-[12%] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-background bg-emerald-500' />
       </div>
-      <div className='flex items-center justify-between text-[11px] text-muted-foreground'>
+      <div className='flex items-center justify-between text-xs text-muted-foreground'>
         <span>Low I</span>
         <span>Balanced</span>
         <span>High I</span>

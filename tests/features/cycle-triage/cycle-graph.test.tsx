@@ -66,10 +66,12 @@ test('CycleGraph uses a summary-first hierarchy for two-node loops', () => {
 
   assert.match(
     html,
-    /payment-service\.ts imports user-service\.ts, and user-service\.ts imports payment-service\.ts\./
+    /Mutual import between payment-service\.ts and user-service\.ts\./
   )
+  assert.match(html, /Arrows show import direction\./)
   assert.match(html, /Imports into this loop/)
   assert.match(html, /Imports from this loop/)
   assert.doesNotMatch(html, /Loop route/)
   assert.doesNotMatch(html, /Imports in this loop/)
+  assert.doesNotMatch(html, /Follow the highlighted edge first\./)
 })

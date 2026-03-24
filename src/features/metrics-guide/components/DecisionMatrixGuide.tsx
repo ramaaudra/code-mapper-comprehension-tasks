@@ -31,7 +31,7 @@ export function DecisionMatrixGuide({ states }: DecisionMatrixGuideProps) {
       </CardHeader>
       <CardContent className='space-y-4'>
         <div className='grid gap-3 md:grid-cols-[auto_1fr]'>
-          <div className='hidden flex-col justify-between text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground md:flex'>
+          <div className='hidden flex-col justify-between text-xs font-medium uppercase tracking-label text-muted-foreground md:flex'>
             <span>Broad impact</span>
             <span>Lower impact</span>
           </div>
@@ -74,7 +74,7 @@ export function DecisionMatrixGuide({ states }: DecisionMatrixGuideProps) {
             </div>
           </div>
         </div>
-        <div className='flex items-center justify-between text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground'>
+        <div className='flex items-center justify-between text-xs font-medium uppercase tracking-label text-muted-foreground'>
           <span>Higher change activity</span>
           <span>Lower change activity</span>
         </div>

@@ -26,7 +26,7 @@ export function ReviewPriorityBadge({
     <Badge
       variant='outline'
       className={cn(
-        'shrink-0 rounded-full px-2 py-1 text-[11px] font-medium leading-none',
+        'shrink-0 rounded-full px-2 py-1 text-xs font-medium leading-none',
         toneClasses[tone],
         className
       )}

@@ -229,7 +229,7 @@ export function TopBar({
               <Badge
                 variant='outline'
                 className={cn(
-                  'hidden shrink-0 border text-[11px] lg:inline-flex',
+                  'hidden shrink-0 border text-xs lg:inline-flex',
                   contextChipClassName
                 )}
               >

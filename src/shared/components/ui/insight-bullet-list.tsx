@@ -7,7 +7,7 @@ interface InsightBulletListProps {
 
 export function InsightBulletList({
   items,
-  prefix = <span className='text-[10px]'>-</span>
+  prefix = <span className='text-xs'>-</span>
 }: InsightBulletListProps) {
   if (items.length === 0) {
     return null

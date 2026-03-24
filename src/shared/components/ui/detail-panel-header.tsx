@@ -38,7 +38,7 @@ export function DetailPanelHeader({
           </h2>
           <div className='mt-0.5 flex items-center gap-1.5'>
             <p
-              className='max-w-[220px] truncate text-xs text-muted-foreground'
+              className='max-w-[220px] truncate font-mono text-xs text-muted-foreground'
               title={subtitle}
             >
               {truncateMiddle(subtitle, 44)}

@@ -2,9 +2,7 @@ import {
   getAssessmentMethodItemsFromCatalog,
   getChangePressureBandLabel,
   getExternalRelianceBandLabel,
-  getImpactScopeThresholdCatalog,
   getImpactScopeBandLabel,
-  getReviewSignalDefinition,
   getStructuralPositionBandLabel
 } from '@/shared/lib/metric-thresholds'
 
@@ -19,18 +17,13 @@ import type { DecisionTitle } from '@/shared/lib/utils/decision-assessment'
 type Subject = 'file' | 'module'
 type DependencyUnit = 'file' | 'module'
 
-const impactScopeSignal = getImpactScopeThresholdCatalog('file')
-const changePressureSignal = getReviewSignalDefinition('changePressure')
-const externalRelianceSignal = getReviewSignalDefinition('externalReliance')
-const structuralPositionSignal = getReviewSignalDefinition('structuralPosition')
-
 export const decisionCopy = {
   evidence: {
     labels: {
-      impactScope: impactScopeSignal.label,
-      changeActivity: changePressureSignal.label,
-      dependencies: externalRelianceSignal.label,
-      architectureRole: structuralPositionSignal.label
+      impactScope: 'Files Affected if Changed',
+      changeActivity: 'How Often This Changes',
+      dependencies: 'External Dependencies',
+      architectureRole: 'Structural Position'
     },
     assessmentMethodItems: getAssessmentMethodItemsFromCatalog()
   }

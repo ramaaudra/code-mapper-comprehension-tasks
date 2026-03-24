@@ -178,7 +178,7 @@ export function HighRiskModules({
       </CardHeader>
       <CardContent className='space-y-3'>
         {/* Column Headers */}
-        <div className='flex items-center gap-4 px-4 text-[11px] font-medium text-muted-foreground'>
+        <div className='flex items-center gap-4 px-4 text-xs font-medium text-muted-foreground'>
           <div className='flex-1'>
             {dashboardCopy.highRiskModules.columns.spreadRisk}
           </div>

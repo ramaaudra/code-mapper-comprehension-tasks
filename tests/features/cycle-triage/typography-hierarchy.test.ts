@@ -39,32 +39,30 @@ test('CycleTriageWorkspace keeps the top summary and action explanation on a con
     source,
     /max-w-\[48ch\] text-base font-medium leading-7 text-foreground/
   )
-  assert.match(source, /mt-2 max-w-\[64ch\]/)
+  assert.match(source, /max-w-\[64ch\] text-sm leading-6 text-muted-foreground/)
 })
 
-test('CycleTriageWorkspace makes the start-here card the strongest text block on first scan', () => {
+test('CycleTriageWorkspace makes the first action the strongest text block on first scan', () => {
   const source = readWorkspaceSource()
 
   assert.match(
     source,
-    /max-w-\[30ch\] font-mono text-\[1\.375rem\] font-semibold leading-\[1\.35\] tracking-\[-0\.02em\] text-foreground/
+    /max-w-\[30ch\] font-mono text-\[1\.5rem\] font-semibold leading-\[1\.28\] tracking-\[-0\.02em\] text-foreground/
   )
-  assert.match(
-    source,
-    /max-w-\[34ch\] font-mono text-\[1\.625rem\] leading-\[1\.2\] tracking-\[-0\.02em\] text-foreground/
-  )
+  assert.match(source, /text-sm font-medium leading-6 text-foreground/)
   assert.match(source, /text-sm leading-6 text-muted-foreground/)
 })
 
-test('CycleQueue and CycleGraph use a cleaner mono type scale without a second sidebar paragraph', () => {
+test('CycleQueue and CycleGraph use a cleaner mono type scale without repeating the primary action', () => {
   const queueSource = readQueueSource()
   const graphSource = readGraphSource()
 
   assert.match(
     queueSource,
-    /font-mono text-\[0\.975rem\] font-semibold leading-6 text-foreground/
+    /font-mono text-\[0\.95rem\] font-semibold leading-6 text-foreground/
   )
-  assert.doesNotMatch(queueSource, /line-clamp-2/)
+  assert.match(queueSource, /text-\[11px\] leading-5 text-muted-foreground/)
   assert.match(graphSource, /font-mono text-base leading-6 text-foreground/)
   assert.match(graphSource, /mt-2 text-sm leading-6 text-muted-foreground/)
+  assert.doesNotMatch(graphSource, /recommendedEdgeHint/)
 })

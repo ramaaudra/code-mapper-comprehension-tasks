@@ -42,6 +42,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
+import { decisionCopy } from '@/shared/content/decisionCopy'
 import { DataContext } from '@/shared/context/DataContext'
 import { architectureApi } from '@/shared/lib/api/architecture'
 import { findDependencyPath } from '@/shared/lib/api/pathfinding'
@@ -51,14 +52,18 @@ import {
   createDecisionAssessment,
   formatChangePressureHelper,
   formatExternalRelianceHelper,
+  formatExternalRelianceValue,
+  formatStructuralPositionHelper,
+  formatStructuralPositionValue,
   getBasename,
   getFileEvolutionMetrics,
   getFileIcon,
   isEvolutionaryMetricsAvailable,
   formatImpactScopeHelper,
-  formatStructuralPositionHelper,
   getAssessmentMethodItems,
+  getExternalRelianceTone,
   getRelativePath,
+  getStructuralPositionTone,
   formatRelativeChurn,
   truncateMiddle
 } from '@/shared/lib/utils'
@@ -390,13 +395,13 @@ const NodeDetailPanel = memo(
                         {item.basename}
                       </span>
                       {item.strength > 1 && (
-                        <span className='rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>
+                        <span className='rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
                           x{item.strength}
                         </span>
                       )}
                     </div>
                     <div
-                      className='truncate pl-6 text-xs text-muted-foreground'
+                      className='truncate pl-6 font-mono text-xs text-muted-foreground'
                       title={item.label}
                     >
                       {truncateMiddle(item.label, 52)}
@@ -561,7 +566,7 @@ const NodeDetailPanel = memo(
           title={displayBasename}
           subtitle={getRelativePath(nodeData.id)}
           meta={
-            <span className='whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground'>
+            <span className='whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground'>
               {formatFileSize(displaySize)}
             </span>
           }
@@ -654,32 +659,22 @@ const NodeDetailPanel = memo(
                 }
                 evidenceHelpers={{
                   impactScope: archMetrics ? (
-                    <span className='text-[11px] text-muted-foreground'>
+                    <span className='text-xs text-muted-foreground'>
                       {formatImpactScopeHelper(archMetrics.ca)}
                     </span>
                   ) : null,
                   changeActivity:
                     changeHistoryAvailable && fileEvolution ? (
-                      <span className='text-[11px] text-muted-foreground'>
+                      <span className='text-xs text-muted-foreground'>
                         {formatChangePressureHelper(
                           fileEvolution.churn30d.relativeChurn
                         )}
                       </span>
                     ) : !changeHistoryAvailable ? (
-                      <span className='text-[11px] text-muted-foreground'>
+                      <span className='text-xs text-muted-foreground'>
                         Git history is unavailable for recent change signals.
                       </span>
-                    ) : null,
-                  dependencies: archMetrics ? (
-                    <span className='text-[11px] text-muted-foreground'>
-                      {formatExternalRelianceHelper(archMetrics.ce)}
-                    </span>
-                  ) : null,
-                  architectureRole: archMetrics ? (
-                    <span className='text-[11px] text-muted-foreground'>
-                      {formatStructuralPositionHelper(archMetrics.instability)}
-                    </span>
-                  ) : null
+                    ) : null
                 }}
               />
             ) : null}
@@ -833,6 +828,44 @@ const NodeDetailPanel = memo(
                   />
                   <InsightBulletList items={getAssessmentMethodItems()} />
                 </div>
+
+                {overviewState.showArchitectureMetrics && archMetrics ? (
+                  <div className='space-y-3'>
+                    <DetailPanelSectionHeading title='Additional Signals' />
+                    <div className='grid grid-cols-2 gap-3'>
+                      <MetricValueCard
+                        value={formatExternalRelianceValue(
+                          decisionAssessment?.externalReliance ?? 'Low'
+                        )}
+                        label={decisionCopy.evidence.labels.dependencies}
+                        tone={getExternalRelianceTone(
+                          decisionAssessment?.externalReliance ?? 'Low'
+                        )}
+                        helper={
+                          <span className='text-xs text-muted-foreground'>
+                            {formatExternalRelianceHelper(archMetrics.ce)}
+                          </span>
+                        }
+                      />
+                      <MetricValueCard
+                        value={formatStructuralPositionValue(
+                          decisionAssessment?.structuralPosition ?? 'Balanced'
+                        )}
+                        label={decisionCopy.evidence.labels.architectureRole}
+                        tone={getStructuralPositionTone(
+                          decisionAssessment?.structuralPosition ?? 'Balanced'
+                        )}
+                        helper={
+                          <span className='text-xs text-muted-foreground'>
+                            {formatStructuralPositionHelper(
+                              archMetrics.instability
+                            )}
+                          </span>
+                        }
+                      />
+                    </div>
+                  </div>
+                ) : null}
 
                 {overviewState.showArchitectureMetrics && archMetrics ? (
                   <div className='space-y-3'>

@@ -154,7 +154,9 @@ export function ReportShell() {
       onShowArchitecture={explorer.handleShowArchitecture}
       onShowMetricsGuide={explorer.handleShowMetricsGuide}
       isTreeCollapsed={
-        explorer.viewMode === 'cycle-triage' || explorer.isTreeCollapsed
+        explorer.viewMode === 'cycle-triage' ||
+        explorer.viewMode === 'metrics-guide' ||
+        explorer.isTreeCollapsed
       }
       onToggleTree={explorer.toggleTreeView}
       onShowSetupGuide={explorer.handleShowSetupGuide}

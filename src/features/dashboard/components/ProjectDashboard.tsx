@@ -50,11 +50,11 @@ function OverviewSectionHeader({
 }: OverviewSectionHeaderProps) {
   return (
     <div className='space-y-1.5'>
-      <p className='text-xs font-medium tracking-[0.08em] text-muted-foreground/85'>
+      <p className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
         {eyebrow}
       </p>
       <div className='space-y-1'>
-        <h2 className='text-lg font-semibold text-foreground'>{title}</h2>
+        <h1 className='text-2xl font-bold text-foreground'>{title}</h1>
         <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground/90'>
           {description}
         </p>

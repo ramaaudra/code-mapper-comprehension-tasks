@@ -74,7 +74,7 @@ export function PriorityReviewQueue({
                   <span className='shrink-0'>{getQueueItemIcon(item)}</span>
                   <span
                     className={cn(
-                      'rounded-full border px-2.5 py-1 text-[11px] font-medium',
+                      'rounded-full border px-2.5 py-1 text-xs font-medium',
                       isPrimary
                         ? 'border-primary/25 bg-primary/10 text-foreground'
                         : 'border-border/70 bg-muted/30 text-muted-foreground'
@@ -96,7 +96,7 @@ export function PriorityReviewQueue({
                 </div>
 
                 <div className='space-y-1.5'>
-                  <p className='text-base font-semibold leading-tight text-foreground'>
+                  <p className='text-lg font-semibold leading-tight text-foreground'>
                     {item.title}
                   </p>
                   <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground'>

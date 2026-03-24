@@ -7,6 +7,8 @@ export interface MetricsGuideMetric {
   shortDefinition: string
   whyItMatters: string
   practicalRead: string
+  whenToCare: string
+  quickAction: string
   caveat: string
   visualAnalogyTitle: string
   visualAnalogyDescription: string
@@ -42,10 +44,31 @@ export interface MetricsGuideDecisionState {
 }
 
 export const metricsGuidePrinciples = [
-  'Instability is a structural position metric, not a defect score.',
-  `${getReviewSignalDefinition('propagationRisk').label}, ${getReviewSignalDefinition('blastRadius').label}, and ${getReviewSignalDefinition('hotspotStatus').label} are derived product heuristics, not universal scientific truths.`,
-  'Read metrics as decision support: what is happening, why it matters, and what to do next.'
+  "High numbers don't always mean bad code. They mean you need to look closer.",
+  'Each metric answers one question. Combine them to see the full picture.',
+  'Start with "What should I review first?" — the app already prioritized for you.'
 ]
+
+export const metricsGuideHeroInsight = {
+  title: 'What this guide will help you do',
+  actions: [
+    {
+      question: 'Where should I start reviewing?',
+      answer:
+        'Check the Overview page. It shows critical hotspots and shared areas first.'
+    },
+    {
+      question: 'Is this file safe to refactor?',
+      answer:
+        'Open Node Detail. Read the diagnosis card — it tells you the risk level and what to check.'
+    },
+    {
+      question: 'What happens if I change this module?',
+      answer:
+        'Look at Propagation Risk and Blast Radius. Higher values mean wider testing scope.'
+    }
+  ]
+}
 
 const propagationRiskSignal = getReviewSignalDefinition('propagationRisk')
 const blastRadiusSignal = getReviewSignalDefinition('blastRadius')
@@ -112,6 +135,9 @@ export const metricsGuideMetrics: MetricsGuideMetric[] = [
       'Higher values usually mean a wider review surface when the item changes.',
     practicalRead:
       'Use this to spot shared foundations that may need broader testing or reviewer attention.',
+    whenToCare:
+      'When Ca > 10, changes here affect many other files. Plan wider review.',
+    quickAction: 'Check which files depend on this before making changes.',
     caveat:
       'High Ca does not mean the code is bad. It means more areas may need review.',
     visualAnalogyTitle: 'Many inputs flow into one shared point',
@@ -128,6 +154,10 @@ export const metricsGuideMetrics: MetricsGuideMetric[] = [
       'Higher values usually mean the item relies on more external code and carries more coupling complexity.',
     practicalRead:
       'Use this to spot modules or files that may be carrying too many responsibilities.',
+    whenToCare:
+      'When Ce > 15, this file might be doing too much. Consider splitting.',
+    quickAction:
+      'Review if all dependencies are truly needed or if some can be removed.',
     caveat:
       'High Ce is a warning signal for review, not proof that a design is wrong.',
     visualAnalogyTitle: 'One item fans out into many dependencies',
@@ -140,11 +170,15 @@ export const metricsGuideMetrics: MetricsGuideMetric[] = [
     title: 'Instability (I)',
     family: 'Core Metric',
     shortDefinition:
-      'A structural position metric that describes whether an item is more foundational or more outward-facing.',
+      'Shows where this item sits on the spectrum from foundational to outward-facing.',
     whyItMatters:
       'It helps explain whether a module sits in a shared foundation or closer to UI/adapter layers.',
     practicalRead:
       'Use it with Spread Risk, not on its own, when deciding review scope.',
+    whenToCare:
+      'High I (>.7) + High Ca = changes spread wide. Low I (<.3) + High Ca = shared foundation.',
+    quickAction:
+      'Combine with Ca to understand change impact, not just position.',
     caveat:
       'High instability is common in presentation and adapter layers. It is not automatically bad.',
     visualAnalogyTitle: 'A spectrum from foundational to outward-facing',
@@ -158,11 +192,15 @@ export const metricsGuideMetrics: MetricsGuideMetric[] = [
     title: 'Relative Churn',
     family: 'Core Metric',
     shortDefinition:
-      'Recent change activity normalized by the current size of the file or module.',
+      'How much this file changed recently, compared to its size.',
     whyItMatters:
       'It highlights active areas more fairly than raw changed lines alone.',
     practicalRead:
       'Use it to spot files or modules that are still changing heavily and may need closer review.',
+    whenToCare:
+      'When churn > 30% in 30 days, the area is still unstable. Review recent commits.',
+    quickAction:
+      'Check recent commit history to understand what is driving the changes.',
     caveat:
       'Values can be above 1.0 when an item is heavily rewritten in the selected time window.',
     visualAnalogyTitle: 'Recent activity normalized by current size',
@@ -176,10 +214,14 @@ export const metricsGuideMetrics: MetricsGuideMetric[] = [
     title: 'Propagation Risk',
     family: 'Derived Heuristic',
     shortDefinition:
-      'A derived heuristic that estimates how strongly change may spread through dependents.',
+      'Estimates how widely your changes might spread through the codebase.',
     whyItMatters: propagationRiskSignal.whyItExists,
     practicalRead:
       'Use this to find areas that deserve broader regression checks before merging.',
+    whenToCare:
+      'Critical or High = run broader tests before merging. Changes here ripple out.',
+    quickAction:
+      'Review dependent files before making changes. Consider smaller, incremental updates.',
     caveat: propagationRiskSignal.scientificStatusNote,
     visualAnalogyTitle: 'Shared reuse plus outward pull can widen spread',
     visualAnalogyDescription:
@@ -192,10 +234,14 @@ export const metricsGuideMetrics: MetricsGuideMetric[] = [
     title: 'Blast Radius',
     family: 'Derived Heuristic',
     shortDefinition:
-      'A file-level heuristic that estimates the nearby verification scope after a change.',
+      'Estimates how many nearby files you should test after changing this one.',
     whyItMatters: blastRadiusSignal.whyItExists,
     practicalRead:
       'Use this as a supporting verification signal in file detail views when planning refactors or choosing test scope.',
+    whenToCare:
+      'Critical or High = test dependents and dependencies. Medium = spot check related files.',
+    quickAction:
+      'Use this to scope your testing. Higher radius = more test coverage needed.',
     caveat: blastRadiusSignal.scientificStatusNote,
     visualAnalogyTitle: 'A local ring of nearby verification effort',
     visualAnalogyDescription:
@@ -205,14 +251,16 @@ export const metricsGuideMetrics: MetricsGuideMetric[] = [
   },
   {
     id: 'hotspot-score',
-    title: 'Evolutionary Hotspot Score',
+    title: 'Hotspot Score',
     family: 'Review Heuristic',
-    shortDefinition:
-      'A repo-relative score that combines recent change activity with structural sensitivity.',
+    shortDefinition: 'Combines how active and how sensitive this area is.',
     whyItMatters:
       'It helps prioritize areas that are both active and important to review.',
     practicalRead:
       'Use it to find modules that deserve closer review because they combine recent churn and structural impact.',
+    whenToCare:
+      'High score = this area is both busy and important. Review carefully before changes.',
+    quickAction: 'Prioritize these areas for code review and extra testing.',
     caveat:
       'This score is repo-relative and supports ranking, not universal scientific judgment.',
     visualAnalogyTitle: 'Recent activity plus structural sensitivity',
@@ -227,10 +275,14 @@ export const metricsGuideMetrics: MetricsGuideMetric[] = [
     title: 'Hotspot Status',
     family: 'Review Heuristic',
     shortDefinition:
-      'A readable review band built from hotspot score percentiles in the current repository.',
+      'A quick label that tells you if this area needs attention.',
     whyItMatters: hotspotStatusSignal.whyItExists,
     practicalRead:
       'Treat it as a prioritization band: critical first, active later, stable lower priority.',
+    whenToCare:
+      'Critical = review first. High = review soon. Active = monitor. Stable = low priority.',
+    quickAction:
+      'Start with critical hotspots. They combine activity and impact.',
     caveat: hotspotStatusSignal.scientificStatusNote,
     visualAnalogyTitle: 'A readable review band on top of ranking data',
     visualAnalogyDescription:

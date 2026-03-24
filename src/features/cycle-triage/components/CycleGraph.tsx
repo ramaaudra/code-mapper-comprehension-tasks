@@ -74,9 +74,7 @@ export function CycleGraph({
   const nearbyMarkerId = `nearby-marker-${item.id}`
   const centerX = model.width / 2
   const centerY = model.height / 2
-  const graphHint = recommendedEdge
-    ? `${cycleTriageCopy.detail.directionHint} ${cycleTriageCopy.detail.recommendedEdgeHint}`
-    : cycleTriageCopy.detail.directionHint
+  const graphHint = cycleTriageCopy.detail.directionHint
 
   return (
     <div className='overflow-hidden rounded-xl border border-border/70 bg-muted/20'>

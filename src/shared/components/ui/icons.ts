@@ -37,6 +37,7 @@ export {
   Info,
   Stack as Layers,
   Lightbulb,
+  List,
   MapTrifold as Map,
   ArrowsOut as Maximize,
   Moon,
@@ -57,5 +58,6 @@ export {
   Wind,
   X,
   MagnifyingGlassPlus as ZoomIn,
-  MagnifyingGlassMinus as ZoomOut
+  MagnifyingGlassMinus as ZoomOut,
+  Question as HelpCircle
 } from '@phosphor-icons/react'

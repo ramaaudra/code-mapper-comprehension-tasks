@@ -4,13 +4,9 @@ import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
 import { decisionCopy } from '@/shared/content/decisionCopy'
 import {
   formatChangePressureValue,
-  formatExternalRelianceValue,
   formatImpactScopeValue,
-  formatStructuralPositionValue,
   getChangePressureTone,
-  getExternalRelianceTone,
   getImpactScopeTone,
-  getStructuralPositionTone,
   cn
 } from '@/shared/lib/utils'
 
@@ -85,18 +81,6 @@ export function DecisionStorySection({
             getChangePressureTone(assessment.changePressure)
           }
           helper={evidenceHelpers?.changeActivity}
-        />
-        <MetricValueCard
-          value={formatExternalRelianceValue(assessment.externalReliance)}
-          label={decisionCopy.evidence.labels.dependencies}
-          tone={getExternalRelianceTone(assessment.externalReliance)}
-          helper={evidenceHelpers?.dependencies}
-        />
-        <MetricValueCard
-          value={formatStructuralPositionValue(assessment.structuralPosition)}
-          label={decisionCopy.evidence.labels.architectureRole}
-          tone={getStructuralPositionTone(assessment.structuralPosition)}
-          helper={evidenceHelpers?.architectureRole}
         />
       </div>
     </div>

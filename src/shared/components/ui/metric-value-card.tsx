@@ -24,16 +24,16 @@ const toneStyles: Record<
     value: 'text-foreground'
   },
   info: {
-    container: 'border-sky-500/30 bg-sky-500/5',
-    value: 'text-sky-600'
+    container: 'border-border bg-muted/35',
+    value: 'text-foreground'
   },
   success: {
     container: 'border-emerald-500/30 bg-emerald-500/5',
     value: 'text-emerald-600'
   },
   warning: {
-    container: 'border-amber-500/30 bg-amber-500/5',
-    value: 'text-amber-600'
+    container: 'border-border bg-muted/35',
+    value: 'text-foreground'
   },
   danger: {
     container: 'border-destructive/30 bg-destructive/5',
@@ -61,13 +61,13 @@ export function MetricValueCard({
     >
       <div
         className={cn(
-          'text-lg font-semibold tabular-nums leading-tight tracking-tight sm:text-xl',
+          'font-mono text-lg font-semibold tabular-nums leading-tight tracking-tight sm:text-xl',
           style.value
         )}
       >
         {value}
       </div>
-      <div className='mt-1.5 flex items-center gap-1 text-xs font-medium text-foreground/80'>
+      <div className='mt-1.5 flex items-center gap-1 text-sm font-medium text-foreground/80'>
         <span>{label}</span>
         {tooltip ? (
           <InfoTooltip

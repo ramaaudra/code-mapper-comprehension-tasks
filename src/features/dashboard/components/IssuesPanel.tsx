@@ -130,7 +130,7 @@ export function IssuesPanel({
                   <Badge
                     key={severity}
                     variant={severityVariantMap[severity]}
-                    className='px-2 py-0.5 text-[10px]'
+                    className='px-2 py-0.5 text-xs'
                   >
                     {count} {severity}
                   </Badge>

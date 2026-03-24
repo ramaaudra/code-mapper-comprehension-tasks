@@ -108,7 +108,7 @@ export function DiagnosisCard({
 
       <div className='mt-4 space-y-4'>
         <div className='space-y-1.5'>
-          <p className='text-[11px] font-semibold uppercase tracking-wide text-muted-foreground'>
+          <p className='text-xs font-semibold uppercase tracking-wide text-muted-foreground'>
             Diagnosis
           </p>
           <p className='text-sm leading-relaxed text-foreground'>{summary}</p>
@@ -118,7 +118,7 @@ export function DiagnosisCard({
         </div>
 
         <div className='space-y-1.5'>
-          <p className='text-[11px] font-semibold uppercase tracking-wide text-muted-foreground'>
+          <p className='text-xs font-semibold uppercase tracking-wide text-muted-foreground'>
             What to do next
           </p>
           <p className='text-sm leading-relaxed text-foreground'>
@@ -130,7 +130,7 @@ export function DiagnosisCard({
         </div>
 
         <div className='space-y-1.5'>
-          <p className='text-[11px] font-semibold uppercase tracking-wide text-muted-foreground'>
+          <p className='text-xs font-semibold uppercase tracking-wide text-muted-foreground'>
             Top drivers
           </p>
           <p className='text-sm leading-relaxed text-foreground'>

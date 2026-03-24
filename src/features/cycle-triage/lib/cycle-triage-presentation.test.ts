@@ -4,9 +4,8 @@ import test from 'node:test'
 import {
   getCycleEvidenceItems,
   getCycleFixPriorityLabel,
-  getCycleReviewStatusLabel,
+  getCycleQueueSummary,
   getCycleSignalSummary,
-  getCycleWorkspaceSummary,
   getLoopPathDefaultExpanded,
   getNearbyImportsToggleLabel
 } from './cycle-triage-presentation'
@@ -91,22 +90,10 @@ test('describes full signal state when architecture and change signals are ready
   )
 })
 
-test('builds a compact workspace summary that leads with the urgent queue', () => {
-  assert.equal(
-    getCycleWorkspaceSummary({
-      totalCount: 10,
-      highPriorityCount: 6,
-      reviewedCount: 2,
-      reviewingCount: 1
-    }),
-    'Start with 6 high-priority loops out of 10. 2 reviewed, 1 in review.'
-  )
-})
-
 test('maps fix priority to review-first language instead of raw severity', () => {
-  assert.equal(getCycleFixPriorityLabel('high'), 'High review priority')
-  assert.equal(getCycleFixPriorityLabel('medium'), 'Normal review priority')
-  assert.equal(getCycleFixPriorityLabel('low'), 'Low review priority')
+  assert.equal(getCycleFixPriorityLabel('high'), 'High Review Priority')
+  assert.equal(getCycleFixPriorityLabel('medium'), 'Normal Review Priority')
+  assert.equal(getCycleFixPriorityLabel('low'), 'Low Review Priority')
 })
 
 test('compresses cycle evidence into a short readable list', () => {
@@ -134,6 +121,13 @@ test('keeps cycle evidence focused on the most useful three signals', () => {
   )
 })
 
+test('keeps queue evidence to one compact sentence', () => {
+  assert.equal(
+    getCycleQueueSummary(createCycleTriageItem()),
+    '2 files, used by many other files'
+  )
+})
+
 test('keeps loop path collapsed by default to reduce reading load', () => {
   assert.equal(getLoopPathDefaultExpanded(3), false)
   assert.equal(getLoopPathDefaultExpanded(5), false)
@@ -144,10 +138,4 @@ test('includes nearby import count in the toggle label', () => {
   assert.equal(getNearbyImportsToggleLabel(0, false), 'No nearby imports')
   assert.equal(getNearbyImportsToggleLabel(4, false), 'Show nearby imports (4)')
   assert.equal(getNearbyImportsToggleLabel(4, true), 'Hide nearby imports (4)')
-})
-
-test('uses explicit developer-friendly labels for review status', () => {
-  assert.equal(getCycleReviewStatusLabel('unreviewed'), 'Unreviewed')
-  assert.equal(getCycleReviewStatusLabel('reviewing'), 'Currently reviewing')
-  assert.equal(getCycleReviewStatusLabel('reviewed'), 'Reviewed')
 })

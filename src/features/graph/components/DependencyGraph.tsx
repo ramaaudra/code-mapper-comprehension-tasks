@@ -432,7 +432,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
         </div>
         <div
           className={clsx(
-            'shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
+            'shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium uppercase tracking-wide',
             chipTone[direction]
           )}
         >
@@ -449,7 +449,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
       {hotspotStatus !== 'stable' ? (
         <div className='rounded-md border border-border/70 bg-muted/35 px-2.5 py-1.5'>
           <div className='flex flex-wrap items-start gap-x-1.5 gap-y-1 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]'>
-            <span className='text-[10px] font-semibold uppercase tracking-[0.12em] text-orange-500'>
+            <span className='text-xs font-semibold uppercase tracking-label text-orange-500'>
               {graphCopy.node.changeSignal}
             </span>
             <HotspotStatusLabel status={hotspotStatus} variant='graph' />
@@ -485,7 +485,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
               <div
                 key={`${badge.label}-${idx}`}
                 className={clsx(
-                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
+                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
                   'border transition-all duration-200',
                   badgeStyles[badge.tone]
                 )}

@@ -16,16 +16,20 @@ function readTailwindConfig(): string {
   )
 }
 
-test('body typography keeps JetBrains Mono as the primary interface font', () => {
+test('body typography uses Geist Sans as the primary interface font', () => {
   const css = readIndexCss()
 
-  assert.match(css, /font-family:\s*'JetBrains Mono',\s*monospace;/)
-  assert.doesNotMatch(css, /font-family:\s*'IBM Plex Sans',\s*sans-serif;/)
+  assert.match(css, /font-family:\s*'Geist Sans',\s*system-ui,\s*sans-serif;/)
+  assert.doesNotMatch(css, /font-family:\s*'JetBrains Mono',\s*monospace;/)
 })
 
-test('tailwind font families keep JetBrains Mono for both app copy and code surfaces', () => {
+test('tailwind font families use Geist Sans for app copy and JetBrains Mono for code', () => {
   const config = readTailwindConfig()
 
-  assert.match(config, /sans:\s*\['JetBrains Mono', 'monospace'\]/)
-  assert.match(config, /mono:\s*\['JetBrains Mono', 'monospace'\]/)
+  assert.match(
+    config,
+    /sans:\s*\['Geist Sans',\s*'system-ui',\s*'sans-serif'\]/
+  )
+  assert.match(config, /mono:\s*\['JetBrains Mono',\s*'monospace'\]/)
+  assert.match(config, /data:\s*\['JetBrains Mono',\s*'monospace'\]/)
 })

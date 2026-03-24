@@ -30,10 +30,10 @@ const toneStyles: Record<
     icon: 'text-muted-foreground'
   },
   info: {
-    container: 'border-sky-500/35 bg-sky-500/5',
-    title: 'text-sky-500',
-    value: 'text-sky-500',
-    icon: 'text-sky-500'
+    container: 'border-border bg-card/60',
+    title: 'text-foreground',
+    value: 'text-foreground',
+    icon: 'text-muted-foreground'
   },
   success: {
     container: 'border-emerald-500/35 bg-emerald-500/5',
@@ -42,10 +42,10 @@ const toneStyles: Record<
     icon: 'text-emerald-500'
   },
   warning: {
-    container: 'border-amber-500/35 bg-amber-500/5',
-    title: 'text-amber-500',
-    value: 'text-amber-500',
-    icon: 'text-amber-500'
+    container: 'border-border bg-card/60',
+    title: 'text-foreground',
+    value: 'text-foreground',
+    icon: 'text-muted-foreground'
   },
   danger: {
     container: 'border-destructive/35 bg-destructive/5',
@@ -80,7 +80,7 @@ export function MetricInsightCard({
         <div className='flex items-center gap-2'>
           <span className={cn('shrink-0', style.icon)}>{icon}</span>
           <div className='flex items-center gap-2'>
-            <span className={cn('text-sm font-semibold', style.title)}>
+            <span className={cn('text-base font-semibold', style.title)}>
               {title}
             </span>
             {titleSuffix}
@@ -89,7 +89,9 @@ export function MetricInsightCard({
         {valueSlot ? (
           valueSlot
         ) : value ? (
-          <span className={cn('font-mono text-xs', style.value)}>{value}</span>
+          <span className={cn('font-mono text-sm tabular-nums', style.value)}>
+            {value}
+          </span>
         ) : null}
       </div>
 
@@ -98,9 +100,7 @@ export function MetricInsightCard({
       </p>
 
       {footer ? (
-        <div className='mt-2 text-[11px] text-muted-foreground/80'>
-          {footer}
-        </div>
+        <div className='mt-2 text-xs text-muted-foreground/80'>{footer}</div>
       ) : null}
     </div>
   )

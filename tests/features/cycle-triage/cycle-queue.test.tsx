@@ -73,6 +73,16 @@ function readWorkspaceSource(): string {
   )
 }
 
+function readQueueSource(): string {
+  return readFileSync(
+    new URL(
+      '../../../src/features/cycle-triage/components/CycleQueue.tsx',
+      import.meta.url
+    ),
+    'utf8'
+  )
+}
+
 function readGraphSource(): string {
   return readFileSync(
     new URL(
@@ -90,9 +100,7 @@ function countOccurrences(source: string, pattern: RegExp): number {
 test('CycleQueue keeps queue evidence compact and decision-first', () => {
   const html = renderQueueHtml()
 
-  assert.match(html, /2 files/)
-  assert.match(html, /Used by many other files/)
-  assert.match(html, /Touches entry wiring \(index\.ts\)/)
+  assert.match(html, /2 files, used by many other files/)
   assert.doesNotMatch(html, /High review priority/)
   assert.doesNotMatch(
     html,
@@ -100,7 +108,7 @@ test('CycleQueue keeps queue evidence compact and decision-first', () => {
   )
   assert.doesNotMatch(html, /Currently reviewing/)
   assert.doesNotMatch(html, /1 module area/)
-  assert.doesNotMatch(html, /Includes entry wiring/)
+  assert.doesNotMatch(html, /Touches entry wiring \(index\.ts\)/)
 })
 
 test('CycleQueue removes repeated status labels from the sidebar row', () => {
@@ -112,8 +120,10 @@ test('CycleQueue removes repeated status labels from the sidebar row', () => {
 
 test('CycleQueue avoids a secondary reason paragraph in the sidebar row', () => {
   const html = renderQueueHtml()
+  const source = readQueueSource()
 
   assert.doesNotMatch(html, /line-clamp-2/)
+  assert.doesNotMatch(source, /CycleEvidenceList/)
 })
 
 test('CycleQueue fills the available sidebar height instead of using a fixed viewport height', () => {
@@ -149,11 +159,12 @@ test('CycleTriageWorkspace removes repeated helper copy from the primary reading
   assert.doesNotMatch(source, /cycleTriageCopy\.detail\.nearbyHint/)
   assert.doesNotMatch(source, /cycleTriageCopy\.page\.description/)
   assert.doesNotMatch(source, /cycleTriageCopy\.queue\.description/)
+  assert.doesNotMatch(source, /cycleTriageCopy\.detail\.whatIsHappening/)
 })
 
 test('CycleTriageWorkspace places suggested investigation before the graph section', () => {
   const source = readWorkspaceSource()
-  const suggestedIndex = source.indexOf('cycleTriageCopy.detail.startHere')
+  const suggestedIndex = source.indexOf('{startHereSummary}')
   const graphIndex = source.indexOf('cycleTriageCopy.detail.cycleGraph')
 
   assert.notEqual(suggestedIndex, -1)
@@ -164,11 +175,20 @@ test('CycleTriageWorkspace places suggested investigation before the graph secti
 test('CycleTriageWorkspace avoids repeating first-step labels in the action card', () => {
   const source = readWorkspaceSource()
 
-  assert.doesNotMatch(source, /cycleTriageCopy\.detail\.suggestedInvestigation/)
+  assert.doesNotMatch(source, /cycleTriageCopy\.detail\.startHere/)
+  assert.doesNotMatch(source, /cycleTriageCopy\.detail\.recommendedEdgeHint/)
   assert.equal(
     countOccurrences(source, /item\.suggestedInvestigation\.summary/g),
     1
   )
+})
+
+test('CycleTriageWorkspace normalizes the primary surface with shared priority and disclosure primitives', () => {
+  const source = readWorkspaceSource()
+
+  assert.match(source, /<ReviewPriorityBadge priority=\{fixPriorityLabel\} \/>/)
+  assert.match(source, /<DetailPanelDisclosure/)
+  assert.doesNotMatch(source, /border-amber-500\/25 bg-amber-500/)
 })
 
 test('CycleGraph tucks nearby route lists behind progressive disclosure', () => {

@@ -2,8 +2,7 @@ import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { cn } from '@/shared/lib/utils'
 
 import { cycleTriageCopy } from '../content/cycleTriageCopy'
-import { getCycleEvidenceItems } from '../lib/cycle-triage-presentation'
-import { CycleEvidenceList } from './CycleEvidenceList'
+import { getCycleQueueSummary } from '../lib/cycle-triage-presentation'
 
 import type { CycleTriageItem } from '../types/cycle-triage'
 
@@ -31,7 +30,7 @@ export function CycleQueue({
       <div className='space-y-3 pb-4 pr-4'>
         {items.map((item) => {
           const isSelected = selectedCycleId === item.id
-          const evidenceItems = getCycleEvidenceItems(item)
+          const queueSummary = getCycleQueueSummary(item)
 
           return (
             <button
@@ -39,30 +38,22 @@ export function CycleQueue({
               type='button'
               onClick={() => onSelect(item.id)}
               className={cn(
-                'w-full rounded-lg border border-transparent px-3 py-3 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                'w-full rounded-xl border px-3 py-2.5 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
                 isSelected
-                  ? 'bg-primary/8 border-primary/35 shadow-sm ring-1 ring-primary/20'
-                  : 'bg-transparent hover:bg-muted/20'
+                  ? 'border-2 border-border bg-muted/25'
+                  : 'border-transparent hover:bg-muted/15'
               )}
             >
-              <div className='flex items-start gap-3'>
-                <span
-                  aria-hidden='true'
-                  className={cn(
-                    'mt-1 h-2 w-2 shrink-0 rounded-full',
-                    isSelected ? 'bg-primary' : 'bg-muted-foreground/40'
-                  )}
-                />
-                <div className='min-w-0 space-y-2'>
-                  <p className='whitespace-normal break-normal font-mono text-[0.975rem] font-semibold leading-6 text-foreground'>
-                    {item.title}
-                  </p>
-                  <CycleEvidenceList
-                    items={evidenceItems}
-                    aria-label='Cycle evidence'
-                    className='text-[11px] tabular-nums'
-                  />
-                </div>
+              <div className='min-w-0 space-y-1.5'>
+                <p className='whitespace-normal break-normal font-mono text-[0.95rem] font-semibold leading-6 text-foreground'>
+                  {item.title}
+                </p>
+                <p
+                  aria-label='Cycle evidence'
+                  className='text-xs leading-5 text-muted-foreground'
+                >
+                  {queueSummary}
+                </p>
               </div>
             </button>
           )

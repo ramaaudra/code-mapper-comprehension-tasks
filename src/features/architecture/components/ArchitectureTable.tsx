@@ -339,7 +339,7 @@ export function ArchitectureTable({
                             </span>
                             <HotspotStatusLabel
                               status={folder.evolution.hotspotStatus}
-                              className='text-[11px] text-muted-foreground'
+                              className='text-xs text-muted-foreground'
                             />
                           </div>
                         ) : (

@@ -4,7 +4,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from '@/shared/components/ui/collapsible'
-import { CaretDown } from '@/shared/components/ui/icons'
+import { CaretDown, Lightbulb, AlertCircle } from '@/shared/components/ui/icons'
 
 import { MetricGuideVisual } from './MetricGuideVisual'
 
@@ -21,39 +21,60 @@ export function MetricGuideCard({ metric }: MetricGuideCardProps) {
         <h3 className='text-base font-semibold text-foreground'>
           {metric.title}
         </h3>
-        <Badge variant='outline' className='text-[11px] text-muted-foreground'>
+        <Badge variant='outline' className='text-xs text-muted-foreground'>
           {metric.family}
         </Badge>
       </div>
 
-      <div className='mt-3 space-y-3'>
+      <div className='mt-3 space-y-4'>
         <MetricGuideVisual metric={metric} />
 
         <div>
-          <p className='text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground/85'>
-            What it means
-          </p>
-          <p className='mt-1 text-sm text-foreground'>
-            {metric.shortDefinition}
-          </p>
+          <p className='text-sm text-foreground'>{metric.shortDefinition}</p>
         </div>
 
-        <div>
-          <p className='text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground/85'>
-            Why it matters
-          </p>
-          <p className='mt-1 text-sm text-foreground'>{metric.whyItMatters}</p>
+        <div className='rounded-lg border border-primary/20 bg-primary/5 p-3'>
+          <div className='flex items-start gap-2'>
+            <AlertCircle className='mt-0.5 h-4 w-4 shrink-0 text-primary' />
+            <div className='space-y-1'>
+              <p className='text-sm font-medium text-foreground'>
+                When to care
+              </p>
+              <p className='text-sm text-foreground/85'>{metric.whenToCare}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className='rounded-lg border border-border/60 bg-muted/30 p-3'>
+          <div className='flex items-start gap-2'>
+            <Lightbulb className='mt-0.5 h-4 w-4 shrink-0 text-amber-500' />
+            <div className='space-y-1'>
+              <p className='text-sm font-medium text-foreground'>
+                Quick action
+              </p>
+              <p className='text-sm text-foreground/85'>{metric.quickAction}</p>
+            </div>
+          </div>
         </div>
 
         <Collapsible>
-          <CollapsibleTrigger className='flex items-center gap-2 text-sm font-medium text-primary'>
-            <span>See practical reading tips and caveats</span>
+          <CollapsibleTrigger className='flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground'>
+            <span>Show details</span>
             <CaretDown className='h-4 w-4' />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className='mt-3 space-y-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-3'>
               <div>
-                <p className='text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground/85'>
+                <p className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
+                  Why it matters
+                </p>
+                <p className='mt-1 text-sm text-foreground'>
+                  {metric.whyItMatters}
+                </p>
+              </div>
+
+              <div>
+                <p className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
                   How to read it
                 </p>
                 <p className='mt-1 text-sm text-foreground'>
@@ -62,7 +83,7 @@ export function MetricGuideCard({ metric }: MetricGuideCardProps) {
               </div>
 
               <div>
-                <p className='text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground/85'>
+                <p className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
                   Important caveat
                 </p>
                 <p className='mt-1 text-sm text-muted-foreground'>
@@ -71,16 +92,12 @@ export function MetricGuideCard({ metric }: MetricGuideCardProps) {
               </div>
 
               <div>
-                <p className='text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground/85'>
+                <p className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
                   Where you see it
                 </p>
                 <div className='mt-2 flex flex-wrap gap-2'>
                   {metric.screens.map((screen) => (
-                    <Badge
-                      key={screen}
-                      variant='secondary'
-                      className='text-[11px]'
-                    >
+                    <Badge key={screen} variant='secondary' className='text-xs'>
                       {screen}
                     </Badge>
                   ))}
@@ -89,16 +106,11 @@ export function MetricGuideCard({ metric }: MetricGuideCardProps) {
 
               {metric.formula ? (
                 <div>
-                  <p className='text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground/85'>
+                  <p className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
                     Formula
                   </p>
-                  <p className='mt-1 text-sm font-medium text-foreground'>
+                  <p className='mt-1 rounded bg-muted/50 px-2 py-1 font-mono text-sm text-foreground'>
                     {metric.formula}
-                  </p>
-                  <p className='mt-2 text-sm text-muted-foreground'>
-                    This formula is shown for transparency. Use the
-                    decision-facing copy in the app first, then use formulas
-                    here when you need a deeper explanation.
                   </p>
                 </div>
               ) : null}

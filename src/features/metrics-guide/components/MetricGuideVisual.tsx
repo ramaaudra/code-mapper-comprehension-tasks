@@ -63,7 +63,7 @@ function renderVisual(metricId: string) {
     case 'instability':
       return (
         <div className='space-y-2'>
-          <div className='flex items-center justify-between text-[11px] text-muted-foreground'>
+          <div className='flex items-center justify-between text-xs text-muted-foreground'>
             <span className='inline-flex items-center gap-1'>
               <Layers className='h-3.5 w-3.5' />
               Foundational

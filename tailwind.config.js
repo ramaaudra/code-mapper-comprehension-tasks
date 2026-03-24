@@ -13,11 +13,12 @@ export default {
       screens: {
         '2xl': '1400px'
       }
-    },
-    extend: {
-      fontFamily: {
-        sans: ['JetBrains Mono', 'monospace'],
-        mono: ['JetBrains Mono', 'monospace']
+      },
+      extend: {
+        fontFamily: {
+        sans: ['Geist Sans', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+        data: ['JetBrains Mono', 'monospace']
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -53,6 +54,14 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))'
         }
+      },
+      fontSize: {
+        '2xs': ['10px', { lineHeight: '1.4' }],
+        'metric': ['2rem', { lineHeight: '1.2' }],
+        'metric-lg': ['2.25rem', { lineHeight: '1.2' }],
+      },
+      letterSpacing: {
+        'label': '0.08em',
       },
       borderRadius: {
         lg: 'var(--radius)',

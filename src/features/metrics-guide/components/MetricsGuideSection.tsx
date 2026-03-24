@@ -1,5 +1,6 @@
 import { cn } from '@/shared/lib/utils'
 
+import type { MetricsGuideMode } from '@/shared/types/explorer'
 import type { ReactNode } from 'react'
 
 interface MetricsGuideSectionProps {
@@ -9,6 +10,7 @@ interface MetricsGuideSectionProps {
   description: string
   children: ReactNode
   className?: string
+  mode?: MetricsGuideMode
 }
 
 export function MetricsGuideSection({
@@ -17,12 +19,18 @@ export function MetricsGuideSection({
   title,
   description,
   children,
-  className
+  className,
+  mode = 'quick'
 }: MetricsGuideSectionProps) {
   return (
     <section id={id} className={cn('scroll-mt-6 space-y-4', className)}>
       <div className='space-y-1.5'>
-        <p className='text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground/85'>
+        <p
+          className={cn(
+            'text-xs font-medium uppercase tracking-label',
+            mode === 'quick' ? 'text-primary/70' : 'text-muted-foreground/85'
+          )}
+        >
           {eyebrow}
         </p>
         <div className='space-y-1'>

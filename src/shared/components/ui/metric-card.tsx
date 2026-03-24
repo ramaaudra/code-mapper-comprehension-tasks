@@ -21,12 +21,12 @@ export const MetricCard = memo(function MetricCard({
     return (
       <div className='min-h-[128px] rounded-xl border border-border/60 bg-muted/15 p-5'>
         <div className='flex items-center justify-between'>
-          <span className='text-xs font-medium tracking-[0.04em] text-muted-foreground/90'>
+          <span className='text-sm font-medium tracking-label text-muted-foreground/90'>
             {label}
           </span>
           {icon && <span className='p-1.5 text-muted-foreground'>{icon}</span>}
         </div>
-        <div className='mt-3 text-[1.95rem] font-semibold tabular-nums tracking-tight text-foreground lg:text-[2.15rem]'>
+        <div className='mt-3 font-mono text-metric font-semibold tabular-nums tracking-tight text-foreground lg:text-metric-lg'>
           {value}
         </div>
         {subValue && (
@@ -47,13 +47,13 @@ export const MetricCard = memo(function MetricCard({
   return (
     <div className='min-h-[140px] rounded-lg bg-muted/20 p-6'>
       <div className='flex items-center justify-between'>
-        <span className='text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground'>
+        <span className='text-sm font-medium uppercase tracking-label text-muted-foreground'>
           {label}
         </span>
         {icon && <span className={`p-2 ${statusColors[status]}`}>{icon}</span>}
       </div>
       <div className='mt-3 flex items-baseline gap-2'>
-        <span className='text-5xl font-semibold tabular-nums tracking-tight text-foreground'>
+        <span className='font-mono text-5xl font-semibold tabular-nums tracking-tight text-foreground'>
           {value}
         </span>
         {subValue && (

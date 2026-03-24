@@ -1,8 +1,7 @@
-import { cycleTriageCopy } from '../content/cycleTriageCopy'
 import { getPriorityDriverChipLabel } from '../content/priorityDriverCopy'
 
 import type { CycleTriageItem, FixPriority } from '../types/cycle-triage'
-import type { CycleReviewStatus } from './cycle-triage-review-state'
+import type { ReviewPriority } from '@/shared/lib/utils'
 
 export type CycleSignalTone = 'loading' | 'ready' | 'warning'
 
@@ -10,21 +9,6 @@ export interface CycleSignalSummary {
   label: string
   detail: string
   tone: CycleSignalTone
-}
-
-interface GetCycleWorkspaceSummaryInput {
-  totalCount: number
-  highPriorityCount: number
-  reviewedCount: number
-  reviewingCount: number
-}
-
-export const cycleReviewToneClass: Record<CycleReviewStatus, string> = {
-  unreviewed:
-    'border-slate-500/25 bg-slate-500/10 text-slate-700 dark:text-slate-300',
-  reviewing: 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300',
-  reviewed:
-    'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
 }
 
 interface GetCycleSignalSummaryInput {
@@ -61,39 +45,24 @@ export function getCycleSignalSummary(
   }
 }
 
-export function getCycleWorkspaceSummary(
-  input: GetCycleWorkspaceSummaryInput
-): string {
-  const reviewBits: string[] = []
-
-  if (input.reviewedCount > 0) {
-    reviewBits.push(`${input.reviewedCount} reviewed`)
+function lowerFirstCharacter(value: string): string {
+  if (!value) {
+    return value
   }
 
-  if (input.reviewingCount > 0) {
-    reviewBits.push(`${input.reviewingCount} in review`)
-  }
-
-  const queueLead =
-    input.highPriorityCount > 0
-      ? `Start with ${input.highPriorityCount} high-priority loops out of ${input.totalCount}.`
-      : `Review ${input.totalCount} detected loops. No high-priority blockers right now.`
-
-  if (reviewBits.length === 0) {
-    return queueLead
-  }
-
-  return `${queueLead} ${reviewBits.join(', ')}.`
+  return `${value.charAt(0).toLowerCase()}${value.slice(1)}`
 }
 
-export function getCycleFixPriorityLabel(priority: FixPriority): string {
+export function getCycleFixPriorityLabel(
+  priority: FixPriority
+): ReviewPriority {
   switch (priority) {
     case 'high':
-      return 'High review priority'
+      return 'High Review Priority'
     case 'medium':
-      return 'Normal review priority'
+      return 'Normal Review Priority'
     default:
-      return 'Low review priority'
+      return 'Low Review Priority'
   }
 }
 
@@ -121,6 +90,19 @@ export function getCycleEvidenceItems(
   return evidence
 }
 
+export function getCycleQueueSummary(
+  item: Pick<CycleTriageItem, 'uniqueFileCount' | 'priorityDrivers'>
+): string {
+  const [fileCount, ...supportingSignals] = getCycleEvidenceItems(item)
+  const primarySignal = supportingSignals[0]
+
+  if (!primarySignal) {
+    return fileCount
+  }
+
+  return [fileCount, lowerFirstCharacter(primarySignal)].join(', ')
+}
+
 export function getLoopPathDefaultExpanded(_fileCount: number): boolean {
   return false
 }
@@ -134,15 +116,4 @@ export function getNearbyImportsToggleLabel(
   }
 
   return `${showNearbyImports ? 'Hide' : 'Show'} nearby imports (${nearbyCount})`
-}
-
-export function getCycleReviewStatusLabel(status: CycleReviewStatus): string {
-  switch (status) {
-    case 'reviewing':
-      return cycleTriageCopy.detail.statusReviewing
-    case 'reviewed':
-      return cycleTriageCopy.detail.statusReviewed
-    default:
-      return cycleTriageCopy.detail.statusUnreviewed
-  }
 }
