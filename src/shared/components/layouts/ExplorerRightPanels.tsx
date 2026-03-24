@@ -39,6 +39,7 @@ interface ExplorerRightPanelsProps {
     moduleData?: FolderArchitectureMetrics
     onClose: () => void
     onViewFile: (filePath: string) => void
+    onViewModule?: (modulePath: string) => void
   }
 }
 
@@ -75,8 +76,10 @@ export function ExplorerRightPanels({
       {showNodeDetailPanel && (
         <div
           ref={nodePanel.panelRef}
-          className='relative flex-shrink-0 overflow-hidden border-l border-border'
-          style={{ width: `${nodePanel.panelWidth}px` }}
+          className='relative min-w-0 flex-shrink-0 overflow-hidden border-l border-border'
+          style={{
+            width: `min(calc(100vw - 1rem), ${nodePanel.panelWidth}px)`
+          }}
         >
           <ResizeGrip resizeHandleProps={nodePanel.resizeHandleProps} />
           <Suspense fallback={<LoadingPanelFallback />}>
@@ -92,8 +95,10 @@ export function ExplorerRightPanels({
       {showModuleSidePanel && modulePanel.modulePath && (
         <div
           ref={modulePanel.panelRef}
-          className='relative flex-shrink-0 overflow-hidden border-l border-border'
-          style={{ width: `${modulePanel.panelWidth}px` }}
+          className='relative min-w-0 flex-shrink-0 overflow-hidden border-l border-border'
+          style={{
+            width: `min(calc(100vw - 1rem), ${modulePanel.panelWidth}px)`
+          }}
         >
           <ResizeGrip resizeHandleProps={modulePanel.resizeHandleProps} />
           <ModuleSidePanel
@@ -101,6 +106,7 @@ export function ExplorerRightPanels({
             moduleData={modulePanel.moduleData}
             onClose={modulePanel.onClose}
             onViewFile={modulePanel.onViewFile}
+            onViewModule={modulePanel.onViewModule}
           />
         </div>
       )}

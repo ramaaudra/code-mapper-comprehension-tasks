@@ -17,29 +17,34 @@ interface HotspotStatusLabelProps {
   status: HotspotStatus
   className?: string
   variant?: 'default' | 'graph'
+  labelOverride?: string
 }
 
 export function HotspotStatusLabel({
   status,
   className,
-  variant = 'default'
+  variant = 'default',
+  labelOverride
 }: HotspotStatusLabelProps) {
   const label =
-    variant === 'graph'
+    labelOverride ??
+    (variant === 'graph'
       ? getGraphHotspotStatusLabel(status)
-      : getHotspotStatusLabel(status)
+      : getHotspotStatusLabel(status))
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span
+        <button
+          type='button'
+          aria-label={`Explain hotspot priority status: ${label}`}
           className={cn(
-            'inline-flex cursor-help items-center underline decoration-dotted underline-offset-2',
+            'inline-flex cursor-help items-center rounded-sm bg-transparent underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
             className
           )}
         >
           {label}
-        </span>
+        </button>
       </TooltipTrigger>
       <TooltipContent side='top' align='start' className='max-w-xs'>
         <div className='space-y-2'>

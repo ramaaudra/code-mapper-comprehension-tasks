@@ -15,9 +15,9 @@ export function CouplingBreakdown({
   const fromEntries = Object.entries(couplingFrom)
 
   return (
-    <div className='grid grid-cols-2 gap-4 text-xs'>
+    <div className='grid grid-cols-1 gap-4 text-xs sm:grid-cols-2'>
       {/* Efferent: this folder imports from... */}
-      <div>
+      <div className='min-w-0'>
         <h4 className='mb-2 flex items-center gap-1 text-muted-foreground'>
           <ArrowRight size={12} />
           {architectureCopy.couplingBreakdown.importsFromOtherModules}
@@ -25,9 +25,12 @@ export function CouplingBreakdown({
         {toEntries.length > 0 ? (
           <ul className='space-y-1'>
             {toEntries.map(([folder, count]) => (
-              <li key={folder} className='flex justify-between'>
+              <li
+                key={folder}
+                className='flex items-start justify-between gap-3'
+              >
                 <span
-                  className='max-w-[140px] truncate font-mono'
+                  className='min-w-0 flex-1 break-all font-mono'
                   title={folder}
                 >
                   {folder}
@@ -44,7 +47,7 @@ export function CouplingBreakdown({
       </div>
 
       {/* Afferent: this folder is imported by... */}
-      <div>
+      <div className='min-w-0'>
         <h4 className='mb-2 flex items-center gap-1 text-muted-foreground'>
           <ArrowLeft size={12} />
           {architectureCopy.couplingBreakdown.usedByOtherModules}
@@ -52,9 +55,12 @@ export function CouplingBreakdown({
         {fromEntries.length > 0 ? (
           <ul className='space-y-1'>
             {fromEntries.map(([folder, count]) => (
-              <li key={folder} className='flex justify-between'>
+              <li
+                key={folder}
+                className='flex items-start justify-between gap-3'
+              >
                 <span
-                  className='max-w-[140px] truncate font-mono'
+                  className='min-w-0 flex-1 break-all font-mono'
                   title={folder}
                 >
                   {folder}

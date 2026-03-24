@@ -36,10 +36,10 @@ const toneStyles: Record<
     icon: 'text-muted-foreground'
   },
   success: {
-    container: 'border-emerald-500/35 bg-emerald-500/5',
-    title: 'text-emerald-500',
-    value: 'text-emerald-500',
-    icon: 'text-emerald-500'
+    container: 'border-status-success-border bg-status-success-surface',
+    title: 'text-status-success-foreground',
+    value: 'text-status-success-foreground',
+    icon: 'text-status-success-foreground'
   },
   warning: {
     container: 'border-border bg-card/60',

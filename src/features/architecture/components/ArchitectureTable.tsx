@@ -1,10 +1,5 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from '@/shared/components/ui/collapsible'
 import { HotspotStatusLabel } from '@/shared/components/ui/hotspot-status-label'
 import { CaretDown, CaretRight, CaretUp } from '@/shared/components/ui/icons'
 import { Skeleton } from '@/shared/components/ui/skeleton'
@@ -37,32 +32,32 @@ const columns: Column[] = [
   {
     key: 'folderPath',
     label: architectureCopy.table.columns.module,
-    className: 'text-left'
+    className: 'min-w-[18rem] text-left'
   },
   {
     key: 'ca',
     label: architectureCopy.table.columns.usedBy,
-    className: 'text-center w-24'
+    className: 'min-w-[5rem] text-center'
   },
   {
     key: 'ce',
     label: architectureCopy.table.columns.imports,
-    className: 'text-center w-24'
+    className: 'min-w-[5rem] text-center'
   },
   {
     key: 'instability',
     label: architectureCopy.table.columns.structuralPosition,
-    className: 'text-center w-32'
+    className: 'min-w-[8.5rem] text-center'
   },
   {
     key: 'riskScore',
     label: architectureCopy.table.columns.spreadRisk,
-    className: 'text-center w-32'
+    className: 'min-w-[8rem] text-center'
   },
   {
     key: 'hotspotScore',
     label: architectureCopy.table.columns.hotspotPriority,
-    className: 'text-center w-40'
+    className: 'min-w-[9rem] text-center'
   }
 ]
 
@@ -73,6 +68,49 @@ interface ArchitectureTableProps {
   thresholdCalibration?: ReviewThresholdCalibration
   evolutionaryMetricsAvailable?: boolean
 }
+
+function createDetailsId(folderPath: string): string {
+  const normalizedPath = folderPath
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+  return `architecture-folder-details-${normalizedPath || 'module'}`
+}
+
+function resolveAriaSort(
+  columnKey: SortKey,
+  sortConfig: SortConfig
+): 'ascending' | 'descending' | 'none' {
+  if (sortConfig.key !== columnKey) {
+    return 'none'
+  }
+
+  return sortConfig.direction === 'asc' ? 'ascending' : 'descending'
+}
+
+function getHotspotLabel(
+  status: NonNullable<FolderArchitectureMetrics['evolution']>['hotspotStatus']
+): string {
+  const labels = {
+    'critical-hotspot': 'Highest band',
+    'high-review-needed': 'Needs review',
+    active: 'Recently active',
+    stable: 'Baseline band'
+  } as const
+
+  return labels[status]
+}
+
+function getRiskDotColor(
+  score: number,
+  thresholdCalibration?: ReviewThresholdCalibration
+): string {
+  const level = getRiskLevel(score, thresholdCalibration)
+  return getRiskColorClass(level)
+}
+
+const instabilityBarClass = 'bg-muted-foreground/50'
 
 function ExpandedRow({
   folderPath,
@@ -136,13 +174,13 @@ function ExpandedRow({
               <td className='py-2 text-center font-data'>{file.ce}</td>
               <td className='py-2'>
                 <div className='flex items-center justify-center gap-2'>
-                  <div className='h-1.5 w-16 overflow-hidden rounded-full bg-slate-800'>
+                  <div className='h-1.5 w-16 overflow-hidden rounded-full bg-border/70'>
                     <div
-                      className='h-full bg-slate-600'
+                      className='h-full bg-muted-foreground/50'
                       style={{ width: `${file.instability * 100}%` }}
                     />
                   </div>
-                  <span className='w-8 font-data text-xs text-slate-400'>
+                  <span className='w-8 font-data text-xs text-muted-foreground'>
                     {file.instability.toFixed(2)}
                   </span>
                 </div>
@@ -168,6 +206,8 @@ export function ArchitectureTable({
   evolutionaryMetricsAvailable = true
 }: ArchitectureTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+  const getAriaSort = (columnKey: SortKey) =>
+    resolveAriaSort(columnKey, sortConfig)
 
   const sortedFolders = useMemo(() => {
     return [...folders].sort((a, b) => {
@@ -215,35 +255,27 @@ export function ArchitectureTable({
     })
   }
 
-  /**
-   * Neutral color for Instability bar.
-   * Instability is a structural property, not a danger indicator.
-   */
-  const getInstabilityBarColor = () => {
-    return 'bg-slate-600'
-  }
-
-  /**
-   * Get color class for propagation-risk dot based on risk level.
-   * Uses same scheme as HighRiskModules panel.
-   */
-  const getRiskDotColor = (score: number) => {
-    const level = getRiskLevel(score, thresholdCalibration)
-    return getRiskColorClass(level)
-  }
-
   return (
     <div className='overflow-x-auto'>
-      <table className='w-full text-sm'>
+      <table className='w-full min-w-[760px] text-sm'>
         <thead className='sticky top-0 z-10 border-b border-border bg-background'>
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`cursor-pointer select-none px-4 py-3 font-medium text-muted-foreground hover:bg-muted/50 ${col.className}`}
-                onClick={() => onSort(col.key)}
+                scope='col'
+                aria-sort={getAriaSort(col.key)}
+                className={`px-4 py-3 font-medium text-muted-foreground ${col.className}`}
               >
-                <span className='inline-flex items-center gap-1.5'>
+                <button
+                  type='button'
+                  onClick={() => onSort(col.key)}
+                  className={`inline-flex w-full items-center gap-1.5 rounded-md px-2 py-2 text-inherit transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                    col.key === 'folderPath'
+                      ? 'justify-start text-left'
+                      : 'justify-center text-center'
+                  }`}
+                >
                   {col.label}
                   {sortConfig.key === col.key && (
                     <span className='text-foreground'>
@@ -254,7 +286,7 @@ export function ArchitectureTable({
                       )}
                     </span>
                   )}
-                </span>
+                </button>
               </th>
             ))}
           </tr>
@@ -262,106 +294,108 @@ export function ArchitectureTable({
         <tbody>
           {sortedFolders.map((folder) => {
             const isExpanded = expandedRows.has(folder.folderPath)
+            const detailsId = createDetailsId(folder.folderPath)
+            const riskScore = calculateRiskScore(folder.ca, folder.instability)
 
             return (
-              <Collapsible
-                key={folder.folderPath}
-                open={isExpanded}
-                onOpenChange={() => toggleRow(folder.folderPath)}
-                asChild
-              >
-                <>
-                  <CollapsibleTrigger asChild>
-                    <tr className='cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/30'>
-                      <td className='px-4 py-3'>
-                        <span className='flex items-center gap-2'>
-                          {isExpanded ? (
-                            <CaretDown
-                              size={14}
-                              className='shrink-0 text-muted-foreground'
-                            />
-                          ) : (
-                            <CaretRight
-                              size={14}
-                              className='shrink-0 text-muted-foreground'
-                            />
+              <Fragment key={folder.folderPath}>
+                <tr
+                  className={`border-b border-border/50 align-top transition-colors ${
+                    isExpanded ? 'bg-muted/20' : 'hover:bg-muted/20'
+                  }`}
+                >
+                  <td className='px-4 py-3'>
+                    <button
+                      type='button'
+                      onClick={() => toggleRow(folder.folderPath)}
+                      aria-label={`Toggle file breakdown for ${folder.folderPath}`}
+                      aria-expanded={isExpanded}
+                      aria-controls={detailsId}
+                      className='flex w-full min-w-0 items-start gap-2 rounded-md text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+                    >
+                      {isExpanded ? (
+                        <CaretDown
+                          size={14}
+                          className='mt-0.5 shrink-0 text-muted-foreground'
+                        />
+                      ) : (
+                        <CaretRight
+                          size={14}
+                          className='mt-0.5 shrink-0 text-muted-foreground'
+                        />
+                      )}
+                      <span
+                        className='min-w-0 truncate font-mono'
+                        title={folder.folderPath}
+                      >
+                        {folder.folderPath}
+                      </span>
+                      {folder.hasCycle && <CycleBadge />}
+                    </button>
+                  </td>
+                  <td className='px-4 py-3 text-center font-data'>
+                    {folder.ca}
+                  </td>
+                  <td className='px-4 py-3 text-center font-data'>
+                    {folder.ce}
+                  </td>
+                  <td className='px-4 py-3'>
+                    <div className='flex items-center justify-center gap-2'>
+                      <div className='h-1.5 w-16 overflow-hidden rounded-full bg-border/70'>
+                        <div
+                          className={`h-full ${instabilityBarClass}`}
+                          style={{ width: `${folder.instability * 100}%` }}
+                        />
+                      </div>
+                      <InstabilityBadge value={folder.instability} />
+                    </div>
+                  </td>
+                  <td className='px-4 py-3'>
+                    <div className='flex items-center justify-center gap-2'>
+                      <span className='font-data text-sm'>
+                        {riskScore.toFixed(1)}
+                      </span>
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${getRiskDotColor(
+                          riskScore,
+                          thresholdCalibration
+                        )}`}
+                        title={`Propagation Risk: ${riskScore.toFixed(1)}`}
+                      />
+                    </div>
+                  </td>
+                  <td className='px-4 py-3 text-center font-data text-xs'>
+                    {folder.evolution && evolutionaryMetricsAvailable ? (
+                      <div className='flex flex-col items-center gap-1'>
+                        <span>{folder.evolution.hotspotScore.toFixed(2)}</span>
+                        <HotspotStatusLabel
+                          status={folder.evolution.hotspotStatus}
+                          labelOverride={getHotspotLabel(
+                            folder.evolution.hotspotStatus
                           )}
-                          <span
-                            className='truncate font-mono'
-                            title={folder.folderPath}
-                          >
-                            {folder.folderPath}
-                          </span>
-                          {folder.hasCycle && <CycleBadge />}
-                        </span>
-                      </td>
-                      <td className='px-4 py-3 text-center font-data'>
-                        {folder.ca}
-                      </td>
-                      <td className='px-4 py-3 text-center font-data'>
-                        {folder.ce}
-                      </td>
-                      <td className='px-4 py-3'>
-                        <div className='flex items-center justify-center gap-2'>
-                          <div className='h-1.5 w-16 overflow-hidden rounded-full bg-slate-800'>
-                            <div
-                              className={`h-full transition-all ${getInstabilityBarColor()}`}
-                              style={{ width: `${folder.instability * 100}%` }}
-                            />
-                          </div>
-                          <InstabilityBadge value={folder.instability} />
-                        </div>
-                      </td>
-                      <td className='px-4 py-3'>
-                        {(() => {
-                          const riskScore = calculateRiskScore(
-                            folder.ca,
-                            folder.instability
-                          )
-                          return (
-                            <div className='flex items-center justify-center gap-2'>
-                              <span className='font-data text-sm'>
-                                {riskScore.toFixed(1)}
-                              </span>
-                              <span
-                                className={`h-2.5 w-2.5 rounded-full ${getRiskDotColor(riskScore)}`}
-                                title={`Propagation Risk: ${riskScore.toFixed(1)}`}
-                              />
-                            </div>
-                          )
-                        })()}
-                      </td>
-                      <td className='px-4 py-3 text-center font-data text-xs'>
-                        {folder.evolution && evolutionaryMetricsAvailable ? (
-                          <div className='flex flex-col items-center gap-1'>
-                            <span>
-                              {folder.evolution.hotspotScore.toFixed(2)}
-                            </span>
-                            <HotspotStatusLabel
-                              status={folder.evolution.hotspotStatus}
-                              className='text-xs text-muted-foreground'
-                            />
-                          </div>
-                        ) : (
-                          'Unavailable'
-                        )}
-                      </td>
-                    </tr>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent asChild>
-                    <tr>
-                      <td colSpan={6} className='p-0'>
+                          className='text-xs text-muted-foreground'
+                        />
+                      </div>
+                    ) : (
+                      'Unavailable'
+                    )}
+                  </td>
+                </tr>
+                {isExpanded ? (
+                  <tr>
+                    <td colSpan={6} className='p-0'>
+                      <div id={detailsId}>
                         <ExpandedRow
                           folderPath={folder.folderPath}
                           evolutionaryMetricsAvailable={
                             evolutionaryMetricsAvailable
                           }
                         />
-                      </td>
-                    </tr>
-                  </CollapsibleContent>
-                </>
-              </Collapsible>
+                      </div>
+                    </td>
+                  </tr>
+                ) : null}
+              </Fragment>
             )
           })}
         </tbody>

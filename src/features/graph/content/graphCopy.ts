@@ -1,4 +1,17 @@
 export const graphCopy = {
+  canvas: {
+    fileLoadingTitle: 'Preparing dependency graph',
+    fileLoadingDescription:
+      'Laying out file relationships so you can compare impact paths clearly.',
+    moduleLoadingTitle: 'Preparing module graph',
+    moduleLoadingDescription:
+      'Collecting cross-module connections and the current focus context.',
+    emptyTitle: 'Pick another file to inspect dependencies',
+    emptyDescription:
+      'This file has no import or export links in the current analysis. Select a shared or recently changed file from the tree to review broader impact.',
+    showAllModules: 'Global Map',
+    showAllModulesCompact: 'Map'
+  },
   node: {
     chips: {
       selected: 'Focus',
@@ -62,6 +75,7 @@ export const graphCopy = {
     connections: {
       incoming: 'Incoming',
       outgoing: 'Outgoing',
+      inspectAction: 'Inspect in graph',
       noIncomingTitle: 'No incoming module dependencies',
       noIncomingDescription:
         'No other modules currently depend on this module.',

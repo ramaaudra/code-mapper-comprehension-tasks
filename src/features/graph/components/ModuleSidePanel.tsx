@@ -1,3 +1,5 @@
+import { useContext } from 'react'
+
 import {
   useModuleReviewThresholdCalibration,
   useFolderDetail
@@ -22,7 +24,7 @@ import { MetricInsightCard } from '@/shared/components/ui/metric-insight-card'
 import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Tabs, TabsContent } from '@/shared/components/ui/tabs'
-import { useDataContext } from '@/shared/context/DataContext'
+import { DataContext } from '@/shared/context/DataContext'
 import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
 import {
   formatReviewSignalBandRange,
@@ -65,6 +67,7 @@ interface ModuleSidePanelProps {
   modulePath: string
   onClose: () => void
   onViewFile: (filePath: string) => void
+  onViewModule?: (modulePath: string) => void
   moduleData?: FolderArchitectureMetrics
 }
 
@@ -80,11 +83,11 @@ interface InstabilityConfig {
 }
 
 const DECISION_CARD_TONE_ICON = {
-  danger: <AlertTriangle className='h-4 w-4 text-red-500' />,
-  warning: <AlertTriangle className='h-4 w-4 text-orange-500' />,
-  info: <Folder className='h-4 w-4 text-sky-500' />,
-  success: <CheckCircle className='h-4 w-4 text-green-500' />,
-  default: <CheckCircle className='h-4 w-4 text-green-500' />
+  danger: <AlertTriangle className='h-4 w-4 text-status-critical-foreground' />,
+  warning: <AlertTriangle className='h-4 w-4 text-status-warning-foreground' />,
+  info: <Folder className='h-4 w-4 text-primary' />,
+  success: <CheckCircle className='h-4 w-4 text-status-success-foreground' />,
+  default: <CheckCircle className='h-4 w-4 text-status-success-foreground' />
 } satisfies Record<DecisionStatusTone, React.ReactNode>
 
 const propagationRiskSignal = getReviewSignalDefinition('propagationRisk')
@@ -98,6 +101,7 @@ const balancedBand = structuralPositionBands.find(
 const outwardDependentBand = structuralPositionBands.find(
   (band) => band.id === 'Outward-Dependent'
 )
+const supportingMetricsGridLayout = 'grid-cols-1 sm:grid-cols-2 gap-3'
 
 function getInstabilityBand(instability: number): InstabilityBand {
   switch (resolveStructuralPosition(instability)) {
@@ -117,9 +121,9 @@ function getInstabilityConfig(instability: number): InstabilityConfig {
     case 'flexible':
       return {
         band,
-        borderClass: 'border-sky-500/40',
-        bgClass: 'bg-sky-500/5',
-        textClass: 'text-sky-600',
+        borderClass: 'border-status-warning-border',
+        bgClass: 'bg-status-warning-surface',
+        textClass: 'text-status-warning-foreground',
         label: 'Flexible / Unstable',
         description:
           'This module points to more outgoing cross-module dependency edges than it receives. High instability is common in UI, route, and adapter layers and does not automatically mean high propagation risk.'
@@ -127,9 +131,9 @@ function getInstabilityConfig(instability: number): InstabilityConfig {
     case 'balanced':
       return {
         band,
-        borderClass: 'border-slate-500/40',
-        bgClass: 'bg-slate-500/5',
-        textClass: 'text-slate-600',
+        borderClass: 'border-border',
+        bgClass: 'bg-muted/35',
+        textClass: 'text-foreground',
         label: 'Balanced',
         description:
           'Incoming and outgoing cross-module dependency edges are both meaningful. Review both dependents and outgoing dependencies before changing it.'
@@ -137,9 +141,9 @@ function getInstabilityConfig(instability: number): InstabilityConfig {
     default:
       return {
         band,
-        borderClass: 'border-indigo-500/40',
-        bgClass: 'bg-indigo-500/5',
-        textClass: 'text-indigo-600',
+        borderClass: 'border-status-success-border',
+        bgClass: 'bg-status-success-surface',
+        textClass: 'text-status-success-foreground',
         label: 'Rigid / Stable',
         description:
           'More incoming cross-module dependency edges point into this module than out of it. Low instability often appears in shared or foundational layers, so change impact depends heavily on Ca.'
@@ -439,7 +443,7 @@ function PropagationRiskCard({
     <MetricInsightCard
       icon={
         riskProfile.level === 'low' ? (
-          <CheckCircle className='h-4 w-4 text-slate-500' />
+          <CheckCircle className='h-4 w-4 text-status-success-foreground' />
         ) : (
           <AlertTriangle
             className={`h-4 w-4 ${getRiskTextClass(riskProfile.level)}`}
@@ -476,18 +480,75 @@ function PropagationRiskCard({
   )
 }
 
+interface SupportingMetricsGridProps {
+  moduleData: FolderArchitectureMetrics
+  changeHistoryAvailable: boolean
+}
+
+function SupportingMetricsGrid({
+  moduleData,
+  changeHistoryAvailable
+}: SupportingMetricsGridProps) {
+  const evolution = moduleData.evolution
+
+  return (
+    <div className={`grid ${supportingMetricsGridLayout}`}>
+      <MetricValueCard
+        value={moduleData.fileCount}
+        label={graphCopy.modulePanel.supportingMetrics.files}
+        tooltip={metricTooltipContent.Files}
+      />
+      <MetricValueCard
+        value={moduleData.ce}
+        label={METRIC_LABELS.dependenciesCe}
+        tooltip={metricTooltipContent[METRIC_LABELS.dependenciesCe]}
+      />
+      <MetricValueCard
+        value={
+          evolution && changeHistoryAvailable
+            ? formatRelativeChurn(evolution.churn30d.relativeChurn)
+            : 'Unavailable'
+        }
+        label={METRIC_LABELS.relativeChurn30d}
+        tooltip={METRIC_TOOLTIPS.relativeChurn30d}
+      />
+      <MetricValueCard
+        value={
+          evolution && changeHistoryAvailable
+            ? evolution.hotspotScore.toFixed(2)
+            : 'Unavailable'
+        }
+        label={METRIC_LABELS.evolutionaryHotspotScore}
+        tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
+        helper={
+          evolution && changeHistoryAvailable ? (
+            <HotspotStatusLabel
+              status={evolution.hotspotStatus}
+              className='text-[11px] text-muted-foreground'
+            />
+          ) : !changeHistoryAvailable ? (
+            <span className='text-[11px] text-muted-foreground'>
+              Git history is unavailable for hotspot ranking.
+            </span>
+          ) : null
+        }
+      />
+    </div>
+  )
+}
+
 interface OverviewTabProps {
   moduleData: FolderArchitectureMetrics
   thresholdCalibration?: ReviewThresholdCalibration
 }
 
 function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
-  const { analysisData } = useDataContext()
+  const dataContext = useContext(DataContext)
+  const analysisData = dataContext?.analysisData ?? null
   const evolution = moduleData.evolution
   const changeHistoryAvailable = isEvolutionaryMetricsAvailable(
     analysisData?.evolutionaryMetrics.summary
   )
-  const riskScore = calculateRiskScore(moduleData.ca, moduleData.instability)
   const decisionAssessment = createDecisionAssessment({
     kind: 'module',
     hasCycle: moduleData.hasCycle,
@@ -568,63 +629,10 @@ function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
             <DetailPanelSectionHeading
               title={graphCopy.modulePanel.disclosure.supportingMetricsTitle}
             />
-            <div className='grid grid-cols-2 gap-3'>
-              <MetricValueCard
-                value={moduleData.fileCount}
-                label={graphCopy.modulePanel.supportingMetrics.files}
-                tooltip={metricTooltipContent.Files}
-              />
-              <MetricValueCard
-                value={moduleData.ca}
-                label={METRIC_LABELS.dependentsCa}
-                tooltip={metricTooltipContent[METRIC_LABELS.dependentsCa]}
-              />
-              <MetricValueCard
-                value={moduleData.ce}
-                label={METRIC_LABELS.dependenciesCe}
-                tooltip={metricTooltipContent[METRIC_LABELS.dependenciesCe]}
-              />
-              <MetricValueCard
-                value={moduleData.instability.toFixed(2)}
-                label={METRIC_LABELS.instability}
-                tooltip={metricTooltipContent[METRIC_LABELS.instability]}
-              />
-              <MetricValueCard
-                value={riskScore.toFixed(1)}
-                label={METRIC_LABELS.propagationRisk}
-                tooltip={metricTooltipContent[METRIC_LABELS.propagationRisk]}
-              />
-              <MetricValueCard
-                value={
-                  evolution && changeHistoryAvailable
-                    ? formatRelativeChurn(evolution.churn30d.relativeChurn)
-                    : 'Unavailable'
-                }
-                label={METRIC_LABELS.relativeChurn30d}
-                tooltip={METRIC_TOOLTIPS.relativeChurn30d}
-              />
-              <MetricValueCard
-                value={
-                  evolution && changeHistoryAvailable
-                    ? evolution.hotspotScore.toFixed(2)
-                    : 'Unavailable'
-                }
-                label={METRIC_LABELS.evolutionaryHotspotScore}
-                tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
-                helper={
-                  evolution && changeHistoryAvailable ? (
-                    <HotspotStatusLabel
-                      status={evolution.hotspotStatus}
-                      className='text-[11px] text-muted-foreground'
-                    />
-                  ) : !changeHistoryAvailable ? (
-                    <span className='text-[11px] text-muted-foreground'>
-                      Git history is unavailable for hotspot ranking.
-                    </span>
-                  ) : null
-                }
-              />
-            </div>
+            <SupportingMetricsGrid
+              moduleData={moduleData}
+              changeHistoryAvailable={changeHistoryAvailable}
+            />
           </div>
         </DetailPanelDisclosure>
       ) : (
@@ -635,63 +643,10 @@ function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
             moduleData={moduleData}
             thresholdCalibration={thresholdCalibration}
           />
-          <div className='grid grid-cols-2 gap-3'>
-            <MetricValueCard
-              value={moduleData.fileCount}
-              label={graphCopy.modulePanel.supportingMetrics.files}
-              tooltip={metricTooltipContent.Files}
-            />
-            <MetricValueCard
-              value={moduleData.ca}
-              label={METRIC_LABELS.dependentsCa}
-              tooltip={metricTooltipContent[METRIC_LABELS.dependentsCa]}
-            />
-            <MetricValueCard
-              value={moduleData.ce}
-              label={METRIC_LABELS.dependenciesCe}
-              tooltip={metricTooltipContent[METRIC_LABELS.dependenciesCe]}
-            />
-            <MetricValueCard
-              value={moduleData.instability.toFixed(2)}
-              label={METRIC_LABELS.instability}
-              tooltip={metricTooltipContent[METRIC_LABELS.instability]}
-            />
-            <MetricValueCard
-              value={riskScore.toFixed(1)}
-              label={METRIC_LABELS.propagationRisk}
-              tooltip={metricTooltipContent[METRIC_LABELS.propagationRisk]}
-            />
-            <MetricValueCard
-              value={
-                evolution && changeHistoryAvailable
-                  ? formatRelativeChurn(evolution.churn30d.relativeChurn)
-                  : 'Unavailable'
-              }
-              label={METRIC_LABELS.relativeChurn30d}
-              tooltip={METRIC_TOOLTIPS.relativeChurn30d}
-            />
-            <MetricValueCard
-              value={
-                evolution && changeHistoryAvailable
-                  ? evolution.hotspotScore.toFixed(2)
-                  : 'Unavailable'
-              }
-              label={METRIC_LABELS.evolutionaryHotspotScore}
-              tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
-              helper={
-                evolution && changeHistoryAvailable ? (
-                  <HotspotStatusLabel
-                    status={evolution.hotspotStatus}
-                    className='text-[11px] text-muted-foreground'
-                  />
-                ) : !changeHistoryAvailable ? (
-                  <span className='text-[11px] text-muted-foreground'>
-                    Git history is unavailable for hotspot ranking.
-                  </span>
-                ) : null
-              }
-            />
-          </div>
+          <SupportingMetricsGrid
+            moduleData={moduleData}
+            changeHistoryAvailable={changeHistoryAvailable}
+          />
         </>
       )}
     </div>
@@ -742,11 +697,12 @@ function FilesTab({
       <div className='space-y-2 p-4'>
         {sortedFiles.map((file, index) => {
           const riskScore = calculateRiskScore(file.ca, file.instability)
+          const fileName = file.filePath.split('/').pop() ?? file.filePath
 
           return (
             <div
               key={file.filePath}
-              className='group rounded-lg border border-border p-3 transition-colors hover:bg-muted/50'
+              className='rounded-lg border border-border p-3 transition-colors hover:bg-muted/50'
             >
               <div className='flex min-w-0 items-center gap-2'>
                 <span className='w-5 shrink-0 text-xs text-muted-foreground'>
@@ -754,11 +710,11 @@ function FilesTab({
                 </span>
                 <FileCode className='h-4 w-4 shrink-0 text-muted-foreground' />
                 <span className='flex-1 truncate font-mono text-sm font-medium text-foreground'>
-                  {file.filePath.split('/').pop()}
+                  {fileName}
                 </span>
               </div>
-              <div className='mt-2 flex items-center justify-between pl-7'>
-                <span className='text-xs text-muted-foreground'>
+              <div className='mt-2 flex flex-col gap-2 pl-7 sm:flex-row sm:items-center sm:justify-between'>
+                <span className='text-xs leading-relaxed text-muted-foreground'>
                   {graphCopy.modulePanel.files.summary(
                     riskScore,
                     file.ca,
@@ -771,8 +727,10 @@ function FilesTab({
                   )}
                 </span>
                 <button
+                  type='button'
                   onClick={() => onViewFile(file.filePath)}
-                  className='flex items-center gap-1 text-xs text-primary opacity-0 transition-opacity hover:underline group-hover:opacity-100'
+                  aria-label={`View file details for ${file.filePath}`}
+                  className='inline-flex items-center gap-1 self-start text-xs font-medium text-primary transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:self-auto'
                 >
                   View
                   <ArrowRight className='h-3 w-3' />
@@ -789,13 +747,15 @@ function FilesTab({
 interface ConnectionRowProps {
   moduleName: string
   count: number
+  onInspect?: (modulePath: string) => void
 }
 
-function ConnectionRow({ moduleName, count }: ConnectionRowProps) {
+function ConnectionRow({ moduleName, count, onInspect }: ConnectionRowProps) {
   const name = moduleName.split('/').pop() ?? moduleName
+  const isInteractive = Boolean(onInspect)
 
-  return (
-    <div className='flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-muted/50'>
+  const rowContent = (
+    <>
       <div className='min-w-0'>
         <div className='truncate font-mono text-sm font-medium text-foreground'>
           {name}
@@ -807,18 +767,44 @@ function ConnectionRow({ moduleName, count }: ConnectionRowProps) {
           {truncateMiddle(moduleName, 48)}
         </div>
       </div>
-      <span className='ml-2 shrink-0 font-data text-xs text-muted-foreground'>
-        {count}
-      </span>
-    </div>
+      <div className='ml-2 flex shrink-0 items-center gap-3'>
+        <span className='font-data text-xs text-muted-foreground'>{count}</span>
+        {isInteractive ? (
+          <span className='inline-flex items-center gap-1 text-xs font-medium text-primary'>
+            {graphCopy.modulePanel.connections.inspectAction}
+            <ArrowRight className='h-3 w-3' />
+          </span>
+        ) : null}
+      </div>
+    </>
+  )
+
+  if (!isInteractive) {
+    return (
+      <div className='flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-muted/50'>
+        {rowContent}
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type='button'
+      onClick={() => onInspect?.(moduleName)}
+      aria-label={`Inspect module ${moduleName} in the graph`}
+      className='flex w-full items-center justify-between rounded-md px-3 py-2 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+    >
+      {rowContent}
+    </button>
   )
 }
 
 interface ConnectionsTabProps {
   moduleData: FolderArchitectureMetrics
+  onViewModule?: (modulePath: string) => void
 }
 
-function ConnectionsTab({ moduleData }: ConnectionsTabProps) {
+function ConnectionsTab({ moduleData, onViewModule }: ConnectionsTabProps) {
   const incoming = Object.entries(moduleData.couplingFrom)
   const outgoing = Object.entries(moduleData.couplingTo)
 
@@ -841,7 +827,12 @@ function ConnectionsTab({ moduleData }: ConnectionsTabProps) {
           ) : (
             <div className='space-y-1'>
               {incoming.map(([path, count]) => (
-                <ConnectionRow key={path} moduleName={path} count={count} />
+                <ConnectionRow
+                  key={path}
+                  moduleName={path}
+                  count={count}
+                  onInspect={onViewModule}
+                />
               ))}
             </div>
           )}
@@ -863,7 +854,12 @@ function ConnectionsTab({ moduleData }: ConnectionsTabProps) {
           ) : (
             <div className='space-y-1'>
               {outgoing.map(([path, count]) => (
-                <ConnectionRow key={path} moduleName={path} count={count} />
+                <ConnectionRow
+                  key={path}
+                  moduleName={path}
+                  count={count}
+                  onInspect={onViewModule}
+                />
               ))}
             </div>
           )}
@@ -877,9 +873,11 @@ export function ModuleSidePanel({
   modulePath,
   onClose,
   onViewFile,
+  onViewModule,
   moduleData
 }: ModuleSidePanelProps) {
-  const { analysisData } = useDataContext()
+  const dataContext = useContext(DataContext)
+  const analysisData = dataContext?.analysisData ?? null
   const moduleThresholdCalibration = useModuleReviewThresholdCalibration()
   const changeHistoryAvailable = isEvolutionaryMetricsAvailable(
     analysisData?.evolutionaryMetrics.summary
@@ -930,7 +928,10 @@ export function ModuleSidePanel({
 
         <TabsContent value='connections' className='mt-0 min-h-0 flex-1'>
           {moduleData ? (
-            <ConnectionsTab moduleData={moduleData} />
+            <ConnectionsTab
+              moduleData={moduleData}
+              onViewModule={onViewModule}
+            />
           ) : (
             <div className='p-4'>
               <DetailPanelState

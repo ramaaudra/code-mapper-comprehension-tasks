@@ -53,7 +53,7 @@ export function DetailPanelHeader({
         size='icon'
         onClick={onClose}
         aria-label={closeLabel}
-        className='-mr-2 -mt-2 h-8 w-8 shrink-0'
+        className='-mr-2 -mt-2 h-10 w-10 shrink-0'
       >
         <X className='h-4 w-4' />
       </Button>

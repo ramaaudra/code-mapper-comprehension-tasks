@@ -23,9 +23,17 @@ interface UseResizablePanelReturn {
   resizeHandleProps: ResizeHandleProps
 }
 
-const DEFAULT_WIDTH = 448
-const MIN_WIDTH = 300
-const MAX_WIDTH = 800
+const DEFAULT_WIDTH = 420
+const MIN_WIDTH = 280
+const MAX_WIDTH = 720
+
+function clampPanelWidth(
+  width: number,
+  minWidth: number,
+  maxWidth: number
+): number {
+  return Math.max(minWidth, Math.min(maxWidth, width))
+}
 
 export function useResizablePanel(
   options: UseResizablePanelOptions = {}
@@ -36,7 +44,9 @@ export function useResizablePanel(
     maxWidth = MAX_WIDTH
   } = options
 
-  const [panelWidth, setPanelWidth] = useState(defaultWidth)
+  const [panelWidth, setPanelWidth] = useState(() =>
+    clampPanelWidth(defaultWidth, minWidth, maxWidth)
+  )
   const [isResizing, setIsResizing] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -54,7 +64,7 @@ export function useResizablePanel(
 
       const newWidth = window.innerWidth - mouseMoveEvent.clientX
       setPanelWidth((prev) => {
-        const clamped = Math.max(minWidth, Math.min(maxWidth, newWidth))
+        const clamped = clampPanelWidth(newWidth, minWidth, maxWidth)
         return Math.abs(prev - clamped) < 2 ? prev : clamped
       })
     },
@@ -76,6 +86,15 @@ export function useResizablePanel(
       document.body.classList.remove('resizing')
     }
   }, [isResizing, resize, stopResizing])
+
+  useEffect(() => {
+    const handleResize = () => {
+      setPanelWidth((width) => clampPanelWidth(width, minWidth, maxWidth))
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [maxWidth, minWidth])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

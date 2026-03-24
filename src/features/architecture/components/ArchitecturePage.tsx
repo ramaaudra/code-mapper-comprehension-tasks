@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
 import {
   Card,
   CardContent,
@@ -162,21 +163,18 @@ export function ArchitecturePage({
     value: number | string
     subValue: string
     icon: React.ReactNode
-    status: 'default' | 'warning' | 'destructive'
   }> = [
     {
       label: architectureCopy.summaryCards.totalModules,
       value: totalModules,
       subValue: `${totalFiles} files`,
-      icon: <FolderTree className='h-4 w-4' />,
-      status: 'default'
+      icon: <FolderTree className='h-4 w-4' />
     },
     {
       label: architectureCopy.summaryCards.averageStructuralPosition,
       value: avgInstability.toFixed(2),
       subValue: averageStructuralStory.summaryLabel,
-      icon: <TrendingUp className='h-4 w-4' />,
-      status: 'default'
+      icon: <TrendingUp className='h-4 w-4' />
     },
     {
       label: architectureCopy.summaryCards.outwardFacingModules,
@@ -185,8 +183,7 @@ export function ArchitecturePage({
         unstableModules > 0
           ? `Modules in the ${outwardFacingRange} instability band`
           : `No modules in the ${outwardFacingRange} instability band`,
-      icon: <Wind className='h-4 w-4' />,
-      status: 'default'
+      icon: <Wind className='h-4 w-4' />
     },
     {
       label: architectureCopy.summaryCards.modulesInCycles,
@@ -195,8 +192,7 @@ export function ArchitecturePage({
         modulesWithCycles > 0
           ? 'Circular dependencies detected'
           : 'No circular dependencies',
-      icon: <AlertTriangle className='h-4 w-4' />,
-      status: modulesWithCycles > 0 ? 'destructive' : 'default'
+      icon: <AlertTriangle className='h-4 w-4' />
     },
     {
       label: architectureCopy.summaryCards.criticalReviewAreas,
@@ -206,9 +202,7 @@ export function ArchitecturePage({
           ? 'Recent change pressure plus high propagation sensitivity'
           : 'No critical hotspot areas detected'
         : evolutionAvailability.message,
-      icon: <TrendingUp className='h-4 w-4' />,
-      status:
-        changeHistoryAvailable && hotspotModules > 0 ? 'warning' : 'default'
+      icon: <TrendingUp className='h-4 w-4' />
     }
   ]
 
@@ -225,38 +219,55 @@ export function ArchitecturePage({
           </p>
         </div>
 
-        {/* Summary Cards */}
-        <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-5'>
-          {summaryCards.map(({ label, value, subValue, icon, status }) => (
-            <MetricCard
-              key={label}
-              label={label}
-              value={value}
-              subValue={subValue}
-              icon={icon}
-              variant='detailed'
-              status={status}
-            />
-          ))}
-        </div>
+        <section
+          aria-labelledby='architecture-summary-heading'
+          className='space-y-3'
+        >
+          <div className='space-y-1'>
+            <h2
+              id='architecture-summary-heading'
+              className='text-sm font-medium tracking-label text-muted-foreground'
+            >
+              {architectureCopy.page.summaryTitle}
+            </h2>
+            <p className='max-w-3xl text-sm text-muted-foreground'>
+              {architectureCopy.page.summaryDescription}
+            </p>
+          </div>
+          <div className='grid gap-3 sm:grid-cols-2 xl:grid-cols-5'>
+            {summaryCards.map(({ label, value, subValue, icon }) => (
+              <MetricCard
+                key={label}
+                label={label}
+                value={value}
+                subValue={subValue}
+                icon={icon}
+                variant='minimal'
+              />
+            ))}
+          </div>
+        </section>
 
         {/* Reading Guide: Instability Education Card */}
-        <div className='relative overflow-hidden rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 transition-all duration-300 dark:from-blue-950/30 dark:to-cyan-950/20'>
-          <div className='absolute inset-0 bg-blue-400/5 dark:bg-blue-400/10' />
-          <div className='relative'>
-            {isReadingGuideExpanded ? (
-              <div className='p-5'>
-                <div className='flex items-start gap-4'>
-                  <div className='flex-shrink-0'>
-                    <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/20'>
-                      <Lightbulb className='h-5 w-5 text-blue-600 dark:text-blue-400' />
-                    </div>
+        <section
+          aria-labelledby='architecture-reading-guide-heading'
+          className='rounded-xl border border-border/60 bg-muted/20'
+        >
+          {isReadingGuideExpanded ? (
+            <div className='space-y-5 p-5'>
+              <div className='flex flex-wrap items-start justify-between gap-4'>
+                <div className='flex min-w-0 items-start gap-3'>
+                  <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/70 text-foreground'>
+                    <Lightbulb className='h-5 w-5' />
                   </div>
-                  <div className='min-w-0 flex-1'>
-                    <h3 className='mb-2 text-sm font-semibold text-foreground'>
+                  <div className='min-w-0 space-y-2'>
+                    <h2
+                      id='architecture-reading-guide-heading'
+                      className='text-sm font-semibold text-foreground'
+                    >
                       {architectureCopy.readingGuide.expandedTitle}
-                    </h3>
-                    <p className='mb-4 text-sm leading-relaxed text-muted-foreground'>
+                    </h2>
+                    <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground'>
                       Do not treat the{' '}
                       <strong>
                         {getStructuralPositionBandLabel('Outward-Dependent')}
@@ -267,154 +278,165 @@ export function ArchitecturePage({
                       risk. Use <strong>Propagation Risk</strong> to estimate
                       how strongly a modification may propagate.
                     </p>
-                    <div className='grid gap-4 md:grid-cols-3'>
-                      <div className='space-y-2'>
-                        <div className='flex items-center gap-2'>
-                          <ShieldCheck className='h-5 w-5 text-blue-600 dark:text-blue-400' />
-                          <span className='text-sm font-medium text-foreground'>
-                            {formatReviewSignalBandRange(
-                              'structuralPosition',
-                              'Foundation-like'
-                            )}{' '}
-                            -{' '}
-                            {getStructuralPositionBandLabel('Foundation-like')}
-                          </span>
-                        </div>
-                        <p className='pl-7 text-xs leading-relaxed text-muted-foreground'>
-                          At this extreme, more incoming cross-module dependency
-                          edges point into this module than out of it. Changes
-                          here often deserve careful regression testing.
-                        </p>
-                        <p className='pl-7 text-xs font-medium text-blue-600 dark:text-blue-400'>
-                          Common in: shared foundations, domain logic,
-                          configuration, and utility layers
-                        </p>
-                      </div>
-                      <div className='space-y-2'>
-                        <div className='flex items-center gap-2'>
-                          <Layers className='h-5 w-5 text-slate-500 dark:text-slate-300' />
-                          <span className='text-sm font-medium text-foreground'>
-                            {formatReviewSignalBandRange(
-                              'structuralPosition',
-                              'Balanced'
-                            )}{' '}
-                            - {getStructuralPositionBandLabel('Balanced')}
-                          </span>
-                        </div>
-                        <p className='pl-7 text-xs leading-relaxed text-muted-foreground'>
-                          Incoming and outgoing coupling are both significant.
-                          These modules often sit between foundational layers
-                          and UI-facing layers.
-                        </p>
-                        <p className='pl-7 text-xs font-medium text-slate-500 dark:text-slate-300'>
-                          Common in: orchestration layers, feature modules, and
-                          shared application services
-                        </p>
-                      </div>
-                      <div className='space-y-2'>
-                        <div className='flex items-center gap-2'>
-                          <Wind className='h-5 w-5 text-emerald-600 dark:text-emerald-400' />
-                          <span className='text-sm font-medium text-foreground'>
-                            {formatReviewSignalBandRange(
-                              'structuralPosition',
-                              'Outward-Dependent'
-                            )}{' '}
-                            -{' '}
-                            {getStructuralPositionBandLabel(
-                              'Outward-Dependent'
-                            )}
-                          </span>
-                        </div>
-                        <p className='pl-7 text-xs leading-relaxed text-muted-foreground'>
-                          At this extreme, outgoing cross-module dependency
-                          edges dominate while incoming ones are limited. These
-                          modules are often easier to replace or refactor.
-                        </p>
-                        <p className='pl-7 text-xs font-medium text-emerald-600 dark:text-emerald-400'>
-                          Common in: presentation layers, route modules, UI
-                          shells, and adapters
-                        </p>
-                      </div>
-                    </div>
                   </div>
-                  <div className='flex flex-shrink-0 items-center gap-2'>
-                    {onShowMetricsGuide ? (
-                      <button
-                        onClick={onShowMetricsGuide}
-                        className='flex items-center gap-1.5 rounded-lg border border-blue-500/20 px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-400 dark:hover:bg-blue-500/20'
-                      >
-                        Full Guide
-                        <CaretRight className='h-4 w-4' />
-                      </button>
-                    ) : null}
-                    <button
-                      onClick={() => {
-                        setIsReadingGuideExpanded(false)
-                      }}
-                      className='rounded-md p-1.5 text-muted-foreground/60 transition-colors hover:bg-background/80 hover:text-foreground'
-                      aria-label='Collapse reading guide'
-                    >
-                      <CaretDown className='h-4 w-4' />
-                    </button>
-                  </div>
+                </div>
+                <div className='flex flex-wrap items-center gap-2'>
+                  {onShowMetricsGuide ? (
+                    <Button onClick={onShowMetricsGuide} variant='outline'>
+                      {architectureCopy.readingGuide.fullGuide}
+                      <CaretRight className='ml-1 h-4 w-4' />
+                    </Button>
+                  ) : null}
+                  <Button
+                    type='button'
+                    variant='secondary'
+                    onClick={() => {
+                      setIsReadingGuideExpanded(false)
+                    }}
+                    aria-label='Collapse reading guide'
+                  >
+                    Collapse guide
+                    <CaretDown className='ml-1 h-4 w-4' />
+                  </Button>
                 </div>
               </div>
-            ) : (
-              <div className='flex items-center gap-4 p-4'>
-                <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 dark:from-blue-500/30 dark:to-cyan-500/30'>
-                  <Lightbulb className='h-6 w-6 text-blue-600 dark:text-blue-400' />
+
+              <div className='grid gap-3 md:grid-cols-3'>
+                <div className='rounded-lg border border-border/60 bg-background/70 p-4'>
+                  <div className='flex items-center gap-2'>
+                    <ShieldCheck className='h-5 w-5 text-foreground' />
+                    <span className='text-sm font-medium text-foreground'>
+                      {formatReviewSignalBandRange(
+                        'structuralPosition',
+                        'Foundation-like'
+                      )}{' '}
+                      - {getStructuralPositionBandLabel('Foundation-like')}
+                    </span>
+                  </div>
+                  <p className='mt-3 text-xs leading-relaxed text-muted-foreground'>
+                    At this extreme, more incoming cross-module dependency edges
+                    point into this module than out of it. Changes here often
+                    deserve careful regression testing.
+                  </p>
+                  <p className='mt-2 text-xs font-medium text-foreground'>
+                    Common in: shared foundations, domain logic, configuration,
+                    and utility layers
+                  </p>
                 </div>
-                <div className='min-w-0 flex-1'>
-                  <h3 className='mb-0.5 text-base font-semibold text-foreground'>
+                <div className='rounded-lg border border-border/60 bg-background/70 p-4'>
+                  <div className='flex items-center gap-2'>
+                    <Layers className='h-5 w-5 text-foreground' />
+                    <span className='text-sm font-medium text-foreground'>
+                      {formatReviewSignalBandRange(
+                        'structuralPosition',
+                        'Balanced'
+                      )}{' '}
+                      - {getStructuralPositionBandLabel('Balanced')}
+                    </span>
+                  </div>
+                  <p className='mt-3 text-xs leading-relaxed text-muted-foreground'>
+                    Incoming and outgoing coupling are both significant. These
+                    modules often sit between foundational layers and UI-facing
+                    layers.
+                  </p>
+                  <p className='mt-2 text-xs font-medium text-foreground'>
+                    Common in: orchestration layers, feature modules, and shared
+                    application services
+                  </p>
+                </div>
+                <div className='rounded-lg border border-border/60 bg-background/70 p-4'>
+                  <div className='flex items-center gap-2'>
+                    <Wind className='h-5 w-5 text-foreground' />
+                    <span className='text-sm font-medium text-foreground'>
+                      {formatReviewSignalBandRange(
+                        'structuralPosition',
+                        'Outward-Dependent'
+                      )}{' '}
+                      - {getStructuralPositionBandLabel('Outward-Dependent')}
+                    </span>
+                  </div>
+                  <p className='mt-3 text-xs leading-relaxed text-muted-foreground'>
+                    At this extreme, outgoing cross-module dependency edges
+                    dominate while incoming ones are limited. These modules are
+                    often easier to replace or refactor.
+                  </p>
+                  <p className='mt-2 text-xs font-medium text-foreground'>
+                    Common in: presentation layers, route modules, UI shells,
+                    and adapters
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className='flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between'>
+              <div className='flex min-w-0 items-start gap-3'>
+                <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/70 text-foreground'>
+                  <Lightbulb className='h-5 w-5' />
+                </div>
+                <div className='min-w-0 space-y-1'>
+                  <h2
+                    id='architecture-reading-guide-heading'
+                    className='text-sm font-semibold text-foreground'
+                  >
                     {architectureCopy.readingGuide.collapsedTitle}
-                  </h3>
-                  <p className='text-sm text-muted-foreground'>
-                    <span className='font-medium text-blue-600 dark:text-blue-400'>
-                      Click to learn
-                    </span>{' '}
+                  </h2>
+                  <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground'>
                     {architectureCopy.readingGuide.collapsedDescription}
                   </p>
                 </div>
-                <div className='flex items-center gap-2'>
-                  <button
-                    onClick={() => {
-                      setIsReadingGuideExpanded(true)
-                    }}
-                    className='flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400 dark:hover:bg-blue-500/30'
-                  >
-                    {architectureCopy.readingGuide.readHere}
-                    <CaretRight className='h-4 w-4' />
-                  </button>
-                  {onShowMetricsGuide ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onShowMetricsGuide()
-                      }}
-                      className='flex items-center gap-1.5 rounded-lg border border-blue-500/20 px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-400 dark:hover:bg-blue-500/20'
-                    >
-                      {architectureCopy.readingGuide.fullGuide}
-                      <CaretRight className='h-4 w-4' />
-                    </button>
-                  ) : null}
-                </div>
               </div>
-            )}
-          </div>
-        </div>
+              <div className='flex flex-wrap items-center gap-2'>
+                <Button
+                  type='button'
+                  variant='secondary'
+                  onClick={() => {
+                    setIsReadingGuideExpanded(true)
+                  }}
+                >
+                  {architectureCopy.readingGuide.readHere}
+                  <CaretRight className='ml-1 h-4 w-4' />
+                </Button>
+                {onShowMetricsGuide ? (
+                  <Button
+                    type='button'
+                    variant='outline'
+                    onClick={onShowMetricsGuide}
+                  >
+                    {architectureCopy.readingGuide.fullGuide}
+                    <CaretRight className='ml-1 h-4 w-4' />
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* Search & Filter */}
-        <div className='flex items-center gap-4'>
-          <div className='relative max-w-sm flex-1'>
-            <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder='Search modules...'
-              className='pl-9'
-            />
+        <div className='flex flex-wrap items-center gap-4'>
+          <div className='max-w-sm flex-1 space-y-2'>
+            <label
+              htmlFor='architecture-module-search'
+              className='block text-xs font-medium tracking-label text-muted-foreground'
+            >
+              {architectureCopy.page.searchLabel}
+            </label>
+            <div className='relative'>
+              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+              <Input
+                id='architecture-module-search'
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={architectureCopy.page.searchPlaceholder}
+                aria-describedby='architecture-triage-count'
+                className='pl-9'
+              />
+            </div>
           </div>
-          <Badge variant='outline' className='text-xs'>
+          <Badge
+            id='architecture-triage-count'
+            variant='outline'
+            className='text-xs'
+          >
             {filteredFolders.length} of {totalModules} modules
           </Badge>
         </div>

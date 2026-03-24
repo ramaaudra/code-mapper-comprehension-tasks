@@ -6,6 +6,11 @@ export const architectureCopy = {
     emptyTitle: 'No architecture data',
     emptyDescription: 'Run analysis to see module metrics',
     errorTitle: 'Failed to load architecture data',
+    summaryTitle: 'Quick orientation',
+    summaryDescription:
+      'Use these totals to confirm scale and context. The review table below should drive your next decision.',
+    searchLabel: 'Search modules',
+    searchPlaceholder: 'Filter by module path',
     triageCue:
       'Sorted by spread risk by default. Start with the top rows to review modules where changes may spread more widely.'
   },
@@ -50,10 +55,10 @@ export const architectureCopy = {
     noIncoming: 'No incoming cross-module dependents'
   },
   readingGuide: {
-    collapsedTitle: 'New to Instability Metrics?',
+    collapsedTitle: 'How to read structural position',
     collapsedDescription:
-      'Click to learn why instability is a structural metric, not a defect or a direct danger score.',
-    readHere: 'Read Here',
+      'Learn why instability is a structural position metric, not a defect or a direct danger score.',
+    readHere: 'Read guide',
     fullGuide: 'Full Guide',
     expandedTitle: 'Understanding the Instability (I) Metric'
   }

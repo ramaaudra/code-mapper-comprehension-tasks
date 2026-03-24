@@ -30,14 +30,20 @@ const VIEW_MODE_OPTIONS: ViewModeOption[] = [
 
 export function ViewModeToggle({ mode, onChange }: ViewModeToggleProps) {
   return (
-    <div className='flex max-w-full items-center gap-1 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))] p-1 shadow-sm'>
+    <div
+      role='group'
+      aria-label='Graph view mode'
+      className='flex max-w-full items-center gap-1 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))] p-1 shadow-sm'
+    >
       {VIEW_MODE_OPTIONS.map(({ value, label, shortLabel, Icon }) => (
         <button
           key={value}
+          type='button'
           onClick={() => onChange(value)}
           aria-label={label}
+          aria-pressed={mode === value}
           className={cn(
-            'flex min-w-0 items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all sm:px-3 sm:text-sm',
+            'flex min-h-10 min-w-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 sm:px-3.5',
             mode === value
               ? 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] shadow-sm'
               : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'

@@ -27,6 +27,7 @@ import {
 import clsx from 'clsx'
 import {
   type ComponentType,
+  type KeyboardEvent,
   memo,
   useCallback,
   useEffect,
@@ -180,6 +181,17 @@ function getFileIcon(fileName: string) {
   }
 }
 
+const GRAPH_SHORTCUTS_HINT =
+  'Keyboard shortcuts: + zoom in, - zoom out, 0 reset, F fit graph.'
+
+function appendLookupMatch(
+  lookup: Map<string, string[]>,
+  key: string,
+  nodeId: string
+): void {
+  lookup.set(key, [...(lookup.get(key) ?? []), nodeId])
+}
+
 function layoutNodes(
   nodes: DependencyFlowNode[],
   edges: DependencyFlowEdge[],
@@ -322,7 +334,7 @@ function ZoomIndicator() {
   }
 
   return (
-    <div className='absolute left-4 top-4 z-20 rounded-md bg-black/70 px-3 py-1 text-white shadow-lg'>
+    <div className='absolute left-4 top-4 z-20 rounded-md border border-border bg-background/90 px-3 py-1 text-foreground shadow-lg backdrop-blur'>
       <div className='font-data text-sm'>{percentage}%</div>
       <div className='mt-1 text-xs opacity-75'>{label}</div>
     </div>
@@ -354,10 +366,11 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
     string
   > = {
     stable: '',
-    active: 'ring-1 ring-yellow-500/40',
-    'high-review-needed': 'border-orange-500/60 ring-2 ring-orange-500/25',
+    active: 'ring-1 ring-status-caution-border',
+    'high-review-needed':
+      'border-status-warning-border ring-2 ring-status-warning-border/70',
     'critical-hotspot':
-      'border-red-500/70 ring-2 ring-red-500/30 shadow-lg shadow-red-500/15'
+      'border-status-critical-border ring-2 ring-status-critical-border/70 shadow-lg'
   }
 
   const chipTone: Record<DependencyNodeData['direction'], string> = {
@@ -404,7 +417,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
           '!border-[hsl(var(--primary))] shadow-md shadow-[hsl(var(--primary))]/10',
         'focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2'
       )}
-      aria-label={`View details for ${data.label}`}
+      aria-label={`Open ${chipLabel[direction]} node ${data.label} in ${getRelativePath(data.fullPath)}`}
     >
       <div className='flex items-center justify-between gap-3'>
         <div className='flex min-w-0 flex-1 items-center gap-2'>
@@ -450,7 +463,7 @@ function DependencyNodeComponent(props: NodeProps<DependencyFlowNode>) {
       {hotspotStatus !== 'stable' ? (
         <div className='rounded-md border border-border/70 bg-muted/35 px-2.5 py-1.5'>
           <div className='flex flex-wrap items-start gap-x-1.5 gap-y-1 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]'>
-            <span className='text-xs font-semibold uppercase tracking-label text-orange-500'>
+            <span className='text-xs font-semibold uppercase tracking-label text-status-warning-foreground'>
               {graphCopy.node.changeSignal}
             </span>
             <HotspotStatusLabel status={hotspotStatus} variant='graph' />
@@ -766,6 +779,7 @@ function DependencyGraphInner({
 
   const quality = useAdaptiveQuality(fileNodes.length)
   const [showMiniMap, setShowMiniMap] = useState(false)
+  const graphRegionRef = useRef<HTMLDivElement>(null)
 
   const layoutedNodes = useMemo(() => {
     if (isLayoutTransitioning || viewMode === 'module') {
@@ -789,38 +803,48 @@ function DependencyGraphInner({
     viewMode
   ])
 
-  const nodesWithHover = useMemo(
-    () =>
-      layoutedNodes.map((node) => {
-        const normalizedNodePath = normalizePath(
-          node.data.fullPath
-        ).toLowerCase()
-        const normalizedHover = hoveredFile
-          ? normalizePath(hoveredFile).toLowerCase()
-          : null
-        const normalizedHoverBasename = normalizedHover
-          ? getBasename(normalizedHover).toLowerCase()
-          : null
-        const normalizedNodeBasename = getBasename(
-          node.data.fullPath
-        ).toLowerCase()
+  const hoverLookup = useMemo(() => {
+    const exactMatches = new Map<string, string[]>()
+    const basenameMatches = new Map<string, string[]>()
 
-        const isHovered = Boolean(
-          normalizedHover &&
-          (normalizedHover === normalizedNodePath ||
-            normalizedHoverBasename === normalizedNodeBasename)
-        )
+    layoutedNodes.forEach((node) => {
+      const normalizedPath = normalizePath(node.data.fullPath).toLowerCase()
+      const normalizedBasename = getBasename(node.data.fullPath).toLowerCase()
 
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            isHovered
-          }
-        }
-      }),
-    [layoutedNodes, hoveredFile]
-  )
+      appendLookupMatch(exactMatches, normalizedPath, node.id)
+      appendLookupMatch(basenameMatches, normalizedBasename, node.id)
+    })
+
+    return { exactMatches, basenameMatches }
+  }, [layoutedNodes])
+
+  const hoveredNodeIds = useMemo(() => {
+    if (!hoveredFile) {
+      return new Set<string>()
+    }
+
+    const normalizedHover = normalizePath(hoveredFile).toLowerCase()
+    const normalizedHoverBasename = getBasename(normalizedHover).toLowerCase()
+
+    return new Set([
+      ...(hoverLookup.exactMatches.get(normalizedHover) ?? []),
+      ...(hoverLookup.basenameMatches.get(normalizedHoverBasename) ?? [])
+    ])
+  }, [hoverLookup, hoveredFile])
+
+  const nodesWithHover = useMemo(() => {
+    if (hoveredNodeIds.size === 0) {
+      return layoutedNodes
+    }
+
+    return layoutedNodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        isHovered: hoveredNodeIds.has(node.id)
+      }
+    }))
+  }, [hoveredNodeIds, layoutedNodes])
 
   const reactFlow = useReactFlow()
 
@@ -864,15 +888,18 @@ function DependencyGraphInner({
     }
   }, [layoutedModuleNodes, viewMode, isModuleLoading, fitViewToModuleGraph])
 
-  // Keyboard shortcuts for zoom controls
-  useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
+  const handleGraphKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      const target = event.target as HTMLElement | null
+
       if (
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target?.isContentEditable
       ) {
         return
       }
+
       switch (event.key) {
         case '+':
         case '=':
@@ -893,11 +920,9 @@ function DependencyGraphInner({
           event.preventDefault()
           break
       }
-    }
-
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [reactFlow])
+    },
+    [reactFlow]
+  )
 
   const handleNodeClick = useCallback(
     (_: unknown, node: DependencyFlowNode) => {
@@ -913,17 +938,36 @@ function DependencyGraphInner({
     (isLayoutTransitioning || layoutedNodes.length === 0)
   ) {
     return (
-      <div className='flex h-full items-center justify-center'>
-        <div
-          className='h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent'
-          aria-label='Loading…'
-        />
+      <div className='flex h-full items-center justify-center px-6'>
+        <div className='flex max-w-sm flex-col items-center gap-3 rounded-xl border border-border bg-card/70 px-6 py-5 text-center shadow-sm'>
+          <div
+            className='h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent'
+            aria-label='Loading dependency graph'
+          />
+          <div className='space-y-1'>
+            <h2 className='text-base font-semibold text-foreground'>
+              {graphCopy.canvas.fileLoadingTitle}
+            </h2>
+            <p className='text-sm leading-relaxed text-muted-foreground'>
+              {graphCopy.canvas.fileLoadingDescription}
+            </p>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className='graph-container relative h-full w-full'>
+    <div
+      ref={graphRegionRef}
+      role='region'
+      aria-label='Dependency graph canvas'
+      aria-describedby='graph-shortcuts-hint'
+      tabIndex={0}
+      onKeyDown={handleGraphKeyDown}
+      onMouseDownCapture={() => graphRegionRef.current?.focus()}
+      className='graph-container relative h-full w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring'
+    >
       <div className='pointer-events-none absolute inset-x-3 top-3 z-[100] sm:inset-x-4 sm:top-4'>
         <div className='grid w-full grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-3'>
           <div />
@@ -935,12 +979,17 @@ function DependencyGraphInner({
           <div className='pointer-events-auto justify-self-end'>
             {viewMode === 'module' && focusedModuleId ? (
               <button
+                type='button'
                 onClick={handleShowAllModules}
-                className='flex items-center gap-1.5 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-2.5 py-1.5 text-xs font-medium text-[hsl(var(--foreground))] shadow-sm transition-colors hover:bg-[hsl(var(--muted))] sm:px-3'
+                className='flex min-h-10 items-center gap-1.5 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-xs font-medium text-[hsl(var(--foreground))] shadow-sm transition-colors hover:bg-[hsl(var(--muted))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 sm:px-3.5'
               >
                 <MapTrifold size={14} />
-                <span className='hidden sm:inline'>Global Map</span>
-                <span className='sm:hidden'>Map</span>
+                <span className='hidden sm:inline'>
+                  {graphCopy.canvas.showAllModules}
+                </span>
+                <span className='sm:hidden'>
+                  {graphCopy.canvas.showAllModulesCompact}
+                </span>
               </button>
             ) : null}
           </div>
@@ -952,7 +1001,17 @@ function DependencyGraphInner({
       {/* Loading state untuk module view */}
       {viewMode === 'module' && isModuleLoading && (
         <div className='absolute inset-0 z-10 flex items-center justify-center bg-[hsl(var(--background))]/80'>
-          <div className='h-12 w-12 animate-spin rounded-full border-4 border-[hsl(var(--primary))] border-t-transparent' />
+          <div className='flex max-w-sm flex-col items-center gap-3 rounded-xl border border-border bg-card/80 px-6 py-5 text-center shadow-sm'>
+            <div className='h-12 w-12 animate-spin rounded-full border-4 border-[hsl(var(--primary))] border-t-transparent' />
+            <div className='space-y-1'>
+              <h2 className='text-base font-semibold text-foreground'>
+                {graphCopy.canvas.moduleLoadingTitle}
+              </h2>
+              <p className='text-sm leading-relaxed text-muted-foreground'>
+                {graphCopy.canvas.moduleLoadingDescription}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1025,6 +1084,13 @@ function DependencyGraphInner({
 
       <ZoomIndicator />
 
+      <p
+        id='graph-shortcuts-hint'
+        className='pointer-events-none absolute bottom-4 left-4 z-20 max-w-xs rounded-md border border-border bg-background/90 px-3 py-2 text-xs leading-relaxed text-muted-foreground shadow-sm backdrop-blur'
+      >
+        {GRAPH_SHORTCUTS_HINT}
+      </p>
+
       <ZoomControls
         onZoomIn={() => reactFlow.zoomIn({ duration: 150 })}
         onZoomOut={() => reactFlow.zoomOut({ duration: 150 })}
@@ -1050,13 +1116,12 @@ export function DependencyGraph(props: DependencyGraphProps) {
 
   if (isEmpty) {
     return (
-      <div className='flex h-full flex-col items-center justify-center gap-3 text-center text-neutral-500 dark:text-neutral-400'>
+      <div className='flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-muted-foreground'>
         <h2 className='text-lg font-semibold text-[hsl(var(--foreground))]'>
-          No dependencies for this file
+          {graphCopy.canvas.emptyTitle}
         </h2>
-        <p className='max-w-md text-sm'>
-          Select another file from the tree to see more complex import/export
-          relationships.
+        <p className='max-w-md text-sm leading-relaxed'>
+          {graphCopy.canvas.emptyDescription}
         </p>
       </div>
     )

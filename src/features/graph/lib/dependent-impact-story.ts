@@ -36,9 +36,9 @@ export function describeDependentImpact(
         description,
         footer: `Impact Scope band: ${formatReviewSignalBandRange('impactScope', 'Broad', 'module', thresholdCalibration)}.`,
         tone: 'danger',
-        borderClass: 'border-red-500/40',
-        bgClass: 'bg-red-500/5',
-        textClass: 'text-red-500'
+        borderClass: 'border-status-critical-border',
+        bgClass: 'bg-status-critical-surface',
+        textClass: 'text-status-critical-foreground'
       }
     case 'Moderate':
       return {
@@ -46,9 +46,9 @@ export function describeDependentImpact(
         description,
         footer: `Impact Scope band: ${formatReviewSignalBandRange('impactScope', 'Moderate', 'module', thresholdCalibration)}.`,
         tone: 'warning',
-        borderClass: 'border-orange-500/40',
-        bgClass: 'bg-orange-500/5',
-        textClass: 'text-orange-500'
+        borderClass: 'border-status-warning-border',
+        bgClass: 'bg-status-warning-surface',
+        textClass: 'text-status-warning-foreground'
       }
     default:
       return {
@@ -56,9 +56,9 @@ export function describeDependentImpact(
         description,
         footer: `Impact Scope band: ${formatReviewSignalBandRange('impactScope', 'Local', 'module', thresholdCalibration)}.`,
         tone: 'default',
-        borderClass: 'border-slate-500/40',
-        bgClass: 'bg-slate-500/5',
-        textClass: 'text-slate-500'
+        borderClass: 'border-status-success-border',
+        bgClass: 'bg-status-success-surface',
+        textClass: 'text-status-success-foreground'
       }
   }
 }

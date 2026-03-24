@@ -301,7 +301,9 @@ function AppContent() {
             modulePath: explorer.selectedModuleForPanel,
             moduleData: explorer.selectedModuleData,
             onClose: explorer.handleModulePanelClose,
-            onViewFile: explorer.handleModuleViewFile
+            onViewFile: explorer.handleModuleViewFile,
+            onViewModule: (modulePath) =>
+              explorer.handleModuleSelect(modulePath)
           }}
         />
       }

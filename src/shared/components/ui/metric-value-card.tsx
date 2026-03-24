@@ -28,8 +28,8 @@ const toneStyles: Record<
     value: 'text-foreground'
   },
   success: {
-    container: 'border-emerald-500/30 bg-emerald-500/5',
-    value: 'text-emerald-600'
+    container: 'border-status-success-border bg-status-success-surface',
+    value: 'text-status-success-foreground'
   },
   warning: {
     container: 'border-border bg-muted/35',

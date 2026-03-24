@@ -20,6 +20,16 @@ interface ZoomControlsProps {
   onLayoutDirectionChange?: (direction: 'LR' | 'TB') => void
 }
 
+const graphControlButtonClass =
+  'border border-border bg-background/95 text-foreground shadow-sm backdrop-blur hover:bg-muted'
+
+const graphToggleButtonClass = {
+  active:
+    'border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary/90',
+  inactive:
+    'border-border bg-background/95 text-muted-foreground shadow-sm backdrop-blur hover:bg-muted hover:text-foreground'
+} as const
+
 export function ZoomControls({
   onZoomIn,
   onZoomOut,
@@ -38,10 +48,12 @@ export function ZoomControls({
             variant='ghost'
             size='icon'
             onClick={() => onLayoutDirectionChange('LR')}
-            className={`h-8 w-8 border shadow-sm transition-colors ${
+            aria-label='Switch graph layout to left-to-right'
+            aria-pressed={layoutDirection === 'LR'}
+            className={`transition-colors ${
               layoutDirection === 'LR'
-                ? 'border-slate-600 bg-slate-600 text-white hover:bg-slate-700'
-                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                ? graphToggleButtonClass.active
+                : graphToggleButtonClass.inactive
             }`}
             title='Left to Right layout'
           >
@@ -51,10 +63,12 @@ export function ZoomControls({
             variant='ghost'
             size='icon'
             onClick={() => onLayoutDirectionChange('TB')}
-            className={`h-8 w-8 border shadow-sm transition-colors ${
+            aria-label='Switch graph layout to top-to-bottom'
+            aria-pressed={layoutDirection === 'TB'}
+            className={`transition-colors ${
               layoutDirection === 'TB'
-                ? 'border-slate-600 bg-slate-600 text-white hover:bg-slate-700'
-                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                ? graphToggleButtonClass.active
+                : graphToggleButtonClass.inactive
             }`}
             title='Top to Bottom layout'
           >
@@ -67,7 +81,8 @@ export function ZoomControls({
         variant='secondary'
         size='icon'
         onClick={onZoomIn}
-        className='h-8 w-8 border bg-white shadow-sm hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700'
+        aria-label='Zoom in graph'
+        className={graphControlButtonClass}
         title='Zoom In (+)'
       >
         <ZoomIn className='h-4 w-4' />
@@ -77,7 +92,8 @@ export function ZoomControls({
         variant='secondary'
         size='icon'
         onClick={onZoomOut}
-        className='h-8 w-8 border bg-white shadow-sm hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700'
+        aria-label='Zoom out graph'
+        className={graphControlButtonClass}
         title='Zoom Out (-)'
       >
         <ZoomOut className='h-4 w-4' />
@@ -87,7 +103,8 @@ export function ZoomControls({
         variant='secondary'
         size='icon'
         onClick={onFitToScreen}
-        className='h-8 w-8 border bg-white shadow-sm hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700'
+        aria-label='Fit graph to screen'
+        className={graphControlButtonClass}
         title='Fit to Screen (F)'
       >
         <Maximize className='h-4 w-4' />
@@ -97,7 +114,8 @@ export function ZoomControls({
         variant='secondary'
         size='icon'
         onClick={onReset}
-        className='h-8 w-8 border bg-white shadow-sm hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700'
+        aria-label='Reset graph viewport'
+        className={graphControlButtonClass}
         title='Reset View (0)'
       >
         <RotateCcw className='h-4 w-4' />
@@ -108,10 +126,12 @@ export function ZoomControls({
           variant='ghost'
           size='icon'
           onClick={onToggleMiniMap}
-          className={`h-8 w-8 border shadow-sm transition-colors ${
+          aria-label='Toggle graph minimap'
+          aria-pressed={showMiniMap}
+          className={`transition-colors ${
             showMiniMap
-              ? 'border-slate-600 bg-slate-600 text-white hover:bg-slate-700'
-              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+              ? graphToggleButtonClass.active
+              : graphToggleButtonClass.inactive
           }`}
           title='Toggle MiniMap (M)'
         >

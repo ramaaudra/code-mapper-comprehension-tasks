@@ -40,12 +40,12 @@ export const MetricCard = memo(function MetricCard({
 
   const statusColors = {
     default: 'text-muted-foreground',
-    warning: 'text-orange-500',
-    destructive: 'text-destructive'
+    warning: 'text-status-warning-foreground',
+    destructive: 'text-status-critical-foreground'
   }
 
   return (
-    <div className='min-h-[140px] rounded-lg bg-muted/20 p-6'>
+    <div className='min-h-[140px] rounded-xl border border-border/60 bg-muted/15 p-5'>
       <div className='flex items-center justify-between'>
         <span className='text-sm font-medium uppercase tracking-label text-muted-foreground'>
           {label}

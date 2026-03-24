@@ -8,8 +8,7 @@ interface InstabilityBadgeProps {
  * High instability in UI components (Ca=0, Ce>0) is natural, not problematic.
  */
 function getInstabilityColor(_value: number): string {
-  // Using neutral slate colors - no red/orange/yellow/green warning colors
-  return 'bg-slate-600/20 text-slate-400'
+  return 'border border-border/60 bg-muted/30 text-muted-foreground'
 }
 
 export function InstabilityBadge({ value }: InstabilityBadgeProps) {
