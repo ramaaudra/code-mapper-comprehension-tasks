@@ -13,6 +13,8 @@ import { TooltipProvider } from '@/shared/components/ui/tooltip'
 import { dashboardCopy } from '../content/dashboardCopy'
 import { getOverviewHealthStory } from '../lib/overview-health-story'
 
+import type { OverviewHealthStory } from '../lib/overview-health-story'
+
 export interface HealthBreakdown {
   stabilityScore: number
   cycleCount: number
@@ -35,6 +37,28 @@ interface ScoreBreakdown {
   prisk: number
   phygiene: number
   finalScore: number
+}
+
+function getToneClassName(tone: OverviewHealthStory['tone']): string {
+  switch (tone) {
+    case 'critical':
+      return 'border-status-critical-border bg-status-critical-surface text-status-critical-foreground'
+    case 'warning':
+      return 'border-status-warning-border bg-status-warning-surface text-status-warning-foreground'
+    default:
+      return 'border-status-success-border bg-status-success-surface text-status-success-foreground'
+  }
+}
+
+function getToneIconClassName(tone: OverviewHealthStory['tone']): string {
+  switch (tone) {
+    case 'critical':
+      return 'h-3.5 w-3.5 text-status-critical-foreground'
+    case 'warning':
+      return 'h-3.5 w-3.5 text-status-warning-foreground'
+    default:
+      return 'h-3.5 w-3.5 text-status-success-foreground'
+  }
 }
 
 function calculateHealthScore(
@@ -85,13 +109,9 @@ export function ArchitectureHealthScore({
     orphanCount: breakdown.orphanCount,
     stabilityScore: breakdown.stabilityScore
   })
-
-  const toneClassName =
-    healthStory.tone === 'critical'
-      ? 'border-red-500/30 bg-red-500/10 text-red-500'
-      : healthStory.tone === 'warning'
-        ? 'border-orange-500/30 bg-orange-500/10 text-orange-500'
-        : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
+  const toneClassName = getToneClassName(healthStory.tone)
+  const toneIconClassName = getToneIconClassName(healthStory.tone)
+  const ToneIcon = healthStory.tone === 'healthy' ? CheckCircle : AlertTriangle
 
   return (
     <Card>
@@ -110,6 +130,7 @@ export function ArchitectureHealthScore({
               title={dashboardCopy.architectureHealth.scoreTooltip.title}
               side='left'
               align='end'
+              triggerLabel='Explain how the change safety summary is scored'
             >
               <div className='space-y-3 text-xs'>
                 <p className='leading-relaxed text-popover-foreground'>
@@ -134,7 +155,9 @@ export function ArchitectureHealthScore({
                           breakdown.cycleCount
                         )}
                       </span>
-                      <span className='text-red-500'>-{pfatal}</span>
+                      <span className='text-status-critical-foreground'>
+                        -{pfatal}
+                      </span>
                     </div>
                   ) : null}
                   {prisk > 0 ? (
@@ -145,7 +168,9 @@ export function ArchitectureHealthScore({
                             .sharedRiskLabel
                         }
                       </span>
-                      <span className='text-orange-500'>-{prisk}</span>
+                      <span className='text-status-warning-foreground'>
+                        -{prisk}
+                      </span>
                     </div>
                   ) : null}
                   {phygiene > 0 ? (
@@ -156,7 +181,9 @@ export function ArchitectureHealthScore({
                             .cleanupLabel
                         }
                       </span>
-                      <span className='text-yellow-500'>-{phygiene}</span>
+                      <span className='text-status-caution-foreground'>
+                        -{phygiene}
+                      </span>
                     </div>
                   ) : null}
                   <div className='flex justify-between gap-4 border-t border-border pt-2 font-semibold'>
@@ -190,13 +217,7 @@ export function ArchitectureHealthScore({
             {healthStory.drivers.map((driver) => (
               <div key={driver} className='flex items-start gap-2.5'>
                 <span className='mt-0.5 shrink-0'>
-                  {healthStory.tone === 'critical' ? (
-                    <AlertTriangle className='h-3.5 w-3.5 text-red-500' />
-                  ) : healthStory.tone === 'warning' ? (
-                    <AlertTriangle className='h-3.5 w-3.5 text-orange-500' />
-                  ) : (
-                    <CheckCircle className='h-3.5 w-3.5 text-green-500' />
-                  )}
+                  <ToneIcon className={toneIconClassName} />
                 </span>
                 <p className='text-sm leading-relaxed text-muted-foreground'>
                   {driver}

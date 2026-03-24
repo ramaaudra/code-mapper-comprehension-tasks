@@ -18,7 +18,7 @@ import {
 } from '@/shared/components/ui/dialog'
 import { AlertTriangle, ArrowRight, Ghost } from '@/shared/components/ui/icons'
 import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
-import { getBasename, getRelativePath } from '@/shared/lib/utils'
+import { cn, getBasename, getRelativePath } from '@/shared/lib/utils'
 
 import { dashboardCopy } from '../content/dashboardCopy'
 
@@ -33,10 +33,11 @@ interface IssuesPanelProps {
   onShowCycleTriage?: (cycleId?: string) => void
 }
 
-const severityVariantMap = {
-  high: 'destructive',
-  medium: 'default',
-  low: 'outline'
+const severityBadgeClassMap = {
+  high: 'border-status-critical-border bg-status-critical-surface text-status-critical-foreground',
+  medium:
+    'border-status-caution-border bg-status-caution-surface text-status-caution-foreground',
+  low: 'border-status-success-border bg-status-success-surface text-status-success-foreground'
 } as const
 
 function buildFallbackCycleTitle(depInfo: CircularDependencyInfo) {
@@ -104,12 +105,12 @@ export function IssuesPanel({
 
   return (
     <div className='space-y-4 overflow-x-hidden'>
-      <Card className='overflow-hidden border-red-500/20 bg-red-500/5'>
+      <Card className='overflow-hidden border-status-critical-border bg-status-critical-surface'>
         <CardHeader className='pb-3'>
           <div className='flex flex-wrap items-start justify-between gap-3'>
             <div className='space-y-1'>
               <div className='flex items-center gap-2'>
-                <AlertTriangle className='h-4 w-4 text-red-500' />
+                <AlertTriangle className='h-4 w-4 text-status-critical-foreground' />
                 <span className='text-sm font-medium'>
                   {dashboardCopy.issuesPanel.cycles.title}
                 </span>
@@ -129,8 +130,11 @@ export function IssuesPanel({
                 return (
                   <Badge
                     key={severity}
-                    variant={severityVariantMap[severity]}
-                    className='px-2 py-0.5 text-xs'
+                    variant='outline'
+                    className={cn(
+                      'px-2 py-0.5 text-xs',
+                      severityBadgeClassMap[severity]
+                    )}
                   >
                     {count} {severity}
                   </Badge>
@@ -141,7 +145,7 @@ export function IssuesPanel({
                 <Button
                   size='sm'
                   onClick={() => onShowCycleTriage?.()}
-                  className='h-8 gap-1.5'
+                  className='h-9 gap-1.5 px-3'
                 >
                   {dashboardCopy.issuesPanel.cycles.cta}
                   <ArrowRight className='h-3.5 w-3.5' />
@@ -150,7 +154,11 @@ export function IssuesPanel({
                 <Badge variant='secondary'>{circularDependencies.length}</Badge>
               )}
 
-              <InfoTooltip title='What is Circular Dependency?' side='top'>
+              <InfoTooltip
+                title='What is Circular Dependency?'
+                side='top'
+                triggerLabel='Explain why dependency cycles block safer refactors'
+              >
                 <div className='space-y-2'>
                   <p className='text-xs text-popover-foreground'>
                     A circular dependency occurs when module A depends on B, and
@@ -175,7 +183,7 @@ export function IssuesPanel({
 
         <CardContent className='space-y-3'>
           {circularDependencies.length === 0 ? (
-            <div className='rounded-md border border-emerald-500/20 bg-emerald-500/5 px-3 py-3 text-sm text-muted-foreground'>
+            <div className='rounded-md border border-status-success-border bg-status-success-surface px-3 py-3 text-sm text-muted-foreground'>
               {dashboardCopy.issuesPanel.cycles.empty}
             </div>
           ) : (
@@ -198,8 +206,11 @@ export function IssuesPanel({
                         </p>
                       </div>
                       <Badge
-                        variant={severityVariantMap[item.fixPriority]}
-                        className='px-2 py-0.5 text-[10px] uppercase'
+                        variant='outline'
+                        className={cn(
+                          'px-2 py-0.5 text-[10px] uppercase',
+                          severityBadgeClassMap[item.fixPriority]
+                        )}
                       >
                         {item.fixPriority}
                       </Badge>
@@ -246,7 +257,7 @@ export function IssuesPanel({
               <DialogContent className='max-w-2xl'>
                 <DialogHeader>
                   <DialogTitle className='flex items-center gap-2'>
-                    <Ghost className='h-5 w-5 text-gray-500' />
+                    <Ghost className='h-5 w-5 text-muted-foreground' />
                     Orphaned Files ({orphans.length})
                   </DialogTitle>
                 </DialogHeader>

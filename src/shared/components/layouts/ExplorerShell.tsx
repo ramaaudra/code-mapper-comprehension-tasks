@@ -90,7 +90,9 @@ export function ExplorerShell({
 
       <div className='flex h-[calc(100vh-56px)] w-full overflow-hidden'>
         <Sidebar isCollapsed={isTreeCollapsed}>{sidebar}</Sidebar>
-        <div className='flex-1 overflow-hidden'>{main}</div>
+        <main className='flex-1 overflow-hidden' aria-label='Primary content'>
+          {main}
+        </main>
         {rightPanels}
       </div>
 

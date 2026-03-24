@@ -28,8 +28,8 @@ export const couplingBucketDefinitions: readonly CouplingBucketDefinition[] = [
     range: '0-2',
     min: 0,
     max: 2,
-    color: 'bg-green-500',
-    textColor: 'text-green-500',
+    color: 'bg-status-success-solid',
+    textColor: 'text-status-success-foreground',
     descriptor: 'healthy'
   },
   {
@@ -37,8 +37,8 @@ export const couplingBucketDefinitions: readonly CouplingBucketDefinition[] = [
     range: '3-6',
     min: 3,
     max: 6,
-    color: 'bg-yellow-500',
-    textColor: 'text-yellow-500',
+    color: 'bg-status-caution-solid',
+    textColor: 'text-status-caution-foreground',
     descriptor: 'moderate'
   },
   {
@@ -46,16 +46,16 @@ export const couplingBucketDefinitions: readonly CouplingBucketDefinition[] = [
     range: '7-10',
     min: 7,
     max: 10,
-    color: 'bg-orange-500',
-    textColor: 'text-orange-500',
+    color: 'bg-status-warning-solid',
+    textColor: 'text-status-warning-foreground',
     descriptor: 'high'
   },
   {
     label: 'Heavy',
     range: '11+',
     min: 11,
-    color: 'bg-red-500',
-    textColor: 'text-red-500',
+    color: 'bg-status-critical-solid',
+    textColor: 'text-status-critical-foreground',
     descriptor: 'very high'
   }
 ] as const

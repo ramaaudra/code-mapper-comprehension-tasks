@@ -30,6 +30,22 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
+    --status-critical-surface: 0 100% 97%;
+    --status-critical-border: 0 78% 82%;
+    --status-critical-foreground: 0 68% 34%;
+    --status-critical-solid: 0 74% 51%;
+    --status-warning-surface: 29 100% 96%;
+    --status-warning-border: 29 88% 79%;
+    --status-warning-foreground: 24 79% 31%;
+    --status-warning-solid: 29 89% 50%;
+    --status-caution-surface: 48 100% 95%;
+    --status-caution-border: 46 92% 78%;
+    --status-caution-foreground: 38 77% 30%;
+    --status-caution-solid: 45 92% 48%;
+    --status-success-surface: 142 45% 95%;
+    --status-success-border: 142 40% 77%;
+    --status-success-foreground: 142 65% 27%;
+    --status-success-solid: 142 64% 39%;
     --radius: 0.75rem;
 
     /* Node Styling - Light (Monochrome Grey Scale) */
@@ -97,6 +113,22 @@
     --border: 0 0% 18%;
     --input: 0 0% 18%;
     --ring: 0 0% 60%;
+    --status-critical-surface: 0 42% 16%;
+    --status-critical-border: 0 55% 34%;
+    --status-critical-foreground: 0 88% 84%;
+    --status-critical-solid: 0 75% 62%;
+    --status-warning-surface: 28 43% 16%;
+    --status-warning-border: 28 55% 33%;
+    --status-warning-foreground: 33 95% 83%;
+    --status-warning-solid: 31 95% 61%;
+    --status-caution-surface: 46 42% 16%;
+    --status-caution-border: 45 56% 31%;
+    --status-caution-foreground: 48 96% 82%;
+    --status-caution-solid: 45 93% 61%;
+    --status-success-surface: 145 37% 15%;
+    --status-success-border: 145 44% 29%;
+    --status-success-foreground: 144 74% 80%;
+    --status-success-solid: 142 69% 54%;
     /* Canvas-specific background */
     --canvas-background: 0 0% 6.7%;
 

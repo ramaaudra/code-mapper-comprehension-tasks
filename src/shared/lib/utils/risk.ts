@@ -110,10 +110,10 @@ export function getRiskLabel(level: RiskLevel): string {
  */
 export function getRiskColorClass(level: RiskLevel): string {
   const colors: Record<RiskLevel, string> = {
-    critical: 'bg-red-500',
-    high: 'bg-orange-500',
-    medium: 'bg-yellow-500',
-    low: 'bg-green-500'
+    critical: 'bg-status-critical-solid',
+    high: 'bg-status-warning-solid',
+    medium: 'bg-status-caution-solid',
+    low: 'bg-status-success-solid'
   }
   return colors[level]
 }
@@ -123,10 +123,10 @@ export function getRiskColorClass(level: RiskLevel): string {
  */
 export function getRiskTextClass(level: RiskLevel): string {
   const colors: Record<RiskLevel, string> = {
-    critical: 'text-red-500',
-    high: 'text-orange-500',
-    medium: 'text-yellow-500',
-    low: 'text-green-500'
+    critical: 'text-status-critical-foreground',
+    high: 'text-status-warning-foreground',
+    medium: 'text-status-caution-foreground',
+    low: 'text-status-success-foreground'
   }
   return colors[level]
 }
@@ -136,10 +136,10 @@ export function getRiskTextClass(level: RiskLevel): string {
  */
 export function getRiskBorderClass(level: RiskLevel): string {
   const colors: Record<RiskLevel, string> = {
-    critical: 'border-red-500',
-    high: 'border-orange-500',
-    medium: 'border-yellow-500',
-    low: 'border-green-500'
+    critical: 'border-status-critical-border',
+    high: 'border-status-warning-border',
+    medium: 'border-status-caution-border',
+    low: 'border-status-success-border'
   }
   return colors[level]
 }
@@ -150,22 +150,22 @@ export function getRiskBorderClass(level: RiskLevel): string {
 export function getRiskBgOpacityClass(level: RiskLevel, opacity = 5): string {
   const opacities: Record<number, Record<RiskLevel, string>> = {
     5: {
-      critical: 'bg-red-500/5',
-      high: 'bg-orange-500/5',
-      medium: 'bg-yellow-500/5',
-      low: 'bg-green-500/5'
+      critical: 'bg-status-critical-surface',
+      high: 'bg-status-warning-surface',
+      medium: 'bg-status-caution-surface',
+      low: 'bg-status-success-surface'
     },
     10: {
-      critical: 'bg-red-500/10',
-      high: 'bg-orange-500/10',
-      medium: 'bg-yellow-500/10',
-      low: 'bg-green-500/10'
+      critical: 'bg-status-critical-surface',
+      high: 'bg-status-warning-surface',
+      medium: 'bg-status-caution-surface',
+      low: 'bg-status-success-surface'
     },
     20: {
-      critical: 'bg-red-500/20',
-      high: 'bg-orange-500/20',
-      medium: 'bg-yellow-500/20',
-      low: 'bg-green-500/20'
+      critical: 'bg-status-critical-surface',
+      high: 'bg-status-warning-surface',
+      medium: 'bg-status-caution-surface',
+      low: 'bg-status-success-surface'
     }
   }
   return opacities[opacity]?.[level] || opacities[5][level]
@@ -273,15 +273,15 @@ export const ARCHITECTURE_THRESHOLDS = {
 export function getRiskColor(category: string): string {
   switch (category) {
     case 'Kritis':
-      return 'bg-red-500'
+      return 'bg-status-critical-solid'
     case 'Tinggi':
-      return 'bg-orange-500'
+      return 'bg-status-warning-solid'
     case 'Sedang':
-      return 'bg-yellow-500'
+      return 'bg-status-caution-solid'
     case 'Rendah':
-      return 'bg-green-500'
+      return 'bg-status-success-solid'
     default:
-      return 'bg-gray-500'
+      return 'bg-muted'
   }
 }
 

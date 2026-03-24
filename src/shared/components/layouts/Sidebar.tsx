@@ -24,7 +24,7 @@ export function Sidebar({ isCollapsed, children }: SidebarProps) {
       className={`shrink-0 overflow-hidden transition-all duration-200 ease-out ${
         isCollapsed
           ? 'w-0 min-w-0'
-          : 'w-80 border-r border-border bg-background'
+          : 'w-[clamp(16rem,22vw,20rem)] border-r border-border bg-background'
       }`}
     >
       {!isCollapsed && (

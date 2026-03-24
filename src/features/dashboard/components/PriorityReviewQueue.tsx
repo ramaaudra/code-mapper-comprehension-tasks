@@ -27,7 +27,7 @@ interface PriorityReviewQueueProps {
 
 function getQueueItemIcon(item: OverviewReviewQueueItem): React.ReactNode {
   if (item.target.kind === 'cycles') {
-    return <RefreshCw className='h-4 w-4 text-red-500' />
+    return <RefreshCw className={cn('h-4 w-4', getRiskTextClass('critical'))} />
   }
 
   if (item.tone === 'info') {
@@ -35,12 +35,7 @@ function getQueueItemIcon(item: OverviewReviewQueueItem): React.ReactNode {
   }
 
   return (
-    <AlertTriangle
-      className={cn(
-        'h-4 w-4',
-        item.tone === 'critical' ? 'text-red-500' : 'text-orange-500'
-      )}
-    />
+    <AlertTriangle className={cn('h-4 w-4', getRiskTextClass(item.tone))} />
   )
 }
 

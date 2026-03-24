@@ -95,7 +95,7 @@ export function TopBar({
 
   const contextChipClassName =
     contextChip?.tone === 'warning'
-      ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-300'
+      ? 'border-status-warning-border bg-status-warning-surface text-status-warning-foreground'
       : 'border-border/70 bg-muted/60 text-muted-foreground'
 
   return (
@@ -113,7 +113,7 @@ export function TopBar({
             size='icon'
             onClick={onToggleTree}
             aria-label={iconLabels.sidebarToggle}
-            className='h-8 w-8 shrink-0 touch-manipulation text-muted-foreground hover:text-foreground'
+            className='h-10 w-10 shrink-0 touch-manipulation text-muted-foreground hover:text-foreground'
           >
             {isTreeCollapsed ? (
               <PanelLeftOpen className='h-4 w-4' aria-hidden='true' />
@@ -124,9 +124,9 @@ export function TopBar({
         </SimpleTooltip>
 
         <div className='flex min-w-0 items-center gap-2'>
-          <h1 className='truncate text-base font-semibold text-foreground'>
+          <p className='truncate text-base font-semibold text-foreground'>
             {shellCopy.brand}
-          </h1>
+          </p>
           {hasData && fileCount !== undefined && (
             <span className='hidden rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground xl:inline-flex'>
               {shellCopy.fileCount(fileCount)}
@@ -142,6 +142,7 @@ export function TopBar({
         {hasData && actionGroups.showHelpGroup && (
           <ToggleGroup
             type='single'
+            size='lg'
             value={activePrimaryViewMode ?? undefined}
             onValueChange={(value: string) => {
               if (value === 'overview') {
@@ -187,7 +188,7 @@ export function TopBar({
                 size='sm'
                 onClick={onShowMetricsGuide}
                 className={cn(
-                  'h-8 touch-manipulation gap-1.5 px-2.5 text-xs font-medium',
+                  'h-10 touch-manipulation gap-1.5 px-3 text-xs font-medium',
                   activeUtilityViewMode !== 'metrics-guide' &&
                     'text-muted-foreground hover:text-foreground'
                 )}
@@ -210,7 +211,7 @@ export function TopBar({
                 size='sm'
                 onClick={onShowSetupGuide}
                 className={cn(
-                  'h-8 touch-manipulation gap-1.5 px-2.5 text-xs font-medium',
+                  'h-10 touch-manipulation gap-1.5 px-3 text-xs font-medium',
                   activeUtilityViewMode !== 'setup-guide' &&
                     'text-muted-foreground hover:text-foreground'
                 )}
@@ -218,7 +219,7 @@ export function TopBar({
                 {shellCopy.utilities.analysisSetup.label}
                 {hasUnresolvedImports && (
                   <AlertTriangle
-                    className='h-3.5 w-3.5 shrink-0 text-amber-500'
+                    className='h-3.5 w-3.5 shrink-0 text-status-warning-foreground'
                     aria-hidden='true'
                   />
                 )}
@@ -260,7 +261,7 @@ export function TopBar({
                 variant: 'ghost',
                 size: 'sm',
                 className:
-                  'h-8 gap-1.5 border border-border/70 px-2.5 text-xs font-medium touch-manipulation text-muted-foreground hover:bg-muted hover:text-foreground'
+                  'h-10 gap-1.5 border border-border/70 px-3 text-xs font-medium touch-manipulation text-muted-foreground hover:bg-muted hover:text-foreground'
               }}
             />
           </div>
@@ -281,7 +282,7 @@ export function TopBar({
           >
             {loadError && runtimeMode === 'live' && (
               <SimpleTooltip content={loadError} side='bottom' asChild>
-                <div className='flex h-8 w-8 items-center justify-center text-amber-500'>
+                <div className='flex h-10 w-10 items-center justify-center text-status-warning-solid'>
                   <AlertTriangle className='h-4 w-4' aria-hidden='true' />
                 </div>
               </SimpleTooltip>
@@ -296,7 +297,7 @@ export function TopBar({
                     onClick={onRefresh}
                     disabled={isLoading}
                     aria-label={iconLabels.refresh}
-                    className='h-8 w-8 touch-manipulation text-muted-foreground hover:text-foreground'
+                    className='h-10 w-10 touch-manipulation text-muted-foreground hover:text-foreground'
                   >
                     <RotateCcw
                       className={cn('h-4 w-4', isLoading && 'animate-spin')}
@@ -304,7 +305,7 @@ export function TopBar({
                     />
                   </Button>
                   {hasChanges && totalChanges > 0 && (
-                    <span className='absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-xs font-medium text-white'>
+                    <span className='absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border border-status-warning-border bg-status-warning-surface px-1 text-xs font-medium text-status-warning-foreground shadow-sm'>
                       {totalChanges > 9 ? '9+' : totalChanges}
                     </span>
                   )}

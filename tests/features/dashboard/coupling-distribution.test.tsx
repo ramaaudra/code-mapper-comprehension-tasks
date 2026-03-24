@@ -86,6 +86,10 @@ test('CouplingDistribution renders the corrected bucket ranges in the visible UI
   assert.match(html, /Medium \(3-6\)/)
   assert.match(html, /Tight \(7-10\)/)
   assert.match(html, /Heavy \(11\+\)/)
+  assert.match(
+    html,
+    /aria-label="Explain how coupling is grouped in this snapshot"/
+  )
 
   assert.doesNotMatch(html, /Medium \(3-5\)/)
   assert.doesNotMatch(html, /Tight \(6-10\)/)

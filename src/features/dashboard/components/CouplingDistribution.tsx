@@ -65,7 +65,11 @@ export function CouplingDistribution({
                 {dashboardCopy.couplingSnapshot.description}
               </CardDescription>
             </div>
-            <InfoTooltip title='What is Coupling?' side='top'>
+            <InfoTooltip
+              title='What is Coupling?'
+              side='top'
+              triggerLabel='Explain how coupling is grouped in this snapshot'
+            >
               <div className='space-y-2'>
                 <p className='text-xs text-popover-foreground'>
                   Coupling describes how strongly files or modules depend on one

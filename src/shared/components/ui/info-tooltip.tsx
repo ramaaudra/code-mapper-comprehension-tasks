@@ -16,6 +16,7 @@ interface InfoTooltipProps {
   className?: string
   iconClassName?: string
   asChild?: boolean
+  triggerLabel?: string
 }
 
 /**
@@ -41,22 +42,27 @@ export function InfoTooltip({
   align = 'center',
   className,
   iconClassName,
-  asChild = false
+  asChild = false,
+  triggerLabel
 }: InfoTooltipProps) {
+  const resolvedTriggerLabel = triggerLabel ?? title ?? 'More information'
+
   return (
     <Tooltip>
-      <TooltipTrigger asChild={asChild}>
+      <TooltipTrigger asChild>
         {asChild ? (
           children
         ) : (
-          <span
+          <button
+            type='button'
+            aria-label={resolvedTriggerLabel}
             className={cn(
               'cursor-help text-muted-foreground transition-colors hover:text-foreground',
               iconClassName
             )}
           >
             <Info className='h-4 w-4' />
-          </span>
+          </button>
         )}
       </TooltipTrigger>
       <TooltipContent

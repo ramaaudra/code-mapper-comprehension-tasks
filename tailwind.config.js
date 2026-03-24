@@ -13,13 +13,13 @@ export default {
       screens: {
         '2xl': '1400px'
       }
+    },
+    extend: {
+      fontFamily: {
+        sans: ['Atkinson Hyperlegible Next', 'sans-serif'],
+        mono: ['Atkinson Hyperlegible Mono', 'monospace'],
+        data: ['Atkinson Hyperlegible Next', 'sans-serif']
       },
-      extend: {
-        fontFamily: {
-          sans: ['Atkinson Hyperlegible Next', 'sans-serif'],
-          mono: ['Atkinson Hyperlegible Mono', 'monospace'],
-          data: ['Atkinson Hyperlegible Next', 'sans-serif']
-        },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
@@ -53,15 +53,45 @@ export default {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))'
+        },
+        status: {
+          critical: {
+            DEFAULT: 'hsl(var(--status-critical-solid))',
+            surface: 'hsl(var(--status-critical-surface))',
+            border: 'hsl(var(--status-critical-border))',
+            foreground: 'hsl(var(--status-critical-foreground))',
+            solid: 'hsl(var(--status-critical-solid))'
+          },
+          warning: {
+            DEFAULT: 'hsl(var(--status-warning-solid))',
+            surface: 'hsl(var(--status-warning-surface))',
+            border: 'hsl(var(--status-warning-border))',
+            foreground: 'hsl(var(--status-warning-foreground))',
+            solid: 'hsl(var(--status-warning-solid))'
+          },
+          caution: {
+            DEFAULT: 'hsl(var(--status-caution-solid))',
+            surface: 'hsl(var(--status-caution-surface))',
+            border: 'hsl(var(--status-caution-border))',
+            foreground: 'hsl(var(--status-caution-foreground))',
+            solid: 'hsl(var(--status-caution-solid))'
+          },
+          success: {
+            DEFAULT: 'hsl(var(--status-success-solid))',
+            surface: 'hsl(var(--status-success-surface))',
+            border: 'hsl(var(--status-success-border))',
+            foreground: 'hsl(var(--status-success-foreground))',
+            solid: 'hsl(var(--status-success-solid))'
+          }
         }
       },
       fontSize: {
         '2xs': ['10px', { lineHeight: '1.4' }],
         'metric': ['2rem', { lineHeight: '1.2' }],
-        'metric-lg': ['2.25rem', { lineHeight: '1.2' }],
+        'metric-lg': ['2.25rem', { lineHeight: '1.2' }]
       },
       letterSpacing: {
-        'label': '0.08em',
+        label: '0.08em'
       },
       borderRadius: {
         lg: 'var(--radius)',

@@ -9,7 +9,9 @@ export const dashboardCopy = {
       eyebrow: 'Quick Snapshot',
       title: 'Repository size and recent pressure',
       description:
-        'Use this row for orientation only. It should confirm scale, not decide your next review step.'
+        'Use this row for orientation only. It should confirm scale, not decide your next review step.',
+      helper:
+        'Use these numbers only to size the repo and recent pressure. Keep your first decision in the review queue above.'
     },
     reviewFirst: {
       eyebrow: 'Start Here',

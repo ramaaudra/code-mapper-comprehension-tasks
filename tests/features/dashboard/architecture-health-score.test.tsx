@@ -36,6 +36,10 @@ test('ArchitectureHealthScore keeps supporting context story-first and removes d
     text,
     /Cycles are still active and shared modules can spread changes farther than a local edit\./
   )
+  assert.match(
+    html,
+    /aria-label="Explain how the change safety summary is scored"/
+  )
   assert.doesNotMatch(text, /Supporting score/i)
   assert.doesNotMatch(text, /Change Profile:/)
   assert.doesNotMatch(text, /Critical Risks:/)
