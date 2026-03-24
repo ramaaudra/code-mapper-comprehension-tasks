@@ -1,8 +1,8 @@
-/* Recursive Sans for interface copy and decision-first reading flow */
-@import url('https://fonts.googleapis.com/css2?family=Recursive:wght@400;500;600;700&display=swap');
+/* Atkinson Hyperlegible Mono for code and filesystem evidence */
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500;600;700&display=swap');
 
-/* JetBrains Mono for code, data, and metrics */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* Atkinson Hyperlegible Next for interface copy and metrics */
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -160,12 +160,8 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Recursive', system-ui, sans-serif;
+    font-family: 'Atkinson Hyperlegible Next', sans-serif;
     font-kerning: normal;
-    font-variation-settings:
-      'MONO' 0,
-      'CASL' 0.5,
-      'slnt' 0;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -175,7 +171,7 @@
   kbd,
   pre,
   samp {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Atkinson Hyperlegible Mono', monospace;
     font-variant-ligatures: none;
   }
 }

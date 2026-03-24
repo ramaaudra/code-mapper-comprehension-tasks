@@ -180,7 +180,7 @@ export function CycleGraph({
             fontSize='11'
             fontWeight='600'
             fill='hsl(var(--destructive))'
-            fontFamily='Recursive, system-ui, sans-serif'
+            fontFamily='Atkinson Hyperlegible Next, sans-serif'
           >
             Start here
           </text>
@@ -205,7 +205,7 @@ export function CycleGraph({
                   textAnchor='middle'
                   fontSize='12'
                   fill='hsl(var(--muted-foreground))'
-                  fontFamily='JetBrains Mono, monospace'
+                  fontFamily='Atkinson Hyperlegible Mono, monospace'
                 >
                   {route.label}
                 </text>
@@ -249,7 +249,7 @@ export function CycleGraph({
                 fontSize='12'
                 fontWeight={node.isCycleNode ? '600' : '500'}
                 fill={textFill}
-                fontFamily='JetBrains Mono, monospace'
+                fontFamily='Atkinson Hyperlegible Mono, monospace'
                 style={{
                   cursor: onNavigateToFile ? 'pointer' : 'default'
                 }}

@@ -6,7 +6,7 @@ function readSource(path: string): string {
   return readFileSync(new URL(path, import.meta.url), 'utf8')
 }
 
-test('shared metric primitives reserve JetBrains Mono for metric values only', () => {
+test('shared metric primitives reserve Atkinson Hyperlegible Next for metric values only', () => {
   const metricCardSource = readSource(
     '../../../src/shared/components/ui/metric-card.tsx'
   )

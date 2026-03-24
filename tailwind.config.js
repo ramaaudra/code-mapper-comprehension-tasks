@@ -16,9 +16,9 @@ export default {
       },
       extend: {
         fontFamily: {
-          sans: ['Recursive', 'system-ui', 'sans-serif'],
-          mono: ['JetBrains Mono', 'monospace'],
-          data: ['JetBrains Mono', 'monospace']
+          sans: ['Atkinson Hyperlegible Next', 'sans-serif'],
+          mono: ['Atkinson Hyperlegible Mono', 'monospace'],
+          data: ['Atkinson Hyperlegible Next', 'sans-serif']
         },
       colors: {
         border: 'hsl(var(--border))',

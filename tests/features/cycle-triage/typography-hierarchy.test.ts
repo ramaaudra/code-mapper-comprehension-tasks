@@ -53,7 +53,7 @@ test('CycleTriageWorkspace makes the first action the strongest text block on fi
   assert.match(source, /text-sm leading-6 text-muted-foreground/)
 })
 
-test('CycleQueue and CycleGraph keep narrative guidance in Recursive Sans while preserving code-like evidence', () => {
+test('CycleQueue and CycleGraph keep narrative guidance in Atkinson Hyperlegible Next while preserving code-like evidence', () => {
   const queueSource = readQueueSource()
   const graphSource = readGraphSource()
   const workspaceSource = readWorkspaceSource()
@@ -72,6 +72,14 @@ test('CycleQueue and CycleGraph keep narrative guidance in Recursive Sans while 
   assert.match(
     workspaceSource,
     /rounded-lg border border-border\/70 bg-background\/70 px-3 py-2 font-mono text-sm leading-6 text-muted-foreground/
+  )
+  assert.match(
+    graphSource,
+    /fontFamily='Atkinson Hyperlegible Next, sans-serif'/
+  )
+  assert.doesNotMatch(
+    graphSource,
+    /fontFamily='Recursive, system-ui, sans-serif'/
   )
   assert.doesNotMatch(graphSource, /recommendedEdgeHint/)
 })

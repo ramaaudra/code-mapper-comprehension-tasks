@@ -175,7 +175,7 @@ export function useGraphGeneration({
   const labelStyle = useMemo(
     () => ({
       fontWeight: 700,
-      fontFamily: 'JetBrains Mono, monospace',
+      fontFamily: 'Atkinson Hyperlegible Mono, monospace',
       fontSize: 11,
       fill: 'hsl(var(--foreground))',
       paintOrder: 'stroke fill' as const,
