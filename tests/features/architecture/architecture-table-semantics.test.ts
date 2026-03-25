@@ -24,8 +24,9 @@ test('ArchitectureTable exposes sortable headers and expandable rows as real con
 
   assert.match(
     source,
-    /aria-label=\{`Toggle file breakdown for \$\{folder.folderPath\}`\}/
+    /aria-label=\{getToggleLabel\(\s*folder\.folderPath,\s*folder\.hasCycle\s*\)\}/
   )
+  assert.match(source, /This module is involved in a circular dependency\./)
   assert.match(source, /aria-expanded=\{isExpanded\}/)
   assert.match(source, /aria-controls=\{detailsId\}/)
   assert.match(source, /id=\{detailsId\}/)

@@ -117,6 +117,14 @@ function getRiskDotColor(
 
 const instabilityBarClass = 'bg-muted-foreground/50'
 
+function getToggleLabel(folderPath: string, hasCycle: boolean): string {
+  if (!hasCycle) {
+    return `Toggle file breakdown for ${folderPath}`
+  }
+
+  return `Toggle file breakdown for ${folderPath}. This module is involved in a circular dependency.`
+}
+
 function ExpandedRow({
   folderPath,
   onNavigateToFile: _onNavigateToFile,
@@ -269,33 +277,38 @@ export function ArchitectureTable({
                   }`}
                 >
                   <td className='px-4 py-3'>
-                    <button
-                      type='button'
-                      onClick={() => toggleRow(folder.folderPath)}
-                      aria-label={`Toggle file breakdown for ${folder.folderPath}`}
-                      aria-expanded={isExpanded}
-                      aria-controls={detailsId}
-                      className='flex w-full min-w-0 items-start gap-2 rounded-md text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
-                    >
-                      {isExpanded ? (
-                        <CaretDown
-                          size={14}
-                          className='mt-0.5 shrink-0 text-muted-foreground'
-                        />
-                      ) : (
-                        <CaretRight
-                          size={14}
-                          className='mt-0.5 shrink-0 text-muted-foreground'
-                        />
-                      )}
-                      <span
-                        className='min-w-0 truncate font-mono'
-                        title={folder.folderPath}
+                    <div className='flex min-w-0 items-start gap-2'>
+                      <button
+                        type='button'
+                        onClick={() => toggleRow(folder.folderPath)}
+                        aria-label={getToggleLabel(
+                          folder.folderPath,
+                          folder.hasCycle
+                        )}
+                        aria-expanded={isExpanded}
+                        aria-controls={detailsId}
+                        className='flex min-w-0 flex-1 items-start gap-2 rounded-md text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
                       >
-                        {folder.folderPath}
-                      </span>
-                      {folder.hasCycle && <CycleBadge />}
-                    </button>
+                        {isExpanded ? (
+                          <CaretDown
+                            size={14}
+                            className='mt-0.5 shrink-0 text-muted-foreground'
+                          />
+                        ) : (
+                          <CaretRight
+                            size={14}
+                            className='mt-0.5 shrink-0 text-muted-foreground'
+                          />
+                        )}
+                        <span
+                          className='min-w-0 truncate font-mono'
+                          title={folder.folderPath}
+                        >
+                          {folder.folderPath}
+                        </span>
+                      </button>
+                      {folder.hasCycle ? <CycleBadge /> : null}
+                    </div>
                   </td>
                   <td className='px-4 py-3 text-center font-data'>
                     {folder.ca}

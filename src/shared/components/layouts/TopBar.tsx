@@ -97,6 +97,7 @@ export function TopBar({
     contextChip?.tone === 'warning'
       ? 'border-status-warning-border bg-status-warning-surface text-status-warning-foreground'
       : 'border-border/70 bg-muted/60 text-muted-foreground'
+  const primaryNavigationValue = activePrimaryViewMode ?? ''
 
   return (
     <header className='grid h-14 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border bg-background px-3 sm:px-4'>
@@ -143,7 +144,7 @@ export function TopBar({
           <ToggleGroup
             type='single'
             size='lg'
-            value={activePrimaryViewMode ?? undefined}
+            value={primaryNavigationValue}
             onValueChange={(value: string) => {
               if (value === 'overview') {
                 onShowOverview()

@@ -32,11 +32,11 @@ root.render(
   <StrictMode>
     <ThemeProvider>
       <AppProviders queryClient={queryClient}>
-        <FileAnalysisProvider>
-          <StaticProvider>
+        <StaticProvider>
+          <FileAnalysisProvider>
             <ReportShell />
-          </StaticProvider>
-        </FileAnalysisProvider>
+          </FileAnalysisProvider>
+        </StaticProvider>
       </AppProviders>
     </ThemeProvider>
   </StrictMode>

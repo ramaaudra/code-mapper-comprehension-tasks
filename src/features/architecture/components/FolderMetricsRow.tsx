@@ -36,6 +36,14 @@ function getCalibratedRiskDotColor(
   return getRiskColorClass(getRiskLevel(score, thresholdCalibration))
 }
 
+function getToggleLabel(folderPath: string, hasCycle: boolean): string {
+  if (!hasCycle) {
+    return `Toggle coupling breakdown for ${folderPath}`
+  }
+
+  return `Toggle coupling breakdown for ${folderPath}. This module is involved in a circular dependency.`
+}
+
 export function FolderMetricsRow({
   folder,
   thresholdCalibration
@@ -48,23 +56,25 @@ export function FolderMetricsRow({
     <>
       <tr className='border-b border-border/50 transition-colors hover:bg-muted/30'>
         <td className='px-3 py-2 font-mono text-sm'>
-          <button
-            type='button'
-            onClick={() => setExpanded(!expanded)}
-            aria-label={`Toggle coupling breakdown for ${folder.folderPath}`}
-            aria-expanded={expanded}
-            aria-controls={detailsId}
-            className='flex w-full items-center gap-2 rounded-md text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
-          >
-            <CaretRight
-              size={12}
-              className={`shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`}
-            />
-            <span className='truncate' title={folder.folderPath}>
-              {truncateMiddle(folder.folderPath, 48)}
-            </span>
-            {folder.hasCycle && <CycleBadge />}
-          </button>
+          <div className='flex items-center gap-2'>
+            <button
+              type='button'
+              onClick={() => setExpanded(!expanded)}
+              aria-label={getToggleLabel(folder.folderPath, folder.hasCycle)}
+              aria-expanded={expanded}
+              aria-controls={detailsId}
+              className='flex min-w-0 flex-1 items-center gap-2 rounded-md text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+            >
+              <CaretRight
+                size={12}
+                className={`shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`}
+              />
+              <span className='truncate' title={folder.folderPath}>
+                {truncateMiddle(folder.folderPath, 48)}
+              </span>
+            </button>
+            {folder.hasCycle ? <CycleBadge /> : null}
+          </div>
         </td>
         <td className='px-3 py-2 text-center font-data'>{folder.ca}</td>
         <td className='px-3 py-2 text-center font-data'>{folder.ce}</td>
