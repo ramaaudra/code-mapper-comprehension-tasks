@@ -91,6 +91,7 @@ export function ReportShell() {
         onShowMetricsGuide={() =>
           explorer.handleShowMetricsGuide('architecture')
         }
+        onNavigateToFile={(filePath) => explorer.navigateToFile(filePath)}
       />
     </Suspense>
   ) : explorer.viewMode === 'metrics-guide' ? (

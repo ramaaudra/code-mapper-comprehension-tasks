@@ -20,6 +20,15 @@ interface FolderMetricsRowProps {
   thresholdCalibration?: ReviewThresholdCalibration
 }
 
+function createDetailsId(folderPath: string): string {
+  const normalizedPath = folderPath
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+  return `legacy-architecture-folder-details-${normalizedPath || 'module'}`
+}
+
 function getCalibratedRiskDotColor(
   score: number,
   thresholdCalibration?: ReviewThresholdCalibration
@@ -33,15 +42,20 @@ export function FolderMetricsRow({
 }: FolderMetricsRowProps) {
   const [expanded, setExpanded] = useState(false)
   const riskScore = calculateRiskScore(folder.ca, folder.instability)
+  const detailsId = createDetailsId(folder.folderPath)
 
   return (
     <>
-      <tr
-        className='cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/30'
-        onClick={() => setExpanded(!expanded)}
-      >
+      <tr className='border-b border-border/50 transition-colors hover:bg-muted/30'>
         <td className='px-3 py-2 font-mono text-sm'>
-          <span className='flex items-center gap-2'>
+          <button
+            type='button'
+            onClick={() => setExpanded(!expanded)}
+            aria-label={`Toggle coupling breakdown for ${folder.folderPath}`}
+            aria-expanded={expanded}
+            aria-controls={detailsId}
+            className='flex w-full items-center gap-2 rounded-md text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+          >
             <CaretRight
               size={12}
               className={`shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`}
@@ -50,7 +64,7 @@ export function FolderMetricsRow({
               {truncateMiddle(folder.folderPath, 48)}
             </span>
             {folder.hasCycle && <CycleBadge />}
-          </span>
+          </button>
         </td>
         <td className='px-3 py-2 text-center font-data'>{folder.ca}</td>
         <td className='px-3 py-2 text-center font-data'>{folder.ce}</td>
@@ -75,10 +89,12 @@ export function FolderMetricsRow({
       {expanded && (
         <tr className='bg-muted/20'>
           <td colSpan={5} className='px-6 py-3'>
-            <CouplingBreakdown
-              couplingTo={folder.couplingTo}
-              couplingFrom={folder.couplingFrom}
-            />
+            <div id={detailsId}>
+              <CouplingBreakdown
+                couplingTo={folder.couplingTo}
+                couplingFrom={folder.couplingFrom}
+              />
+            </div>
           </td>
         </tr>
       )}

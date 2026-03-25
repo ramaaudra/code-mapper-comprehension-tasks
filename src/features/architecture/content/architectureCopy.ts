@@ -45,7 +45,21 @@ export const architectureCopy = {
       imports: 'Imports',
       structuralPosition: 'Structural Position',
       changedIn30d: 'Changed in 30d',
-      empty: 'No files in this module'
+      empty: 'No files in this module',
+      reviewFocusTitle: 'Module review focus',
+      startHereTitle: 'Start here',
+      startHereDescription:
+        'Review the highest-signal files first before broader cleanup inside this module.',
+      nextFilesTitle: 'Next files to verify',
+      nextFilesDescription:
+        'Use these files to confirm whether impact stays local after you understand the first review targets.',
+      remainingTitle: 'Remaining files',
+      inspectFileAction: 'Inspect file',
+      showRemainingAction: 'Show remaining',
+      hideRemainingAction: 'Hide remaining files',
+      cycleWarningTitle: 'Cycle warning',
+      cycleWarningDescription:
+        'This module includes files in a dependency cycle. Review those files before broader refactors.'
     }
   },
   couplingBreakdown: {

@@ -2,9 +2,9 @@ import {
   formatReviewSignalBandRange,
   getStructuralPositionBandLabel,
   resolveStructuralPosition
-} from '@/shared/lib/metric-thresholds'
+} from '../../../shared/lib/metric-thresholds'
 
-import type { StructuralPosition } from '@/shared/lib/metric-thresholds'
+import type { StructuralPosition } from '../../../shared/lib/metric-thresholds'
 
 interface StructuralPositionStoryContent {
   summaryLabel: string

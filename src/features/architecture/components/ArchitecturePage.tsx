@@ -48,6 +48,7 @@ import type {
 
 interface ArchitecturePageProps {
   onShowMetricsGuide?: () => void
+  onNavigateToFile?: (filePath: string) => void
 }
 
 function ArchitecturePageSkeleton() {
@@ -74,7 +75,8 @@ function ArchitecturePageSkeleton() {
 }
 
 export function ArchitecturePage({
-  onShowMetricsGuide
+  onShowMetricsGuide,
+  onNavigateToFile
 }: ArchitecturePageProps) {
   const { data, isLoading, error } = useArchitectureFolders()
   const { evolutionarySummary } = useAnalysisData()
@@ -462,6 +464,7 @@ export function ArchitecturePage({
               folders={filteredFolders}
               sortConfig={sortConfig}
               onSort={handleSort}
+              onNavigateToFile={onNavigateToFile}
               thresholdCalibration={moduleThresholdCalibration}
               evolutionaryMetricsAvailable={changeHistoryAvailable}
             />

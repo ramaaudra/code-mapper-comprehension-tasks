@@ -3,7 +3,10 @@ import { Fragment, useMemo, useState } from 'react'
 import { HotspotStatusLabel } from '@/shared/components/ui/hotspot-status-label'
 import { CaretDown, CaretRight, CaretUp } from '@/shared/components/ui/icons'
 import { Skeleton } from '@/shared/components/ui/skeleton'
-import { formatRelativeChurn } from '@/shared/lib/utils'
+import {
+  getStructuralPositionBandLabel,
+  resolveStructuralPosition
+} from '@/shared/lib/metric-thresholds'
 import {
   calculateRiskScore,
   getRiskColorClass,
@@ -13,6 +16,7 @@ import {
 import { architectureCopy } from '../content/architectureCopy'
 import { useFolderDetail } from '../hooks/useArchitectureMetrics'
 import { CycleBadge } from './CycleBadge'
+import { ExpandedModuleReviewPanel } from './ExpandedModuleReviewPanel'
 import { InstabilityBadge } from './InstabilityBadge'
 
 import type {
@@ -65,6 +69,7 @@ interface ArchitectureTableProps {
   folders: FolderArchitectureMetrics[]
   sortConfig: SortConfig
   onSort: (key: SortKey) => void
+  onNavigateToFile?: (filePath: string) => void
   thresholdCalibration?: ReviewThresholdCalibration
   evolutionaryMetricsAvailable?: boolean
 }
@@ -96,7 +101,7 @@ function getHotspotLabel(
     'critical-hotspot': 'Highest band',
     'high-review-needed': 'Needs review',
     active: 'Recently active',
-    stable: 'Baseline band'
+    stable: 'Stable'
   } as const
 
   return labels[status]
@@ -114,9 +119,11 @@ const instabilityBarClass = 'bg-muted-foreground/50'
 
 function ExpandedRow({
   folderPath,
+  onNavigateToFile: _onNavigateToFile,
   evolutionaryMetricsAvailable = true
 }: {
   folderPath: string
+  onNavigateToFile?: (filePath: string) => void
   evolutionaryMetricsAvailable?: boolean
 }) {
   const { data, isLoading } = useFolderDetail(folderPath)
@@ -140,61 +147,12 @@ function ExpandedRow({
   }
 
   return (
-    <div className='bg-muted/30 px-8 py-4'>
-      <table className='w-full text-xs'>
-        <thead>
-          <tr className='text-muted-foreground'>
-            <th className='py-2 text-left font-medium'>
-              {architectureCopy.table.expanded.file}
-            </th>
-            <th className='w-20 py-2 text-center font-medium'>
-              {architectureCopy.table.expanded.usedBy}
-            </th>
-            <th className='w-20 py-2 text-center font-medium'>
-              {architectureCopy.table.expanded.imports}
-            </th>
-            <th className='w-32 py-2 text-center font-medium'>
-              {architectureCopy.table.expanded.structuralPosition}
-            </th>
-            <th className='w-28 py-2 text-center font-medium'>
-              {architectureCopy.table.expanded.changedIn30d}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.files.map((file) => (
-            <tr key={file.filePath} className='border-t border-border/30'>
-              <td
-                className='max-w-xs truncate py-2 font-mono text-xs'
-                title={file.filePath}
-              >
-                {file.filePath.split('/').pop()}
-              </td>
-              <td className='py-2 text-center font-data'>{file.ca}</td>
-              <td className='py-2 text-center font-data'>{file.ce}</td>
-              <td className='py-2'>
-                <div className='flex items-center justify-center gap-2'>
-                  <div className='h-1.5 w-16 overflow-hidden rounded-full bg-border/70'>
-                    <div
-                      className='h-full bg-muted-foreground/50'
-                      style={{ width: `${file.instability * 100}%` }}
-                    />
-                  </div>
-                  <span className='w-8 font-data text-xs text-muted-foreground'>
-                    {file.instability.toFixed(2)}
-                  </span>
-                </div>
-              </td>
-              <td className='py-2 text-center'>
-                {file.evolution && evolutionaryMetricsAvailable
-                  ? formatRelativeChurn(file.evolution.churn30d.relativeChurn)
-                  : 'Unavailable'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <ExpandedModuleReviewPanel
+      folder={data.folder}
+      files={data.files}
+      onNavigateToFile={_onNavigateToFile}
+      evolutionaryMetricsAvailable={evolutionaryMetricsAvailable}
+    />
   )
 }
 
@@ -202,6 +160,7 @@ export function ArchitectureTable({
   folders,
   sortConfig,
   onSort,
+  onNavigateToFile,
   thresholdCalibration,
   evolutionaryMetricsAvailable = true
 }: ArchitectureTableProps) {
@@ -296,6 +255,11 @@ export function ArchitectureTable({
             const isExpanded = expandedRows.has(folder.folderPath)
             const detailsId = createDetailsId(folder.folderPath)
             const riskScore = calculateRiskScore(folder.ca, folder.instability)
+            const folderStructuralRole = resolveStructuralPosition(
+              folder.instability
+            )
+            const folderStructuralRoleLabel =
+              getStructuralPositionBandLabel(folderStructuralRole)
 
             return (
               <Fragment key={folder.folderPath}>
@@ -340,14 +304,19 @@ export function ArchitectureTable({
                     {folder.ce}
                   </td>
                   <td className='px-4 py-3'>
-                    <div className='flex items-center justify-center gap-2'>
-                      <div className='h-1.5 w-16 overflow-hidden rounded-full bg-border/70'>
-                        <div
-                          className={`h-full ${instabilityBarClass}`}
-                          style={{ width: `${folder.instability * 100}%` }}
-                        />
+                    <div className='flex flex-col items-center gap-1.5'>
+                      <div className='flex items-center justify-center gap-2'>
+                        <div className='h-1.5 w-16 overflow-hidden rounded-full bg-border/70'>
+                          <div
+                            className={`h-full ${instabilityBarClass}`}
+                            style={{ width: `${folder.instability * 100}%` }}
+                          />
+                        </div>
+                        <InstabilityBadge value={folder.instability} />
                       </div>
-                      <InstabilityBadge value={folder.instability} />
+                      <span className='text-[11px] font-medium text-muted-foreground'>
+                        {folderStructuralRoleLabel}
+                      </span>
                     </div>
                   </td>
                   <td className='px-4 py-3'>
@@ -368,13 +337,19 @@ export function ArchitectureTable({
                     {folder.evolution && evolutionaryMetricsAvailable ? (
                       <div className='flex flex-col items-center gap-1'>
                         <span>{folder.evolution.hotspotScore.toFixed(2)}</span>
-                        <HotspotStatusLabel
-                          status={folder.evolution.hotspotStatus}
-                          labelOverride={getHotspotLabel(
-                            folder.evolution.hotspotStatus
-                          )}
-                          className='text-xs text-muted-foreground'
-                        />
+                        {folder.evolution.hotspotStatus !== 'stable' ? (
+                          <HotspotStatusLabel
+                            status={folder.evolution.hotspotStatus}
+                            labelOverride={getHotspotLabel(
+                              folder.evolution.hotspotStatus
+                            )}
+                            className='text-xs text-muted-foreground'
+                          />
+                        ) : (
+                          <span className='sr-only'>
+                            Stable hotspot baseline
+                          </span>
+                        )}
                       </div>
                     ) : (
                       'Unavailable'
@@ -387,6 +362,7 @@ export function ArchitectureTable({
                       <div id={detailsId}>
                         <ExpandedRow
                           folderPath={folder.folderPath}
+                          onNavigateToFile={onNavigateToFile}
                           evolutionaryMetricsAvailable={
                             evolutionaryMetricsAvailable
                           }

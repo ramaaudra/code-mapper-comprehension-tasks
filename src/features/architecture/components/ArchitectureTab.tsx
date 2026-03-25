@@ -86,7 +86,7 @@ export function ArchitectureTab() {
             {avgInstability.toFixed(2)}
           </span>
           {foldersWithCycles > 0 && (
-            <span className='text-red-400'>
+            <span className='text-destructive'>
               {architectureCopy.tab.modulesInCycles(foldersWithCycles)}
             </span>
           )}

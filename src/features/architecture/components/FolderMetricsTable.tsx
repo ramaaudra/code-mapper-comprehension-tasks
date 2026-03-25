@@ -50,6 +50,17 @@ interface FolderMetricsTableProps {
   thresholdCalibration?: ReviewThresholdCalibration
 }
 
+function resolveAriaSort(
+  columnKey: SortKey,
+  sortConfig: SortConfig
+): 'ascending' | 'descending' | 'none' {
+  if (sortConfig.key !== columnKey) {
+    return 'none'
+  }
+
+  return sortConfig.direction === 'asc' ? 'ascending' : 'descending'
+}
+
 export function FolderMetricsTable({
   folders,
   sortConfig,
@@ -101,10 +112,19 @@ export function FolderMetricsTable({
           {columns.map((col) => (
             <th
               key={col.key}
-              className={`cursor-pointer select-none px-3 py-2 font-medium text-muted-foreground hover:bg-muted/50 ${col.className}`}
-              onClick={() => handleSort(col.key)}
+              scope='col'
+              aria-sort={resolveAriaSort(col.key, sortConfig)}
+              className={`px-3 py-2 font-medium text-muted-foreground ${col.className}`}
             >
-              <span className='inline-flex items-center gap-1'>
+              <button
+                type='button'
+                onClick={() => handleSort(col.key)}
+                className={`inline-flex w-full items-center gap-1 rounded-md px-2 py-2 text-inherit transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                  col.key === 'folderPath'
+                    ? 'justify-start text-left'
+                    : 'justify-center text-center'
+                }`}
+              >
                 {col.label}
                 {sortConfig.key === col.key && (
                   <span className='text-foreground'>
@@ -115,7 +135,7 @@ export function FolderMetricsTable({
                     )}
                   </span>
                 )}
-              </span>
+              </button>
             </th>
           ))}
         </tr>

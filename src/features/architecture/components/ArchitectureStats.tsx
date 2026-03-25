@@ -19,7 +19,7 @@ export function ArchitectureStats({
 }: ArchitectureStatsProps) {
   return (
     <div className='space-y-3'>
-      <div className='grid grid-cols-3 gap-3'>
+      <div className='grid grid-cols-1 gap-3 sm:grid-cols-3'>
         <MetricValueCard
           value={ca}
           label={METRIC_LABELS.dependentsCa}
@@ -39,9 +39,9 @@ export function ArchitectureStats({
       </div>
 
       {hasCycle && (
-        <div className='flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3'>
-          <WarningCircle size={14} className='text-red-400' weight='fill' />
-          <span className='text-xs text-red-400'>
+        <div className='flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3'>
+          <WarningCircle size={14} className='text-destructive' weight='fill' />
+          <span className='text-xs text-destructive'>
             Involved in circular dependency
           </span>
         </div>
