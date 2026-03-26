@@ -39,9 +39,13 @@ export function ArchitectureStats({
       </div>
 
       {hasCycle && (
-        <div className='flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3'>
-          <WarningCircle size={14} className='text-destructive' weight='fill' />
-          <span className='text-xs text-destructive'>
+        <div className='flex items-center gap-2 rounded-lg border border-status-critical-border bg-status-critical-surface p-3'>
+          <WarningCircle
+            size={14}
+            className='text-status-critical-foreground'
+            weight='fill'
+          />
+          <span className='text-xs text-status-critical-foreground'>
             Involved in circular dependency
           </span>
         </div>

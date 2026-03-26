@@ -228,74 +228,79 @@ export function IssuesPanel({
       </Card>
 
       <Card className='overflow-hidden'>
-        <CardHeader className='pb-3'>
-          <div className='flex items-center justify-between gap-3'>
-            <div className='space-y-1'>
-              <div className='flex items-center gap-2'>
-                <Ghost className='h-4 w-4 text-muted-foreground' />
-                <span className='text-sm font-medium'>
-                  {dashboardCopy.issuesPanel.cleanup.title}
-                </span>
-              </div>
-              <p className='text-xs text-muted-foreground'>
-                {dashboardCopy.issuesPanel.cleanup.description}
-              </p>
-            </div>
-
-            <Dialog
-              open={orphansDialogOpen}
-              onOpenChange={setOrphansDialogOpen}
+        <Dialog open={orphansDialogOpen} onOpenChange={setOrphansDialogOpen}>
+          <DialogTrigger asChild>
+            <button
+              type='button'
+              className='group flex w-full flex-col gap-3 px-4 py-4 text-left transition-colors duration-200 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:flex-row sm:items-start sm:justify-between'
             >
-              <DialogTrigger asChild>
+              <div className='min-w-0 space-y-1'>
+                <div className='flex items-center gap-2'>
+                  <Ghost className='h-4 w-4 text-muted-foreground' />
+                  <span className='text-sm font-medium'>
+                    {dashboardCopy.issuesPanel.cleanup.title}
+                  </span>
+                </div>
+                <p className='text-xs leading-relaxed text-muted-foreground'>
+                  {dashboardCopy.issuesPanel.cleanup.description}
+                </p>
+              </div>
+
+              <div className='flex shrink-0 items-center gap-2 sm:justify-end'>
                 <Badge
                   variant={orphans.length > 0 ? 'outline' : 'secondary'}
-                  className='cursor-pointer hover:opacity-80'
+                  className='shrink-0'
                 >
                   {orphans.length}
                 </Badge>
-              </DialogTrigger>
-              <DialogContent className='max-w-2xl'>
-                <DialogHeader>
-                  <DialogTitle className='flex items-center gap-2'>
-                    <Ghost className='h-5 w-5 text-muted-foreground' />
-                    Orphaned Files ({orphans.length})
-                  </DialogTitle>
-                </DialogHeader>
-                <div className='max-h-96 space-y-2 overflow-y-auto p-2'>
-                  {orphans.length === 0 ? (
-                    <div className='py-8 text-center text-muted-foreground'>
-                      <Ghost className='mx-auto h-12 w-12 opacity-50' />
-                      <p>✅ No orphaned files found!</p>
-                      <p className='mt-1 text-xs'>
-                        All files are properly referenced.
-                      </p>
-                    </div>
-                  ) : (
-                    orphans.map((file: string) => (
-                      <button
-                        key={file}
-                        type='button'
-                        onClick={() => {
-                          onNavigateToFile?.(file)
-                          setOrphansDialogOpen(false)
-                        }}
-                        className='w-full rounded-lg bg-muted/20 px-3 py-3 text-left transition hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
-                        title={file}
-                      >
-                        <p className='font-mono text-sm font-medium text-foreground'>
-                          {getBasename(file)}
-                        </p>
-                        <p className='mt-1 truncate font-mono text-xs text-muted-foreground'>
-                          {getRelativePath(file)}
-                        </p>
-                      </button>
-                    ))
-                  )}
+                <span className='inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors duration-200 group-hover:text-foreground'>
+                  {dashboardCopy.issuesPanel.cleanup.cta}
+                  <ArrowRight className='h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5' />
+                </span>
+              </div>
+            </button>
+          </DialogTrigger>
+          <DialogContent className='max-w-2xl'>
+            <DialogHeader>
+              <DialogTitle className='flex items-center gap-2'>
+                <Ghost className='h-5 w-5 text-muted-foreground' />
+                {dashboardCopy.issuesPanel.cleanup.formalTitle} (
+                {orphans.length})
+              </DialogTitle>
+            </DialogHeader>
+            <div className='max-h-96 space-y-2 overflow-y-auto p-2'>
+              {orphans.length === 0 ? (
+                <div className='py-8 text-center text-muted-foreground'>
+                  <Ghost className='mx-auto h-12 w-12 opacity-50' />
+                  <p>{dashboardCopy.issuesPanel.cleanup.emptyTitle}</p>
+                  <p className='mt-1 text-xs'>
+                    {dashboardCopy.issuesPanel.cleanup.emptyDescription}
+                  </p>
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardHeader>
+              ) : (
+                orphans.map((file: string) => (
+                  <button
+                    key={file}
+                    type='button'
+                    onClick={() => {
+                      onNavigateToFile?.(file)
+                      setOrphansDialogOpen(false)
+                    }}
+                    className='w-full rounded-lg bg-muted/20 px-3 py-3 text-left transition hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
+                    title={file}
+                  >
+                    <p className='font-mono text-sm font-medium text-foreground'>
+                      {getBasename(file)}
+                    </p>
+                    <p className='mt-1 truncate font-mono text-xs text-muted-foreground'>
+                      {getRelativePath(file)}
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </Card>
     </div>
   )

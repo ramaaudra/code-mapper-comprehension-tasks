@@ -21,6 +21,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
+import { reachabilityCopy } from '@/shared/content/reachabilityCopy'
 import { getBasename, getRelativePath } from '@/shared/lib/utils'
 
 import type {
@@ -189,7 +190,7 @@ export default function MetricsPanel({
           <HealthIndicator
             value={codebaseHealth.orphanCount}
             total={totalFiles}
-            label='Orphaned Files'
+            label={reachabilityCopy.collectionTitle}
             icon={<AlertCircle size={16} />}
           />
           <HealthIndicator

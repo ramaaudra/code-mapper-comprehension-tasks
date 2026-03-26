@@ -1,3 +1,4 @@
+import { reachabilityCopy } from '@/shared/content/reachabilityCopy'
 import {
   getAssessmentMethodItemsFromCatalog,
   getChangePressureBandLabel,
@@ -99,12 +100,16 @@ export function getDecisionHeadlineCopy(params: {
 }): string {
   const { title, impactScope, changePressure, hasCycle, isOrphan } = params
 
-  if (isOrphan) {
-    return 'Appears isolated in the current analysis'
+  if (hasCycle && isOrphan) {
+    return 'Circular dependency in a possibly unreachable path'
   }
 
   if (hasCycle) {
     return 'Circular dependency requires extra care'
+  }
+
+  if (isOrphan) {
+    return 'Possibly unreachable from detected entry points'
   }
 
   if (title === 'Critical Hotspot') {
@@ -145,8 +150,12 @@ export function getDecisionBasisSummaryCopy(params: {
 }): string {
   const { hasCycle, isOrphan, changeHistoryAvailable = true } = params
 
-  if (isOrphan) {
-    return 'Based on graph isolation in the current analysis.'
+  if (hasCycle && isOrphan) {
+    if (!changeHistoryAvailable) {
+      return 'Based on cycle participation and entry-point reachability in the current analysis. Git history is unavailable for recent change signals.'
+    }
+
+    return 'Based on cycle participation, entry-point reachability, and recent change pressure.'
   }
 
   if (hasCycle) {
@@ -154,6 +163,10 @@ export function getDecisionBasisSummaryCopy(params: {
       return 'Based on cycle participation and downstream impact. Git history is unavailable for recent change signals.'
     }
     return 'Based on cycle participation, downstream impact, and recent change pressure.'
+  }
+
+  if (isOrphan) {
+    return 'Based on entry-point reachability in the current analysis.'
   }
 
   if (!changeHistoryAvailable) {
@@ -165,22 +178,44 @@ export function getDecisionBasisSummaryCopy(params: {
 
 export function getOrphanDecisionCopy() {
   return {
-    summary: 'This file appears isolated in the current analysis.',
-    whyItMatters:
-      'No dependents were detected in the current graph, so change impact is usually more contained than in shared files.',
+    summary: reachabilityCopy.detailDescription,
+    whyItMatters: `It may be a cleanup candidate, but ${reachabilityCopy.verificationHint.toLowerCase()} before you treat it as safe to remove.`,
     actions: [
-      'Verify whether this file is still used through dynamic imports, tests, or scripts.',
-      'If it is truly unused, consider cleanup or consolidation.'
+      'Verify whether this path is still used through runtime loading, tests, scripts, or dynamic imports.',
+      'If the path is truly unused, consider cleanup or consolidation after confirmation.'
     ],
     topDrivers: [
-      'No dependents were detected in the current graph.',
-      'This area appears more isolated than shared files.',
-      'Cleanup may be easier here than in broadly reused areas.'
+      `The current entry-point analysis did not reach this path.`,
+      'This may be easier to clean up than broadly reused areas.',
+      'Verification is still needed before you treat it as safe to remove.'
     ]
   }
 }
 
-export function getCycleDecisionCopy(subject: Subject) {
+export function getCycleDecisionCopy(
+  subject: Subject,
+  options?: {
+    isPossiblyUnreachable?: boolean
+  }
+) {
+  if (options?.isPossiblyUnreachable) {
+    return {
+      summary: `This ${subject} sits in a circular dependency. Entry-point analysis also did not reach this path, but the cycle risk still takes priority.`,
+      whyItMatters:
+        'Do not treat this as a safe cleanup candidate until the full cycle and any runtime usage are verified.',
+      actions: [
+        'Review the full dependency cycle before merging.',
+        'Verify whether runtime loading, tests, scripts, or dynamic imports still reach this path.',
+        'Avoid deleting or refactoring it as isolated work until the cycle is understood.'
+      ],
+      topDrivers: [
+        'This area participates in a circular dependency.',
+        'The current entry-point analysis did not reach this path.',
+        'Cycle risk still dominates because changes can feed back through the same dependency chain.'
+      ]
+    }
+  }
+
   return {
     summary: `This ${subject} sits in a circular dependency and needs careful review.`,
     whyItMatters:

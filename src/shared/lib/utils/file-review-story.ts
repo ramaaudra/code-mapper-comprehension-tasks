@@ -59,7 +59,7 @@ function mapDecisionToneToStoryTone(
 function createGraphBadgeLabel(assessment: DecisionAssessment): string | null {
   if (
     assessment.title === 'Circular Dependency' ||
-    assessment.title === 'Possibly Unused File'
+    assessment.title === 'Possibly Unreachable'
   ) {
     return null
   }

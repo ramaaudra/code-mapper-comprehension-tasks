@@ -39,6 +39,22 @@ export function DecisionStorySection({
   fallbackActionLead = 'Review this area carefully.',
   className
 }: DecisionStorySectionProps) {
+  const secondaryEvidence: Array<{ label: string; helper: ReactNode }> = []
+
+  if (evidenceHelpers?.dependencies) {
+    secondaryEvidence.push({
+      label: decisionCopy.evidence.labels.dependencies,
+      helper: evidenceHelpers.dependencies
+    })
+  }
+
+  if (evidenceHelpers?.architectureRole) {
+    secondaryEvidence.push({
+      label: decisionCopy.evidence.labels.architectureRole,
+      helper: evidenceHelpers.architectureRole
+    })
+  }
+
   return (
     <div className={cn('space-y-3', className)}>
       <DiagnosisCard
@@ -83,6 +99,24 @@ export function DecisionStorySection({
           helper={evidenceHelpers?.changeActivity}
         />
       </div>
+
+      {secondaryEvidence.length > 0 ? (
+        <div className='grid gap-3 sm:grid-cols-2'>
+          {secondaryEvidence.map((item) => (
+            <div
+              key={item.label}
+              className='rounded-lg border border-border bg-muted/25 p-3'
+            >
+              <p className='text-xs font-semibold uppercase tracking-wide text-muted-foreground'>
+                {item.label}
+              </p>
+              <div className='mt-1.5 text-xs leading-relaxed text-foreground/80'>
+                {item.helper}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }

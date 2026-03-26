@@ -42,7 +42,7 @@ export type DecisionStatusTone =
 
 export type DecisionTitle =
   | 'Circular Dependency'
-  | 'Possibly Unused File'
+  | 'Possibly Unreachable'
   | 'Critical Hotspot'
   | 'Active but Local'
   | 'Shared Foundation'
@@ -201,7 +201,7 @@ function getDecisionTitle(
   impactScope: ImpactScope,
   changePressure: ChangePressure,
   changeHistoryAvailable: boolean
-): Exclude<DecisionTitle, 'Possibly Unused File'> {
+): Exclude<DecisionTitle, 'Possibly Unreachable'> {
   if (!changeHistoryAvailable) {
     return impactScope === 'Broad' ? 'Shared Foundation' : 'Likely Local Change'
   }
@@ -266,6 +266,32 @@ function createLikelyLocalChangeCopy(params: {
   return getLikelyLocalDecisionCopy(params)
 }
 
+function resolveDecisionTitle(params: {
+  hasCycle: boolean
+  isOrphan: boolean
+  impactScope: ImpactScope
+  changePressure: ChangePressure
+  changeHistoryAvailable: boolean
+}): DecisionTitle {
+  const {
+    hasCycle,
+    isOrphan,
+    impactScope,
+    changePressure,
+    changeHistoryAvailable
+  } = params
+
+  if (hasCycle) {
+    return 'Circular Dependency'
+  }
+
+  if (isOrphan) {
+    return 'Possibly Unreachable'
+  }
+
+  return getDecisionTitle(impactScope, changePressure, changeHistoryAvailable)
+}
+
 function getDecisionTone(
   title: DecisionTitle,
   hasCycle: boolean
@@ -298,10 +324,6 @@ function getReviewPriority(params: {
 }): ReviewPriority {
   const { title, hasCycle, impactScope, changePressure, isOrphan } = params
 
-  if (isOrphan) {
-    return 'Low Review Priority'
-  }
-
   if (
     hasCycle ||
     title === 'Critical Hotspot' ||
@@ -312,6 +334,10 @@ function getReviewPriority(params: {
 
   if (title === 'Active but Local' || title === 'Shared Foundation') {
     return 'High Review Priority'
+  }
+
+  if (isOrphan) {
+    return 'Low Review Priority'
   }
 
   if (impactScope === 'Moderate' || changePressure === 'Moderate') {
@@ -349,40 +375,13 @@ export function createDecisionAssessment(
     kind
   )
   const structuralPosition = resolveStructuralPosition(instability)
-
-  if (isOrphan) {
-    const copy = getOrphanDecisionCopy()
-
-    return {
-      headline: getDiagnosisHeadline({
-        title: 'Possibly Unused File',
-        impactScope,
-        changePressure,
-        hasCycle,
-        isOrphan
-      }),
-      title: 'Possibly Unused File',
-      basisSummary: getBasisSummary({
-        hasCycle,
-        isOrphan,
-        changeHistoryAvailable
-      }),
-      summary: copy.summary,
-      whyItMatters: copy.whyItMatters,
-      actions: copy.actions,
-      topDrivers: copy.topDrivers,
-      reviewPriority: 'Low Review Priority',
-      impactScope: 'Local',
-      changePressure,
-      externalReliance,
-      structuralPosition,
-      tone: 'success'
-    }
-  }
-
-  const title = hasCycle
-    ? 'Circular Dependency'
-    : getDecisionTitle(impactScope, changePressure, changeHistoryAvailable)
+  const title = resolveDecisionTitle({
+    hasCycle,
+    isOrphan,
+    impactScope,
+    changePressure,
+    changeHistoryAvailable
+  })
   const reviewPriority = getReviewPriority({
     title,
     hasCycle,
@@ -405,7 +404,9 @@ export function createDecisionAssessment(
   })
 
   if (hasCycle) {
-    const copy = getCycleDecisionCopy(subject)
+    const copy = getCycleDecisionCopy(subject, {
+      isPossiblyUnreachable: isOrphan
+    })
 
     return {
       headline,
@@ -417,6 +418,26 @@ export function createDecisionAssessment(
       topDrivers: copy.topDrivers,
       reviewPriority,
       impactScope,
+      changePressure,
+      externalReliance,
+      structuralPosition,
+      tone
+    }
+  }
+
+  if (title === 'Possibly Unreachable') {
+    const copy = getOrphanDecisionCopy()
+
+    return {
+      headline,
+      title,
+      basisSummary: resolvedBasisSummary,
+      summary: copy.summary,
+      whyItMatters: copy.whyItMatters,
+      actions: copy.actions,
+      topDrivers: copy.topDrivers,
+      reviewPriority,
+      impactScope: 'Local',
       changePressure,
       externalReliance,
       structuralPosition,

@@ -9,10 +9,13 @@ interface ReviewPriorityBadgeProps {
 }
 
 const toneClasses = {
-  danger: 'border-red-500/35 bg-red-500/10 text-red-600',
-  warning: 'border-amber-500/35 bg-amber-500/10 text-amber-600',
-  info: 'border-sky-500/35 bg-sky-500/10 text-sky-600',
-  success: 'border-emerald-500/35 bg-emerald-500/10 text-emerald-600',
+  danger:
+    'border-status-critical-border bg-status-critical-surface text-status-critical-foreground',
+  warning:
+    'border-status-warning-border bg-status-warning-surface text-status-warning-foreground',
+  info: 'border-primary/20 bg-primary/10 text-primary',
+  success:
+    'border-status-success-border bg-status-success-surface text-status-success-foreground',
   default: 'border-border bg-muted/60 text-foreground'
 } as const
 

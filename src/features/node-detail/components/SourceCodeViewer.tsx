@@ -152,12 +152,14 @@ export function SourceCodeViewer({
           <span className='text-xs text-muted-foreground'>{language}</span>
           <button
             onClick={handleCopy}
+            type='button'
             className='rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
             title='Copy code'
+            aria-label='Copy code'
           >
             {copied ? (
               <CheckCircle
-                className='h-3.5 w-3.5 text-green-500'
+                className='h-3.5 w-3.5 text-status-success-foreground'
                 weight='fill'
               />
             ) : (
@@ -171,7 +173,7 @@ export function SourceCodeViewer({
           </pre>
         </ScrollArea>
         {hasMoreLines && (
-          <div className='border-t border-border bg-yellow-500/10 px-4 py-2 text-xs text-yellow-600'>
+          <div className='border-t border-status-warning-border bg-status-warning-surface px-4 py-2 text-xs text-status-warning-foreground'>
             Showing first {maxLines} of {lines.length.toLocaleString()} lines
           </div>
         )}
@@ -200,13 +202,14 @@ export function SourceCodeViewer({
         </div>
         <button
           onClick={handleCopy}
+          type='button'
           className='flex items-center gap-1.5 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
           title='Copy code'
         >
           {copied ? (
             <>
               <CheckCircle
-                className='h-3.5 w-3.5 text-green-500'
+                className='h-3.5 w-3.5 text-status-success-foreground'
                 weight='fill'
               />
               <span>Copied!</span>
@@ -248,7 +251,7 @@ export function SourceCodeViewer({
                 const { key: _lineKey, ...restLineProps } = lineProps
                 return (
                   <div
-                    key={i}
+                    key={String(_lineKey)}
                     {...restLineProps}
                     className='table-row'
                     style={{ display: 'table-row' }}
@@ -278,7 +281,7 @@ export function SourceCodeViewer({
 
       {/* Warning for large files */}
       {hasMoreLines && (
-        <div className='flex flex-none items-center gap-2 border-t border-border bg-yellow-500/10 px-4 py-2 text-xs text-yellow-600'>
+        <div className='flex flex-none items-center gap-2 border-t border-status-warning-border bg-status-warning-surface px-4 py-2 text-xs text-status-warning-foreground'>
           <span>
             Large file detected. Showing first {maxLines} of{' '}
             {lines.length.toLocaleString()} lines.

@@ -226,8 +226,23 @@ test('createFileReviewStory suppresses duplicate graph and tree indicators for o
     isOrphan: true
   })
 
-  assert.equal(story.assessment.title, 'Possibly Unused File')
+  assert.equal(story.assessment.title, 'Possibly Unreachable')
   assert.equal(story.graphBadgeLabel, null)
   assert.equal(story.showGraphBadge, false)
   assert.equal(story.showTreeIndicator, false)
+  assert.doesNotMatch(story.assessment.title, /unused/i)
+})
+
+test('createFileReviewStory keeps cycle-first reasoning when a file is both orphaned and in a cycle', () => {
+  const story = createFileReviewStory({
+    filePath: 'src/cycle-orphan.ts',
+    riskProfile: createRiskProfile('src/cycle-orphan.ts', 2, 1, 0.67),
+    hasCycle: true,
+    isOrphan: true
+  })
+
+  assert.equal(story.assessment.title, 'Circular Dependency')
+  assert.equal(story.assessment.reviewPriority, 'Critical Review Priority')
+  assert.equal(story.badgeTone, 'danger')
+  assert.match(story.shortReason, /circular dependency/i)
 })

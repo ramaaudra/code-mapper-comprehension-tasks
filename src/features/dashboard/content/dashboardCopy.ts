@@ -1,3 +1,5 @@
+import { reachabilityCopy } from '@/shared/content/reachabilityCopy'
+
 export const dashboardCopy = {
   page: {
     title: 'Project Overview',
@@ -104,7 +106,13 @@ export const dashboardCopy = {
     },
     cleanup: {
       title: 'Cleanup candidates',
-      description: 'These files may be removable after a quick validation pass.'
+      description:
+        'Open the list to confirm whether these files are still used before deleting anything.',
+      cta: 'Open cleanup list',
+      formalTitle: reachabilityCopy.collectionTitle,
+      emptyTitle: `No ${reachabilityCopy.collectionTitle.toLowerCase()} found.`,
+      emptyDescription:
+        'All files were reached from the detected entry points in the current analysis.'
     }
   },
   architectureHealth: {

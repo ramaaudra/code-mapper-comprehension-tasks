@@ -151,7 +151,7 @@ export function buildOverviewReviewQueue(
         'These files may be removable, but they are lower priority than active structural risk.',
       recommendedAction:
         'Check dynamic imports, scripts, and tests before deleting anything.',
-      evidenceLabel: `${input.orphanCount} possible orphan${input.orphanCount === 1 ? '' : 's'}`,
+      evidenceLabel: `${input.orphanCount} possible unreachable file${input.orphanCount === 1 ? '' : 's'}`,
       target: {
         kind: 'issues',
         ctaLabel: 'Review current issues'

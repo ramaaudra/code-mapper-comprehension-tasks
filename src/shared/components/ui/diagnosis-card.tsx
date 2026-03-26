@@ -35,28 +35,28 @@ const toneStyles: Record<
     taxonomy: 'text-muted-foreground'
   },
   info: {
-    container: 'border-sky-500/35 bg-sky-500/5',
-    icon: 'text-sky-500',
-    headline: 'text-sky-600',
-    taxonomy: 'text-sky-600/80'
+    container: 'border-primary/20 bg-primary/5',
+    icon: 'text-primary',
+    headline: 'text-primary',
+    taxonomy: 'text-primary/80'
   },
   success: {
-    container: 'border-emerald-500/35 bg-emerald-500/5',
-    icon: 'text-emerald-500',
-    headline: 'text-emerald-600',
-    taxonomy: 'text-emerald-600/80'
+    container: 'border-status-success-border bg-status-success-surface',
+    icon: 'text-status-success-foreground',
+    headline: 'text-status-success-foreground',
+    taxonomy: 'text-status-success-foreground/80'
   },
   warning: {
-    container: 'border-amber-500/35 bg-amber-500/5',
-    icon: 'text-amber-500',
-    headline: 'text-amber-600',
-    taxonomy: 'text-amber-600/80'
+    container: 'border-status-warning-border bg-status-warning-surface',
+    icon: 'text-status-warning-foreground',
+    headline: 'text-status-warning-foreground',
+    taxonomy: 'text-status-warning-foreground/80'
   },
   danger: {
-    container: 'border-destructive/35 bg-destructive/5',
-    icon: 'text-destructive',
-    headline: 'text-destructive',
-    taxonomy: 'text-destructive/80'
+    container: 'border-status-critical-border bg-status-critical-surface',
+    icon: 'text-status-critical-foreground',
+    headline: 'text-status-critical-foreground',
+    taxonomy: 'text-status-critical-foreground/80'
   }
 }
 

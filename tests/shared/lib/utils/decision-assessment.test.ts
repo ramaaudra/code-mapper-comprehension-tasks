@@ -24,7 +24,7 @@ test('createDecisionAssessment labels cycle findings as circular dependency', ()
   assert.equal(assessment.reviewPriority, 'Critical Review Priority')
 })
 
-test('createDecisionAssessment marks orphan files as possibly unused with low priority', () => {
+test('createDecisionAssessment marks unreachable files with low priority when no stronger structural risk is present', () => {
   const assessment = createDecisionAssessment({
     kind: 'file',
     hasCycle: false,
@@ -35,9 +35,52 @@ test('createDecisionAssessment marks orphan files as possibly unused with low pr
     isOrphan: true
   })
 
-  assert.equal(assessment.title, 'Possibly Unused File')
+  assert.equal(assessment.title, 'Possibly Unreachable')
   assert.equal(assessment.reviewPriority, 'Low Review Priority')
   assert.equal(assessment.impactScope, 'Local')
+  assert.doesNotMatch(assessment.title, /unused/i)
+})
+
+test('createDecisionAssessment keeps cycle risk as the dominant verdict when a file is also marked orphaned', () => {
+  const assessment = createDecisionAssessment({
+    kind: 'file',
+    hasCycle: true,
+    ca: 2,
+    ce: 1,
+    instability: 1 / 3,
+    relativeChurn30d: 0,
+    isOrphan: true
+  })
+
+  assert.equal(assessment.title, 'Circular Dependency')
+  assert.equal(assessment.reviewPriority, 'Critical Review Priority')
+  assert.equal(assessment.tone, 'danger')
+  assert.match(assessment.headline, /circular dependency/i)
+  assert.match(
+    assessment.basisSummary,
+    /entry-point reachability|current entry-point/i
+  )
+  assert.doesNotMatch(assessment.summary, /appears isolated/i)
+})
+
+test('createDecisionAssessment describes orphan findings as entry-point reachability, not missing dependents', () => {
+  const assessment = createDecisionAssessment({
+    kind: 'file',
+    hasCycle: false,
+    ca: 0,
+    ce: 1,
+    instability: 1,
+    relativeChurn30d: 0,
+    isOrphan: true
+  })
+
+  assert.match(assessment.headline, /entry points|unreachable/i)
+  assert.match(assessment.summary, /entry-point analysis|not reached/i)
+  assert.doesNotMatch(assessment.whyItMatters, /no dependents were detected/i)
+  assert.doesNotMatch(
+    assessment.topDrivers.join(' '),
+    /no dependents were detected/i
+  )
 })
 
 test('createDecisionAssessment keeps isolated zero-coupling files in low-pressure local diagnosis', () => {

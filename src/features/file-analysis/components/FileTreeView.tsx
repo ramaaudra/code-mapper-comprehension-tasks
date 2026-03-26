@@ -17,6 +17,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
+import { reachabilityCopy } from '@/shared/content/reachabilityCopy'
 import { getFileIcon, hasMatchInSet, normalizePath } from '@/shared/lib/utils'
 
 import { useFileAnalysisContext } from '../context/FileAnalysisContext'
@@ -139,7 +140,10 @@ const createNodeRenderer = (
                   <Ghost className='h-3.5 w-3.5 text-muted-foreground' />
                 </TooltipTrigger>
                 <TooltipContent side='right'>
-                  <p className='text-xs'>Orphan: Not imported by any file</p>
+                  <p className='text-xs'>
+                    {reachabilityCopy.treeTooltipTitle}:{' '}
+                    {reachabilityCopy.treeTooltipDescription}
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -184,7 +188,8 @@ const createNodeRenderer = (
                 </TooltipTrigger>
                 <TooltipContent side='right'>
                   <p className='text-xs'>
-                    Will become orphan if simulated file is deleted
+                    {reachabilityCopy.simulationBadge} if the simulated file is
+                    deleted
                   </p>
                 </TooltipContent>
               </Tooltip>

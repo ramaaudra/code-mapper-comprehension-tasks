@@ -1,6 +1,7 @@
 import { MarkerType } from '@xyflow/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { reachabilityCopy } from '@/shared/content/reachabilityCopy'
 import {
   buildFileReviewStoryMap,
   getFileEvolutionMetrics,
@@ -287,7 +288,10 @@ export function useGraphGeneration({
             }
 
             if (hasMatchInSet(orphanFilesSet, normalizedPath)) {
-              badges.push({ label: 'Orphan', tone: 'warning' })
+              badges.push({
+                label: reachabilityCopy.badgeCompact,
+                tone: 'warning'
+              })
             }
 
             if (hasMatchInSet(brokenFilesSet, normalizedPath)) {
@@ -295,7 +299,10 @@ export function useGraphGeneration({
             }
 
             if (hasMatchInSet(newOrphansSet, normalizedPath)) {
-              badges.push({ label: 'Sim Result: Orphan', tone: 'info' })
+              badges.push({
+                label: reachabilityCopy.simulationBadge,
+                tone: 'info'
+              })
             }
 
             const reviewStory =

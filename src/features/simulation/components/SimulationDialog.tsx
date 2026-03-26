@@ -5,6 +5,7 @@ import {
   DialogTitle
 } from '@/shared/components/ui/dialog'
 import { FileWarning, FileX } from '@/shared/components/ui/icons'
+import { reachabilityCopy } from '@/shared/content/reachabilityCopy'
 import { getBasename } from '@/shared/lib/utils/path'
 
 import type { SimulationResult } from '../hooks/useSimulation'
@@ -46,16 +47,17 @@ export function SimulationDialog({ result, onClose }: SimulationDialogProps) {
             </div>
           </div>
 
-          {/* New Orphans Section */}
+          {/* Reachability follow-up section */}
           <div>
             <h3 className='flex items-center gap-2 font-semibold'>
               <FileX className='h-5 w-5 text-yellow-500' />
-              New Orphans ({result?.newOrphans.length || 0})
+              {reachabilityCopy.simulationSectionTitle} (
+              {result?.newOrphans.length || 0})
             </h3>
             <div className='mt-2 max-h-40 space-y-1 overflow-y-auto'>
               {result?.newOrphans.length === 0 ? (
                 <p className='text-sm italic text-muted-foreground'>
-                  No files will become orphans
+                  {reachabilityCopy.simulationEmpty}
                 </p>
               ) : (
                 result?.newOrphans.map((file) => (

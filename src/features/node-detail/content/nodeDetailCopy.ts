@@ -1,3 +1,5 @@
+import { reachabilityCopy } from '@/shared/content/reachabilityCopy'
+
 export const nodeDetailCopy = {
   tabs: {
     overview: 'Overview',
@@ -36,22 +38,17 @@ export const nodeDetailCopy = {
   },
   orphan: {
     sectionTitle: 'File Status',
-    title: 'Orphaned File (Unused)',
-    description:
-      'This file has 0 dependents and is not an entry point in the current analysis. It is likely unused and worth reviewing for cleanup.',
-    footer:
-      'Tip: Verify whether this is a test file, a script, or a dynamic import before deleting it. False positives may occur.'
+    title: reachabilityCopy.title,
+    description: `${reachabilityCopy.detailDescription} It may be a cleanup candidate, but runtime usage still needs verification before you treat it as safe to remove.`,
+    footer: `Tip: ${reachabilityCopy.verificationHint} Entry-point analysis can miss valid usage paths.`
   },
   blastRadius: {
     sectionTitle: 'Supporting Verification Signal',
     tooltipTitle: 'Blast Radius',
     tooltipDescription:
-      'Blast Radius estimates how many nearby files may require verification after this file changes.',
+      'Use this to estimate how broad your verification may need to be after this file changes.',
     tooltipInterpretation:
-      'A higher score suggests a broader local impact and a larger verification surface after a change.',
-    criticalTitle: 'Critical Circular Dependency',
-    criticalDescription:
-      'This file is part of a circular dependency chain. Changes can increase initialization, runtime, and maintenance risks.',
+      'Higher scores suggest broader review and testing may be needed before you merge a change here.',
     godObjectTitle: 'God Object Detected',
     godObjectDescription: (ce: number) =>
       `This file depends on ${ce} other files. Consider splitting responsibilities into smaller units.`,
