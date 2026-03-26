@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react'
 
 import { useArchitectureFolders } from '@/features/architecture'
 import {
@@ -91,6 +91,7 @@ export const ProjectDashboard = memo(function ProjectDashboard({
   onShowModuleGraph,
   isLayoutTransitioning
 }: ProjectDashboardProps) {
+  const [cleanupDialogOpen, setCleanupDialogOpen] = useState(false)
   const { data: architectureData } = useArchitectureFolders()
   const evolutionarySummary = analysisData?.evolutionaryMetrics.summary ?? null
   const moduleThresholdCalibration = useMemo(() => {
@@ -303,6 +304,7 @@ export const ProjectDashboard = memo(function ProjectDashboard({
                     items={reviewQueue}
                     onViewModule={onShowModuleGraph}
                     onShowCycleTriage={onShowCycleTriage}
+                    onShowCleanupCandidates={() => setCleanupDialogOpen(true)}
                   />
                 </section>
               )
@@ -322,6 +324,9 @@ export const ProjectDashboard = memo(function ProjectDashboard({
                     data={analysisData}
                     onNavigateToFile={onNavigateToFile}
                     onShowCycleTriage={onShowCycleTriage}
+                    cleanupDialogOpen={cleanupDialogOpen}
+                    onCleanupDialogOpenChange={setCleanupDialogOpen}
+                    onShowCleanupCandidates={() => setCleanupDialogOpen(true)}
                   />
                 </section>
               )

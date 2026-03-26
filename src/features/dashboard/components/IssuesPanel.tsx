@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 import { useCycleTriageItems } from '@/features/cycle-triage'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -9,18 +7,12 @@ import {
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from '@/shared/components/ui/dialog'
 import { AlertTriangle, ArrowRight, Ghost } from '@/shared/components/ui/icons'
 import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
-import { cn, getBasename, getRelativePath } from '@/shared/lib/utils'
+import { cn, getBasename } from '@/shared/lib/utils'
 
 import { dashboardCopy } from '../content/dashboardCopy'
+import { CleanupCandidatesDialog } from './CleanupCandidatesDialog'
 
 import type {
   AnalysisData,
@@ -31,6 +23,9 @@ interface IssuesPanelProps {
   data: AnalysisData | null
   onNavigateToFile?: (file: string) => void
   onShowCycleTriage?: (cycleId?: string) => void
+  cleanupDialogOpen: boolean
+  onCleanupDialogOpenChange: (open: boolean) => void
+  onShowCleanupCandidates?: () => void
 }
 
 const severityBadgeClassMap = {
@@ -53,9 +48,11 @@ function buildFallbackCycleTitle(depInfo: CircularDependencyInfo) {
 export function IssuesPanel({
   data,
   onNavigateToFile,
-  onShowCycleTriage
+  onShowCycleTriage,
+  cleanupDialogOpen,
+  onCleanupDialogOpenChange,
+  onShowCleanupCandidates
 }: IssuesPanelProps) {
-  const [orphansDialogOpen, setOrphansDialogOpen] = useState(false)
   const { items: cycleItems } = useCycleTriageItems(data)
 
   if (!data?.issues) {
@@ -228,79 +225,42 @@ export function IssuesPanel({
       </Card>
 
       <Card className='overflow-hidden'>
-        <Dialog open={orphansDialogOpen} onOpenChange={setOrphansDialogOpen}>
-          <DialogTrigger asChild>
-            <button
-              type='button'
-              className='group flex w-full flex-col gap-3 px-4 py-4 text-left transition-colors duration-200 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:flex-row sm:items-start sm:justify-between'
-            >
-              <div className='min-w-0 space-y-1'>
-                <div className='flex items-center gap-2'>
-                  <Ghost className='h-4 w-4 text-muted-foreground' />
-                  <span className='text-sm font-medium'>
-                    {dashboardCopy.issuesPanel.cleanup.title}
-                  </span>
-                </div>
-                <p className='text-xs leading-relaxed text-muted-foreground'>
-                  {dashboardCopy.issuesPanel.cleanup.description}
-                </p>
-              </div>
-
-              <div className='flex shrink-0 items-center gap-2 sm:justify-end'>
-                <Badge
-                  variant={orphans.length > 0 ? 'outline' : 'secondary'}
-                  className='shrink-0'
-                >
-                  {orphans.length}
-                </Badge>
-                <span className='inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors duration-200 group-hover:text-foreground'>
-                  {dashboardCopy.issuesPanel.cleanup.cta}
-                  <ArrowRight className='h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5' />
-                </span>
-              </div>
-            </button>
-          </DialogTrigger>
-          <DialogContent className='max-w-2xl'>
-            <DialogHeader>
-              <DialogTitle className='flex items-center gap-2'>
-                <Ghost className='h-5 w-5 text-muted-foreground' />
-                {dashboardCopy.issuesPanel.cleanup.formalTitle} (
-                {orphans.length})
-              </DialogTitle>
-            </DialogHeader>
-            <div className='max-h-96 space-y-2 overflow-y-auto p-2'>
-              {orphans.length === 0 ? (
-                <div className='py-8 text-center text-muted-foreground'>
-                  <Ghost className='mx-auto h-12 w-12 opacity-50' />
-                  <p>{dashboardCopy.issuesPanel.cleanup.emptyTitle}</p>
-                  <p className='mt-1 text-xs'>
-                    {dashboardCopy.issuesPanel.cleanup.emptyDescription}
-                  </p>
-                </div>
-              ) : (
-                orphans.map((file: string) => (
-                  <button
-                    key={file}
-                    type='button'
-                    onClick={() => {
-                      onNavigateToFile?.(file)
-                      setOrphansDialogOpen(false)
-                    }}
-                    className='w-full rounded-lg bg-muted/20 px-3 py-3 text-left transition hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
-                    title={file}
-                  >
-                    <p className='font-mono text-sm font-medium text-foreground'>
-                      {getBasename(file)}
-                    </p>
-                    <p className='mt-1 truncate font-mono text-xs text-muted-foreground'>
-                      {getRelativePath(file)}
-                    </p>
-                  </button>
-                ))
-              )}
+        <button
+          type='button'
+          onClick={() => onShowCleanupCandidates?.()}
+          className='group flex w-full flex-col gap-3 px-4 py-4 text-left transition-colors duration-200 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:flex-row sm:items-start sm:justify-between'
+        >
+          <div className='min-w-0 space-y-1'>
+            <div className='flex items-center gap-2'>
+              <Ghost className='h-4 w-4 text-muted-foreground' />
+              <span className='text-sm font-medium'>
+                {dashboardCopy.issuesPanel.cleanup.title}
+              </span>
             </div>
-          </DialogContent>
-        </Dialog>
+            <p className='text-xs leading-relaxed text-muted-foreground'>
+              {dashboardCopy.issuesPanel.cleanup.description}
+            </p>
+          </div>
+
+          <div className='flex shrink-0 items-center gap-2 sm:justify-end'>
+            <Badge
+              variant={orphans.length > 0 ? 'outline' : 'secondary'}
+              className='shrink-0'
+            >
+              {orphans.length}
+            </Badge>
+            <span className='inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors duration-200 group-hover:text-foreground'>
+              {dashboardCopy.issuesPanel.cleanup.cta}
+              <ArrowRight className='h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5' />
+            </span>
+          </div>
+        </button>
+        <CleanupCandidatesDialog
+          open={cleanupDialogOpen}
+          onOpenChange={onCleanupDialogOpenChange}
+          files={orphans}
+          onNavigateToFile={onNavigateToFile}
+        />
       </Card>
     </div>
   )

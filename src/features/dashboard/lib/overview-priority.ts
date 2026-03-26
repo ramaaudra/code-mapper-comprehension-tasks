@@ -25,7 +25,7 @@ export type OverviewReviewTarget =
       value?: undefined
     }
   | {
-      kind: 'issues'
+      kind: 'cleanup'
       ctaLabel: string
       value?: undefined
     }
@@ -153,8 +153,8 @@ export function buildOverviewReviewQueue(
         'Check dynamic imports, scripts, and tests before deleting anything.',
       evidenceLabel: `${input.orphanCount} possible unreachable file${input.orphanCount === 1 ? '' : 's'}`,
       target: {
-        kind: 'issues',
-        ctaLabel: 'Review current issues'
+        kind: 'cleanup',
+        ctaLabel: 'Open cleanup list'
       }
     })
   }

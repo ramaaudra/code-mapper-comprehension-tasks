@@ -123,3 +123,20 @@ test('keeps a single start-here decision surface before the supporting sections'
     'quick-snapshot'
   ])
 })
+
+test('routes cleanup follow-up to the cleanup list with explicit cleanup wording', () => {
+  const queue = buildOverviewReviewQueue({
+    cycleCount: 2,
+    orphanCount: 33,
+    criticalRisks: [],
+    warningRisks: [],
+    topHotspot: null
+  })
+
+  const cleanupItem = queue.find((item) => item.id === 'cleanup-candidates')
+
+  assert.deepEqual(cleanupItem?.target, {
+    kind: 'cleanup',
+    ctaLabel: 'Open cleanup list'
+  })
+})

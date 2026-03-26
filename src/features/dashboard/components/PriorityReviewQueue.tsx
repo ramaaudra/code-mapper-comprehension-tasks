@@ -23,6 +23,7 @@ interface PriorityReviewQueueProps {
   items: OverviewReviewQueueItem[]
   onViewModule?: (modulePath: string) => void
   onShowCycleTriage?: (cycleId?: string) => void
+  onShowCleanupCandidates?: () => void
 }
 
 function getQueueItemIcon(item: OverviewReviewQueueItem): React.ReactNode {
@@ -42,7 +43,8 @@ function getQueueItemIcon(item: OverviewReviewQueueItem): React.ReactNode {
 export function PriorityReviewQueue({
   items,
   onViewModule,
-  onShowCycleTriage
+  onShowCycleTriage,
+  onShowCleanupCandidates
 }: PriorityReviewQueueProps) {
   function handleSelect(target: OverviewReviewTarget): void {
     if (target.kind === 'module' && target.value) {
@@ -50,8 +52,13 @@ export function PriorityReviewQueue({
       return
     }
 
-    if (target.kind === 'cycles' || target.kind === 'issues') {
+    if (target.kind === 'cycles') {
       onShowCycleTriage?.()
+      return
+    }
+
+    if (target.kind === 'cleanup') {
+      onShowCleanupCandidates?.()
     }
   }
 
