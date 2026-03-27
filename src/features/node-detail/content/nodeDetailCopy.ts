@@ -56,6 +56,13 @@ export const nodeDetailCopy = {
     bottleneckDescription: (ca: number) =>
       `${ca} files depend on this. Changes here are more likely to affect many other files.`
   },
+  consequences: {
+    title: 'If you modify this file:'
+  },
+  technicalBasis: {
+    title: 'Technical basis',
+    summary: 'Raw metrics and structural evidence for this file.'
+  },
   disclosure: {
     whyTitle: 'Why this recommendation',
     whySummary:

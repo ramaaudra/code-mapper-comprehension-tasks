@@ -6,34 +6,24 @@ import {
 } from '@/shared/components/ui/card'
 import { ArrowRight, Layers, Wind } from '@/shared/components/ui/icons'
 
+import { GuideDot } from './GuideDot'
+
 import type { MetricsGuideQuickVisual } from '../content/metricsGuideContent'
 
 interface MetricsVisualPrimerProps {
   visuals: MetricsGuideQuickVisual[]
 }
 
-function Dot({ emphasized = false }: { emphasized?: boolean }) {
-  return (
-    <span
-      className={
-        emphasized
-          ? 'h-4 w-4 rounded-full bg-primary'
-          : 'h-3 w-3 rounded-full bg-muted-foreground/60'
-      }
-    />
-  )
-}
-
 function DependentsDiagram() {
   return (
     <div className='flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 p-3'>
       <div className='space-y-2'>
-        <Dot />
-        <Dot />
-        <Dot />
+        <GuideDot />
+        <GuideDot />
+        <GuideDot />
       </div>
       <ArrowRight className='h-4 w-4 text-muted-foreground' />
-      <Dot emphasized />
+      <GuideDot emphasized />
     </div>
   )
 }
@@ -41,12 +31,12 @@ function DependentsDiagram() {
 function DependenciesDiagram() {
   return (
     <div className='flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 p-3'>
-      <Dot emphasized />
+      <GuideDot emphasized />
       <ArrowRight className='h-4 w-4 text-muted-foreground' />
       <div className='space-y-2'>
-        <Dot />
-        <Dot />
-        <Dot />
+        <GuideDot />
+        <GuideDot />
+        <GuideDot />
       </div>
     </div>
   )
@@ -65,10 +55,10 @@ function InstabilityDiagram() {
           Outward-facing
         </span>
       </div>
-      <div className='relative h-2 rounded-full bg-gradient-to-r from-sky-500/70 via-slate-500/70 to-emerald-500/70'>
-        <span className='absolute left-[12%] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-background bg-sky-500' />
-        <span className='absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-slate-500' />
-        <span className='absolute right-[12%] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-background bg-emerald-500' />
+      <div className='relative h-2 rounded-full bg-gradient-to-r from-guide-core-foreground/70 via-guide-neutral-foreground/70 to-guide-review-foreground/70'>
+        <span className='absolute left-[12%] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-background bg-guide-core-foreground' />
+        <span className='absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-guide-neutral-foreground' />
+        <span className='absolute right-[12%] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-background bg-guide-review-foreground' />
       </div>
       <div className='flex items-center justify-between text-xs text-muted-foreground'>
         <span>Low I</span>

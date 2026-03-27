@@ -44,9 +44,18 @@ export interface MetricsGuideDecisionState {
 }
 
 export const metricsGuidePrinciples = [
-  "High numbers don't always mean bad code. They mean you need to look closer.",
-  'Each metric answers one question. Combine them to see the full picture.',
-  'Start with "What should I review first?" — the app already prioritized for you.'
+  {
+    label: 'High is not bad',
+    text: "High numbers don't always mean bad code. They mean you need to look closer."
+  },
+  {
+    label: 'Combine to decide',
+    text: 'Each metric answers one question. Combine them to see the full picture.'
+  },
+  {
+    label: 'App prioritizes for you',
+    text: 'Start with "What should I review first?" — the app already prioritized for you.'
+  }
 ]
 
 export const metricsGuideHeroInsight = {
@@ -203,9 +212,9 @@ export const metricsGuideMetrics: MetricsGuideMetric[] = [
       'Check recent commit history to understand what is driving the changes.',
     caveat:
       'Values can be above 1.0 when an item is heavily rewritten in the selected time window.',
-    visualAnalogyTitle: 'Recent activity normalized by current size',
+    visualAnalogyTitle: 'How much has this file been rewritten recently?',
     visualAnalogyDescription:
-      'Think of Relative Churn as change pressure, not just raw changed lines. It helps small unstable areas stand out.',
+      'Relative Churn compares recent changes to file size, so small but heavily edited files stand out just like large ones.',
     formula: 'Relative Churn = churn LOC / effective LOC',
     screens: ['Overview', 'Graph', 'Node Detail', 'Architecture']
   },

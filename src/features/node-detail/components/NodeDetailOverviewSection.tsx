@@ -1,4 +1,3 @@
-import { ArchitectureStats } from '@/features/architecture'
 import { Button } from '@/shared/components/ui/button'
 import { DecisionStorySection } from '@/shared/components/ui/decision-story-section'
 import { DetailPanelDisclosure } from '@/shared/components/ui/detail-panel-disclosure'
@@ -15,33 +14,23 @@ import {
   Ghost,
   Target
 } from '@/shared/components/ui/icons'
-import { InsightBulletList } from '@/shared/components/ui/insight-bullet-list'
-import { MetricInsightCard } from '@/shared/components/ui/metric-insight-card'
-import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
-import { decisionCopy } from '@/shared/content/decisionCopy'
-import { METRIC_LABELS, METRIC_TOOLTIPS } from '@/shared/lib/metric-copy'
+import { METRIC_LABELS } from '@/shared/lib/metric-copy'
 import { getReviewSignalDefinition } from '@/shared/lib/metric-thresholds'
 import {
   formatChangePressureHelper,
   formatExternalRelianceHelper,
-  formatExternalRelianceValue,
   formatImpactScopeHelper,
   formatRelativeChurn,
-  formatStructuralPositionHelper,
-  formatStructuralPositionValue,
-  getAssessmentMethodItems,
-  getExternalRelianceTone,
-  getStructuralPositionTone
+  formatStructuralPositionHelper
 } from '@/shared/lib/utils'
 import {
   getRiskBgOpacityClass,
-  getRiskBorderClass,
   getRiskTextClass
 } from '@/shared/lib/utils/risk'
 
@@ -54,7 +43,10 @@ import {
 import type { BlastRadiusRole } from '../lib/panel-state'
 import type { FileArchitectureMetrics } from '@/features/architecture/types/architecture'
 import type { DecisionAssessment } from '@/shared/lib/utils'
-import type { FileEvolutionMetrics } from '@/shared/types/analysis'
+import type {
+  EntryDetectionContext,
+  FileEvolutionMetrics
+} from '@/shared/types/analysis'
 import type { ReactNode } from 'react'
 
 interface NodeDetailOverviewState {
@@ -80,6 +72,7 @@ interface NodeDetailOverviewSectionProps {
   onFocusDirectionChange: (direction: 'inward' | 'outward') => void
   resolvedNodeId: string
   decisionIcon: ReactNode
+  entryDetectionContext?: EntryDetectionContext
 }
 
 const blastRadiusSignal = getReviewSignalDefinition('blastRadius')
@@ -97,7 +90,8 @@ export function NodeDetailOverviewSection({
   focusDirection,
   onFocusDirectionChange,
   resolvedNodeId,
-  decisionIcon
+  decisionIcon,
+  entryDetectionContext
 }: NodeDetailOverviewSectionProps) {
   const supportingSignals =
     overviewState.showBlastRadius &&
@@ -107,7 +101,8 @@ export function NodeDetailOverviewSection({
           decisionTitle: decisionAssessment.title,
           isPossiblyUnreachable,
           archMetrics,
-          blastRadiusAssessment
+          blastRadiusAssessment,
+          entryDetectionContext
         })
       : []
 
@@ -163,173 +158,151 @@ export function NodeDetailOverviewSection({
       {supportingSignals.length > 0 ? (
         <div className='space-y-3'>
           <DetailPanelSectionHeading
-            title={nodeDetailCopy.blastRadius.sectionTitle}
+            title={nodeDetailCopy.consequences.title}
           />
-          {supportingSignals.map((signal) => {
-            if (signal.id === 'verification-scope' && signal.riskLevel) {
-              return (
-                <TooltipProvider delayDuration={200} key={signal.id}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className='cursor-help'>
-                        <MetricInsightCard
-                          icon={
-                            signal.riskLevel === 'low' ? (
+          <div className='flex flex-col gap-3 text-sm'>
+            {supportingSignals.map((signal) => {
+              if (signal.id === 'verification-scope' && signal.riskLevel) {
+                return (
+                  <TooltipProvider delayDuration={200} key={signal.id}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={`flex cursor-help items-start gap-2 rounded-md p-2 ${getRiskBgOpacityClass(signal.riskLevel, 10)}`}
+                        >
+                          <div className='mt-0.5 shrink-0'>
+                            {signal.riskLevel === 'low' ? (
                               <CheckCircle className='h-4 w-4 text-status-success-foreground' />
                             ) : (
                               <AlertTriangle
                                 className={`h-4 w-4 ${getRiskTextClass(signal.riskLevel)}`}
                               />
-                            )
-                          }
-                          title={signal.title}
-                          value={
-                            typeof signal.riskScore === 'number'
-                              ? `Score: ${signal.riskScore.toFixed(1)}`
-                              : undefined
-                          }
-                          description={signal.description}
-                          tone={signal.tone}
-                          className={`${getRiskBorderClass(signal.riskLevel)} ${getRiskBgOpacityClass(signal.riskLevel, 5)}`}
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side='top'
-                      className='max-w-xs border-border bg-popover'
-                    >
-                      <div className='space-y-2'>
-                        <p className='font-semibold text-popover-foreground'>
-                          {nodeDetailCopy.blastRadius.tooltipTitle}:{' '}
-                          {signal.riskScore?.toFixed(1)}
-                        </p>
-                        <p className='text-xs text-popover-foreground/80'>
-                          {nodeDetailCopy.blastRadius.tooltipDescription}
-                        </p>
-                        <div className='border-t border-border pt-1 text-xs'>
-                          <p className='text-popover-foreground/80'>
-                            {nodeDetailCopy.blastRadius.tooltipInterpretation}
-                          </p>
-                        </div>
-                        {archMetrics ? (
-                          <div className='space-y-1 border-t border-border pt-1 text-xs'>
-                            <p className='text-popover-foreground/80'>
-                              • <strong>Dependents (Ca):</strong>{' '}
-                              {archMetrics.ca}
-                            </p>
-                            <p className='text-popover-foreground/80'>
-                              • <strong>Dependencies (Ce):</strong>{' '}
-                              {archMetrics.ce}
-                            </p>
-                            {typeof signal.riskScore === 'number' ? (
-                              <p className='pt-1 text-popover-foreground/80'>
-                                Score basis: {archMetrics.ca} + (
-                                {archMetrics.ce} × 0.5) ={' '}
-                                {signal.riskScore.toFixed(1)}
-                              </p>
-                            ) : null}
+                            )}
                           </div>
-                        ) : null}
-                        <div className='border-t border-border pt-1 text-xs'>
-                          <p className='text-popover-foreground/80'>
-                            {blastRadiusSignal.scientificStatusNote}
-                          </p>
+                          <div>
+                            <p className='font-medium text-foreground'>
+                              {signal.title}{' '}
+                              {typeof signal.riskScore === 'number' && (
+                                <span className='ml-1 font-normal text-muted-foreground'>
+                                  (Score: {signal.riskScore.toFixed(1)})
+                                </span>
+                              )}
+                            </p>
+                            <p className='mt-0.5 text-sm text-foreground/80'>
+                              {signal.description}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )
-            }
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side='top'
+                        className='max-w-xs border-border bg-popover'
+                      >
+                        <div className='space-y-2'>
+                          <p className='font-semibold text-popover-foreground'>
+                            {nodeDetailCopy.blastRadius.tooltipTitle}:{' '}
+                            {signal.riskScore?.toFixed(1)}
+                          </p>
+                          <p className='text-xs text-popover-foreground/80'>
+                            {nodeDetailCopy.blastRadius.tooltipDescription}
+                          </p>
+                          <div className='border-t border-border pt-1 text-xs'>
+                            <p className='text-popover-foreground/80'>
+                              {nodeDetailCopy.blastRadius.tooltipInterpretation}
+                            </p>
+                          </div>
+                          {archMetrics ? (
+                            <div className='space-y-1 border-t border-border pt-1 text-xs'>
+                              <p className='text-popover-foreground/80'>
+                                • <strong>Dependents (Ca):</strong>{' '}
+                                {archMetrics.ca}
+                              </p>
+                              <p className='text-popover-foreground/80'>
+                                • <strong>Dependencies (Ce):</strong>{' '}
+                                {archMetrics.ce}
+                              </p>
+                              {typeof signal.riskScore === 'number' ? (
+                                <p className='pt-1 text-popover-foreground/80'>
+                                  Score basis: {archMetrics.ca} + (
+                                  {archMetrics.ce} × 0.5) ={' '}
+                                  {signal.riskScore.toFixed(1)}
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : null}
+                          <div className='border-t border-border pt-1 text-xs'>
+                            <p className='text-popover-foreground/80'>
+                              {blastRadiusSignal.scientificStatusNote}
+                            </p>
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )
+              }
 
-            const icon =
-              signal.id === 'unreachable' ? (
-                <Ghost className='h-4 w-4 text-status-warning-foreground' />
-              ) : signal.id === 'god-object' ? (
-                <Cube
-                  className='h-4 w-4 text-status-warning-foreground'
-                  weight='fill'
-                />
-              ) : (
-                <Target
-                  className='h-4 w-4 text-status-warning-foreground'
-                  weight='fill'
-                />
-              )
+              const icon =
+                signal.id === 'unreachable' ? (
+                  <Ghost className='h-4 w-4 text-status-warning-foreground' />
+                ) : signal.id === 'god-object' ? (
+                  <Cube
+                    className='h-4 w-4 text-status-warning-foreground'
+                    weight='fill'
+                  />
+                ) : (
+                  <Target
+                    className='h-4 w-4 text-status-warning-foreground'
+                    weight='fill'
+                  />
+                )
 
-            return (
-              <MetricInsightCard
-                key={signal.id}
-                icon={icon}
-                title={signal.title}
-                description={signal.description}
-                tone={signal.tone}
-                className='border-status-warning-border bg-status-warning-surface'
-              />
-            )
-          })}
+              return (
+                <div key={signal.id} className='flex items-start gap-2 py-1'>
+                  <div className='mt-0.5 shrink-0'>{icon}</div>
+                  <div>
+                    <p className='font-medium text-foreground'>
+                      {signal.title}
+                    </p>
+                    <p className='mt-0.5 text-sm text-foreground/80'>
+                      {signal.description}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       ) : null}
 
       {overviewState.showWhyDisclosure ? (
         <DetailPanelDisclosure
-          title={nodeDetailCopy.disclosure.whyTitle}
-          summary={nodeDetailCopy.disclosure.whySummary}
+          title={nodeDetailCopy.technicalBasis.title}
+          summary={nodeDetailCopy.technicalBasis.summary}
         >
-          <div className='space-y-3'>
-            <DetailPanelSectionHeading
-              title={nodeDetailCopy.disclosure.howAssessedTitle}
-            />
-            <InsightBulletList items={getAssessmentMethodItems()} />
-          </div>
-
           {overviewState.showArchitectureMetrics && archMetrics ? (
-            <div className='space-y-3'>
-              <DetailPanelSectionHeading title='Additional Signals' />
-              <div className='grid grid-cols-2 gap-3'>
-                <MetricValueCard
-                  value={formatExternalRelianceValue(
-                    decisionAssessment?.externalReliance ?? 'Low'
-                  )}
-                  label={decisionCopy.evidence.labels.dependencies}
-                  tone={getExternalRelianceTone(
-                    decisionAssessment?.externalReliance ?? 'Low'
-                  )}
-                  helper={
-                    <span className='text-xs text-muted-foreground'>
-                      {formatExternalRelianceHelper(archMetrics.ce)}
-                    </span>
-                  }
-                />
-                <MetricValueCard
-                  value={formatStructuralPositionValue(
-                    decisionAssessment?.structuralPosition ?? 'Balanced'
-                  )}
-                  label={decisionCopy.evidence.labels.architectureRole}
-                  tone={getStructuralPositionTone(
-                    decisionAssessment?.structuralPosition ?? 'Balanced'
-                  )}
-                  helper={
-                    <span className='text-xs text-muted-foreground'>
-                      {formatStructuralPositionHelper(archMetrics.instability)}
-                    </span>
-                  }
-                />
-              </div>
-            </div>
-          ) : null}
-
-          {overviewState.showArchitectureMetrics && archMetrics ? (
-            <div className='space-y-3'>
+            <div className='space-y-3 pb-2'>
               <DetailPanelSectionHeading
                 title={nodeDetailCopy.disclosure.architectureMetricsTitle}
               />
-              <ArchitectureStats
-                ca={archMetrics.ca}
-                ce={archMetrics.ce}
-                instability={archMetrics.instability}
-                hasCycle={archMetrics.hasCycle}
-              />
+              <dl className='grid grid-cols-2 gap-x-4 gap-y-2 text-sm'>
+                <dt className='text-muted-foreground'>Dependents (Ca)</dt>
+                <dd className='text-right font-medium text-foreground'>
+                  {archMetrics.ca}
+                </dd>
+                <dt className='text-muted-foreground'>Dependencies (Ce)</dt>
+                <dd className='text-right font-medium text-foreground'>
+                  {archMetrics.ce}
+                </dd>
+                <dt className='text-muted-foreground'>Instability</dt>
+                <dd className='text-right font-medium text-foreground'>
+                  {archMetrics.instability.toFixed(2)}
+                </dd>
+                <dt className='text-muted-foreground'>Cycle</dt>
+                <dd className='text-right font-medium text-foreground'>
+                  {archMetrics.hasCycle ? 'Yes' : 'No'}
+                </dd>
+              </dl>
             </div>
           ) : null}
 
@@ -343,59 +316,55 @@ export function NodeDetailOverviewSection({
           {overviewState.showEvolutionMetrics &&
           fileEvolution &&
           changeHistoryAvailable ? (
-            <div className='space-y-3'>
+            <div className='space-y-3 border-t border-border/50 pt-3'>
               <DetailPanelSectionHeading
                 title={nodeDetailCopy.disclosure.evolutionaryMetricsTitle}
               />
-              <div className='grid grid-cols-2 gap-3'>
-                <MetricValueCard
-                  value={formatRelativeChurn(
-                    fileEvolution.churn30d.relativeChurn
-                  )}
-                  label={METRIC_LABELS.relativeChurn30d}
-                  tooltip={METRIC_TOOLTIPS.relativeChurn30d}
-                />
-                <MetricValueCard
-                  value={formatRelativeChurn(
-                    fileEvolution.churn90d.relativeChurn
-                  )}
-                  label={METRIC_LABELS.relativeChurn90d}
-                  tooltip={METRIC_TOOLTIPS.relativeChurn90d}
-                />
-                <MetricValueCard
-                  value={fileEvolution.churn30d.commitCount}
-                  label={METRIC_LABELS.commits30d}
-                  tooltip={METRIC_TOOLTIPS.commits30d}
-                />
-                <MetricValueCard
-                  value={fileEvolution.hotspotScore.toFixed(2)}
-                  label={METRIC_LABELS.evolutionaryHotspotScore}
-                  tooltip={METRIC_TOOLTIPS.evolutionaryHotspotScore}
-                  helper={
-                    <HotspotStatusLabel
-                      status={fileEvolution.hotspotStatus}
-                      className='text-[11px] text-muted-foreground'
-                    />
-                  }
-                />
-              </div>
+              <dl className='grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 text-sm'>
+                <dt className='text-muted-foreground'>
+                  {METRIC_LABELS.relativeChurn30d}
+                </dt>
+                <dd className='text-right font-medium text-foreground'>
+                  {formatRelativeChurn(fileEvolution.churn30d.relativeChurn)}
+                </dd>
+                <dt className='text-muted-foreground'>
+                  {METRIC_LABELS.relativeChurn90d}
+                </dt>
+                <dd className='text-right font-medium text-foreground'>
+                  {formatRelativeChurn(fileEvolution.churn90d.relativeChurn)}
+                </dd>
+                <dt className='text-muted-foreground'>
+                  {METRIC_LABELS.commits30d}
+                </dt>
+                <dd className='text-right font-medium text-foreground'>
+                  {fileEvolution.churn30d.commitCount}
+                </dd>
+                <dt className='flex items-center gap-2 text-muted-foreground'>
+                  {METRIC_LABELS.evolutionaryHotspotScore}
+                </dt>
+                <dd className='flex items-center justify-end gap-2 text-right font-medium text-status-warning-foreground'>
+                  {fileEvolution.hotspotScore.toFixed(2)}
+                  <HotspotStatusLabel
+                    status={fileEvolution.hotspotStatus}
+                    className='text-[10px] font-bold uppercase text-muted-foreground'
+                  />
+                </dd>
+              </dl>
             </div>
           ) : null}
         </DetailPanelDisclosure>
       ) : null}
 
       {onFocusSubgraph ? (
-        <DetailPanelDisclosure
-          title={nodeDetailCopy.graphTools.title}
-          summary={nodeDetailCopy.graphTools.summary}
-        >
+        <div className='space-y-4 border-t border-border/40 pb-2 pt-6'>
+          <DetailPanelSectionHeading title={nodeDetailCopy.graphTools.title} />
           <div className='space-y-3'>
-            <div className='grid grid-cols-2 gap-2'>
+            <div className='flex w-full gap-2'>
               <Button
                 variant={focusDirection === 'inward' ? 'secondary' : 'outline'}
                 size='sm'
                 onClick={() => onFocusDirectionChange('inward')}
-                className='w-full justify-start'
+                className='flex-1 justify-center'
               >
                 <ArrowLeft className='mr-2 h-3 w-3' />
                 {nodeDetailCopy.graphTools.inward}
@@ -404,7 +373,7 @@ export function NodeDetailOverviewSection({
                 variant={focusDirection === 'outward' ? 'secondary' : 'outline'}
                 size='sm'
                 onClick={() => onFocusDirectionChange('outward')}
-                className='w-full justify-start'
+                className='flex-1 justify-center'
               >
                 {nodeDetailCopy.graphTools.outward}
                 <ArrowRight className='ml-2 h-3 w-3' />
@@ -424,7 +393,7 @@ export function NodeDetailOverviewSection({
               {nodeDetailCopy.graphTools.focusSuffix}
             </Button>
           </div>
-        </DetailPanelDisclosure>
+        </div>
       ) : null}
     </div>
   )

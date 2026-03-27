@@ -88,6 +88,19 @@
     --guide-reference-surface: 0 0% 100%;
     --guide-reference-border: 0 0% 90%;
 
+    /* Guide metric family tones (semantic, not raw Tailwind palette) */
+    --guide-core-surface: 205 80% 96%;
+    --guide-core-border: 205 55% 82%;
+    --guide-core-foreground: 205 60% 38%;
+    --guide-derived-surface: 38 90% 96%;
+    --guide-derived-border: 38 60% 78%;
+    --guide-derived-foreground: 30 70% 36%;
+    --guide-review-surface: 152 50% 95%;
+    --guide-review-border: 152 40% 76%;
+    --guide-review-foreground: 152 55% 30%;
+    /* Neutral midpoint for instability gradient */
+    --guide-neutral-foreground: 215 15% 45%;
+
     color-scheme: light;
   }
 
@@ -171,6 +184,18 @@
     --guide-quick-border: 0 0% 22%;
     --guide-reference-surface: 0 0% 7%;
     --guide-reference-border: 0 0% 18%;
+
+    /* Guide metric family tones (dark mode) */
+    --guide-core-surface: 205 35% 16%;
+    --guide-core-border: 205 40% 30%;
+    --guide-core-foreground: 205 65% 78%;
+    --guide-derived-surface: 35 35% 16%;
+    --guide-derived-border: 35 40% 30%;
+    --guide-derived-foreground: 38 80% 78%;
+    --guide-review-surface: 152 30% 15%;
+    --guide-review-border: 152 35% 28%;
+    --guide-review-foreground: 152 60% 76%;
+    --guide-neutral-foreground: 0 0% 60%;
 
     color-scheme: dark;
   }

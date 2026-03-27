@@ -32,6 +32,7 @@ import type {
   StructuralPosition,
   ThresholdSubject
 } from '@/shared/lib/metric-thresholds'
+import type { EntryDetectionContext } from '@/shared/types/analysis'
 
 export type DecisionStatusTone =
   | 'default'
@@ -195,6 +196,7 @@ export interface DecisionAssessmentInput {
   changeHistoryAvailable?: boolean
   isOrphan?: boolean
   thresholdCalibration?: ReviewThresholdCalibration
+  entryDetectionContext?: EntryDetectionContext
 }
 
 function getDecisionTitle(
@@ -238,6 +240,7 @@ function getBasisSummary(params: {
   hasCycle: boolean
   isOrphan: boolean
   changeHistoryAvailable?: boolean
+  entryDetectionContext?: EntryDetectionContext
 }): string {
   return getDecisionBasisSummaryCopy(params)
 }
@@ -359,7 +362,8 @@ export function createDecisionAssessment(
     relativeChurn30d,
     changeHistoryAvailable = true,
     isOrphan = false,
-    thresholdCalibration
+    thresholdCalibration,
+    entryDetectionContext
   } = input
 
   const subject = kind === 'file' ? 'file' : 'module'
@@ -400,7 +404,8 @@ export function createDecisionAssessment(
   const resolvedBasisSummary = getBasisSummary({
     hasCycle,
     isOrphan,
-    changeHistoryAvailable
+    changeHistoryAvailable,
+    entryDetectionContext
   })
 
   if (hasCycle) {
@@ -426,7 +431,7 @@ export function createDecisionAssessment(
   }
 
   if (title === 'Possibly Unreachable') {
-    const copy = getOrphanDecisionCopy()
+    const copy = getOrphanDecisionCopy(entryDetectionContext)
 
     return {
       headline,

@@ -66,6 +66,19 @@ export interface AnalysisWarnings {
   totalUnresolvedCount: number
 }
 
+/**
+ * Slim entry-detection metadata from the backend.
+ * Used as explanatory context in reachability/orphan UI areas.
+ */
+export interface EntryDetectionContext {
+  /** Human-readable framework names (e.g., ['Next.js', 'React']) */
+  frameworks: string[]
+  /** Detection sources that contributed (e.g., ['dependencies', 'config', 'scripts']) */
+  sources: string[]
+  /** Overall confidence level of entry-point detection */
+  confidence: 'high' | 'medium' | 'low'
+}
+
 export interface DependencyInfo {
   target: string
   strength: number
@@ -148,4 +161,5 @@ export interface AnalysisData {
   metrics: AnalysisMetrics
   detailedMetrics?: DetailedMetrics
   warnings?: AnalysisWarnings
+  entryDetectionContext?: EntryDetectionContext
 }

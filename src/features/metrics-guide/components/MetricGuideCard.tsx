@@ -1,10 +1,16 @@
+import { useState } from 'react'
+
 import { Badge } from '@/shared/components/ui/badge'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger
 } from '@/shared/components/ui/collapsible'
-import { CaretDown, Lightbulb, AlertCircle } from '@/shared/components/ui/icons'
+import {
+  CaretDown,
+  AlertTriangle,
+  AlertCircle
+} from '@/shared/components/ui/icons'
 
 import { MetricGuideVisual } from './MetricGuideVisual'
 
@@ -15,6 +21,8 @@ interface MetricGuideCardProps {
 }
 
 export function MetricGuideCard({ metric }: MetricGuideCardProps) {
+  const [isOpen, setIsOpen] = useState(false)
+
   return (
     <div className='rounded-xl border border-border/70 bg-card/50 p-4 shadow-sm'>
       <div className='flex flex-wrap items-center gap-2'>
@@ -47,7 +55,7 @@ export function MetricGuideCard({ metric }: MetricGuideCardProps) {
 
         <div className='rounded-lg border border-border/60 bg-muted/30 p-3'>
           <div className='flex items-start gap-2'>
-            <Lightbulb className='mt-0.5 h-4 w-4 shrink-0 text-amber-500' />
+            <AlertTriangle className='mt-0.5 h-4 w-4 shrink-0 text-status-caution-foreground' />
             <div className='space-y-1'>
               <p className='text-sm font-medium text-foreground'>
                 Quick action
@@ -57,10 +65,15 @@ export function MetricGuideCard({ metric }: MetricGuideCardProps) {
           </div>
         </div>
 
-        <Collapsible>
-          <CollapsibleTrigger className='flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground'>
-            <span>Show details</span>
-            <CaretDown className='h-4 w-4' />
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleTrigger
+            className='flex min-h-[44px] items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground'
+            aria-expanded={isOpen}
+          >
+            <span>{isOpen ? 'Hide details' : 'Show details'}</span>
+            <CaretDown
+              className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className='mt-3 space-y-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-3'>

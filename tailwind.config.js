@@ -83,6 +83,34 @@ export default {
             foreground: 'hsl(var(--status-success-foreground))',
             solid: 'hsl(var(--status-success-solid))'
           }
+        },
+        guide: {
+          quick: {
+            surface: 'hsl(var(--guide-quick-surface))',
+            border: 'hsl(var(--guide-quick-border))'
+          },
+          reference: {
+            surface: 'hsl(var(--guide-reference-surface))',
+            border: 'hsl(var(--guide-reference-border))'
+          },
+          core: {
+            surface: 'hsl(var(--guide-core-surface))',
+            border: 'hsl(var(--guide-core-border))',
+            foreground: 'hsl(var(--guide-core-foreground))'
+          },
+          derived: {
+            surface: 'hsl(var(--guide-derived-surface))',
+            border: 'hsl(var(--guide-derived-border))',
+            foreground: 'hsl(var(--guide-derived-foreground))'
+          },
+          review: {
+            surface: 'hsl(var(--guide-review-surface))',
+            border: 'hsl(var(--guide-review-border))',
+            foreground: 'hsl(var(--guide-review-foreground))'
+          },
+          neutral: {
+            foreground: 'hsl(var(--guide-neutral-foreground))'
+          }
         }
       },
       fontSize: {

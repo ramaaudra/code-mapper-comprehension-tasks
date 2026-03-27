@@ -179,11 +179,13 @@ const NodeDetailPanel = memo(function NodeDetailPanel({
       instability: archMetrics.instability,
       relativeChurn30d: fileEvolution?.churn30d.relativeChurn ?? 0,
       changeHistoryAvailable,
-      thresholdCalibration: fileThresholdCalibration
+      thresholdCalibration: fileThresholdCalibration,
+      entryDetectionContext: data?.entryDetectionContext
     })
   }, [
     archMetrics,
     changeHistoryAvailable,
+    data?.entryDetectionContext,
     fileEvolution,
     fileThresholdCalibration,
     isOrphan
@@ -447,6 +449,7 @@ const NodeDetailPanel = memo(function NodeDetailPanel({
                 ? DECISION_CARD_TONE_ICON[decisionAssessment.tone]
                 : null
             }
+            entryDetectionContext={data?.entryDetectionContext}
           />
         </TabsContent>
 

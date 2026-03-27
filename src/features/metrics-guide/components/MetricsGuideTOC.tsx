@@ -37,7 +37,7 @@ export function MetricsGuideTOC({
   const links = mode === 'quick' ? quickGuideTOC : referenceTOC
 
   return (
-    <nav className='space-y-1'>
+    <nav aria-label='Metrics guide navigation' className='space-y-1'>
       <p className='mb-3 text-xs font-medium uppercase tracking-label text-muted-foreground/70'>
         On this page
       </p>
@@ -50,7 +50,7 @@ export function MetricsGuideTOC({
                 type='button'
                 onClick={() => onSectionClick(link.id)}
                 className={cn(
-                  'w-full cursor-pointer border-l-2 py-1.5 pl-3 pr-2 text-left text-sm transition-colors',
+                  'w-full cursor-pointer border-l-2 py-2.5 pl-3 pr-2 text-left text-sm transition-colors',
                   isActive
                     ? mode === 'quick'
                       ? 'border-primary/70 bg-primary/5 font-medium text-foreground'

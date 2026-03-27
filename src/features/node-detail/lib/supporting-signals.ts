@@ -1,3 +1,7 @@
+import {
+  buildReachabilityBasisCopy,
+  buildReachabilityVerificationCopy
+} from '@/shared/content/reachabilityContextCopy'
 import { reachabilityCopy } from '@/shared/content/reachabilityCopy'
 import {
   ARCHITECTURE_THRESHOLDS,
@@ -9,6 +13,7 @@ import { nodeDetailCopy } from '../content/nodeDetailCopy'
 
 import type { FileArchitectureMetrics } from '@/features/architecture/types/architecture'
 import type { DecisionTitle } from '@/shared/lib/utils/decision-assessment'
+import type { EntryDetectionContext } from '@/shared/types/analysis'
 import type { RiskLevel } from '@/shared/types/risk'
 
 export interface NodeDetailBlastRadiusAssessment {
@@ -37,6 +42,7 @@ interface ResolveNodeDetailSupportingSignalsInput {
   isPossiblyUnreachable: boolean
   archMetrics?: FileArchitectureMetrics
   blastRadiusAssessment?: NodeDetailBlastRadiusAssessment | null
+  entryDetectionContext?: EntryDetectionContext
 }
 
 function shouldShowVerificationScopeSignal(
@@ -53,15 +59,20 @@ export function resolveNodeDetailSupportingSignals({
   decisionTitle,
   isPossiblyUnreachable,
   archMetrics,
-  blastRadiusAssessment
+  blastRadiusAssessment,
+  entryDetectionContext
 }: ResolveNodeDetailSupportingSignalsInput): NodeDetailSupportingSignal[] {
   const signals: NodeDetailSupportingSignal[] = []
 
   if (isPossiblyUnreachable && decisionTitle === 'Circular Dependency') {
+    const basisCopy = buildReachabilityBasisCopy(entryDetectionContext)
+    const verificationCopy = buildReachabilityVerificationCopy(
+      entryDetectionContext
+    )
     signals.push({
       id: 'unreachable',
       title: reachabilityCopy.title,
-      description: `${reachabilityCopy.detailDescription} ${reachabilityCopy.verificationHint}`,
+      description: `${reachabilityCopy.detailDescription} ${basisCopy} ${verificationCopy}`,
       tone: 'warning'
     })
   }

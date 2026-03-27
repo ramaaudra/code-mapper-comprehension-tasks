@@ -10,7 +10,7 @@ import {
 } from '@/shared/components/ui/card'
 import {
   ArrowLeft,
-  Lightbulb,
+  AlertTriangle,
   CheckCircle,
   HelpCircle,
   List
@@ -158,13 +158,7 @@ export function MetricsGuidePage({
 
   return (
     <div
-      className='flex h-full'
-      style={{
-        backgroundColor:
-          mode === 'quick'
-            ? 'hsl(var(--guide-quick-surface))'
-            : 'hsl(var(--guide-reference-surface))'
-      }}
+      className={`flex h-full ${mode === 'quick' ? 'bg-guide-quick-surface' : 'bg-guide-reference-surface'}`}
     >
       <aside className='hidden shrink-0 border-r border-border/50 lg:block lg:w-56 xl:w-64'>
         <div className='sticky top-0 h-full overflow-y-auto p-4'>
@@ -194,7 +188,9 @@ export function MetricsGuidePage({
                 variant='outline'
                 size='sm'
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className='gap-2 lg:hidden'
+                className='min-h-[44px] gap-2 lg:hidden'
+                aria-expanded={isMobileMenuOpen}
+                aria-controls='mobile-toc'
               >
                 <List className='h-4 w-4' />
                 Contents
@@ -202,7 +198,10 @@ export function MetricsGuidePage({
             </div>
 
             {isMobileMenuOpen && (
-              <div className='rounded-lg border border-border/70 bg-card p-4 lg:hidden'>
+              <div
+                id='mobile-toc'
+                className='rounded-lg border border-border/70 bg-card p-4 lg:hidden'
+              >
                 <MetricsGuideTOC
                   mode={mode}
                   activeSection={activeSection}
@@ -265,12 +264,14 @@ export function MetricsGuidePage({
           <div ref={contentRef} className='space-y-6 lg:space-y-8'>
             {mode === 'quick' ? (
               <>
+                {/* Hero section — visually prominent */}
                 <MetricsGuideSection
                   id='what-you-can-do'
                   eyebrow='Start Here'
                   title='What this guide will help you do'
                   description='Answer these three questions and the metrics will make sense.'
                   mode={mode}
+                  className='rounded-xl border border-primary/10 bg-primary/[0.03] p-5'
                 >
                   <div className='space-y-4'>
                     {metricsGuideHeroInsight.actions.map((action, index) => (
@@ -304,19 +305,19 @@ export function MetricsGuidePage({
                   mode={mode}
                 >
                   <div className='grid gap-4 md:grid-cols-3'>
-                    {metricsGuidePrinciples.map((principle, index) => (
+                    {metricsGuidePrinciples.map((principle) => (
                       <Card
-                        key={principle}
+                        key={principle.label}
                         className='border-primary/15 bg-primary/5'
                       >
                         <CardHeader className='pb-2'>
                           <CardTitle className='flex items-center gap-2 text-base'>
                             <CheckCircle className='h-4 w-4 text-primary' />
-                            Key idea {index + 1}
+                            {principle.label}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className='text-sm text-foreground'>
-                          {principle}
+                          {principle.text}
                         </CardContent>
                       </Card>
                     ))}
@@ -353,6 +354,7 @@ export function MetricsGuidePage({
                   <ScreenUsageGuide screens={metricsGuideScreenHelp} />
                 </MetricsGuideSection>
 
+                {/* Caveats — subtler treatment */}
                 <MetricsGuideSection
                   id='important-caveats'
                   eyebrow='Caveats'
@@ -360,10 +362,10 @@ export function MetricsGuidePage({
                   description='Read these before you make decisions based on metrics.'
                   mode={mode}
                 >
-                  <Card className='border-amber-500/20 bg-amber-500/5'>
+                  <Card className='border-status-caution-border/40 bg-status-caution-surface/50'>
                     <CardHeader className='pb-2'>
                       <CardTitle className='flex items-center gap-2 text-base'>
-                        <Lightbulb className='h-4 w-4 text-amber-500' />
+                        <AlertTriangle className='h-4 w-4 text-status-caution-foreground' />
                         Keep in mind
                       </CardTitle>
                     </CardHeader>
@@ -371,7 +373,7 @@ export function MetricsGuidePage({
                       <ul className='space-y-2 text-sm text-foreground'>
                         {metricsGuideCaveats.map((item) => (
                           <li key={item} className='flex gap-2'>
-                            <span className='mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500' />
+                            <span className='mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-status-caution-foreground/60' />
                             <span>{item}</span>
                           </li>
                         ))}

@@ -1,3 +1,7 @@
+import {
+  buildReachabilityBasisCopy,
+  buildReachabilityVerificationCopy
+} from '@/shared/content/reachabilityContextCopy'
 import { reachabilityCopy } from '@/shared/content/reachabilityCopy'
 import {
   getAssessmentMethodItemsFromCatalog,
@@ -14,6 +18,7 @@ import type {
   StructuralPosition
 } from '@/shared/lib/metric-thresholds'
 import type { DecisionTitle } from '@/shared/lib/utils/decision-assessment'
+import type { EntryDetectionContext } from '@/shared/types/analysis'
 
 type Subject = 'file' | 'module'
 type DependencyUnit = 'file' | 'module'
@@ -147,15 +152,25 @@ export function getDecisionBasisSummaryCopy(params: {
   hasCycle: boolean
   isOrphan: boolean
   changeHistoryAvailable?: boolean
+  entryDetectionContext?: EntryDetectionContext
 }): string {
-  const { hasCycle, isOrphan, changeHistoryAvailable = true } = params
+  const {
+    hasCycle,
+    isOrphan,
+    changeHistoryAvailable = true,
+    entryDetectionContext
+  } = params
 
   if (hasCycle && isOrphan) {
+    const reachabilityBasisCopy = entryDetectionContext
+      ? buildReachabilityBasisCopy(entryDetectionContext)
+      : 'Based on entry-point reachability in the current analysis.'
+    const basisFragment = reachabilityBasisCopy.replace(/^Based on /, '')
     if (!changeHistoryAvailable) {
-      return 'Based on cycle participation and entry-point reachability in the current analysis. Git history is unavailable for recent change signals.'
+      return `Based on cycle participation and ${basisFragment} Git history is unavailable for recent change signals.`
     }
 
-    return 'Based on cycle participation, entry-point reachability, and recent change pressure.'
+    return `Based on cycle participation, ${basisFragment.replace(/\.$/, '')}, and recent change pressure.`
   }
 
   if (hasCycle) {
@@ -166,7 +181,7 @@ export function getDecisionBasisSummaryCopy(params: {
   }
 
   if (isOrphan) {
-    return 'Based on entry-point reachability in the current analysis.'
+    return buildReachabilityBasisCopy(entryDetectionContext)
   }
 
   if (!changeHistoryAvailable) {
@@ -176,7 +191,14 @@ export function getDecisionBasisSummaryCopy(params: {
   return 'Based on repository signals: change pressure, downstream impact, external reliance, and structural position.'
 }
 
-export function getOrphanDecisionCopy() {
+export function getOrphanDecisionCopy(
+  entryDetectionContext?: EntryDetectionContext
+) {
+  const basisCopy = buildReachabilityBasisCopy(entryDetectionContext)
+  const verificationCopy = buildReachabilityVerificationCopy(
+    entryDetectionContext
+  )
+
   return {
     summary: reachabilityCopy.detailDescription,
     whyItMatters: `It may be a cleanup candidate, but ${reachabilityCopy.verificationHint.toLowerCase()} before you treat it as safe to remove.`,
@@ -185,7 +207,7 @@ export function getOrphanDecisionCopy() {
       'If the path is truly unused, consider cleanup or consolidation after confirmation.'
     ],
     topDrivers: [
-      `The current entry-point analysis did not reach this path.`,
+      `${basisCopy} ${verificationCopy}`,
       'This may be easier to clean up than broadly reused areas.',
       'Verification is still needed before you treat it as safe to remove.'
     ]
