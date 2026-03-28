@@ -38,8 +38,6 @@ export function useReportExplorer() {
     setGraphViewMode: ui.setGraphViewMode,
     utilityReturnViewMode: ui.utilityReturnViewMode,
     setUtilityReturnViewMode: ui.setUtilityReturnViewMode,
-    metricsGuideMode: ui.metricsGuideMode,
-    setMetricsGuideMode: ui.setMetricsGuideMode,
     highlightedModule: ui.highlightedModule,
     setHighlightedModule: ui.setHighlightedModule,
     focusedModulePath: ui.focusedModulePath,

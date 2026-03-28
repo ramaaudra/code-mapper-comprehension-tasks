@@ -115,6 +115,7 @@ export function getModulePathFromNodeLabel(label?: string): string | null {
 
 export {
   buildMetricsGuideHash,
+  isMetricsGuideHash,
   parseMetricsGuideHash,
   resolveExplorerContextChip
 } from './explorer-shell'
@@ -177,6 +178,7 @@ export type {
   ReviewPriority
 } from './decision-assessment'
 export type { FileReviewStory, FileReviewStoryTone } from './file-review-story'
+export type { MetricsGuideSectionId } from './explorer-shell'
 export type {
   ChangePressure,
   ExternalReliance,

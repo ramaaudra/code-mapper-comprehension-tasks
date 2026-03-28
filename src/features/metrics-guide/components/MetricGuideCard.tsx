@@ -1,16 +1,4 @@
-import { useState } from 'react'
-
 import { Badge } from '@/shared/components/ui/badge'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from '@/shared/components/ui/collapsible'
-import {
-  CaretDown,
-  AlertTriangle,
-  AlertCircle
-} from '@/shared/components/ui/icons'
 
 import { MetricGuideVisual } from './MetricGuideVisual'
 
@@ -21,12 +9,10 @@ interface MetricGuideCardProps {
 }
 
 export function MetricGuideCard({ metric }: MetricGuideCardProps) {
-  const [isOpen, setIsOpen] = useState(false)
-
   return (
-    <div className='rounded-xl border border-border/70 bg-card/50 p-4 shadow-sm'>
-      <div className='flex flex-wrap items-center gap-2'>
-        <h3 className='text-base font-semibold text-foreground'>
+    <div className='border-b border-border/40 py-6 last:border-0'>
+      <div className='mb-4 flex flex-wrap items-center gap-2'>
+        <h3 className='text-lg font-semibold text-foreground'>
           {metric.title}
         </h3>
         <Badge variant='outline' className='text-xs text-muted-foreground'>
@@ -34,102 +20,74 @@ export function MetricGuideCard({ metric }: MetricGuideCardProps) {
         </Badge>
       </div>
 
-      <div className='mt-3 space-y-4'>
+      <div className='space-y-5 text-sm md:text-base'>
         <MetricGuideVisual metric={metric} />
 
-        <div>
-          <p className='text-sm text-foreground'>{metric.shortDefinition}</p>
+        <div className='space-y-4 text-foreground/90'>
+          <p>
+            <strong className='inline-block min-w-[140px] font-medium text-foreground'>
+              What it means:{' '}
+            </strong>
+            {metric.whatItMeans}
+          </p>
+          <p>
+            <strong className='inline-block min-w-[140px] font-medium text-foreground'>
+              Why you should care:{' '}
+            </strong>
+            {metric.whyYouShouldCare}
+          </p>
+          <p>
+            <strong className='inline-block min-w-[140px] font-medium text-foreground'>
+              What you should do:{' '}
+            </strong>
+            {metric.whatYouShouldDo}
+          </p>
         </div>
 
-        <div className='rounded-lg border border-primary/20 bg-primary/5 p-3'>
-          <div className='flex items-start gap-2'>
-            <AlertCircle className='mt-0.5 h-4 w-4 shrink-0 text-primary' />
-            <div className='space-y-1'>
-              <p className='text-sm font-medium text-foreground'>
-                When to care
+        {(metric.caveat ||
+          metric.formula ||
+          (metric.whereYouSeeIt && metric.whereYouSeeIt.length > 0)) && (
+          <div className='mt-6 space-y-3 rounded-lg border-t border-border/30 bg-muted/20 p-4 pt-4'>
+            {metric.caveat && (
+              <p className='text-sm text-foreground/80'>
+                <strong className='font-medium text-foreground'>
+                  Keep in mind:{' '}
+                </strong>
+                <span className='italic'>{metric.caveat}</span>
               </p>
-              <p className='text-sm text-foreground/85'>{metric.whenToCare}</p>
-            </div>
-          </div>
-        </div>
+            )}
 
-        <div className='rounded-lg border border-border/60 bg-muted/30 p-3'>
-          <div className='flex items-start gap-2'>
-            <AlertTriangle className='mt-0.5 h-4 w-4 shrink-0 text-status-caution-foreground' />
-            <div className='space-y-1'>
-              <p className='text-sm font-medium text-foreground'>
-                Quick action
+            {metric.formula && (
+              <p className='text-sm text-foreground/80'>
+                <strong className='font-medium text-foreground'>
+                  Formula:{' '}
+                </strong>
+                <span className='rounded bg-muted/50 px-1.5 py-0.5 font-mono text-muted-foreground'>
+                  {metric.formula}
+                </span>
               </p>
-              <p className='text-sm text-foreground/85'>{metric.quickAction}</p>
-            </div>
-          </div>
-        </div>
+            )}
 
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger
-            className='flex min-h-[44px] items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground'
-            aria-expanded={isOpen}
-          >
-            <span>{isOpen ? 'Hide details' : 'Show details'}</span>
-            <CaretDown
-              className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-            />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className='mt-3 space-y-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-3'>
-              <div>
-                <p className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
-                  Why it matters
-                </p>
-                <p className='mt-1 text-sm text-foreground'>
-                  {metric.whyItMatters}
-                </p>
-              </div>
-
-              <div>
-                <p className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
-                  How to read it
-                </p>
-                <p className='mt-1 text-sm text-foreground'>
-                  {metric.practicalRead}
-                </p>
-              </div>
-
-              <div>
-                <p className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
-                  Important caveat
-                </p>
-                <p className='mt-1 text-sm text-muted-foreground'>
-                  {metric.caveat}
-                </p>
-              </div>
-
-              <div>
-                <p className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
-                  Where you see it
-                </p>
-                <div className='mt-2 flex flex-wrap gap-2'>
-                  {metric.screens.map((screen) => (
-                    <Badge key={screen} variant='secondary' className='text-xs'>
+            {metric.whereYouSeeIt && metric.whereYouSeeIt.length > 0 && (
+              <div className='flex flex-wrap items-center gap-2 pt-1 text-sm text-foreground/80'>
+                <strong className='font-medium text-foreground'>
+                  Where you see it:
+                </strong>
+                <div className='flex flex-wrap gap-1.5'>
+                  {metric.whereYouSeeIt.map((screen) => (
+                    <Badge
+                      key={screen}
+                      variant='secondary'
+                      className='text-[10px] font-semibold uppercase text-muted-foreground'
+                    >
                       {screen}
                     </Badge>
                   ))}
                 </div>
               </div>
-
-              {metric.formula ? (
-                <div>
-                  <p className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
-                    Formula
-                  </p>
-                  <p className='mt-1 rounded bg-muted/50 px-2 py-1 font-mono text-sm text-foreground'>
-                    {metric.formula}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -12,6 +12,7 @@ import { useSimulation } from '@/features/simulation/hooks/useSimulation'
 import { ExplorerRightPanels, ExplorerShell } from '@/shared/components/layouts'
 import { useKeyboardShortcut } from '@/shared/hooks/useKeyboardShortcut'
 import { useResizablePanel } from '@/shared/hooks/useResizablePanel'
+import { isMetricsGuideHash } from '@/shared/lib/utils'
 
 import { useReportExplorer } from '../hooks/useReportExplorer'
 import { useReportSimulation } from '../hooks/useReportSimulation'
@@ -59,7 +60,7 @@ export function ReportShell() {
       analysisData &&
       explorer.viewMode !== 'metrics-guide' &&
       typeof window !== 'undefined' &&
-      window.location.hash.startsWith('#metrics-guide')
+      isMetricsGuideHash(window.location.hash)
     ) {
       explorer.handleShowMetricsGuide('overview')
     }
@@ -96,10 +97,7 @@ export function ReportShell() {
     </Suspense>
   ) : explorer.viewMode === 'metrics-guide' ? (
     <Suspense fallback={<DashboardSkeleton />}>
-      <MetricsGuidePage
-        onBack={explorer.handleBackFromUtility}
-        onModeChange={explorer.handleMetricsGuideModeChange}
-      />
+      <MetricsGuidePage onBack={explorer.handleBackFromUtility} />
     </Suspense>
   ) : explorer.viewMode === 'cycle-triage' ? (
     <CycleTriageWorkspace

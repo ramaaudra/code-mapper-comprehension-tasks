@@ -14,6 +14,7 @@ import { ThemeProvider } from '@/shared/components/providers/ThemeProvider'
 import { useExplorerController } from '@/shared/hooks/useExplorerController'
 import { useKeyboardShortcut } from '@/shared/hooks/useKeyboardShortcut'
 import { useResizablePanel } from '@/shared/hooks/useResizablePanel'
+import { isMetricsGuideHash } from '@/shared/lib/utils'
 
 const FileTreeView = lazy(() =>
   import('@/features/file-analysis').then((module) => ({
@@ -76,8 +77,6 @@ function AppContent() {
     setGraphViewMode,
     utilityReturnViewMode,
     setUtilityReturnViewMode,
-    metricsGuideMode,
-    setMetricsGuideMode,
     highlightedModule,
     setHighlightedModule,
     focusedModulePath,
@@ -114,8 +113,6 @@ function AppContent() {
     setGraphViewMode,
     utilityReturnViewMode,
     setUtilityReturnViewMode,
-    metricsGuideMode,
-    setMetricsGuideMode,
     highlightedModule,
     setHighlightedModule,
     focusedModulePath,
@@ -141,7 +138,7 @@ function AppContent() {
       analysisData &&
       viewMode !== 'metrics-guide' &&
       typeof window !== 'undefined' &&
-      window.location.hash.startsWith('#metrics-guide')
+      isMetricsGuideHash(window.location.hash)
     ) {
       explorer.handleShowMetricsGuide('overview')
     }
@@ -218,10 +215,7 @@ function AppContent() {
             </Suspense>
           ) : explorer.viewMode === 'metrics-guide' ? (
             <Suspense fallback={<DashboardSkeleton />}>
-              <MetricsGuidePage
-                onBack={explorer.handleBackFromUtility}
-                onModeChange={explorer.handleMetricsGuideModeChange}
-              />
+              <MetricsGuidePage onBack={explorer.handleBackFromUtility} />
             </Suspense>
           ) : explorer.viewMode === 'cycle-triage' ? (
             <CycleTriageWorkspace

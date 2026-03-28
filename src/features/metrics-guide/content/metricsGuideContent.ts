@@ -3,24 +3,22 @@ import { getReviewSignalDefinition } from '@/shared/lib/metric-thresholds'
 export interface MetricsGuideMetric {
   id: string
   title: string
-  family: 'Core Metric' | 'Derived Heuristic' | 'Review Heuristic'
-  shortDefinition: string
-  whyItMatters: string
-  practicalRead: string
-  whenToCare: string
-  quickAction: string
-  caveat: string
+  family: 'Codebase Signals' | 'Impact Estimates' | 'Review Priorities'
+  whatItMeans: string
+  whyYouShouldCare: string
+  whatYouShouldDo: string
   visualAnalogyTitle: string
   visualAnalogyDescription: string
   formula?: string
-  screens: string[]
+  whereYouSeeIt?: string[]
+  caveat?: string
 }
 
-export interface MetricsGuideScreenHelp {
+export interface MetricsGuideScreenUsage {
   id: string
-  title: string
-  summary: string
-  bullets: string[]
+  ifYouWantToKnow: string
+  goTo: string
+  youWillGet: string
 }
 
 export interface MetricsGuideGlossaryItem {
@@ -36,16 +34,14 @@ export interface MetricsGuideQuickVisual {
   takeaway: string
 }
 
-export interface MetricsGuideDecisionState {
-  id: string
+export interface MetricsGuidePriorityQuadrant {
   title: string
-  summary: string
-  tone: 'danger' | 'warning' | 'info' | 'success'
+  action: string
 }
 
 export const metricsGuidePrinciples = [
   {
-    label: 'High is not bad',
+    label: 'High is not always bad',
     text: "High numbers don't always mean bad code. They mean you need to look closer."
   },
   {
@@ -54,7 +50,7 @@ export const metricsGuidePrinciples = [
   },
   {
     label: 'App prioritizes for you',
-    text: 'Start with "What should I review first?" — the app already prioritized for you.'
+    text: 'Start with "What should I review first?" — the app already prioritizes based on signals.'
   }
 ]
 
@@ -69,12 +65,12 @@ export const metricsGuideHeroInsight = {
     {
       question: 'Is this file safe to refactor?',
       answer:
-        'Open Node Detail. Read the diagnosis card — it tells you the risk level and what to check.'
+        'Open Node Detail. Read the diagnosis — it tells you the risk level and what to check.'
     },
     {
       question: 'What happens if I change this module?',
       answer:
-        'Look at Propagation Risk and Blast Radius. Higher values mean wider testing scope.'
+        'Look at Propagation Risk and Blast Radius. Higher values suggest wider testing scope.'
     }
   ]
 }
@@ -100,249 +96,195 @@ export const metricsGuideQuickVisuals: MetricsGuideQuickVisual[] = [
   {
     id: 'instability',
     title: 'Instability (I)',
-    summary:
-      'Instability shows structural position from foundational to outward-facing.',
+    summary: 'Shows structural position from foundational to outward-facing.',
     takeaway:
       'High instability is common in UI and adapters. It is not automatically a bad sign.'
   }
 ]
 
-export const metricsGuideDecisionStates: MetricsGuideDecisionState[] = [
-  {
-    id: 'critical-hotspot',
+export const metricsGuideDecisionQuadrants: Record<
+  'criticalHotspot' | 'activeLocal' | 'sharedFoundation' | 'likelyLocal',
+  MetricsGuidePriorityQuadrant
+> = {
+  criticalHotspot: {
     title: 'Critical Hotspot',
-    summary: 'Active and broadly shared. Review here first.',
-    tone: 'danger'
+    action: 'Review here first. This area is both active and widely shared.'
   },
-  {
-    id: 'active-local',
+  activeLocal: {
     title: 'Active but Local',
-    summary: 'Changing often, but still more contained.',
-    tone: 'warning'
+    action: 'Review recent changes, but impact is likely contained.'
   },
-  {
-    id: 'shared-foundation',
+  sharedFoundation: {
     title: 'Shared Foundation',
-    summary: 'Widely reused, even when change pressure is calmer.',
-    tone: 'info'
+    action: 'Test widely when changed. Code here is reused by many.'
   },
-  {
-    id: 'likely-local',
+  likelyLocal: {
     title: 'Likely Local Change',
-    summary: 'More contained and under lower review pressure.',
-    tone: 'success'
+    action: 'Monitor casually. Impact is contained and churn is low.'
   }
-]
+}
 
 export const metricsGuideMetrics: MetricsGuideMetric[] = [
   {
     id: 'dependents',
     title: 'Dependents (Ca)',
-    family: 'Core Metric',
-    shortDefinition: 'How many files or modules depend on the current item.',
-    whyItMatters:
+    family: 'Codebase Signals',
+    whatItMeans: 'How many files or modules depend on the current item.',
+    whyYouShouldCare:
       'Higher values usually mean a wider review surface when the item changes.',
-    practicalRead:
-      'Use this to spot shared foundations that may need broader testing or reviewer attention.',
-    whenToCare:
-      'When Ca > 10, changes here affect many other files. Plan wider review.',
-    quickAction: 'Check which files depend on this before making changes.',
-    caveat:
-      'High Ca does not mean the code is bad. It means more areas may need review.',
+    whatYouShouldDo:
+      'Check which files depend on this before making changes. Plan wider review if Ca > 10.',
     visualAnalogyTitle: 'Many inputs flow into one shared point',
     visualAnalogyDescription:
       'Think of Ca as incoming traffic. The more areas point here, the more places may care about the change.',
-    screens: ['Overview', 'Node Detail', 'Architecture']
+    caveat:
+      'High Ca does not mean the code is bad. It simply means more areas may need review.',
+    whereYouSeeIt: ['Overview', 'Node Detail', 'Architecture']
   },
   {
     id: 'dependencies',
     title: 'Dependencies (Ce)',
-    family: 'Core Metric',
-    shortDefinition: 'How many files or modules the current item depends on.',
-    whyItMatters:
+    family: 'Codebase Signals',
+    whatItMeans: 'How many files or modules the current item depends on.',
+    whyYouShouldCare:
       'Higher values usually mean the item relies on more external code and carries more coupling complexity.',
-    practicalRead:
-      'Use this to spot modules or files that may be carrying too many responsibilities.',
-    whenToCare:
-      'When Ce > 15, this file might be doing too much. Consider splitting.',
-    quickAction:
-      'Review if all dependencies are truly needed or if some can be removed.',
-    caveat:
-      'High Ce is a warning signal for review, not proof that a design is wrong.',
+    whatYouShouldDo:
+      'Review if all dependencies are truly needed or if some can be removed. If Ce > 15, consider splitting responsibilities.',
     visualAnalogyTitle: 'One item fans out into many dependencies',
     visualAnalogyDescription:
       'Think of Ce as outgoing reliance. The more connections leave this item, the harder it may be to change in isolation.',
-    screens: ['Node Detail', 'Architecture']
+    caveat:
+      'High Ce is a warning signal for review, not proof that a design is wrong.',
+    whereYouSeeIt: ['Node Detail', 'Architecture']
   },
   {
     id: 'instability',
     title: 'Instability (I)',
-    family: 'Core Metric',
-    shortDefinition:
+    family: 'Codebase Signals',
+    whatItMeans:
       'Shows where this item sits on the spectrum from foundational to outward-facing.',
-    whyItMatters:
+    whyYouShouldCare:
       'It helps explain whether a module sits in a shared foundation or closer to UI/adapter layers.',
-    practicalRead:
-      'Use it with Spread Risk, not on its own, when deciding review scope.',
-    whenToCare:
-      'High I (>.7) + High Ca = changes spread wide. Low I (<.3) + High Ca = shared foundation.',
-    quickAction:
-      'Combine with Ca to understand change impact, not just position.',
-    caveat:
-      'High instability is common in presentation and adapter layers. It is not automatically bad.',
+    whatYouShouldDo:
+      'Combine with Ca to understand change impact. High I + High Ca = changes spread wide. Low I + High Ca = shared foundation.',
     visualAnalogyTitle: 'A spectrum from foundational to outward-facing',
     visualAnalogyDescription:
       'Instability is a position indicator. Read it as structure, not as danger.',
+    caveat:
+      'High instability is common in presentation and adapter layers. It is not automatically bad.',
     formula: 'I = Ce / (Ca + Ce)',
-    screens: ['Overview', 'Architecture', 'Node Detail']
+    whereYouSeeIt: ['Overview', 'Architecture', 'Node Detail']
   },
   {
     id: 'relative-churn',
     title: 'Relative Churn',
-    family: 'Core Metric',
-    shortDefinition:
-      'How much this file changed recently, compared to its size.',
-    whyItMatters:
+    family: 'Codebase Signals',
+    whatItMeans: 'How much this file changed recently, compared to its size.',
+    whyYouShouldCare:
       'It highlights active areas more fairly than raw changed lines alone.',
-    practicalRead:
-      'Use it to spot files or modules that are still changing heavily and may need closer review.',
-    whenToCare:
-      'When churn > 30% in 30 days, the area is still unstable. Review recent commits.',
-    quickAction:
-      'Check recent commit history to understand what is driving the changes.',
-    caveat:
-      'Values can be above 1.0 when an item is heavily rewritten in the selected time window.',
+    whatYouShouldDo:
+      'Check recent commit history to understand what is driving the changes. High relative churn means the area is still unstable.',
     visualAnalogyTitle: 'How much has this file been rewritten recently?',
     visualAnalogyDescription:
       'Relative Churn compares recent changes to file size, so small but heavily edited files stand out just like large ones.',
+    caveat:
+      'Values can be above 1.0 when an item is heavily rewritten in the selected time window.',
     formula: 'Relative Churn = churn LOC / effective LOC',
-    screens: ['Overview', 'Graph', 'Node Detail', 'Architecture']
+    whereYouSeeIt: ['Overview', 'Graph', 'Node Detail', 'Architecture']
   },
   {
     id: 'propagation-risk',
     title: 'Propagation Risk',
-    family: 'Derived Heuristic',
-    shortDefinition:
+    family: 'Impact Estimates',
+    whatItMeans:
       'Estimates how widely your changes might spread through the codebase.',
-    whyItMatters: propagationRiskSignal.whyItExists,
-    practicalRead:
-      'Use this to find areas that deserve broader regression checks before merging.',
-    whenToCare:
-      'Critical or High = run broader tests before merging. Changes here ripple out.',
-    quickAction:
-      'Review dependent files before making changes. Consider smaller, incremental updates.',
-    caveat: propagationRiskSignal.scientificStatusNote,
+    whyYouShouldCare: propagationRiskSignal.whyItExists,
+    whatYouShouldDo:
+      'Review dependent files before making changes. Critical or High risk suggests the need for broader regression checks before merging.',
     visualAnalogyTitle: 'Shared reuse plus outward pull can widen spread',
     visualAnalogyDescription:
       'Propagation Risk combines structural reuse and structural position to estimate how widely a change may travel.',
+    caveat: propagationRiskSignal.scientificStatusNote,
     formula: 'Propagation Risk = Ca × I',
-    screens: ['Overview', 'Architecture', 'Node Detail']
+    whereYouSeeIt: ['Overview', 'Architecture', 'Node Detail']
   },
   {
     id: 'blast-radius',
     title: 'Blast Radius',
-    family: 'Derived Heuristic',
-    shortDefinition:
+    family: 'Impact Estimates',
+    whatItMeans:
       'Estimates how many nearby files you should test after changing this one.',
-    whyItMatters: blastRadiusSignal.whyItExists,
-    practicalRead:
-      'Use this as a supporting verification signal in file detail views when planning refactors or choosing test scope.',
-    whenToCare:
-      'Critical or High = test dependents and dependencies. Medium = spot check related files.',
-    quickAction:
-      'Use this to scope your testing. Higher radius = more test coverage needed.',
-    caveat: blastRadiusSignal.scientificStatusNote,
+    whyYouShouldCare: blastRadiusSignal.whyItExists,
+    whatYouShouldDo:
+      'Use this to scope your testing. Higher radius means more test coverage is needed for dependents and dependencies.',
     visualAnalogyTitle: 'A local ring of nearby verification effort',
     visualAnalogyDescription:
       'Blast Radius is about nearby impact around one file change, not repository-wide spread.',
+    caveat: blastRadiusSignal.scientificStatusNote,
     formula: 'Blast Radius = Ca + (Ce × 0.5)',
-    screens: ['Node Detail']
+    whereYouSeeIt: ['Node Detail']
   },
   {
     id: 'hotspot-score',
     title: 'Hotspot Score',
-    family: 'Review Heuristic',
-    shortDefinition: 'Combines how active and how sensitive this area is.',
-    whyItMatters:
+    family: 'Review Priorities',
+    whatItMeans:
+      'A score that combines how active and how structurally sensitive this area is.',
+    whyYouShouldCare:
       'It helps prioritize areas that are both active and important to review.',
-    practicalRead:
-      'Use it to find modules that deserve closer review because they combine recent churn and structural impact.',
-    whenToCare:
-      'High score = this area is both busy and important. Review carefully before changes.',
-    quickAction: 'Prioritize these areas for code review and extra testing.',
-    caveat:
-      'This score is repo-relative and supports ranking, not universal scientific judgment.',
+    whatYouShouldDo:
+      'Prioritize these areas for code review and extra testing before making changes.',
     visualAnalogyTitle: 'Recent activity plus structural sensitivity',
     visualAnalogyDescription:
       'Hotspot score rewards overlap between heavy recent change and meaningful architectural sensitivity.',
+    caveat:
+      'This score is repo-relative and helps with relative ranking, not universal scientific judgment.',
     formula:
       'Hotspot Score = percentile(relative churn 30d) × percentile(structural risk)',
-    screens: ['Overview', 'Graph', 'Architecture']
+    whereYouSeeIt: ['Overview', 'Graph', 'Architecture']
   },
   {
     id: 'hotspot-status',
     title: 'Hotspot Status',
-    family: 'Review Heuristic',
-    shortDefinition:
-      'A quick label that tells you if this area needs attention.',
-    whyItMatters: hotspotStatusSignal.whyItExists,
-    practicalRead:
-      'Treat it as a prioritization band: critical first, active later, stable lower priority.',
-    whenToCare:
-      'Critical = review first. High = review soon. Active = monitor. Stable = low priority.',
-    quickAction:
-      'Start with critical hotspots. They combine activity and impact.',
-    caveat: hotspotStatusSignal.scientificStatusNote,
+    family: 'Review Priorities',
+    whatItMeans: 'A quick label that categorizes if this area needs attention.',
+    whyYouShouldCare: hotspotStatusSignal.whyItExists,
+    whatYouShouldDo:
+      'Start reviewing Critical hotspots first. Treat it as a prioritization band: critical first, active later, stable lower priority.',
     visualAnalogyTitle: 'A readable review band on top of ranking data',
     visualAnalogyDescription:
       'Status labels translate numeric ranking into quick review language so you can decide faster.',
-    screens: ['Graph', 'Node Detail', 'Architecture']
+    caveat: hotspotStatusSignal.scientificStatusNote,
+    whereYouSeeIt: ['Graph', 'Node Detail', 'Architecture']
   }
 ]
 
-export const metricsGuideScreenHelp: MetricsGuideScreenHelp[] = [
+export const metricsGuideScreenUsage: MetricsGuideScreenUsage[] = [
   {
     id: 'overview',
-    title: 'Overview',
-    summary: 'Use this page as your triage screen.',
-    bullets: [
-      'Start Here shows what to review first and where to click next.',
-      'Review First combines two lenses: shared change spread and recent change pressure.',
-      'System Context is supporting evidence, not your first action surface.'
-    ]
-  },
-  {
-    id: 'graph',
-    title: 'Graph',
-    summary:
-      'Use the graph to understand relationships, not to read every metric in full.',
-    bullets: [
-      'Node labels show quick signals about activity, spread, and relation to the focus item.',
-      'Open the detail panel when you need the full reasoning behind a recommendation.',
-      'Focused graphs help you inspect local neighborhoods before making a change.'
-    ]
+    ifYouWantToKnow: 'what deserves review first',
+    goTo: 'Overview',
+    youWillGet:
+      'hotspots and shared areas prioritized by activity and structural impact.'
   },
   {
     id: 'node-detail',
-    title: 'Node Detail',
-    summary:
-      'Use this panel for decision support before you edit a file or module.',
-    bullets: [
-      'Read the diagnosis first, then the action guidance, then the top drivers.',
-      'Evidence cards and Blast Radius provide supporting context behind the diagnosis, not a separate verdict.',
-      'Open Why this recommendation when you need formulas, thresholds, or scientific context.'
-    ]
+    ifYouWantToKnow: 'the local consequences of changing one file',
+    goTo: 'Node Detail',
+    youWillGet:
+      'a risk diagnosis, actionable guidance, and top drivers for change in that specific code.'
   },
   {
     id: 'architecture',
-    title: 'Architecture',
-    summary:
-      'Use this page to inspect modules in detail once you know where to start.',
-    bullets: [
-      'Sort by Spread Risk to find shared modules that may need broader testing.',
-      'Sort by Hotspot Priority to find modules under recent change pressure.',
-      'Use expanded rows to inspect file-level patterns inside a module.'
-    ]
+    ifYouWantToKnow: 'the structural health of larger modules',
+    goTo: 'Architecture',
+    youWillGet: 'metrics to sort modules by spread risk or hotspot priority.'
+  },
+  {
+    id: 'graph',
+    ifYouWantToKnow: 'how a module is uniquely connected to its neighbors',
+    goTo: 'Graph',
+    youWillGet: 'a visual map of direct relationships and dependencies.'
   }
 ]
 
@@ -358,12 +300,12 @@ export const metricsGuideGlossary: MetricsGuideGlossaryItem[] = [
   {
     term: 'Dependents (Ca)',
     definition: 'The number of files or modules that depend on an item.',
-    practicalMeaning: 'Higher values usually mean broader review scope.'
+    practicalMeaning: 'Higher values usually suggest broader review scope.'
   },
   {
     term: 'Dependencies (Ce)',
     definition: 'The number of files or modules an item depends on.',
-    practicalMeaning: 'Higher values usually mean more external reliance.'
+    practicalMeaning: 'Higher values usually suggest more external reliance.'
   },
   {
     term: 'Instability (I)',
@@ -373,14 +315,14 @@ export const metricsGuideGlossary: MetricsGuideGlossaryItem[] = [
   },
   {
     term: 'Propagation Risk',
-    definition: 'A derived heuristic that combines Ca and I.',
+    definition: 'A derived estimate that combines Ca and I.',
     practicalMeaning: 'Highlights modules where change may spread more widely.'
   },
   {
     term: 'Blast Radius',
     definition: 'A file-level heuristic for nearby verification scope.',
     practicalMeaning:
-      'Useful when deciding whether a file change is likely to stay local.'
+      'Useful when estimating whether a file change is likely to stay local.'
   },
   {
     term: 'Relative Churn',

@@ -19,11 +19,11 @@ interface MetricGuideVisualProps {
 }
 
 const familyToneClasses = {
-  'Core Metric':
+  'Codebase Signals':
     'border-guide-core-border bg-guide-core-surface text-guide-core-foreground',
-  'Derived Heuristic':
+  'Impact Estimates':
     'border-guide-derived-border bg-guide-derived-surface text-guide-derived-foreground',
-  'Review Heuristic':
+  'Review Priorities':
     'border-guide-review-border bg-guide-review-surface text-guide-review-foreground'
 } as const
 

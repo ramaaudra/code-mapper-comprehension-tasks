@@ -11,8 +11,6 @@ export type ExplorerViewMode = PrimaryExplorerViewMode | UtilityExplorerViewMode
 
 export type GraphViewMode = 'file' | 'module'
 
-export type MetricsGuideMode = 'quick' | 'reference'
-
 export type NonUtilityViewMode = PrimaryExplorerViewMode
 
 export type ExplorerContextChipTone = 'default' | 'warning'

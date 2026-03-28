@@ -4,6 +4,7 @@ import { buildCycleTriageSearch } from '@/features/cycle-triage/lib/cycle-triage
 import { useModuleExplorerState } from '@/features/graph'
 import {
   buildMetricsGuideHash,
+  isMetricsGuideHash,
   matchesFile,
   parseMetricsGuideHash,
   resolveExplorerContextChip
@@ -15,7 +16,6 @@ import type {
   ExplorerContextChip,
   ExplorerViewMode,
   GraphViewMode,
-  MetricsGuideMode,
   NonUtilityViewMode,
   PrimaryExplorerViewMode,
   UtilityExplorerViewMode
@@ -35,8 +35,6 @@ interface UseExplorerControllerOptions {
   setGraphViewMode: Dispatch<SetStateAction<GraphViewMode>>
   utilityReturnViewMode: NonUtilityViewMode
   setUtilityReturnViewMode: Dispatch<SetStateAction<NonUtilityViewMode>>
-  metricsGuideMode: MetricsGuideMode
-  setMetricsGuideMode: Dispatch<SetStateAction<MetricsGuideMode>>
   highlightedModule: string | null
   setHighlightedModule: Dispatch<SetStateAction<string | null>>
   focusedModulePath: string | null
@@ -70,8 +68,6 @@ export function useExplorerController({
   setGraphViewMode,
   utilityReturnViewMode,
   setUtilityReturnViewMode,
-  metricsGuideMode,
-  setMetricsGuideMode,
   highlightedModule,
   setHighlightedModule,
   focusedModulePath,
@@ -127,7 +123,7 @@ export function useExplorerController({
   const clearUtilityHash = useCallback(() => {
     if (
       typeof window !== 'undefined' &&
-      window.location.hash.startsWith('#metrics-guide')
+      isMetricsGuideHash(window.location.hash)
     ) {
       window.history.replaceState(
         null,
@@ -334,24 +330,25 @@ export function useExplorerController({
   const handleShowMetricsGuide = useCallback(
     (sourceView?: NonUtilityViewMode) => {
       const nextSource = resolveUtilitySourceView(sourceView)
-      const hashMode =
+      const nextSection =
         typeof window !== 'undefined'
-          ? parseMetricsGuideHash(window.location.hash)?.mode
-          : null
-      const nextMode = hashMode ?? 'quick'
+          ? parseMetricsGuideHash(window.location.hash)?.section
+          : undefined
 
       setUtilityReturnViewMode(nextSource)
       setSelectedCycleId(null)
       setShowCycleNearbyImports(false)
-      setMetricsGuideMode(nextMode)
       if (typeof window !== 'undefined') {
-        window.history.replaceState(null, '', buildMetricsGuideHash(nextMode))
+        window.history.replaceState(
+          null,
+          '',
+          buildMetricsGuideHash(nextSection)
+        )
       }
       setViewMode('metrics-guide')
     },
     [
       resolveUtilitySourceView,
-      setMetricsGuideMode,
       setSelectedCycleId,
       setShowCycleNearbyImports,
       setUtilityReturnViewMode,
@@ -391,13 +388,6 @@ export function useExplorerController({
     syncCycleTriageSearch,
     utilityReturnViewMode
   ])
-
-  const handleMetricsGuideModeChange = useCallback(
-    (mode: MetricsGuideMode) => {
-      setMetricsGuideMode(mode)
-    },
-    [setMetricsGuideMode]
-  )
 
   const handleCycleSelection = useCallback(
     (cycleId: string | null) => {
@@ -496,10 +486,10 @@ export function useExplorerController({
     return resolveExplorerContextChip({
       viewMode,
       graphViewMode,
-      currentHash: buildMetricsGuideHash(metricsGuideMode),
+      currentHash: buildMetricsGuideHash(),
       hasUnresolvedImports
     })
-  }, [graphViewMode, hasUnresolvedImports, metricsGuideMode, viewMode])
+  }, [graphViewMode, hasUnresolvedImports, viewMode])
 
   return {
     treeRef,
@@ -509,7 +499,6 @@ export function useExplorerController({
     activeUtilityViewMode,
     graphViewMode,
     activeContextChip,
-    metricsGuideMode,
     highlightedModule,
     focusedModulePath,
     isTreeCollapsed,
@@ -529,7 +518,6 @@ export function useExplorerController({
     handleShowSetupGuide,
     handleShowMetricsGuide,
     handleBackFromUtility,
-    handleMetricsGuideModeChange,
     handleShowModuleGraph,
     handleModuleSelect,
     handleModulePanelClose,

@@ -1,15 +1,15 @@
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from '@/shared/components/ui/card'
-import { FileText, Focus, Map, Network } from '@/shared/components/ui/icons'
+  FileText,
+  Focus,
+  Map,
+  Network,
+  ArrowRight
+} from '@/shared/components/ui/icons'
 
-import type { MetricsGuideScreenHelp } from '../content/metricsGuideContent'
+import type { MetricsGuideScreenUsage } from '../content/metricsGuideContent'
 
 interface ScreenUsageGuideProps {
-  screens: MetricsGuideScreenHelp[]
+  screens: MetricsGuideScreenUsage[]
 }
 
 const screenIcons = {
@@ -21,31 +21,46 @@ const screenIcons = {
 
 export function ScreenUsageGuide({ screens }: ScreenUsageGuideProps) {
   return (
-    <div className='grid gap-4 lg:grid-cols-2'>
+    <div className='space-y-6'>
       {screens.map((screen) => {
         const Icon =
           screenIcons[screen.id as keyof typeof screenIcons] ?? FileText
 
         return (
-          <Card key={screen.id} className='border-border/70 bg-card/50'>
-            <CardHeader className='pb-2'>
-              <CardTitle className='flex items-center gap-2 text-base'>
-                <Icon className='h-4 w-4 text-primary' />
-                {screen.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className='space-y-3'>
-              <p className='text-sm text-muted-foreground'>{screen.summary}</p>
-              <ul className='space-y-2 text-sm text-foreground'>
-                {screen.bullets.map((bullet) => (
-                  <li key={bullet} className='flex gap-2'>
-                    <span className='mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary' />
-                    <span>{bullet}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <div
+            key={screen.id}
+            className='flex flex-col gap-4 border-b border-border/40 pb-6 last:border-0 last:pb-0 sm:flex-row sm:gap-6'
+          >
+            <div className='flex flex-1 items-start gap-4'>
+              <div className='mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+                <Icon className='h-4 w-4' />
+              </div>
+              <div className='space-y-1.5'>
+                <p className='text-sm text-muted-foreground'>
+                  If you want to know...
+                </p>
+                <p className='text-base font-medium text-foreground'>
+                  {screen.ifYouWantToKnow}
+                </p>
+              </div>
+            </div>
+
+            <div className='hidden shrink-0 items-center text-muted-foreground/30 sm:flex'>
+              <ArrowRight className='h-5 w-5' />
+            </div>
+
+            <div className='flex-1 space-y-1.5 pl-12 sm:pl-0'>
+              <div className='text-sm text-muted-foreground'>
+                Go to{' '}
+                <strong className='rounded bg-muted/40 px-1 py-0.5 font-semibold text-foreground'>
+                  {screen.goTo}
+                </strong>
+              </div>
+              <p className='text-sm text-foreground/90'>
+                You will get {screen.youWillGet}
+              </p>
+            </div>
+          </div>
         )
       })}
     </div>
