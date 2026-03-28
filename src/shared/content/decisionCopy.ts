@@ -149,17 +149,21 @@ export function getDecisionHeadlineCopy(params: {
 }
 
 export function getDecisionBasisSummaryCopy(params: {
+  subject?: Subject
   hasCycle: boolean
   isOrphan: boolean
   changeHistoryAvailable?: boolean
   entryDetectionContext?: EntryDetectionContext
 }): string {
   const {
+    subject = 'file',
     hasCycle,
     isOrphan,
     changeHistoryAvailable = true,
     entryDetectionContext
   } = params
+  const cycleBasis =
+    subject === 'module' ? 'cycle member files' : 'cycle participation'
 
   if (hasCycle && isOrphan) {
     const reachabilityBasisCopy = entryDetectionContext
@@ -167,17 +171,17 @@ export function getDecisionBasisSummaryCopy(params: {
       : 'Based on entry-point reachability in the current analysis.'
     const basisFragment = reachabilityBasisCopy.replace(/^Based on /, '')
     if (!changeHistoryAvailable) {
-      return `Based on cycle participation and ${basisFragment} Git history is unavailable for recent change signals.`
+      return `Based on ${cycleBasis} and ${basisFragment} Git history is unavailable for recent change signals.`
     }
 
-    return `Based on cycle participation, ${basisFragment.replace(/\.$/, '')}, and recent change pressure.`
+    return `Based on ${cycleBasis}, ${basisFragment.replace(/\.$/, '')}, and recent change pressure.`
   }
 
   if (hasCycle) {
     if (!changeHistoryAvailable) {
-      return 'Based on cycle participation and downstream impact. Git history is unavailable for recent change signals.'
+      return `Based on ${cycleBasis} and downstream impact. Git history is unavailable for recent change signals.`
     }
-    return 'Based on cycle participation, downstream impact, and recent change pressure.'
+    return `Based on ${cycleBasis}, downstream impact, and recent change pressure.`
   }
 
   if (isOrphan) {
@@ -220,9 +224,18 @@ export function getCycleDecisionCopy(
     isPossiblyUnreachable?: boolean
   }
 ) {
+  const cycleSummaryLead =
+    subject === 'module'
+      ? 'This module contains files involved in a circular dependency'
+      : `This ${subject} sits in a circular dependency`
+  const cycleTopDriver =
+    subject === 'module'
+      ? 'This module contains files involved in a circular dependency.'
+      : 'This area participates in a circular dependency.'
+
   if (options?.isPossiblyUnreachable) {
     return {
-      summary: `This ${subject} sits in a circular dependency. Entry-point analysis also did not reach this path, but the cycle risk still takes priority.`,
+      summary: `${cycleSummaryLead}. Entry-point analysis also did not reach this path, but the cycle risk still takes priority.`,
       whyItMatters:
         'Do not treat this as a safe cleanup candidate until the full cycle and any runtime usage are verified.',
       actions: [
@@ -231,7 +244,7 @@ export function getCycleDecisionCopy(
         'Avoid deleting or refactoring it as isolated work until the cycle is understood.'
       ],
       topDrivers: [
-        'This area participates in a circular dependency.',
+        cycleTopDriver,
         'The current entry-point analysis did not reach this path.',
         'Cycle risk still dominates because changes can feed back through the same dependency chain.'
       ]
@@ -239,7 +252,7 @@ export function getCycleDecisionCopy(
   }
 
   return {
-    summary: `This ${subject} sits in a circular dependency and needs careful review.`,
+    summary: `${cycleSummaryLead} and needs careful review.`,
     whyItMatters:
       'Circular dependencies increase maintenance and verification cost, and changes can behave unexpectedly across the same dependency chain.',
     actions: [
@@ -248,7 +261,7 @@ export function getCycleDecisionCopy(
       'Prefer breaking the cycle over adding new responsibilities here.'
     ],
     topDrivers: [
-      'This area participates in a circular dependency.',
+      cycleTopDriver,
       'Changes can feed back through the same dependency chain.',
       'Verification cost is higher because behavior can loop unexpectedly.'
     ]

@@ -40,6 +40,7 @@ import {
   type NodeDetailBlastRadiusAssessment
 } from '../lib/supporting-signals'
 
+import type { NodeDetailCycleTriageSummary } from '../lib/cycle-triage-link'
 import type { BlastRadiusRole } from '../lib/panel-state'
 import type { FileArchitectureMetrics } from '@/features/architecture/types/architecture'
 import type { DecisionAssessment } from '@/shared/lib/utils'
@@ -73,6 +74,8 @@ interface NodeDetailOverviewSectionProps {
   resolvedNodeId: string
   decisionIcon: ReactNode
   entryDetectionContext?: EntryDetectionContext
+  relatedCycleSummary: NodeDetailCycleTriageSummary | null
+  onShowCycleTriage?: (cycleId?: string | null) => void
 }
 
 const blastRadiusSignal = getReviewSignalDefinition('blastRadius')
@@ -91,7 +94,9 @@ export function NodeDetailOverviewSection({
   onFocusDirectionChange,
   resolvedNodeId,
   decisionIcon,
-  entryDetectionContext
+  entryDetectionContext,
+  relatedCycleSummary,
+  onShowCycleTriage
 }: NodeDetailOverviewSectionProps) {
   const supportingSignals =
     overviewState.showBlastRadius &&
@@ -109,43 +114,72 @@ export function NodeDetailOverviewSection({
   return (
     <div className='space-y-6'>
       {overviewState.showDiagnosis && decisionAssessment ? (
-        <DecisionStorySection
-          assessment={decisionAssessment}
-          icon={decisionIcon}
-          changeActivityValue={
-            changeHistoryAvailable ? undefined : 'Unavailable'
-          }
-          changeActivityTone={changeHistoryAvailable ? undefined : 'default'}
-          evidenceHelpers={{
-            impactScope: archMetrics ? (
-              <span className='text-xs text-muted-foreground'>
-                {formatImpactScopeHelper(archMetrics.ca)}
-              </span>
-            ) : null,
-            changeActivity:
-              changeHistoryAvailable && fileEvolution ? (
+        <div className='space-y-3'>
+          <DecisionStorySection
+            assessment={decisionAssessment}
+            icon={decisionIcon}
+            changeActivityValue={
+              changeHistoryAvailable ? undefined : 'Unavailable'
+            }
+            changeActivityTone={changeHistoryAvailable ? undefined : 'default'}
+            evidenceHelpers={{
+              impactScope: archMetrics ? (
                 <span className='text-xs text-muted-foreground'>
-                  {formatChangePressureHelper(
-                    fileEvolution.churn30d.relativeChurn
-                  )}
-                </span>
-              ) : !changeHistoryAvailable ? (
-                <span className='text-xs text-muted-foreground'>
-                  Git history is unavailable for recent change signals.
+                  {formatImpactScopeHelper(archMetrics.ca)}
                 </span>
               ) : null,
-            dependencies: archMetrics ? (
-              <span className='text-xs text-muted-foreground'>
-                {formatExternalRelianceHelper(archMetrics.ce)}
-              </span>
-            ) : null,
-            architectureRole: archMetrics ? (
-              <span className='text-xs text-muted-foreground'>
-                {formatStructuralPositionHelper(archMetrics.instability)}
-              </span>
-            ) : null
-          }}
-        />
+              changeActivity:
+                changeHistoryAvailable && fileEvolution ? (
+                  <span className='text-xs text-muted-foreground'>
+                    {formatChangePressureHelper(
+                      fileEvolution.churn30d.relativeChurn
+                    )}
+                  </span>
+                ) : !changeHistoryAvailable ? (
+                  <span className='text-xs text-muted-foreground'>
+                    Git history is unavailable for recent change signals.
+                  </span>
+                ) : null,
+              dependencies: archMetrics ? (
+                <span className='text-xs text-muted-foreground'>
+                  {formatExternalRelianceHelper(archMetrics.ce)}
+                </span>
+              ) : null,
+              architectureRole: archMetrics ? (
+                <span className='text-xs text-muted-foreground'>
+                  {formatStructuralPositionHelper(archMetrics.instability)}
+                </span>
+              ) : null
+            }}
+          />
+
+          {relatedCycleSummary && onShowCycleTriage ? (
+            <div className='rounded-xl border border-destructive/30 bg-destructive/5 p-4'>
+              <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
+                <div className='space-y-1'>
+                  <p className='text-sm font-semibold text-destructive'>
+                    {relatedCycleSummary.title}
+                  </p>
+                  <p className='text-xs leading-relaxed text-destructive/90'>
+                    {relatedCycleSummary.description}
+                  </p>
+                </div>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  className='border-destructive/30 bg-background/80 text-destructive hover:bg-destructive/10 hover:text-destructive'
+                  onClick={() =>
+                    onShowCycleTriage(relatedCycleSummary.selectedCycleId)
+                  }
+                >
+                  {relatedCycleSummary.actionLabel}
+                  <ArrowRight className='ml-2 h-3 w-3' />
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </div>
       ) : null}
 
       {overviewState.showDiagnosisUnavailableState ? (

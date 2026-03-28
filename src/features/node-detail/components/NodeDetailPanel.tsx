@@ -37,6 +37,7 @@ import {
 } from '@/shared/lib/utils/risk'
 
 import { nodeDetailCopy } from '../content/nodeDetailCopy'
+import { resolveNodeDetailCycleTriageSummary } from '../lib/cycle-triage-link'
 import {
   resolveBlastRadiusRole,
   resolveNodeDetailOverviewState,
@@ -71,13 +72,15 @@ interface NodeDetailPanelProps {
   data: AnalysisData | null
   onClose: () => void
   onFocusSubgraph?: (nodeId: string, direction: 'inward' | 'outward') => void
+  onShowCycleTriage?: (cycleId?: string | null) => void
 }
 
 const NodeDetailPanel = memo(function NodeDetailPanel({
   node,
   data,
   onClose,
-  onFocusSubgraph
+  onFocusSubgraph,
+  onShowCycleTriage
 }: NodeDetailPanelProps) {
   const [focusDirection, setFocusDirection] = useState<'inward' | 'outward'>(
     'outward'
@@ -190,6 +193,14 @@ const NodeDetailPanel = memo(function NodeDetailPanel({
     fileThresholdCalibration,
     isOrphan
   ])
+  const relatedCycleSummary = useMemo(
+    () =>
+      resolveNodeDetailCycleTriageSummary({
+        filePath: nodeId ?? null,
+        cycles: data?.issues?.circularDependencies ?? []
+      }),
+    [data?.issues?.circularDependencies, nodeId]
+  )
 
   const overviewState = useMemo(
     () =>
@@ -450,6 +461,8 @@ const NodeDetailPanel = memo(function NodeDetailPanel({
                 : null
             }
             entryDetectionContext={data?.entryDetectionContext}
+            relatedCycleSummary={relatedCycleSummary}
+            onShowCycleTriage={onShowCycleTriage}
           />
         </TabsContent>
 

@@ -4,6 +4,7 @@ import {
   useModuleReviewThresholdCalibration,
   useFolderDetail
 } from '@/features/architecture'
+import { Badge } from '@/shared/components/ui/badge'
 import { DecisionStorySection } from '@/shared/components/ui/decision-story-section'
 import { DetailPanelDisclosure } from '@/shared/components/ui/detail-panel-disclosure'
 import { DetailPanelHeader } from '@/shared/components/ui/detail-panel-header'
@@ -57,6 +58,10 @@ import {
 
 import { graphCopy } from '../content/graphCopy'
 import { describeDependentImpact } from '../lib/dependent-impact-story'
+import {
+  getModuleFileCycleBadgeCopy,
+  getModulePropagationDescription
+} from '../lib/module-side-panel-presentation'
 
 import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
 import type { ReviewThresholdCalibration } from '@/shared/lib/metric-thresholds'
@@ -428,9 +433,10 @@ function PropagationRiskCard({
     },
     thresholdCalibration
   )
-  const description = moduleData.hasCycle
-    ? 'This module participates in a circular dependency. Break the cycle first because changes can feed back into the same dependency chain.'
-    : getRiskDescription(riskProfile.level)
+  const description = getModulePropagationDescription(
+    moduleData.hasCycle,
+    getRiskDescription(riskProfile.level)
+  )
   const isLowPropagationWithHighDependents =
     riskProfile.level === 'low' &&
     resolveImpactScope(moduleData.ca, 'module', thresholdCalibration) ===
@@ -698,6 +704,7 @@ function FilesTab({
         {sortedFiles.map((file, index) => {
           const riskScore = calculateRiskScore(file.ca, file.instability)
           const fileName = file.filePath.split('/').pop() ?? file.filePath
+          const cycleBadgeCopy = getModuleFileCycleBadgeCopy(file.hasCycle)
 
           return (
             <div
@@ -709,28 +716,45 @@ function FilesTab({
                   {index + 1}
                 </span>
                 <FileCode className='h-4 w-4 shrink-0 text-muted-foreground' />
-                <span className='flex-1 truncate font-mono text-sm font-medium text-foreground'>
-                  {fileName}
-                </span>
+                <div className='flex min-w-0 flex-1 flex-wrap items-center gap-2'>
+                  <span className='truncate font-mono text-sm font-medium text-foreground'>
+                    {fileName}
+                  </span>
+                  {cycleBadgeCopy ? (
+                    <Badge
+                      variant='outline'
+                      className='border-destructive/30 bg-destructive/5 text-[11px] font-medium text-destructive'
+                    >
+                      {cycleBadgeCopy.label}
+                    </Badge>
+                  ) : null}
+                </div>
               </div>
-              <div className='mt-2 flex flex-col gap-2 pl-7 sm:flex-row sm:items-center sm:justify-between'>
-                <span className='text-xs leading-relaxed text-muted-foreground'>
-                  {graphCopy.modulePanel.files.summary(
-                    riskScore,
-                    file.ca,
-                    file.instability,
-                    changeHistoryAvailable && file.evolution
-                      ? formatRelativeChurn(
-                          file.evolution.churn30d.relativeChurn
-                        )
-                      : undefined
-                  )}
-                </span>
+              <div className='mt-2 flex flex-col gap-2 pl-7 sm:flex-row sm:items-start sm:justify-between'>
+                <div className='min-w-0 space-y-1'>
+                  <span className='block text-xs leading-relaxed text-muted-foreground'>
+                    {graphCopy.modulePanel.files.summary(
+                      riskScore,
+                      file.ca,
+                      file.instability,
+                      changeHistoryAvailable && file.evolution
+                        ? formatRelativeChurn(
+                            file.evolution.churn30d.relativeChurn
+                          )
+                        : undefined
+                    )}
+                  </span>
+                  {cycleBadgeCopy ? (
+                    <span className='block text-xs leading-relaxed text-destructive/90'>
+                      {cycleBadgeCopy.description}
+                    </span>
+                  ) : null}
+                </div>
                 <button
                   type='button'
                   onClick={() => onViewFile(file.filePath)}
                   aria-label={`View file details for ${file.filePath}`}
-                  className='inline-flex items-center gap-1 self-start text-xs font-medium text-primary transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:self-auto'
+                  className='inline-flex items-center gap-1 self-start text-xs font-medium text-primary transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
                 >
                   View
                   <ArrowRight className='h-3 w-3' />

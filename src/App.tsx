@@ -289,7 +289,12 @@ function AppContent() {
             panelRef,
             panelWidth,
             resizeHandleProps,
-            onClose: explorer.handleDetailClose
+            onClose: explorer.handleDetailClose,
+            onShowCycleTriage: (cycleId) =>
+              explorer.handleShowCycleTriage(
+                cycleId,
+                explorer.viewMode === 'graph' ? 'graph' : 'overview'
+              )
           }}
           modulePanel={{
             panelRef: modulePanelRef,

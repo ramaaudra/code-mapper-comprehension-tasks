@@ -187,7 +187,12 @@ export function ReportShell() {
             panelRef: nodePanel.panelRef,
             panelWidth: nodePanel.panelWidth,
             resizeHandleProps: nodePanel.resizeHandleProps,
-            onClose: explorer.handleDetailClose
+            onClose: explorer.handleDetailClose,
+            onShowCycleTriage: (cycleId) =>
+              explorer.handleShowCycleTriage(
+                cycleId,
+                explorer.viewMode === 'graph' ? 'graph' : 'overview'
+              )
           }}
           modulePanel={{
             panelRef: modulePanel.panelRef,

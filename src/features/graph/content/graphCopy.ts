@@ -62,6 +62,9 @@ export const graphCopy = {
       emptyTitle: 'No files found',
       emptyDescription:
         'This module currently has no file entries in the analysis result.',
+      cycleMemberLabel: 'Cycle member',
+      cycleMemberDescription:
+        'This file is part of a detected dependency cycle. Review it before broader refactors in this module.',
       summary: (
         riskScore: number,
         ca: number,
@@ -89,7 +92,9 @@ export const graphCopy = {
     overview: {
       noModuleTitle: 'No module data available',
       noModuleDescription:
-        'The current analysis result does not include architecture metrics for this module.'
+        'The current analysis result does not include architecture metrics for this module.',
+      cyclePropagationDescription:
+        'This module contains files involved in a circular dependency. Review the cycle member files first because changes can feed back through the same dependency chain.'
     }
   }
 } as const

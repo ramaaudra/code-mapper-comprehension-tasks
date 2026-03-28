@@ -33,6 +33,7 @@ interface ExplorerRightPanelsProps {
   graphViewMode: 'file' | 'module'
   nodePanel: PanelControls & {
     onClose: () => void
+    onShowCycleTriage?: (cycleId?: string | null) => void
   }
   modulePanel: PanelControls & {
     modulePath: string | null
@@ -87,6 +88,7 @@ export function ExplorerRightPanels({
               node={selectedNode}
               data={analysisData}
               onClose={nodePanel.onClose}
+              onShowCycleTriage={nodePanel.onShowCycleTriage}
             />
           </Suspense>
         </div>

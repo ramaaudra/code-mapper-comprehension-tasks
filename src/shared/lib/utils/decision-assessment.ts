@@ -237,6 +237,7 @@ function getDiagnosisHeadline(params: {
 }
 
 function getBasisSummary(params: {
+  subject: 'file' | 'module'
   hasCycle: boolean
   isOrphan: boolean
   changeHistoryAvailable?: boolean
@@ -402,6 +403,7 @@ export function createDecisionAssessment(
     isOrphan
   })
   const resolvedBasisSummary = getBasisSummary({
+    subject,
     hasCycle,
     isOrphan,
     changeHistoryAvailable,

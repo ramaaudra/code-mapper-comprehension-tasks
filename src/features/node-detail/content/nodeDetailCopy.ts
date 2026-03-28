@@ -36,6 +36,16 @@ export const nodeDetailCopy = {
     description:
       'The panel cannot build a review verdict because architecture metrics for this file are unavailable in the current dataset.'
   },
+  cycleTriage: {
+    title: (count: number) =>
+      `${count} related dependency ${count === 1 ? 'cycle' : 'cycles'}`,
+    description: (count: number) =>
+      count === 1
+        ? 'This file is part of 1 detected dependency cycle. Open cycle triage to inspect the full loop before changing this file.'
+        : `This file appears in ${count} detected dependency cycles. Open cycle triage to compare the loops and decide which one to inspect first.`,
+    singleAction: 'Open related cycle',
+    multipleAction: (count: number) => `Review related cycles (${count})`
+  },
   orphan: {
     sectionTitle: 'File Status',
     title: reachabilityCopy.title,
