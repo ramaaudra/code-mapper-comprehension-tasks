@@ -25,6 +25,7 @@ type DependencyUnit = 'file' | 'module'
 
 export const decisionCopy = {
   evidence: {
+    supportingTitle: 'Supporting evidence',
     labels: {
       impactScope: 'Files Affected if Changed',
       changeActivity: 'How Often This Changes',

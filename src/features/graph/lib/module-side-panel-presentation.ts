@@ -5,6 +5,11 @@ export interface ModuleFileCycleBadgeCopy {
   description: string
 }
 
+export interface ModuleOverviewDecisionStoryConfig {
+  evidenceLayout: 'list'
+  fallbackActionLead: string
+}
+
 export function getModulePropagationDescription(
   hasCycle: boolean,
   fallbackDescription: string
@@ -26,5 +31,12 @@ export function getModuleFileCycleBadgeCopy(
   return {
     label: graphCopy.modulePanel.files.cycleMemberLabel,
     description: graphCopy.modulePanel.files.cycleMemberDescription
+  }
+}
+
+export function getModuleOverviewDecisionStoryConfig(): ModuleOverviewDecisionStoryConfig {
+  return {
+    evidenceLayout: 'list',
+    fallbackActionLead: 'Review this module carefully.'
   }
 }

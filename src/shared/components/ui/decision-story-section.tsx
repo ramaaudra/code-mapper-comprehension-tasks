@@ -1,10 +1,13 @@
+import { DecisionEvidenceList } from '@/shared/components/ui/decision-evidence-list'
 import { DiagnosisCard } from '@/shared/components/ui/diagnosis-card'
 import { InsightBulletList } from '@/shared/components/ui/insight-bullet-list'
 import { MetricValueCard } from '@/shared/components/ui/metric-value-card'
 import { decisionCopy } from '@/shared/content/decisionCopy'
 import {
   formatChangePressureValue,
+  formatExternalRelianceValue,
   formatImpactScopeValue,
+  formatStructuralPositionValue,
   getChangePressureTone,
   getImpactScopeTone,
   cn
@@ -24,6 +27,7 @@ interface DecisionStorySectionProps {
   assessment: DecisionAssessment
   icon: ReactNode
   evidenceHelpers?: DecisionStorySectionEvidenceHelpers
+  evidenceLayout?: 'cards' | 'list'
   changeActivityValue?: string
   changeActivityTone?: DecisionStatusTone
   fallbackActionLead?: string
@@ -34,11 +38,36 @@ export function DecisionStorySection({
   assessment,
   icon,
   evidenceHelpers,
+  evidenceLayout = 'cards',
   changeActivityValue,
   changeActivityTone,
   fallbackActionLead = 'Review this area carefully.',
   className
 }: DecisionStorySectionProps) {
+  const evidenceItems = [
+    {
+      label: decisionCopy.evidence.labels.impactScope,
+      value: formatImpactScopeValue(assessment.impactScope),
+      helper: evidenceHelpers?.impactScope
+    },
+    {
+      label: decisionCopy.evidence.labels.changeActivity,
+      value:
+        changeActivityValue ??
+        formatChangePressureValue(assessment.changePressure),
+      helper: evidenceHelpers?.changeActivity
+    },
+    {
+      label: decisionCopy.evidence.labels.dependencies,
+      value: formatExternalRelianceValue(assessment.externalReliance),
+      helper: evidenceHelpers?.dependencies
+    },
+    {
+      label: decisionCopy.evidence.labels.architectureRole,
+      value: formatStructuralPositionValue(assessment.structuralPosition),
+      helper: evidenceHelpers?.architectureRole
+    }
+  ]
   const secondaryEvidence: Array<{ label: string; helper: ReactNode }> = []
 
   if (evidenceHelpers?.dependencies) {
@@ -79,44 +108,53 @@ export function DecisionStorySection({
         tone={assessment.tone}
       />
 
-      <div className='grid grid-cols-2 gap-3'>
-        <MetricValueCard
-          value={formatImpactScopeValue(assessment.impactScope)}
-          label={decisionCopy.evidence.labels.impactScope}
-          tone={getImpactScopeTone(assessment.impactScope)}
-          helper={evidenceHelpers?.impactScope}
+      {evidenceLayout === 'list' ? (
+        <DecisionEvidenceList
+          title={decisionCopy.evidence.supportingTitle}
+          items={evidenceItems}
         />
-        <MetricValueCard
-          value={
-            changeActivityValue ??
-            formatChangePressureValue(assessment.changePressure)
-          }
-          label={decisionCopy.evidence.labels.changeActivity}
-          tone={
-            changeActivityTone ??
-            getChangePressureTone(assessment.changePressure)
-          }
-          helper={evidenceHelpers?.changeActivity}
-        />
-      </div>
+      ) : (
+        <>
+          <div className='grid grid-cols-2 gap-3'>
+            <MetricValueCard
+              value={formatImpactScopeValue(assessment.impactScope)}
+              label={decisionCopy.evidence.labels.impactScope}
+              tone={getImpactScopeTone(assessment.impactScope)}
+              helper={evidenceHelpers?.impactScope}
+            />
+            <MetricValueCard
+              value={
+                changeActivityValue ??
+                formatChangePressureValue(assessment.changePressure)
+              }
+              label={decisionCopy.evidence.labels.changeActivity}
+              tone={
+                changeActivityTone ??
+                getChangePressureTone(assessment.changePressure)
+              }
+              helper={evidenceHelpers?.changeActivity}
+            />
+          </div>
 
-      {secondaryEvidence.length > 0 ? (
-        <div className='grid gap-3 sm:grid-cols-2'>
-          {secondaryEvidence.map((item) => (
-            <div
-              key={item.label}
-              className='rounded-lg border border-border bg-muted/25 p-3'
-            >
-              <p className='text-xs font-semibold uppercase tracking-wide text-muted-foreground'>
-                {item.label}
-              </p>
-              <div className='mt-1.5 text-xs leading-relaxed text-foreground/80'>
-                {item.helper}
-              </div>
+          {secondaryEvidence.length > 0 ? (
+            <div className='grid gap-3 sm:grid-cols-2'>
+              {secondaryEvidence.map((item) => (
+                <div
+                  key={item.label}
+                  className='rounded-lg border border-border bg-muted/25 p-3'
+                >
+                  <p className='text-xs font-semibold uppercase tracking-wide text-muted-foreground'>
+                    {item.label}
+                  </p>
+                  <div className='mt-1.5 text-xs leading-relaxed text-foreground/80'>
+                    {item.helper}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      ) : null}
+          ) : null}
+        </>
+      )}
     </div>
   )
 }

@@ -60,6 +60,7 @@ import { graphCopy } from '../content/graphCopy'
 import { describeDependentImpact } from '../lib/dependent-impact-story'
 import {
   getModuleFileCycleBadgeCopy,
+  getModuleOverviewDecisionStoryConfig,
   getModulePropagationDescription
 } from '../lib/module-side-panel-presentation'
 
@@ -565,6 +566,7 @@ function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
     changeHistoryAvailable,
     thresholdCalibration
   })
+  const decisionStoryConfig = getModuleOverviewDecisionStoryConfig()
 
   return (
     <div className='space-y-4 p-4'>
@@ -573,11 +575,12 @@ function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
           <DecisionStorySection
             assessment={decisionAssessment}
             icon={DECISION_CARD_TONE_ICON[decisionAssessment.tone]}
+            evidenceLayout={decisionStoryConfig.evidenceLayout}
             changeActivityValue={
               changeHistoryAvailable ? undefined : 'Unavailable'
             }
             changeActivityTone={changeHistoryAvailable ? undefined : 'default'}
-            fallbackActionLead='Review this module carefully.'
+            fallbackActionLead={decisionStoryConfig.fallbackActionLead}
             evidenceHelpers={{
               impactScope: (
                 <span className='text-[11px] text-muted-foreground'>

@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import {
   getModuleFileCycleBadgeCopy,
+  getModuleOverviewDecisionStoryConfig,
   getModulePropagationDescription
 } from './module-side-panel-presentation'
 
@@ -30,4 +31,11 @@ test('getModuleFileCycleBadgeCopy returns cycle member guidance for files in a c
 
 test('getModuleFileCycleBadgeCopy returns null for files outside cycles', () => {
   assert.equal(getModuleFileCycleBadgeCopy(false), null)
+})
+
+test('getModuleOverviewDecisionStoryConfig keeps module overview in list evidence mode', () => {
+  assert.deepEqual(getModuleOverviewDecisionStoryConfig(), {
+    evidenceLayout: 'list',
+    fallbackActionLead: 'Review this module carefully.'
+  })
 })

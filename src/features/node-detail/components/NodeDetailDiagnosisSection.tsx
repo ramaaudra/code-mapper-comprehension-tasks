@@ -1,6 +1,4 @@
-import { Button } from '@/shared/components/ui/button'
 import { DecisionStorySection } from '@/shared/components/ui/decision-story-section'
-import { ArrowRight } from '@/shared/components/ui/icons'
 import {
   formatChangePressureHelper,
   formatExternalRelianceHelper,
@@ -8,12 +6,14 @@ import {
   formatStructuralPositionHelper
 } from '@/shared/lib/utils'
 
+import { NodeDetailCycleTriageCallout } from './NodeDetailCycleTriageCallout'
+
 import type { NodeDetailCycleTriageSummary } from '../lib/cycle-triage-link'
 import type { FileArchitectureMetrics } from '@/features/architecture/types/architecture'
 import type { DecisionAssessment } from '@/shared/lib/utils'
 import type { FileEvolutionMetrics } from '@/shared/types/analysis'
 import type { CycleTriageNavigationRequest } from '@/shared/types/explorer'
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 
 interface NodeDetailDiagnosisSectionProps {
   decisionAssessment: DecisionAssessment
@@ -26,6 +26,61 @@ interface NodeDetailDiagnosisSectionProps {
   onShowCycleTriage?: (request: CycleTriageNavigationRequest) => void
 }
 
+function renderHelperText(text: string): ReactElement {
+  return <span className='text-xs text-muted-foreground'>{text}</span>
+}
+
+function getImpactScopeHelper(
+  archMetrics: FileArchitectureMetrics | undefined
+): ReactElement | null {
+  if (!archMetrics) {
+    return null
+  }
+
+  return renderHelperText(formatImpactScopeHelper(archMetrics.ca))
+}
+
+function getChangeActivityHelper(
+  changeHistoryAvailable: boolean,
+  fileEvolution: FileEvolutionMetrics | null
+): ReactElement | null {
+  if (!changeHistoryAvailable) {
+    return renderHelperText(
+      'Git history is unavailable for recent change signals.'
+    )
+  }
+
+  if (!fileEvolution) {
+    return null
+  }
+
+  return renderHelperText(
+    formatChangePressureHelper(fileEvolution.churn30d.relativeChurn)
+  )
+}
+
+function getDependenciesHelper(
+  archMetrics: FileArchitectureMetrics | undefined
+): ReactElement | null {
+  if (!archMetrics) {
+    return null
+  }
+
+  return renderHelperText(formatExternalRelianceHelper(archMetrics.ce))
+}
+
+function getArchitectureRoleHelper(
+  archMetrics: FileArchitectureMetrics | undefined
+): ReactElement | null {
+  if (!archMetrics) {
+    return null
+  }
+
+  return renderHelperText(
+    formatStructuralPositionHelper(archMetrics.instability)
+  )
+}
+
 export function NodeDetailDiagnosisSection({
   decisionAssessment,
   decisionIcon,
@@ -35,7 +90,7 @@ export function NodeDetailDiagnosisSection({
   relatedCycleSummary,
   resolvedNodeId,
   onShowCycleTriage
-}: NodeDetailDiagnosisSectionProps) {
+}: NodeDetailDiagnosisSectionProps): ReactElement {
   const showCycleTriageCallout = relatedCycleSummary && onShowCycleTriage
 
   return (
@@ -43,67 +98,26 @@ export function NodeDetailDiagnosisSection({
       <DecisionStorySection
         assessment={decisionAssessment}
         icon={decisionIcon}
+        evidenceLayout='list'
         changeActivityValue={changeHistoryAvailable ? undefined : 'Unavailable'}
         changeActivityTone={changeHistoryAvailable ? undefined : 'default'}
         evidenceHelpers={{
-          impactScope: archMetrics ? (
-            <span className='text-xs text-muted-foreground'>
-              {formatImpactScopeHelper(archMetrics.ca)}
-            </span>
-          ) : null,
-          changeActivity:
-            changeHistoryAvailable && fileEvolution ? (
-              <span className='text-xs text-muted-foreground'>
-                {formatChangePressureHelper(
-                  fileEvolution.churn30d.relativeChurn
-                )}
-              </span>
-            ) : !changeHistoryAvailable ? (
-              <span className='text-xs text-muted-foreground'>
-                Git history is unavailable for recent change signals.
-              </span>
-            ) : null,
-          dependencies: archMetrics ? (
-            <span className='text-xs text-muted-foreground'>
-              {formatExternalRelianceHelper(archMetrics.ce)}
-            </span>
-          ) : null,
-          architectureRole: archMetrics ? (
-            <span className='text-xs text-muted-foreground'>
-              {formatStructuralPositionHelper(archMetrics.instability)}
-            </span>
-          ) : null
+          impactScope: getImpactScopeHelper(archMetrics),
+          changeActivity: getChangeActivityHelper(
+            changeHistoryAvailable,
+            fileEvolution
+          ),
+          dependencies: getDependenciesHelper(archMetrics),
+          architectureRole: getArchitectureRoleHelper(archMetrics)
         }}
       />
 
       {showCycleTriageCallout ? (
-        <div className='rounded-xl border border-destructive/30 bg-destructive/5 p-4'>
-          <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
-            <div className='space-y-1'>
-              <p className='text-sm font-semibold text-destructive'>
-                {relatedCycleSummary.title}
-              </p>
-              <p className='text-xs leading-relaxed text-destructive/90'>
-                {relatedCycleSummary.description}
-              </p>
-            </div>
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              className='border-destructive/30 bg-background/80 text-destructive hover:bg-destructive/10 hover:text-destructive'
-              onClick={() =>
-                onShowCycleTriage({
-                  cycleId: relatedCycleSummary.selectedCycleId,
-                  focusFilePath: resolvedNodeId
-                })
-              }
-            >
-              {relatedCycleSummary.actionLabel}
-              <ArrowRight className='ml-2 h-3 w-3' />
-            </Button>
-          </div>
-        </div>
+        <NodeDetailCycleTriageCallout
+          summary={relatedCycleSummary}
+          resolvedNodeId={resolvedNodeId}
+          onShowCycleTriage={onShowCycleTriage}
+        />
       ) : null}
     </div>
   )
