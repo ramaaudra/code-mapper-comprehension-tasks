@@ -27,6 +27,8 @@ export function useAppLogic() {
     setFocusedModulePath,
     selectedCycleId,
     setSelectedCycleId,
+    cycleTriageFocusFilePath,
+    setCycleTriageFocusFilePath,
     showCycleNearbyImports,
     setShowCycleNearbyImports,
     isTreeCollapsed,
@@ -91,6 +93,7 @@ export function useAppLogic() {
         setSelectedFileId(null)
         setSelectedNode(null)
         setSelectedCycleId(null)
+        setCycleTriageFocusFilePath(null)
         setViewMode('overview')
         clearGraph()
         return
@@ -100,6 +103,7 @@ export function useAppLogic() {
       setGraphViewMode('file')
       setFocusedModulePath(null)
       setSelectedCycleId(null)
+      setCycleTriageFocusFilePath(null)
 
       const resolvedFileId = generateGraphForFile(fileId) || fileId
       setSelectedFileId(resolvedFileId)
@@ -119,6 +123,7 @@ export function useAppLogic() {
       generateGraphForFile,
       setFocusedModulePath,
       setGraphViewMode,
+      setCycleTriageFocusFilePath,
       setSelectedCycleId,
       setSelectedFileId,
       setSelectedNode,
@@ -166,6 +171,7 @@ export function useAppLogic() {
         setSelectedNode(null)
         setHoveredFile(null)
         setSelectedCycleId(null)
+        setCycleTriageFocusFilePath(null)
         setViewMode('overview')
       }
     }
@@ -184,6 +190,7 @@ export function useAppLogic() {
     reanalyze,
     selectedFileId,
     setHoveredFile,
+    setCycleTriageFocusFilePath,
     setSelectedCycleId,
     setSelectedNode,
     setViewMode
@@ -247,6 +254,7 @@ export function useAppLogic() {
     setUtilityReturnViewMode,
     highlightedModule,
     selectedCycleId,
+    cycleTriageFocusFilePath,
     showCycleNearbyImports,
     focusedModulePath,
     setFocusedModulePath,
@@ -267,6 +275,7 @@ export function useAppLogic() {
     setViewMode,
     setHighlightedModule,
     setSelectedCycleId,
+    setCycleTriageFocusFilePath,
     setIsTreeCollapsed
   }
 }

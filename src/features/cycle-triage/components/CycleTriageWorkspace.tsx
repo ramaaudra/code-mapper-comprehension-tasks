@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -21,6 +21,7 @@ import { getRelativePath } from '@/shared/lib/utils'
 
 import { cycleTriageCopy } from '../content/cycleTriageCopy'
 import { useCycleTriageItems } from '../hooks/useCycleTriageItems'
+import { filterCycleTriageItemsByFocusFile } from '../lib/cycle-triage'
 import {
   getCycleEvidenceItems,
   getCycleFixPriorityLabel,
@@ -38,6 +39,8 @@ interface CycleTriageWorkspaceProps {
   analysisData: AnalysisData | null
   selectedCycleId?: string | null
   onSelectedCycleIdChange?: (cycleId: string | null) => void
+  focusFilePath?: string | null
+  onFocusFilePathChange?: (filePath: string | null) => void
   showNearbyImports?: boolean
   onShowNearbyImportsChange?: (value: boolean) => void
   onBack?: () => void
@@ -49,26 +52,74 @@ function getBasename(filePath: string): string {
   return relativePath.split('/').pop() ?? relativePath
 }
 
+function getWorkspaceSummary(params: {
+  focusFileLabel: string | null
+  totalCount: number
+  allItemCount: number
+  highPriorityCount: number
+}): string {
+  const { focusFileLabel, totalCount, allItemCount, highPriorityCount } = params
+
+  if (focusFileLabel) {
+    return cycleTriageCopy.page.focusedSummary(
+      totalCount,
+      allItemCount,
+      focusFileLabel
+    )
+  }
+
+  if (highPriorityCount > 0) {
+    return `Start with ${highPriorityCount} high-priority loops out of ${totalCount}.`
+  }
+
+  return `Review ${totalCount} detected loops. No high-priority blockers right now.`
+}
+
 export function CycleTriageWorkspace({
   analysisData,
   selectedCycleId,
   onSelectedCycleIdChange,
+  focusFilePath,
+  onFocusFilePathChange,
   showNearbyImports = false,
   onShowNearbyImportsChange,
   onBack,
   onNavigateToFile
 }: CycleTriageWorkspaceProps) {
   const { items } = useCycleTriageItems(analysisData)
-  const activeSelectedCycleId = selectedCycleId ?? items[0]?.id ?? null
-  const highPriorityCount = items.filter(
+  const visibleItems = useMemo(
+    () => filterCycleTriageItemsByFocusFile(items, focusFilePath ?? null),
+    [focusFilePath, items]
+  )
+  const focusFileLabel = focusFilePath ? getRelativePath(focusFilePath) : null
+  const activeSelectedCycleId = selectedCycleId ?? visibleItems[0]?.id ?? null
+  const highPriorityCount = visibleItems.filter(
     (item) => item.fixPriority === 'high'
   ).length
-  const totalCount = items.length
-  const workspaceSummary =
-    highPriorityCount > 0
-      ? `Start with ${highPriorityCount} high-priority loops out of ${totalCount}.`
-      : `Review ${totalCount} detected loops. No high-priority blockers right now.`
-  const queueKeyboardNavigationEnabled = items.length > 1
+  const totalCount = visibleItems.length
+  const workspaceSummary = getWorkspaceSummary({
+    focusFileLabel,
+    totalCount,
+    allItemCount: items.length,
+    highPriorityCount
+  })
+  const queueKeyboardNavigationEnabled = visibleItems.length > 1
+
+  const selectCycleByOffset = useCallback(
+    (offset: number) => {
+      const currentIndex = visibleItems.findIndex(
+        (item) => item.id === activeSelectedCycleId
+      )
+      const fallbackIndex = currentIndex >= 0 ? currentIndex : 0
+      const nextIndex = Math.max(
+        0,
+        Math.min(fallbackIndex + offset, visibleItems.length - 1)
+      )
+
+      onSelectedCycleIdChange?.(visibleItems[nextIndex]?.id ?? null)
+    },
+    [activeSelectedCycleId, onSelectedCycleIdChange, visibleItems]
+  )
 
   useKeyboardShortcut(
     {
@@ -77,13 +128,7 @@ export function CycleTriageWorkspace({
       enabled: queueKeyboardNavigationEnabled,
       ignoreEditableTargets: true
     },
-    () => {
-      const currentIndex = items.findIndex(
-        (item) => item.id === activeSelectedCycleId
-      )
-      const nextIndex = Math.min(currentIndex + 1, items.length - 1)
-      onSelectedCycleIdChange?.(items[nextIndex]?.id ?? null)
-    }
+    () => selectCycleByOffset(1)
   )
   useKeyboardShortcut(
     {
@@ -92,13 +137,7 @@ export function CycleTriageWorkspace({
       enabled: queueKeyboardNavigationEnabled,
       ignoreEditableTargets: true
     },
-    () => {
-      const currentIndex = items.findIndex(
-        (item) => item.id === activeSelectedCycleId
-      )
-      const prevIndex = Math.max(currentIndex - 1, 0)
-      onSelectedCycleIdChange?.(items[prevIndex]?.id ?? null)
-    }
+    () => selectCycleByOffset(-1)
   )
   useKeyboardShortcut(
     {
@@ -107,13 +146,7 @@ export function CycleTriageWorkspace({
       enabled: queueKeyboardNavigationEnabled,
       ignoreEditableTargets: true
     },
-    () => {
-      const currentIndex = items.findIndex(
-        (item) => item.id === activeSelectedCycleId
-      )
-      const nextIndex = Math.min(currentIndex + 1, items.length - 1)
-      onSelectedCycleIdChange?.(items[nextIndex]?.id ?? null)
-    }
+    () => selectCycleByOffset(1)
   )
   useKeyboardShortcut(
     {
@@ -122,17 +155,11 @@ export function CycleTriageWorkspace({
       enabled: queueKeyboardNavigationEnabled,
       ignoreEditableTargets: true
     },
-    () => {
-      const currentIndex = items.findIndex(
-        (item) => item.id === activeSelectedCycleId
-      )
-      const prevIndex = Math.max(currentIndex - 1, 0)
-      onSelectedCycleIdChange?.(items[prevIndex]?.id ?? null)
-    }
+    () => selectCycleByOffset(-1)
   )
 
   useEffect(() => {
-    if (!items.length) {
+    if (!visibleItems.length) {
       if (selectedCycleId) {
         onSelectedCycleIdChange?.(null)
       }
@@ -141,26 +168,30 @@ export function CycleTriageWorkspace({
     }
 
     const selectedStillExists = selectedCycleId
-      ? items.some((item) => item.id === selectedCycleId)
+      ? visibleItems.some((item) => item.id === selectedCycleId)
       : false
 
     if (!selectedStillExists) {
-      onSelectedCycleIdChange?.(items[0]?.id ?? null)
+      onSelectedCycleIdChange?.(visibleItems[0]?.id ?? null)
     }
   }, [
-    items,
+    visibleItems,
     onSelectedCycleIdChange,
     onShowNearbyImportsChange,
     selectedCycleId
   ])
 
   const selectedItem = useMemo(() => {
-    if (!items.length) {
+    if (!visibleItems.length) {
       return null
     }
 
-    return items.find((item) => item.id === selectedCycleId) ?? items[0] ?? null
-  }, [items, selectedCycleId])
+    return (
+      visibleItems.find((item) => item.id === selectedCycleId) ??
+      visibleItems[0] ??
+      null
+    )
+  }, [selectedCycleId, visibleItems])
 
   if (!analysisData) {
     return null
@@ -186,6 +217,29 @@ export function CycleTriageWorkspace({
               <h1 className='font-sans text-3xl font-semibold leading-[1.08] tracking-[-0.03em] text-foreground'>
                 {cycleTriageCopy.page.title}
               </h1>
+              {focusFileLabel ? (
+                <div className='flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 py-3'>
+                  <div className='space-y-1'>
+                    <p className='text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground'>
+                      {cycleTriageCopy.page.focusedFileLabel}
+                    </p>
+                    <p className='font-mono text-sm font-medium text-foreground'>
+                      {focusFileLabel}
+                    </p>
+                    <p className='text-xs leading-5 text-muted-foreground'>
+                      {cycleTriageCopy.page.focusedFileHint}
+                    </p>
+                  </div>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='h-8 px-3 text-xs'
+                    onClick={() => onFocusFilePathChange?.(null)}
+                  >
+                    {cycleTriageCopy.page.clearFocusedFile}
+                  </Button>
+                </div>
+              ) : null}
               <div className='max-w-2xl rounded-2xl border border-border/70 bg-muted/20 px-4 py-3'>
                 <p className='max-w-[48ch] text-base font-medium leading-7 text-foreground'>
                   {workspaceSummary}
@@ -204,6 +258,29 @@ export function CycleTriageWorkspace({
               </CardTitle>
             </CardHeader>
           </Card>
+        ) : !visibleItems.length && focusFileLabel ? (
+          <Card className='border-border/70 bg-card/80'>
+            <CardHeader>
+              <CardTitle className='flex items-center gap-2 text-lg'>
+                <AlertTriangle className='h-5 w-5 text-status-warning-foreground' />
+                {cycleTriageCopy.detail.noFocusedCyclesTitle}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <p className='max-w-[60ch] text-sm leading-6 text-muted-foreground'>
+                {cycleTriageCopy.detail.noFocusedCyclesDescription(
+                  focusFileLabel
+                )}
+              </p>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => onFocusFilePathChange?.(null)}
+              >
+                {cycleTriageCopy.page.clearFocusedFile}
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
           <div className='grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]'>
             <Card className='flex min-h-0 flex-col overflow-hidden border-border/70 bg-card/80 xl:sticky xl:top-6 xl:h-[calc(100dvh-8rem)] xl:self-start'>
@@ -214,7 +291,7 @@ export function CycleTriageWorkspace({
               </CardHeader>
               <CardContent className='flex min-h-0 flex-1 overflow-hidden pt-0'>
                 <CycleQueue
-                  items={items}
+                  items={visibleItems}
                   selectedCycleId={selectedItem?.id ?? null}
                   onSelect={(cycleId) => onSelectedCycleIdChange?.(cycleId)}
                 />

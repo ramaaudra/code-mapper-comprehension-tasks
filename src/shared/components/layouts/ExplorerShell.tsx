@@ -88,7 +88,7 @@ export function ExplorerShell({
         totalChanges={totalChanges}
       />
 
-      <div className='flex h-[calc(100vh-56px)] w-full overflow-hidden'>
+      <div className='flex min-h-0 w-full flex-1 overflow-hidden'>
         <Sidebar isCollapsed={isTreeCollapsed}>{sidebar}</Sidebar>
         <main className='flex-1 overflow-hidden' aria-label='Primary content'>
           {main}

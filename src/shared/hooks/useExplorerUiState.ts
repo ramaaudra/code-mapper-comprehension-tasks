@@ -36,6 +36,8 @@ export interface ExplorerUiState {
   setFocusedModulePath: Dispatch<SetStateAction<string | null>>
   selectedCycleId: string | null
   setSelectedCycleId: Dispatch<SetStateAction<string | null>>
+  cycleTriageFocusFilePath: string | null
+  setCycleTriageFocusFilePath: Dispatch<SetStateAction<string | null>>
   showCycleNearbyImports: boolean
   setShowCycleNearbyImports: Dispatch<SetStateAction<boolean>>
   isTreeCollapsed: boolean
@@ -55,6 +57,7 @@ export function useExplorerUiState({
       ? {
           viewMode: null,
           selectedCycleId: null,
+          focusFilePath: null,
           showNearbyImports: false
         }
       : parseCycleTriageSearch(window.location.search)
@@ -79,6 +82,9 @@ export function useExplorerUiState({
   const [selectedCycleId, setSelectedCycleId] = useState<string | null>(
     initialCycleTriageState.selectedCycleId
   )
+  const [cycleTriageFocusFilePath, setCycleTriageFocusFilePath] = useState<
+    string | null
+  >(initialCycleTriageState.focusFilePath)
   const [showCycleNearbyImports, setShowCycleNearbyImports] = useState(
     initialCycleTriageState.showNearbyImports
   )
@@ -106,6 +112,8 @@ export function useExplorerUiState({
     setFocusedModulePath,
     selectedCycleId,
     setSelectedCycleId,
+    cycleTriageFocusFilePath,
+    setCycleTriageFocusFilePath,
     showCycleNearbyImports,
     setShowCycleNearbyImports,
     isTreeCollapsed,

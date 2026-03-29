@@ -3,11 +3,13 @@ import type { ExplorerViewMode } from '@/shared/types/explorer'
 export interface CycleTriageUrlState {
   viewMode: ExplorerViewMode | null
   selectedCycleId: string | null
+  focusFilePath: string | null
   showNearbyImports: boolean
 }
 
 const VIEW_PARAM = 'view'
 const CYCLE_PARAM = 'cycle'
+const CYCLE_FILE_PARAM = 'cycleFile'
 const NEARBY_PARAM = 'nearby'
 
 export function parseCycleTriageSearch(search: string): CycleTriageUrlState {
@@ -18,6 +20,7 @@ export function parseCycleTriageSearch(search: string): CycleTriageUrlState {
     return {
       viewMode: null,
       selectedCycleId: null,
+      focusFilePath: null,
       showNearbyImports: false
     }
   }
@@ -25,6 +28,7 @@ export function parseCycleTriageSearch(search: string): CycleTriageUrlState {
   return {
     viewMode: 'cycle-triage',
     selectedCycleId: params.get(CYCLE_PARAM),
+    focusFilePath: params.get(CYCLE_FILE_PARAM),
     showNearbyImports: params.get(NEARBY_PARAM) === '1'
   }
 }
@@ -36,6 +40,7 @@ export function buildCycleTriageSearch(
   const params = new URLSearchParams(search)
   params.delete(VIEW_PARAM)
   params.delete(CYCLE_PARAM)
+  params.delete(CYCLE_FILE_PARAM)
   params.delete(NEARBY_PARAM)
 
   if (state.viewMode === 'cycle-triage') {
@@ -43,6 +48,10 @@ export function buildCycleTriageSearch(
 
     if (state.selectedCycleId) {
       params.set(CYCLE_PARAM, state.selectedCycleId)
+    }
+
+    if (state.focusFilePath) {
+      params.set(CYCLE_FILE_PARAM, state.focusFilePath)
     }
 
     if (state.showNearbyImports) {

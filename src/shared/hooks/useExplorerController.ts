@@ -13,6 +13,7 @@ import {
 import type { FileTreeViewRef } from '@/features/file-analysis'
 import type { AnalysisData, AnalysisNode } from '@/shared/types/analysis'
 import type {
+  CycleTriageNavigationRequest,
   ExplorerContextChip,
   ExplorerViewMode,
   GraphViewMode,
@@ -43,6 +44,8 @@ interface UseExplorerControllerOptions {
     | ((value: string | null) => void)
   selectedCycleId: string | null
   setSelectedCycleId: Dispatch<SetStateAction<string | null>>
+  cycleTriageFocusFilePath: string | null
+  setCycleTriageFocusFilePath: Dispatch<SetStateAction<string | null>>
   showCycleNearbyImports: boolean
   setShowCycleNearbyImports: Dispatch<SetStateAction<boolean>>
   clearFocusedModule?: () => void
@@ -74,6 +77,8 @@ export function useExplorerController({
   setFocusedModulePath,
   selectedCycleId,
   setSelectedCycleId,
+  cycleTriageFocusFilePath,
+  setCycleTriageFocusFilePath,
   showCycleNearbyImports,
   setShowCycleNearbyImports,
   clearFocusedModule,
@@ -134,11 +139,17 @@ export function useExplorerController({
   }, [])
 
   const syncCycleTriageSearch = useCallback(
-    (
-      nextViewMode: ExplorerViewMode,
-      nextCycleId: string | null,
-      nextShowNearbyImports = showCycleNearbyImports
-    ) => {
+    ({
+      nextViewMode,
+      nextCycleId,
+      nextShowNearbyImports = showCycleNearbyImports,
+      nextFocusFilePath = cycleTriageFocusFilePath
+    }: {
+      nextViewMode: ExplorerViewMode
+      nextCycleId: string | null
+      nextShowNearbyImports?: boolean
+      nextFocusFilePath?: string | null
+    }) => {
       if (typeof window === 'undefined') {
         return
       }
@@ -146,6 +157,8 @@ export function useExplorerController({
       const nextSearch = buildCycleTriageSearch(window.location.search, {
         viewMode: nextViewMode,
         selectedCycleId: nextCycleId,
+        focusFilePath:
+          nextViewMode === 'cycle-triage' ? nextFocusFilePath : null,
         showNearbyImports:
           nextViewMode === 'cycle-triage' ? nextShowNearbyImports : false
       })
@@ -153,7 +166,7 @@ export function useExplorerController({
 
       window.history.replaceState(null, '', nextUrl)
     },
-    [showCycleNearbyImports]
+    [cycleTriageFocusFilePath, showCycleNearbyImports]
   )
 
   const resolveUtilitySourceView = useCallback(
@@ -191,11 +204,16 @@ export function useExplorerController({
         setSelectedFileId(null)
         setSelectedNode(null)
         setSelectedCycleId(null)
+        setCycleTriageFocusFilePath(null)
         setShowCycleNearbyImports(false)
         resetModulePanel()
         setViewMode('overview')
         clearGraph()
-        syncCycleTriageSearch('overview', null)
+        syncCycleTriageSearch({
+          nextViewMode: 'overview',
+          nextCycleId: null,
+          nextFocusFilePath: null
+        })
         return null
       }
 
@@ -204,9 +222,14 @@ export function useExplorerController({
       setGraphViewMode('file')
       setFocusedModulePath(null)
       setSelectedCycleId(null)
+      setCycleTriageFocusFilePath(null)
       setShowCycleNearbyImports(false)
       resetModulePanel()
-      syncCycleTriageSearch('graph', null)
+      syncCycleTriageSearch({
+        nextViewMode: 'graph',
+        nextCycleId: null,
+        nextFocusFilePath: null
+      })
 
       const matchedFileId = resolveFileId(fileId)
       const resolvedFocusId =
@@ -226,6 +249,7 @@ export function useExplorerController({
       resolveNode,
       setFocusedModulePath,
       setGraphViewMode,
+      setCycleTriageFocusFilePath,
       setShowCycleNearbyImports,
       setSelectedCycleId,
       setSelectedFileId,
@@ -263,12 +287,18 @@ export function useExplorerController({
     setSelectedFileId(null)
     setSelectedNode(null)
     setSelectedCycleId(null)
+    setCycleTriageFocusFilePath(null)
     clearGraph()
     setShowCycleNearbyImports(false)
-    syncCycleTriageSearch('overview', null)
+    syncCycleTriageSearch({
+      nextViewMode: 'overview',
+      nextCycleId: null,
+      nextFocusFilePath: null
+    })
   }, [
     clearGraph,
     clearUtilityHash,
+    setCycleTriageFocusFilePath,
     setShowCycleNearbyImports,
     setSelectedCycleId,
     setSelectedFileId,
@@ -283,10 +313,16 @@ export function useExplorerController({
     setGraphViewMode('file')
     setHighlightedModule(null)
     setSelectedCycleId(null)
+    setCycleTriageFocusFilePath(null)
     setShowCycleNearbyImports(false)
-    syncCycleTriageSearch('graph', null)
+    syncCycleTriageSearch({
+      nextViewMode: 'graph',
+      nextCycleId: null,
+      nextFocusFilePath: null
+    })
   }, [
     clearUtilityHash,
+    setCycleTriageFocusFilePath,
     setGraphViewMode,
     setHighlightedModule,
     setShowCycleNearbyImports,
@@ -298,11 +334,17 @@ export function useExplorerController({
   const handleShowArchitecture = useCallback(() => {
     clearUtilityHash()
     setSelectedCycleId(null)
+    setCycleTriageFocusFilePath(null)
     setShowCycleNearbyImports(false)
     setViewMode('architecture')
-    syncCycleTriageSearch('architecture', null)
+    syncCycleTriageSearch({
+      nextViewMode: 'architecture',
+      nextCycleId: null,
+      nextFocusFilePath: null
+    })
   }, [
     clearUtilityHash,
+    setCycleTriageFocusFilePath,
     setSelectedCycleId,
     setShowCycleNearbyImports,
     syncCycleTriageSearch,
@@ -313,16 +355,24 @@ export function useExplorerController({
     (sourceView?: NonUtilityViewMode) => {
       clearUtilityHash()
       setSelectedCycleId(null)
+      setCycleTriageFocusFilePath(null)
       setShowCycleNearbyImports(false)
       setUtilityReturnViewMode(resolveUtilitySourceView(sourceView))
+      syncCycleTriageSearch({
+        nextViewMode: 'setup-guide',
+        nextCycleId: null,
+        nextFocusFilePath: null
+      })
       setViewMode('setup-guide')
     },
     [
       clearUtilityHash,
       resolveUtilitySourceView,
+      setCycleTriageFocusFilePath,
       setSelectedCycleId,
       setShowCycleNearbyImports,
       setUtilityReturnViewMode,
+      syncCycleTriageSearch,
       setViewMode
     ]
   )
@@ -337,18 +387,26 @@ export function useExplorerController({
 
       setUtilityReturnViewMode(nextSource)
       setSelectedCycleId(null)
+      setCycleTriageFocusFilePath(null)
       setShowCycleNearbyImports(false)
       if (typeof window !== 'undefined') {
+        const nextSearch = buildCycleTriageSearch(window.location.search, {
+          viewMode: 'metrics-guide',
+          selectedCycleId: null,
+          focusFilePath: null,
+          showNearbyImports: false
+        })
         window.history.replaceState(
           null,
           '',
-          buildMetricsGuideHash(nextSection)
+          `${window.location.pathname}${nextSearch}${buildMetricsGuideHash(nextSection)}`
         )
       }
       setViewMode('metrics-guide')
     },
     [
       resolveUtilitySourceView,
+      setCycleTriageFocusFilePath,
       setSelectedCycleId,
       setShowCycleNearbyImports,
       setUtilityReturnViewMode,
@@ -357,17 +415,30 @@ export function useExplorerController({
   )
 
   const handleShowCycleTriage = useCallback(
-    (cycleId?: string | null, sourceView?: NonUtilityViewMode) => {
+    ({
+      cycleId = null,
+      sourceView,
+      focusFilePath = null
+    }: CycleTriageNavigationRequest & {
+      sourceView?: NonUtilityViewMode
+    } = {}) => {
       clearUtilityHash()
       setUtilityReturnViewMode(resolveUtilitySourceView(sourceView))
-      setSelectedCycleId(cycleId ?? null)
+      setSelectedCycleId(cycleId)
+      setCycleTriageFocusFilePath(focusFilePath)
       setShowCycleNearbyImports(false)
       setViewMode('cycle-triage')
-      syncCycleTriageSearch('cycle-triage', cycleId ?? null)
+      syncCycleTriageSearch({
+        nextViewMode: 'cycle-triage',
+        nextCycleId: cycleId,
+        nextShowNearbyImports: false,
+        nextFocusFilePath: focusFilePath
+      })
     },
     [
       clearUtilityHash,
       resolveUtilitySourceView,
+      setCycleTriageFocusFilePath,
       setShowCycleNearbyImports,
       setSelectedCycleId,
       setUtilityReturnViewMode,
@@ -380,7 +451,11 @@ export function useExplorerController({
     clearUtilityHash()
     setShowCycleNearbyImports(false)
     setViewMode(utilityReturnViewMode)
-    syncCycleTriageSearch(utilityReturnViewMode, null)
+    syncCycleTriageSearch({
+      nextViewMode: utilityReturnViewMode,
+      nextCycleId: null,
+      nextFocusFilePath: null
+    })
   }, [
     clearUtilityHash,
     setShowCycleNearbyImports,
@@ -394,16 +469,45 @@ export function useExplorerController({
       setSelectedCycleId(cycleId)
 
       if (viewMode === 'cycle-triage') {
-        syncCycleTriageSearch('cycle-triage', cycleId)
+        syncCycleTriageSearch({
+          nextViewMode: 'cycle-triage',
+          nextCycleId: cycleId
+        })
       }
     },
     [setSelectedCycleId, syncCycleTriageSearch, viewMode]
   )
 
+  const handleCycleFocusFilePathChange = useCallback(
+    (focusFilePath: string | null) => {
+      setCycleTriageFocusFilePath(focusFilePath)
+
+      if (viewMode === 'cycle-triage') {
+        syncCycleTriageSearch({
+          nextViewMode: 'cycle-triage',
+          nextCycleId: selectedCycleId,
+          nextShowNearbyImports: showCycleNearbyImports,
+          nextFocusFilePath: focusFilePath
+        })
+      }
+    },
+    [
+      selectedCycleId,
+      setCycleTriageFocusFilePath,
+      showCycleNearbyImports,
+      syncCycleTriageSearch,
+      viewMode
+    ]
+  )
+
   const handleCycleNearbyImportsChange = useCallback(
     (value: boolean) => {
       setShowCycleNearbyImports(value)
-      syncCycleTriageSearch(viewMode, selectedCycleId, value)
+      syncCycleTriageSearch({
+        nextViewMode: viewMode,
+        nextCycleId: selectedCycleId,
+        nextShowNearbyImports: value
+      })
     },
     [
       selectedCycleId,
@@ -421,8 +525,13 @@ export function useExplorerController({
       setFocusedModulePath(modulePath)
       setHighlightedModule(modulePath)
       setSelectedCycleId(null)
+      setCycleTriageFocusFilePath(null)
       setShowCycleNearbyImports(false)
-      syncCycleTriageSearch('graph', null)
+      syncCycleTriageSearch({
+        nextViewMode: 'graph',
+        nextCycleId: null,
+        nextFocusFilePath: null
+      })
 
       setTimeout(() => {
         setHighlightedModule(null)
@@ -430,6 +539,7 @@ export function useExplorerController({
     },
     [
       clearUtilityHash,
+      setCycleTriageFocusFilePath,
       setFocusedModulePath,
       setGraphViewMode,
       setHighlightedModule,
@@ -504,6 +614,7 @@ export function useExplorerController({
     isTreeCollapsed,
     selectedNode,
     selectedCycleId,
+    cycleTriageFocusFilePath,
     showCycleNearbyImports,
     selectedModuleForPanel,
     selectedModuleData,
@@ -524,6 +635,7 @@ export function useExplorerController({
     handleModuleViewFile,
     handleGraphViewModeChange,
     handleCycleSelection,
+    handleCycleFocusFilePathChange,
     handleCycleNearbyImportsChange,
     handleDetailClose,
     toggleTreeView

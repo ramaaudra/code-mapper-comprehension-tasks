@@ -19,3 +19,8 @@ export interface ExplorerContextChip {
   label: string
   tone?: ExplorerContextChipTone
 }
+
+export interface CycleTriageNavigationRequest {
+  cycleId?: string | null
+  focusFilePath?: string | null
+}

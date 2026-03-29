@@ -7,7 +7,10 @@ import { ResizeGrip } from './ResizeGrip'
 import type { FolderArchitectureMetrics } from '@/features/architecture/types/architecture'
 import type { useResizablePanel } from '@/shared/hooks/useResizablePanel'
 import type { AnalysisData, AnalysisNode } from '@/shared/types/analysis'
-import type { ExplorerViewMode } from '@/shared/types/explorer'
+import type {
+  CycleTriageNavigationRequest,
+  ExplorerViewMode
+} from '@/shared/types/explorer'
 
 const NodeDetailPanel = lazy(() =>
   import('@/features/node-detail').then((module) => ({
@@ -33,7 +36,7 @@ interface ExplorerRightPanelsProps {
   graphViewMode: 'file' | 'module'
   nodePanel: PanelControls & {
     onClose: () => void
-    onShowCycleTriage?: (cycleId?: string | null) => void
+    onShowCycleTriage?: (request: CycleTriageNavigationRequest) => void
   }
   modulePanel: PanelControls & {
     modulePath: string | null

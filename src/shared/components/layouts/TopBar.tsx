@@ -17,6 +17,7 @@ import {
   cn,
   resolveTopBarActionGroups,
   resolveTopBarIconLabels,
+  resolveTopBarLayoutClasses,
   shouldShowTopBarContextChip
 } from '@/shared/lib/utils'
 
@@ -77,6 +78,7 @@ export function TopBar({
     runtimeMode,
     loadError
   })
+  const layoutClasses = resolveTopBarLayoutClasses()
   const iconLabels = resolveTopBarIconLabels({
     isTreeCollapsed,
     isLoading,
@@ -100,8 +102,8 @@ export function TopBar({
   const primaryNavigationValue = activePrimaryViewMode ?? ''
 
   return (
-    <header className='grid h-14 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border bg-background px-3 sm:px-4'>
-      <div className='flex min-w-0 items-center gap-3'>
+    <header className={layoutClasses.header}>
+      <div className={layoutClasses.brandRow}>
         <SimpleTooltip
           content={
             isTreeCollapsed ? shellCopy.sidebar.show : shellCopy.sidebar.hide
@@ -114,7 +116,7 @@ export function TopBar({
             size='icon'
             onClick={onToggleTree}
             aria-label={iconLabels.sidebarToggle}
-            className='h-10 w-10 shrink-0 touch-manipulation text-muted-foreground hover:text-foreground'
+            className='h-9 w-9 shrink-0 touch-manipulation text-muted-foreground hover:text-foreground sm:h-10 sm:w-10'
           >
             {isTreeCollapsed ? (
               <PanelLeftOpen className='h-4 w-4' aria-hidden='true' />
@@ -138,13 +140,14 @@ export function TopBar({
 
       <nav
         aria-label={shellCopy.regions.primaryNavigation}
-        className='justify-self-center'
+        className={layoutClasses.navigation}
       >
         {hasData && actionGroups.showHelpGroup && (
           <ToggleGroup
             type='single'
             size='lg'
             value={primaryNavigationValue}
+            className={layoutClasses.navigationGroup}
             onValueChange={(value: string) => {
               if (value === 'overview') {
                 onShowOverview()
@@ -155,25 +158,34 @@ export function TopBar({
               }
             }}
           >
-            <ToggleGroupItem value='overview'>
+            <ToggleGroupItem
+              value='overview'
+              className={layoutClasses.navigationItem}
+            >
               {shellCopy.navigation.overview}
             </ToggleGroupItem>
-            <ToggleGroupItem value='graph'>
+            <ToggleGroupItem
+              value='graph'
+              className={layoutClasses.navigationItem}
+            >
               {shellCopy.navigation.graph}
             </ToggleGroupItem>
-            <ToggleGroupItem value='architecture'>
+            <ToggleGroupItem
+              value='architecture'
+              className={layoutClasses.navigationItem}
+            >
               {shellCopy.navigation.architecture}
             </ToggleGroupItem>
           </ToggleGroup>
         )}
       </nav>
 
-      <div className='flex min-w-0 items-center justify-end gap-2'>
+      <div className={layoutClasses.actions}>
         {actionGroups.showHelpGroup && (
           <div
             role='group'
             aria-label={shellCopy.regions.help}
-            className='flex min-w-0 items-center gap-1'
+            className={layoutClasses.helpGroup}
           >
             <SimpleTooltip
               content={shellCopy.utilities.metricsGuide.tooltip}
@@ -189,7 +201,7 @@ export function TopBar({
                 size='sm'
                 onClick={onShowMetricsGuide}
                 className={cn(
-                  'h-10 touch-manipulation gap-1.5 px-3 text-xs font-medium',
+                  'h-9 touch-manipulation gap-1.5 px-3 text-xs font-medium sm:h-10',
                   activeUtilityViewMode !== 'metrics-guide' &&
                     'text-muted-foreground hover:text-foreground'
                 )}
@@ -212,7 +224,7 @@ export function TopBar({
                 size='sm'
                 onClick={onShowSetupGuide}
                 className={cn(
-                  'h-10 touch-manipulation gap-1.5 px-3 text-xs font-medium',
+                  'h-9 touch-manipulation gap-1.5 px-3 text-xs font-medium sm:h-10',
                   activeUtilityViewMode !== 'setup-guide' &&
                     'text-muted-foreground hover:text-foreground'
                 )}
@@ -245,10 +257,7 @@ export function TopBar({
           (actionGroups.showExportGroup ||
             actionGroups.showOperationsGroup ||
             Boolean(timestampLabel)) && (
-            <span
-              aria-hidden='true'
-              className='hidden h-5 w-px shrink-0 bg-border/70 lg:block'
-            />
+            <span aria-hidden='true' className={layoutClasses.divider} />
           )}
 
         {actionGroups.showExportGroup && (
@@ -262,17 +271,14 @@ export function TopBar({
                 variant: 'ghost',
                 size: 'sm',
                 className:
-                  'h-10 gap-1.5 border border-border/70 px-3 text-xs font-medium touch-manipulation text-muted-foreground hover:bg-muted hover:text-foreground'
+                  'h-9 gap-1.5 border border-border/70 px-3 text-xs font-medium touch-manipulation text-muted-foreground hover:bg-muted hover:text-foreground sm:h-10'
               }}
             />
           </div>
         )}
 
         {actionGroups.showExportGroup && actionGroups.showOperationsGroup && (
-          <span
-            aria-hidden='true'
-            className='hidden h-5 w-px shrink-0 bg-border/70 lg:block'
-          />
+          <span aria-hidden='true' className={layoutClasses.divider} />
         )}
 
         {actionGroups.showOperationsGroup && (
@@ -283,7 +289,7 @@ export function TopBar({
           >
             {loadError && runtimeMode === 'live' && (
               <SimpleTooltip content={loadError} side='bottom' asChild>
-                <div className='flex h-10 w-10 items-center justify-center text-status-warning-solid'>
+                <div className='flex h-9 w-9 items-center justify-center text-status-warning-solid sm:h-10 sm:w-10'>
                   <AlertTriangle className='h-4 w-4' aria-hidden='true' />
                 </div>
               </SimpleTooltip>
@@ -298,7 +304,7 @@ export function TopBar({
                     onClick={onRefresh}
                     disabled={isLoading}
                     aria-label={iconLabels.refresh}
-                    className='h-10 w-10 touch-manipulation text-muted-foreground hover:text-foreground'
+                    className='h-9 w-9 touch-manipulation text-muted-foreground hover:text-foreground sm:h-10 sm:w-10'
                   >
                     <RotateCcw
                       className={cn('h-4 w-4', isLoading && 'animate-spin')}

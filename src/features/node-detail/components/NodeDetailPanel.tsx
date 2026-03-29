@@ -57,6 +57,7 @@ import type {
   AnalysisNode,
   DependencyReference
 } from '@/shared/types/analysis'
+import type { CycleTriageNavigationRequest } from '@/shared/types/explorer'
 import type { ReactNode } from 'react'
 
 const DECISION_CARD_TONE_ICON = {
@@ -72,7 +73,7 @@ interface NodeDetailPanelProps {
   data: AnalysisData | null
   onClose: () => void
   onFocusSubgraph?: (nodeId: string, direction: 'inward' | 'outward') => void
-  onShowCycleTriage?: (cycleId?: string | null) => void
+  onShowCycleTriage?: (request: CycleTriageNavigationRequest) => void
 }
 
 const NodeDetailPanel = memo(function NodeDetailPanel({

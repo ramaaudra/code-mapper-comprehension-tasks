@@ -1,3 +1,5 @@
+import { matchesFile } from '@/shared/lib/utils'
+
 import { createCycleId, normalizeCyclePath } from './cycle-id'
 
 import type {
@@ -473,4 +475,18 @@ export function buildCycleTriageItems({
 
       return cycleA.uniqueFileCount - cycleB.uniqueFileCount
     })
+}
+
+export function filterCycleTriageItemsByFocusFile(
+  items: CycleTriageItem[],
+  focusFilePath: string | null,
+  fileMatcher: typeof matchesFile = matchesFile
+): CycleTriageItem[] {
+  if (!focusFilePath) {
+    return items
+  }
+
+  return items.filter((item) =>
+    item.files.some((filePath) => fileMatcher(filePath, focusFilePath))
+  )
 }

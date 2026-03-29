@@ -44,6 +44,8 @@ export function useReportExplorer() {
     setFocusedModulePath: ui.setFocusedModulePath,
     selectedCycleId: ui.selectedCycleId,
     setSelectedCycleId: ui.setSelectedCycleId,
+    cycleTriageFocusFilePath: ui.cycleTriageFocusFilePath,
+    setCycleTriageFocusFilePath: ui.setCycleTriageFocusFilePath,
     showCycleNearbyImports: ui.showCycleNearbyImports,
     setShowCycleNearbyImports: ui.setShowCycleNearbyImports,
     clearGraph,

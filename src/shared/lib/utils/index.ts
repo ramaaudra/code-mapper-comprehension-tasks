@@ -124,6 +124,7 @@ export {
   resolveTopBarIconLabels,
   shouldShowTopBarContextChip
 } from './top-bar'
+export { resolveTopBarLayoutClasses } from './top-bar-layout'
 
 // Re-export file status utilities
 export {

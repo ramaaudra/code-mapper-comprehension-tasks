@@ -1,7 +1,31 @@
+function getFocusedSummary(
+  visible: number,
+  total: number,
+  filePath: string
+): string {
+  if (visible === 1 && total > visible) {
+    return `Showing 1 of ${total} detected loop involving ${filePath}.`
+  }
+
+  if (visible === 1) {
+    return `Showing 1 detected loop involving ${filePath}.`
+  }
+
+  if (total > visible) {
+    return `Showing ${visible} of ${total} detected loops involving ${filePath}.`
+  }
+
+  return `Showing ${visible} detected loops involving ${filePath}.`
+}
+
 export const cycleTriageCopy = {
   page: {
     title: 'Cycle Triage Workspace',
-    backToOverview: 'Back to Overview'
+    backToOverview: 'Back to Overview',
+    focusedFileLabel: 'Focused file',
+    focusedFileHint: 'Only loops that include this file are shown.',
+    clearFocusedFile: 'Show all cycles',
+    focusedSummary: getFocusedSummary
   },
   summary: {
     totalCycles: 'Cycles to review',
@@ -33,6 +57,9 @@ export const cycleTriageCopy = {
     hideNearby: 'Hide nearby imports',
     confidence: 'Confidence',
     whySuggestion: 'Why start here?',
-    noCycles: 'No circular dependencies detected in this analysis.'
+    noCycles: 'No circular dependencies detected in this analysis.',
+    noFocusedCyclesTitle: 'No cycles match the focused file',
+    noFocusedCyclesDescription: (filePath: string) =>
+      `No detected dependency cycles currently include ${filePath}. Clear the file filter to review every detected loop.`
   }
 } as const

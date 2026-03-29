@@ -104,6 +104,8 @@ export function ReportShell() {
       analysisData={analysisData}
       selectedCycleId={explorer.selectedCycleId}
       onSelectedCycleIdChange={explorer.handleCycleSelection}
+      focusFilePath={explorer.cycleTriageFocusFilePath}
+      onFocusFilePathChange={explorer.handleCycleFocusFilePathChange}
       showNearbyImports={explorer.showCycleNearbyImports}
       onShowNearbyImportsChange={explorer.handleCycleNearbyImportsChange}
       onBack={explorer.handleBackFromUtility}
@@ -130,7 +132,10 @@ export function ReportShell() {
         onShowArchitecture={explorer.handleShowArchitecture}
         onShowMetricsGuide={() => explorer.handleShowMetricsGuide('overview')}
         onShowCycleTriage={(cycleId) =>
-          explorer.handleShowCycleTriage(cycleId, 'overview')
+          explorer.handleShowCycleTriage({
+            cycleId,
+            sourceView: 'overview'
+          })
         }
         onShowModuleGraph={explorer.handleShowModuleGraph}
         isLayoutTransitioning={ui.isLayoutTransitioning}
@@ -188,11 +193,12 @@ export function ReportShell() {
             panelWidth: nodePanel.panelWidth,
             resizeHandleProps: nodePanel.resizeHandleProps,
             onClose: explorer.handleDetailClose,
-            onShowCycleTriage: (cycleId) =>
-              explorer.handleShowCycleTriage(
+            onShowCycleTriage: ({ cycleId, focusFilePath }) =>
+              explorer.handleShowCycleTriage({
                 cycleId,
-                explorer.viewMode === 'graph' ? 'graph' : 'overview'
-              )
+                focusFilePath: focusFilePath ?? null,
+                sourceView: explorer.viewMode === 'graph' ? 'graph' : 'overview'
+              })
           }}
           modulePanel={{
             panelRef: modulePanel.panelRef,

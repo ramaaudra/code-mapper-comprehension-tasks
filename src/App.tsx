@@ -83,6 +83,8 @@ function AppContent() {
     setFocusedModulePath,
     selectedCycleId,
     setSelectedCycleId,
+    cycleTriageFocusFilePath,
+    setCycleTriageFocusFilePath,
     showCycleNearbyImports,
     setShowCycleNearbyImports,
     clearFocusedModule,
@@ -119,6 +121,8 @@ function AppContent() {
     setFocusedModulePath,
     selectedCycleId,
     setSelectedCycleId,
+    cycleTriageFocusFilePath,
+    setCycleTriageFocusFilePath,
     showCycleNearbyImports,
     setShowCycleNearbyImports,
     clearFocusedModule,
@@ -222,6 +226,8 @@ function AppContent() {
               analysisData={analysisData}
               selectedCycleId={explorer.selectedCycleId}
               onSelectedCycleIdChange={explorer.handleCycleSelection}
+              focusFilePath={explorer.cycleTriageFocusFilePath}
+              onFocusFilePathChange={explorer.handleCycleFocusFilePathChange}
               showNearbyImports={explorer.showCycleNearbyImports}
               onShowNearbyImportsChange={
                 explorer.handleCycleNearbyImportsChange
@@ -252,7 +258,10 @@ function AppContent() {
                   explorer.handleShowMetricsGuide('overview')
                 }
                 onShowCycleTriage={(cycleId) =>
-                  explorer.handleShowCycleTriage(cycleId, 'overview')
+                  explorer.handleShowCycleTriage({
+                    cycleId,
+                    sourceView: 'overview'
+                  })
                 }
                 onShowModuleGraph={explorer.handleShowModuleGraph}
                 isLayoutTransitioning={isLayoutTransitioning}
@@ -290,11 +299,12 @@ function AppContent() {
             panelWidth,
             resizeHandleProps,
             onClose: explorer.handleDetailClose,
-            onShowCycleTriage: (cycleId) =>
-              explorer.handleShowCycleTriage(
+            onShowCycleTriage: ({ cycleId, focusFilePath }) =>
+              explorer.handleShowCycleTriage({
                 cycleId,
-                explorer.viewMode === 'graph' ? 'graph' : 'overview'
-              )
+                focusFilePath: focusFilePath ?? null,
+                sourceView: explorer.viewMode === 'graph' ? 'graph' : 'overview'
+              })
           }}
           modulePanel={{
             panelRef: modulePanelRef,
