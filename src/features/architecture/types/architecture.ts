@@ -1,4 +1,5 @@
 import type {
+  ConnascenceSignal,
   FileEvolutionMetrics,
   FolderEvolutionMetrics
 } from '@/shared/types/analysis'
@@ -14,6 +15,7 @@ export interface FileArchitectureMetrics extends CouplingMetrics {
   filePath: string
   moduleKey: string
   evolution?: FileEvolutionMetrics
+  connascenceSignals?: ConnascenceSignal[]
 }
 
 export interface FolderArchitectureMetrics extends CouplingMetrics {
@@ -22,6 +24,7 @@ export interface FolderArchitectureMetrics extends CouplingMetrics {
   couplingTo: Record<string, number>
   couplingFrom: Record<string, number>
   evolution: FolderEvolutionMetrics
+  connascenceSignals?: ConnascenceSignal[]
 }
 
 export interface FolderDetailResponse {

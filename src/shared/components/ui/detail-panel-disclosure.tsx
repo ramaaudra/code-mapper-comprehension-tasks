@@ -13,6 +13,7 @@ interface DetailPanelDisclosureProps {
   summary?: string
   children: ReactNode
   defaultOpen?: boolean
+  titleLevel?: 'section' | 'subsection'
   className?: string
   contentClassName?: string
 }
@@ -22,9 +23,15 @@ export function DetailPanelDisclosure({
   summary,
   children,
   defaultOpen = false,
+  titleLevel = 'subsection',
   className,
   contentClassName
 }: DetailPanelDisclosureProps) {
+  const titleClassName =
+    titleLevel === 'section'
+      ? 'text-base font-semibold text-foreground'
+      : 'text-sm font-semibold text-foreground'
+
   return (
     <Collapsible
       defaultOpen={defaultOpen}
@@ -39,7 +46,7 @@ export function DetailPanelDisclosure({
           className='group flex w-full items-start justify-between gap-3 rounded-lg px-3 py-3 text-left transition-colors hover:bg-muted/35'
         >
           <div className='min-w-0'>
-            <div className='text-sm font-semibold text-foreground'>{title}</div>
+            <div className={titleClassName}>{title}</div>
             {summary ? (
               <p className='mt-1 text-xs leading-relaxed text-muted-foreground'>
                 {summary}

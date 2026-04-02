@@ -5,6 +5,7 @@ import {
   resolveNodeDetailSupportingSignals,
   type NodeDetailBlastRadiusAssessment
 } from '../lib/supporting-signals'
+import { NodeDetailConnascenceSection } from './NodeDetailConnascenceSection'
 import { NodeDetailDiagnosisSection } from './NodeDetailDiagnosisSection'
 import { NodeDetailGraphToolsSection } from './NodeDetailGraphToolsSection'
 import { NodeDetailSupportingSignalsSection } from './NodeDetailSupportingSignalsSection'
@@ -15,6 +16,7 @@ import type { BlastRadiusRole } from '../lib/panel-state'
 import type { FileArchitectureMetrics } from '@/features/architecture/types/architecture'
 import type { DecisionAssessment } from '@/shared/lib/utils'
 import type {
+  ConnascenceSignal,
   EntryDetectionContext,
   FileEvolutionMetrics
 } from '@/shared/types/analysis'
@@ -45,6 +47,10 @@ interface NodeDetailOverviewSectionProps {
   resolvedNodeId: string
   decisionIcon: ReactNode
   entryDetectionContext?: EntryDetectionContext
+  connascenceSignals: ConnascenceSignal[]
+  onNavigateToFile?: (filePath: string) => void
+  onOpenDependents?: () => void
+  onFocusDependents?: () => void
   relatedCycleSummary: NodeDetailCycleTriageSummary | null
   onShowCycleTriage?: (request: CycleTriageNavigationRequest) => void
 }
@@ -64,6 +70,10 @@ export function NodeDetailOverviewSection({
   resolvedNodeId,
   decisionIcon,
   entryDetectionContext,
+  connascenceSignals,
+  onNavigateToFile,
+  onOpenDependents,
+  onFocusDependents,
   relatedCycleSummary,
   onShowCycleTriage
 }: NodeDetailOverviewSectionProps) {
@@ -105,6 +115,13 @@ export function NodeDetailOverviewSection({
       <NodeDetailSupportingSignalsSection
         signals={supportingSignals}
         archMetrics={archMetrics}
+      />
+
+      <NodeDetailConnascenceSection
+        signals={connascenceSignals}
+        onNavigateToFile={onNavigateToFile}
+        onOpenDependents={onOpenDependents}
+        onFocusDependents={onFocusDependents}
       />
 
       {overviewState.showWhyDisclosure ? (

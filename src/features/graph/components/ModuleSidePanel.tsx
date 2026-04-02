@@ -4,6 +4,7 @@ import {
   useModuleReviewThresholdCalibration,
   useFolderDetail
 } from '@/features/architecture'
+import { ModuleConnascenceSection } from '@/features/architecture/components/ModuleConnascenceSection'
 import { Badge } from '@/shared/components/ui/badge'
 import { DecisionStorySection } from '@/shared/components/ui/decision-story-section'
 import { DetailPanelDisclosure } from '@/shared/components/ui/detail-panel-disclosure'
@@ -546,10 +547,15 @@ function SupportingMetricsGrid({
 
 interface OverviewTabProps {
   moduleData: FolderArchitectureMetrics
+  onViewFile: (filePath: string) => void
   thresholdCalibration?: ReviewThresholdCalibration
 }
 
-function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
+function OverviewTab({
+  moduleData,
+  onViewFile,
+  thresholdCalibration
+}: OverviewTabProps) {
   const dataContext = useContext(DataContext)
   const analysisData = dataContext?.analysisData ?? null
   const evolution = moduleData.evolution
@@ -613,6 +619,11 @@ function OverviewTab({ moduleData, thresholdCalibration }: OverviewTabProps) {
           />
         </div>
       ) : null}
+
+      <ModuleConnascenceSection
+        signals={moduleData.connascenceSignals ?? []}
+        onNavigateToFile={onViewFile}
+      />
 
       {decisionAssessment ? (
         <DetailPanelDisclosure
@@ -933,6 +944,7 @@ export function ModuleSidePanel({
           {moduleData ? (
             <OverviewTab
               moduleData={moduleData}
+              onViewFile={onViewFile}
               thresholdCalibration={moduleThresholdCalibration}
             />
           ) : (

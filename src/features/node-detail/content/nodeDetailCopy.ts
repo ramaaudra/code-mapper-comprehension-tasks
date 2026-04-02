@@ -69,6 +69,17 @@ export const nodeDetailCopy = {
   consequences: {
     title: 'If you modify this file:'
   },
+  connascence: {
+    title: 'Change Coordination Risks',
+    description:
+      'These signals show where changing this file may require coordinated edits elsewhere.',
+    tooltipTitle: 'What is a change coordination risk?',
+    tooltipDescription:
+      'These signals highlight contracts that other files must stay in sync with. If you change the declaration here, review the related files before you merge.',
+    declarationPreviewLabel: 'Declaration preview',
+    reviewFilesLabel: 'Review first',
+    nextStepLabel: 'Next step:'
+  },
   technicalBasis: {
     title: 'Technical basis',
     summary: 'Raw metrics and structural evidence for this file.'

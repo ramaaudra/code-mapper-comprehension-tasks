@@ -120,6 +120,16 @@ export {
   resolveExplorerContextChip
 } from './explorer-shell'
 export {
+  filterVisibleConnascenceSignals,
+  hasActionableConnascenceGuidance,
+  getFileConnascenceSignals,
+  getModuleConnascenceSignals,
+  getConnascenceHeadline,
+  getConnascenceImpactSummary,
+  getConnascenceReviewTargetsLabel,
+  getConnascenceScopeLabel
+} from './connascence'
+export {
   resolveTopBarActionGroups,
   resolveTopBarIconLabels,
   shouldShowTopBarContextChip

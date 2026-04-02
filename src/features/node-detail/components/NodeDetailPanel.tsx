@@ -26,6 +26,7 @@ import { findDependencyPath } from '@/shared/lib/api/pathfinding'
 import {
   createDecisionAssessment,
   getBasename,
+  getFileConnascenceSignals,
   getFileEvolutionMetrics,
   getFileIcon,
   isEvolutionaryMetricsAvailable,
@@ -72,6 +73,7 @@ interface NodeDetailPanelProps {
   node: AnalysisNode | string | null
   data: AnalysisData | null
   onClose: () => void
+  onNavigateToFile?: (filePath: string) => void
   onFocusSubgraph?: (nodeId: string, direction: 'inward' | 'outward') => void
   onShowCycleTriage?: (request: CycleTriageNavigationRequest) => void
 }
@@ -80,6 +82,7 @@ const NodeDetailPanel = memo(function NodeDetailPanel({
   node,
   data,
   onClose,
+  onNavigateToFile,
   onFocusSubgraph,
   onShowCycleTriage
 }: NodeDetailPanelProps) {
@@ -201,6 +204,19 @@ const NodeDetailPanel = memo(function NodeDetailPanel({
         cycles: data?.issues?.circularDependencies ?? []
       }),
     [data?.issues?.circularDependencies, nodeId]
+  )
+  const connascenceSignals = useMemo(
+    () =>
+      getFileConnascenceSignals({
+        filePath: nodeId ?? '',
+        architectureSignals: archMetrics?.connascenceSignals ?? [],
+        analysisFileSignals: data?.connascenceInsights?.fileSignals ?? {}
+      }),
+    [
+      archMetrics?.connascenceSignals,
+      data?.connascenceInsights?.fileSignals,
+      nodeId
+    ]
   )
 
   const overviewState = useMemo(
@@ -462,6 +478,14 @@ const NodeDetailPanel = memo(function NodeDetailPanel({
                 : null
             }
             entryDetectionContext={data?.entryDetectionContext}
+            connascenceSignals={connascenceSignals}
+            onNavigateToFile={onNavigateToFile}
+            onOpenDependents={() => setActiveTab('dependents')}
+            onFocusDependents={
+              onFocusSubgraph
+                ? () => onFocusSubgraph(resolvedNodeId, 'outward')
+                : undefined
+            }
             relatedCycleSummary={relatedCycleSummary}
             onShowCycleTriage={onShowCycleTriage}
           />

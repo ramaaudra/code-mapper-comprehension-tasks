@@ -40,7 +40,10 @@ export function NodeDetailSupportingSignalsSection({
 
   return (
     <div className='space-y-3'>
-      <DetailPanelSectionHeading title={nodeDetailCopy.consequences.title} />
+      <DetailPanelSectionHeading
+        title={nodeDetailCopy.consequences.title}
+        level='section'
+      />
       <div className='flex flex-col gap-3 text-sm'>
         {signals.map((signal) => {
           if (signal.id === 'verification-scope' && signal.riskLevel) {

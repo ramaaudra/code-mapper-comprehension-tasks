@@ -3,9 +3,7 @@ import test from 'node:test'
 
 import { renderToStaticMarkup } from 'react-dom/server'
 
-import { createDecisionAssessment } from '@/shared/lib/utils'
-
-import { NodeDetailDiagnosisSection } from './NodeDetailDiagnosisSection'
+import { NodeDetailTechnicalBasisSection } from './NodeDetailTechnicalBasisSection'
 
 import type { FileArchitectureMetrics } from '@/features/architecture/types/architecture'
 import type { FileEvolutionMetrics } from '@/shared/types/analysis'
@@ -14,9 +12,9 @@ function createArchMetrics(): FileArchitectureMetrics {
   return {
     filePath: 'next.config.js',
     moduleKey: 'sample-project',
-    ca: 0,
-    ce: 0,
-    instability: 0,
+    ca: 3,
+    ce: 1,
+    instability: 0.25,
     hasCycle: false
   }
 }
@@ -33,9 +31,9 @@ function createEvolution(): FileEvolutionMetrics {
     },
     churn90d: {
       windowDays: 90,
-      churnLoc: 2,
-      commitCount: 1,
-      relativeChurn: 0.06
+      churnLoc: 3,
+      commitCount: 2,
+      relativeChurn: 0.09
     },
     relativeChurnPercentile: 0.15,
     structuralRiskPercentile: 0.05,
@@ -45,32 +43,23 @@ function createEvolution(): FileEvolutionMetrics {
   }
 }
 
-test('NodeDetailDiagnosisSection renders supporting evidence as a compact list instead of metric cards', () => {
+test('NodeDetailTechnicalBasisSection promotes the disclosure title above inner metric subheadings', () => {
   const markup = renderToStaticMarkup(
-    <NodeDetailDiagnosisSection
-      decisionAssessment={createDecisionAssessment({
-        kind: 'file',
-        hasCycle: false,
-        ca: 0,
-        ce: 0,
-        instability: 0,
-        relativeChurn30d: 0.06
-      })}
-      decisionIcon={<span>!</span>}
+    <NodeDetailTechnicalBasisSection
+      showArchitectureMetrics
+      showEvolutionMetrics
       changeHistoryAvailable
-      fileEvolution={createEvolution()}
       archMetrics={createArchMetrics()}
-      relatedCycleSummary={null}
-      resolvedNodeId='next.config.js'
+      fileEvolution={createEvolution()}
     />
   )
 
   assert.match(
     markup,
-    /<h3 class="[^"]*text-base[^"]*font-semibold[^"]*">Supporting evidence<\/h3>/
+    /<div class="[^"]*text-base[^"]*font-semibold[^"]*text-foreground[^"]*">Technical basis<\/div>/
   )
-  assert.match(markup, /Supporting evidence/)
-  assert.match(markup, /Files Affected if Changed/)
-  assert.match(markup, /How Often This Changes/)
-  assert.doesNotMatch(markup, /font-data/)
+  assert.match(
+    markup,
+    /<p class="[^"]*text-xs[^"]*leading-relaxed[^"]*text-muted-foreground[^"]*">Raw metrics and structural evidence for this file\.<\/p>/
+  )
 })

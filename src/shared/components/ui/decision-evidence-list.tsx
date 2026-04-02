@@ -12,12 +12,14 @@ export interface DecisionEvidenceListItem {
 interface DecisionEvidenceListProps {
   title: string
   items: DecisionEvidenceListItem[]
+  headingLevel?: 'section' | 'subsection'
   className?: string
 }
 
 export function DecisionEvidenceList({
   title,
   items,
+  headingLevel = 'subsection',
   className
 }: DecisionEvidenceListProps) {
   if (items.length === 0) {
@@ -26,7 +28,7 @@ export function DecisionEvidenceList({
 
   return (
     <div className={cn('space-y-3', className)}>
-      <DetailPanelSectionHeading title={title} />
+      <DetailPanelSectionHeading title={title} level={headingLevel} />
       <dl className='overflow-hidden rounded-lg border border-border/60 bg-muted/10'>
         {items.map((item, index) => (
           <div

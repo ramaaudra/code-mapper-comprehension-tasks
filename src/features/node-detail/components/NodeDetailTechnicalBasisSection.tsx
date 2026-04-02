@@ -29,6 +29,7 @@ export function NodeDetailTechnicalBasisSection({
     <DetailPanelDisclosure
       title={nodeDetailCopy.technicalBasis.title}
       summary={nodeDetailCopy.technicalBasis.summary}
+      titleLevel='section'
     >
       {showArchitectureMetrics && archMetrics ? (
         <div className='space-y-3 pb-2'>

@@ -193,6 +193,7 @@ export function ReportShell() {
             panelWidth: nodePanel.panelWidth,
             resizeHandleProps: nodePanel.resizeHandleProps,
             onClose: explorer.handleDetailClose,
+            onViewFile: explorer.navigateToFile,
             onShowCycleTriage: ({ cycleId, focusFilePath }) =>
               explorer.handleShowCycleTriage({
                 cycleId,

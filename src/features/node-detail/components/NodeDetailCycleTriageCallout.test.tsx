@@ -25,4 +25,6 @@ test('NodeDetailCycleTriageCallout uses critical status tokens instead of generi
   assert.match(markup, /bg-status-critical-surface/)
   assert.match(markup, /text-status-critical-foreground/)
   assert.doesNotMatch(markup, /text-destructive/)
+  assert.match(markup, /inline-flex items-center gap-1/)
+  assert.doesNotMatch(markup, /bg-background\/85/)
 })

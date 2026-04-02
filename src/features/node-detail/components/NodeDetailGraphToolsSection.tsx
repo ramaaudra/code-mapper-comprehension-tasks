@@ -19,7 +19,10 @@ export function NodeDetailGraphToolsSection({
 }: NodeDetailGraphToolsSectionProps) {
   return (
     <div className='space-y-4 border-t border-border/40 pb-2 pt-6'>
-      <DetailPanelSectionHeading title={nodeDetailCopy.graphTools.title} />
+      <DetailPanelSectionHeading
+        title={nodeDetailCopy.graphTools.title}
+        level='section'
+      />
       <div className='space-y-3'>
         <div className='flex w-full gap-2'>
           <Button

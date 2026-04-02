@@ -53,6 +53,75 @@ export interface EvolutionaryMetricsResult {
   files: Record<string, FileEvolutionMetrics>
 }
 
+export type ConnascenceSeverity = 'low' | 'medium' | 'high'
+export type ConnascenceConfidence = 'low' | 'medium' | 'high'
+export type ConnascenceEvidenceKind =
+  | 'declaration'
+  | 'call-site'
+  | 'type-import'
+  | 'type-usage'
+
+export interface ConnascenceEvidence {
+  filePath: string
+  line: number | null
+  label: string
+  evidenceKind: ConnascenceEvidenceKind
+}
+
+interface BaseConnascenceSignal {
+  signalKey: string
+  title: string
+  declarationPreview?: string
+  declaredIn: string
+  targetFiles: string[]
+  severity: ConnascenceSeverity
+  confidence: ConnascenceConfidence
+  whyItMatters: string
+  recommendedAction: string
+  evidence: ConnascenceEvidence[]
+}
+
+export interface FragilePositionalApiSignal extends BaseConnascenceSignal {
+  kind: 'fragile-positional-api'
+  title: 'Fragile Positional API'
+  symbolName: string
+  requiredParamCount: number
+  callerCount: number
+  moduleBoundaryCount: number
+}
+
+export type SharedTypeContractUsageKind =
+  | 'parameter'
+  | 'return'
+  | 'exported-property'
+  | 'exported-object-shape'
+
+export interface SharedTypeContractSignal extends BaseConnascenceSignal {
+  kind: 'shared-type-contract'
+  title: 'Shared Type Contract'
+  typeName: string
+  importerCount: number
+  moduleBoundaryCount: number
+  usageKind: SharedTypeContractUsageKind
+}
+
+export type ConnascenceSignal =
+  | FragilePositionalApiSignal
+  | SharedTypeContractSignal
+
+export interface ConnascenceInsightSummary {
+  availability: 'available' | 'unavailable'
+  unavailableReason: string | null
+  fragilePositionalApiCount: number
+  sharedTypeContractCount: number
+}
+
+export interface ConnascenceInsightsResult {
+  summary: ConnascenceInsightSummary
+  fileSignals: Record<string, ConnascenceSignal[]>
+  moduleSignals: Record<string, ConnascenceSignal[]>
+}
+
 export interface UnresolvedImport {
   specifier: string
   pattern: string
@@ -156,6 +225,7 @@ export interface AnalysisData {
   fileTree: FileTreeNode[]
   dependencyMap: Record<string, DependencyInfo[]>
   riskAnalysis?: FileRiskProfile[]
+  connascenceInsights?: ConnascenceInsightsResult
   evolutionaryMetrics: EvolutionaryMetricsResult
   issues: AnalysisIssues
   metrics: AnalysisMetrics

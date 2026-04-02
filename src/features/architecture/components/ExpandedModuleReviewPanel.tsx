@@ -9,6 +9,7 @@ import {
   buildModuleReviewGroups,
   type PrioritizedModuleReviewFile
 } from '../lib/module-review-priority'
+import { ModuleConnascenceSection } from './ModuleConnascenceSection'
 import { ModuleReviewSummary } from './ModuleReviewSummary'
 
 import type {
@@ -159,6 +160,11 @@ export function ExpandedModuleReviewPanel({
           </div>
         </div>
       ) : null}
+
+      <ModuleConnascenceSection
+        signals={folder.connascenceSignals ?? []}
+        onNavigateToFile={onNavigateToFile}
+      />
 
       <ReviewGroupSection
         title={architectureCopy.table.expanded.startHereTitle}

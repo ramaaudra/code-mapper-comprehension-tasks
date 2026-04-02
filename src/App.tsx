@@ -299,6 +299,7 @@ function AppContent() {
             panelWidth,
             resizeHandleProps,
             onClose: explorer.handleDetailClose,
+            onViewFile: explorer.navigateToFile,
             onShowCycleTriage: ({ cycleId, focusFilePath }) =>
               explorer.handleShowCycleTriage({
                 cycleId,

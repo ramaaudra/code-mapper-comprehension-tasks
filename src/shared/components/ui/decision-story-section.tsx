@@ -112,6 +112,7 @@ export function DecisionStorySection({
         <DecisionEvidenceList
           title={decisionCopy.evidence.supportingTitle}
           items={evidenceItems}
+          headingLevel='section'
         />
       ) : (
         <>

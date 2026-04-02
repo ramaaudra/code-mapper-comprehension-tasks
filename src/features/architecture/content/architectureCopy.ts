@@ -59,7 +59,16 @@ export const architectureCopy = {
       hideRemainingAction: 'Hide remaining files',
       cycleWarningTitle: 'Cycle warning',
       cycleWarningDescription:
-        'This module includes files in a dependency cycle. Review those files before broader refactors.'
+        'This module includes files in a dependency cycle. Review those files before broader refactors.',
+      connascenceTitle: 'Coordination Risks',
+      connascenceDescription:
+        'These signals show which declarations in this module may require coordinated edits elsewhere.',
+      connascenceTooltipTitle: 'What is a coordination risk?',
+      connascenceTooltipDescription:
+        'A coordination risk means a declaration in this module has related files that may also need changes. Review the declaration and its linked files together.',
+      connascenceDeclarationLabel: 'Declared in',
+      connascenceReviewFilesLabel: 'Review first',
+      connascenceNextStepLabel: 'Next step:'
     }
   },
   couplingBreakdown: {

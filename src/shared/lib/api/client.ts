@@ -1,10 +1,12 @@
 import axios from 'axios'
 
 function resolveBaseURL(): string {
-  const envBaseURL = import.meta.env.VITE_API_URL?.trim()
-  const forceEnv = import.meta.env.VITE_FORCE_API_URL === 'true'
+  const metaEnv = import.meta.env ?? {}
+  const envBaseURL =
+    typeof metaEnv.VITE_API_URL === 'string' ? metaEnv.VITE_API_URL.trim() : ''
+  const forceEnv = metaEnv.VITE_FORCE_API_URL === 'true'
 
-  if (import.meta.env.DEV || forceEnv) {
+  if (metaEnv.DEV || forceEnv) {
     return envBaseURL || ''
   }
 

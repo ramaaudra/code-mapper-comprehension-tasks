@@ -36,6 +36,7 @@ interface ExplorerRightPanelsProps {
   graphViewMode: 'file' | 'module'
   nodePanel: PanelControls & {
     onClose: () => void
+    onViewFile: (filePath: string) => void
     onShowCycleTriage?: (request: CycleTriageNavigationRequest) => void
   }
   modulePanel: PanelControls & {
@@ -91,6 +92,7 @@ export function ExplorerRightPanels({
               node={selectedNode}
               data={analysisData}
               onClose={nodePanel.onClose}
+              onNavigateToFile={nodePanel.onViewFile}
               onShowCycleTriage={nodePanel.onShowCycleTriage}
             />
           </Suspense>
