@@ -29,6 +29,11 @@ interface ResolveExplorerContextChipOptions {
   hasUnresolvedImports: boolean
 }
 
+interface ResolveAnalysisShellStateOptions {
+  hasAnalysisData: boolean
+  isLoading: boolean
+}
+
 const metricsGuideSectionSet = new Set<string>(METRICS_GUIDE_SECTION_IDS)
 
 const legacyMetricsGuideSectionMap: Record<string, MetricsGuideSectionId> = {
@@ -120,6 +125,21 @@ export function isMetricsGuideHash(hash: string): boolean {
 
 export function buildMetricsGuideHash(section?: MetricsGuideSectionId): string {
   return section ? `#metrics-guide/${section}` : '#metrics-guide'
+}
+
+export function resolveAnalysisShellState({
+  hasAnalysisData,
+  isLoading
+}: ResolveAnalysisShellStateOptions): 'ready' | 'loading' | 'empty' {
+  if (hasAnalysisData) {
+    return 'ready'
+  }
+
+  if (isLoading) {
+    return 'loading'
+  }
+
+  return 'empty'
 }
 
 export function resolveExplorerContextChip({

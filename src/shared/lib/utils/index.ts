@@ -117,6 +117,7 @@ export {
   buildMetricsGuideHash,
   isMetricsGuideHash,
   parseMetricsGuideHash,
+  resolveAnalysisShellState,
   resolveExplorerContextChip
 } from './explorer-shell'
 export {

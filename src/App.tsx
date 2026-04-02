@@ -14,7 +14,10 @@ import { ThemeProvider } from '@/shared/components/providers/ThemeProvider'
 import { useExplorerController } from '@/shared/hooks/useExplorerController'
 import { useKeyboardShortcut } from '@/shared/hooks/useKeyboardShortcut'
 import { useResizablePanel } from '@/shared/hooks/useResizablePanel'
-import { isMetricsGuideHash } from '@/shared/lib/utils'
+import {
+  isMetricsGuideHash,
+  resolveAnalysisShellState
+} from '@/shared/lib/utils'
 
 const FileTreeView = lazy(() =>
   import('@/features/file-analysis').then((module) => ({
@@ -148,6 +151,134 @@ function AppContent() {
     }
   }, [analysisData, explorer, viewMode])
 
+  const analysisShellState = resolveAnalysisShellState({
+    hasAnalysisData: analysisData != null,
+    isLoading
+  })
+
+  let sidebarContent = null
+
+  if (analysisShellState === 'ready' && analysisData) {
+    sidebarContent = (
+      <Suspense fallback={<FileTreeSkeleton />}>
+        <FileTreeView
+          ref={explorer.treeRef}
+          data={analysisData.fileTree}
+          onFileSelect={explorer.handleFileSelect}
+          onSimulateDelete={handleSimulateDelete}
+        />
+      </Suspense>
+    )
+  } else if (analysisShellState === 'loading') {
+    sidebarContent = <FileTreeSkeleton />
+  }
+
+  let mainContent = null
+
+  if (analysisShellState === 'ready' && analysisData) {
+    mainContent =
+      explorer.viewMode === 'graph' ? (
+        <div className='h-full bg-background'>
+          <DependencyGraph
+            nodes={graphElements.nodes}
+            edges={graphElements.edges}
+            focusNodeId={graphElements.focusNodeId}
+            hoveredFile={hoveredFile}
+            layoutDirection={layoutDirection}
+            onLayoutDirectionChange={setLayoutDirection}
+            onNodeClick={(fileId) => explorer.navigateToFile(fileId)}
+            isLayoutTransitioning={isLayoutTransitioning}
+            initialViewMode={explorer.graphViewMode}
+            highlightedModule={explorer.highlightedModule}
+            initialFocusedModuleId={explorer.focusedModulePath}
+            onViewModeChange={explorer.handleGraphViewModeChange}
+            onModuleSelect={explorer.handleModuleSelect}
+          />
+        </div>
+      ) : explorer.viewMode === 'architecture' ? (
+        <Suspense fallback={<DashboardSkeleton />}>
+          <ArchitecturePage
+            onShowMetricsGuide={() =>
+              explorer.handleShowMetricsGuide('architecture')
+            }
+            onNavigateToFile={(filePath) => explorer.navigateToFile(filePath)}
+          />
+        </Suspense>
+      ) : explorer.viewMode === 'metrics-guide' ? (
+        <Suspense fallback={<DashboardSkeleton />}>
+          <MetricsGuidePage onBack={explorer.handleBackFromUtility} />
+        </Suspense>
+      ) : explorer.viewMode === 'cycle-triage' ? (
+        <CycleTriageWorkspace
+          analysisData={analysisData}
+          selectedCycleId={explorer.selectedCycleId}
+          onSelectedCycleIdChange={explorer.handleCycleSelection}
+          focusFilePath={explorer.cycleTriageFocusFilePath}
+          onFocusFilePathChange={explorer.handleCycleFocusFilePathChange}
+          showNearbyImports={explorer.showCycleNearbyImports}
+          onShowNearbyImportsChange={explorer.handleCycleNearbyImportsChange}
+          onBack={explorer.handleBackFromUtility}
+          onNavigateToFile={explorer.navigateToFile}
+        />
+      ) : explorer.viewMode === 'setup-guide' ? (
+        <Suspense fallback={<DashboardSkeleton />}>
+          <SetupGuidePage
+            warnings={analysisData.warnings}
+            onBack={explorer.handleBackFromUtility}
+          />
+        </Suspense>
+      ) : (
+        <Suspense fallback={<DashboardSkeleton />}>
+          <ProjectDashboard
+            analysisData={analysisData}
+            dependencyGraph={graphElements}
+            hoveredFile={hoveredFile}
+            layoutDirection={layoutDirection}
+            onLayoutDirectionChange={setLayoutDirection}
+            viewMode={explorer.viewMode}
+            selectedFileId={selectedFileId}
+            onNavigateToFile={explorer.navigateToFile}
+            onShowArchitecture={explorer.handleShowArchitecture}
+            onShowMetricsGuide={() =>
+              explorer.handleShowMetricsGuide('overview')
+            }
+            onShowCycleTriage={(cycleId) =>
+              explorer.handleShowCycleTriage({
+                cycleId,
+                sourceView: 'overview'
+              })
+            }
+            onShowModuleGraph={explorer.handleShowModuleGraph}
+            isLayoutTransitioning={isLayoutTransitioning}
+          />
+        </Suspense>
+      )
+  } else if (analysisShellState === 'loading') {
+    mainContent = <DashboardSkeleton />
+  } else {
+    mainContent = (
+      <div className='flex h-full items-center justify-center'>
+        <div className='mx-auto max-w-lg space-y-5 px-6 text-center'>
+          <div className='mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-border/70 bg-muted/25'>
+            <div className='h-10 w-10 rounded-xl border border-border/70 bg-muted/70' />
+          </div>
+          <div className='space-y-2'>
+            <h2 className='text-xl font-semibold text-foreground'>
+              Waiting for analysis data
+            </h2>
+            <p className='text-sm leading-relaxed text-muted-foreground'>
+              Run the command{' '}
+              <code className='rounded bg-muted px-1 py-0.5'>
+                code-mapper analyze &lt;project-path&gt;
+              </code>{' '}
+              in your terminal to load the first project snapshot.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <ExplorerShell
       runtimeMode='live'
@@ -174,120 +305,8 @@ function AppContent() {
       analysisLoadedAt={analysisLoadedAt}
       hasChanges={changesStatus?.hasChanges ?? false}
       totalChanges={changesStatus?.totalChanges ?? 0}
-      sidebar={
-        analysisData ? (
-          <Suspense fallback={<FileTreeSkeleton />}>
-            <FileTreeView
-              ref={explorer.treeRef}
-              data={analysisData.fileTree}
-              onFileSelect={explorer.handleFileSelect}
-              onSimulateDelete={handleSimulateDelete}
-            />
-          </Suspense>
-        ) : null
-      }
-      main={
-        analysisData ? (
-          explorer.viewMode === 'graph' ? (
-            <div className='h-full bg-background'>
-              <DependencyGraph
-                nodes={graphElements.nodes}
-                edges={graphElements.edges}
-                focusNodeId={graphElements.focusNodeId}
-                hoveredFile={hoveredFile}
-                layoutDirection={layoutDirection}
-                onLayoutDirectionChange={setLayoutDirection}
-                onNodeClick={(fileId) => explorer.navigateToFile(fileId)}
-                isLayoutTransitioning={isLayoutTransitioning}
-                initialViewMode={explorer.graphViewMode}
-                highlightedModule={explorer.highlightedModule}
-                initialFocusedModuleId={explorer.focusedModulePath}
-                onViewModeChange={explorer.handleGraphViewModeChange}
-                onModuleSelect={explorer.handleModuleSelect}
-              />
-            </div>
-          ) : explorer.viewMode === 'architecture' ? (
-            <Suspense fallback={<DashboardSkeleton />}>
-              <ArchitecturePage
-                onShowMetricsGuide={() =>
-                  explorer.handleShowMetricsGuide('architecture')
-                }
-                onNavigateToFile={(filePath) =>
-                  explorer.navigateToFile(filePath)
-                }
-              />
-            </Suspense>
-          ) : explorer.viewMode === 'metrics-guide' ? (
-            <Suspense fallback={<DashboardSkeleton />}>
-              <MetricsGuidePage onBack={explorer.handleBackFromUtility} />
-            </Suspense>
-          ) : explorer.viewMode === 'cycle-triage' ? (
-            <CycleTriageWorkspace
-              analysisData={analysisData}
-              selectedCycleId={explorer.selectedCycleId}
-              onSelectedCycleIdChange={explorer.handleCycleSelection}
-              focusFilePath={explorer.cycleTriageFocusFilePath}
-              onFocusFilePathChange={explorer.handleCycleFocusFilePathChange}
-              showNearbyImports={explorer.showCycleNearbyImports}
-              onShowNearbyImportsChange={
-                explorer.handleCycleNearbyImportsChange
-              }
-              onBack={explorer.handleBackFromUtility}
-              onNavigateToFile={explorer.navigateToFile}
-            />
-          ) : explorer.viewMode === 'setup-guide' ? (
-            <Suspense fallback={<DashboardSkeleton />}>
-              <SetupGuidePage
-                warnings={analysisData.warnings}
-                onBack={explorer.handleBackFromUtility}
-              />
-            </Suspense>
-          ) : (
-            <Suspense fallback={<DashboardSkeleton />}>
-              <ProjectDashboard
-                analysisData={analysisData}
-                dependencyGraph={graphElements}
-                hoveredFile={hoveredFile}
-                layoutDirection={layoutDirection}
-                onLayoutDirectionChange={setLayoutDirection}
-                viewMode={explorer.viewMode}
-                selectedFileId={selectedFileId}
-                onNavigateToFile={explorer.navigateToFile}
-                onShowArchitecture={explorer.handleShowArchitecture}
-                onShowMetricsGuide={() =>
-                  explorer.handleShowMetricsGuide('overview')
-                }
-                onShowCycleTriage={(cycleId) =>
-                  explorer.handleShowCycleTriage({
-                    cycleId,
-                    sourceView: 'overview'
-                  })
-                }
-                onShowModuleGraph={explorer.handleShowModuleGraph}
-                isLayoutTransitioning={isLayoutTransitioning}
-              />
-            </Suspense>
-          )
-        ) : (
-          <div className='flex h-full items-center justify-center'>
-            <div className='text-center'>
-              <div className='mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary/15'>
-                <div className='h-12 w-12 rounded-full bg-primary/50' />
-              </div>
-              <h2 className='mb-2 text-xl font-semibold text-foreground'>
-                Waiting for analysis data
-              </h2>
-              <p className='mx-auto max-w-md text-muted-foreground'>
-                Run the command{' '}
-                <code className='rounded bg-muted px-1 py-0.5'>
-                  code-mapper analyze &lt;project-path&gt;
-                </code>{' '}
-                in your terminal.
-              </p>
-            </div>
-          </div>
-        )
-      }
+      sidebar={sidebarContent}
+      main={mainContent}
       rightPanels={
         <ExplorerRightPanels
           analysisData={analysisData}
