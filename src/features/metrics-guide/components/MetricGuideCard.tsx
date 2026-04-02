@@ -9,6 +9,12 @@ interface MetricGuideCardProps {
 }
 
 export function MetricGuideCard({ metric }: MetricGuideCardProps) {
+  const explanationItems = [
+    { description: metric.whatItMeans, term: 'What it means' },
+    { description: metric.whyYouShouldCare, term: 'Why you should care' },
+    { description: metric.whatYouShouldDo, term: 'What you should do' }
+  ]
+
   return (
     <div className='border-b border-border/40 py-6 last:border-0'>
       <div className='mb-4 flex flex-wrap items-center gap-2'>
@@ -23,26 +29,17 @@ export function MetricGuideCard({ metric }: MetricGuideCardProps) {
       <div className='space-y-5 text-sm md:text-base'>
         <MetricGuideVisual metric={metric} />
 
-        <div className='space-y-4 text-foreground/90'>
-          <p>
-            <strong className='inline-block min-w-[140px] font-medium text-foreground'>
-              What it means:{' '}
-            </strong>
-            {metric.whatItMeans}
-          </p>
-          <p>
-            <strong className='inline-block min-w-[140px] font-medium text-foreground'>
-              Why you should care:{' '}
-            </strong>
-            {metric.whyYouShouldCare}
-          </p>
-          <p>
-            <strong className='inline-block min-w-[140px] font-medium text-foreground'>
-              What you should do:{' '}
-            </strong>
-            {metric.whatYouShouldDo}
-          </p>
-        </div>
+        <dl className='grid gap-3'>
+          {explanationItems.map((item) => (
+            <div
+              key={item.term}
+              className='grid gap-1 md:grid-cols-[minmax(0,180px)_1fr] md:items-start md:gap-4'
+            >
+              <dt className='font-medium text-foreground'>{item.term}:</dt>
+              <dd className='m-0 text-foreground/90'>{item.description}</dd>
+            </div>
+          ))}
+        </dl>
 
         {(metric.caveat ||
           metric.formula ||
