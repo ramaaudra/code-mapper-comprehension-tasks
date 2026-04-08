@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
 
-import { useFileAnalysisContext } from '@/features/file-analysis'
+import { useFileAnalysisInteraction } from '@/features/file-analysis'
 
 export function useReportSimulation() {
-  const { setIsSimulating, setSimulationResult } = useFileAnalysisContext()
+  const { setIsSimulating, setSimulationResult } = useFileAnalysisInteraction()
 
   const handleSimulateDelete = useCallback(
     (_fileId: string) => {

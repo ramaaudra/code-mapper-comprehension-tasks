@@ -1,11 +1,14 @@
 import { useCallback, useEffect } from 'react'
 
-import { useFileAnalysisContext } from '@/features/file-analysis'
+import {
+  useFileAnalysisInteraction,
+  useFileAnalysisPrepared
+} from '@/features/file-analysis'
 import { useGraphGeneration, usePrefetch } from '@/features/graph'
 import { useSimulation } from '@/features/simulation'
 import { useAnalysisData } from '@/shared/hooks/useAnalysisData'
 import { useExplorerUiState } from '@/shared/hooks/useExplorerUiState'
-import { matchesFile } from '@/shared/lib/utils'
+import { normalizePath } from '@/shared/lib/utils'
 
 export function useAppLogic() {
   const explorerUi = useExplorerUiState()
@@ -41,16 +44,21 @@ export function useAppLogic() {
     selectedFileId,
     setSelectedFileId,
     setHoveredFile,
-    filesInCycle,
-    orphanFilesSet,
-    riskProfileMap,
     brokenFilesSet,
     newOrphansSet,
     setSimulationResult,
-    getRiskProfileForFile,
     setIsSimulating,
     hoveredFile
-  } = useFileAnalysisContext()
+  } = useFileAnalysisInteraction()
+  const {
+    filesInCycle,
+    orphanFilesSet,
+    riskProfileMap,
+    fileReviewStoryMap,
+    reverseDependencyMap,
+    nodeLookup,
+    getRiskProfileForFile
+  } = useFileAnalysisPrepared()
 
   const {
     analysisData,
@@ -62,19 +70,25 @@ export function useAppLogic() {
     checkChanges
   } = useAnalysisData()
 
-  const { graphElements, generateGraphForFile, clearGraph } =
-    useGraphGeneration({
-      analysisData,
-      filesInCycle,
-      orphanFilesSet,
-      brokenFilesSet,
-      newOrphansSet,
-      dataUpdatedAt: analysisLoadedAt
-    })
+  const {
+    graphElements,
+    generateGraphForFile,
+    prepareGraphForFile,
+    clearGraph
+  } = useGraphGeneration({
+    analysisData,
+    filesInCycle,
+    orphanFilesSet,
+    brokenFilesSet,
+    newOrphansSet,
+    fileReviewStoryMap,
+    reverseDependencyMap,
+    dataUpdatedAt: analysisLoadedAt
+  })
 
   const { prefetch, clearPrefetchCache } = usePrefetch(
     analysisData,
-    generateGraphForFile
+    prepareGraphForFile
   )
 
   useEffect(() => {
@@ -87,8 +101,19 @@ export function useAppLogic() {
     simulate
   } = useSimulation()
 
+  const resolveNodeByFile = useCallback(
+    (rawFileId: string, resolvedFileId: string) => {
+      return (
+        nodeLookup.get(normalizePath(resolvedFileId)) ??
+        nodeLookup.get(normalizePath(rawFileId)) ??
+        null
+      )
+    },
+    [nodeLookup]
+  )
+
   const handleFileSelect = useCallback(
-    (fileId: string | null) => {
+    (fileId: string | null): string | null => {
       if (!fileId || !analysisData) {
         setSelectedFileId(null)
         setSelectedNode(null)
@@ -96,7 +121,7 @@ export function useAppLogic() {
         setCycleTriageFocusFilePath(null)
         setViewMode('overview')
         clearGraph()
-        return
+        return null
       }
 
       setViewMode('graph')
@@ -107,20 +132,14 @@ export function useAppLogic() {
 
       const resolvedFileId = generateGraphForFile(fileId) || fileId
       setSelectedFileId(resolvedFileId)
-
-      const nodeData =
-        analysisData.nodes?.find((node) =>
-          matchesFile(node.id, resolvedFileId)
-        ) ||
-        analysisData.nodes?.find((node) => matchesFile(node.id, fileId)) ||
-        null
-
-      setSelectedNode(nodeData)
+      setSelectedNode(resolveNodeByFile(fileId, resolvedFileId))
+      return resolvedFileId
     },
     [
       analysisData,
       clearGraph,
       generateGraphForFile,
+      resolveNodeByFile,
       setFocusedModulePath,
       setGraphViewMode,
       setCycleTriageFocusFilePath,
@@ -136,17 +155,11 @@ export function useAppLogic() {
       if (!analysisData) {
         return
       }
-
-      const dependencyMap = analysisData.dependencyMap ?? {}
-      const allFiles = Object.keys(dependencyMap)
-      const matchedFile =
-        allFiles.find((candidate) => matchesFile(candidate, fileId)) || fileId
-
-      handleFileSelect(matchedFile)
+      const resolvedFileId = handleFileSelect(fileId)
 
       if (treeRef.current) {
         try {
-          treeRef.current.select(matchedFile, { focus: true })
+          treeRef.current.select(resolvedFileId ?? fileId, { focus: true })
         } catch (error) {
           console.warn('Failed to focus file in tree:', error)
         }
@@ -262,6 +275,7 @@ export function useAppLogic() {
     setShowCycleNearbyImports,
     handleSimulateDelete,
     getRiskProfileForFile,
+    resolveNodeByFile,
     prefetchFile: prefetch,
     filesInCycle,
     orphanFilesSet,

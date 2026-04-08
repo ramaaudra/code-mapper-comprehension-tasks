@@ -1,19 +1,18 @@
 import { Suspense, lazy, useCallback, useEffect } from 'react'
 
-import { CycleTriageWorkspace } from '@/features/cycle-triage'
 import { DashboardSkeleton } from '@/features/dashboard'
 import {
   FileAnalysisProvider,
   FileTreeSkeleton
 } from '@/features/file-analysis'
-import { DependencyGraph } from '@/features/graph'
-import { SimulationDialog } from '@/features/simulation'
 import { useAppLogic } from '@/hooks/useAppLogic'
 import { ExplorerRightPanels, ExplorerShell } from '@/shared/components/layouts'
 import { ThemeProvider } from '@/shared/components/providers/ThemeProvider'
 import { useExplorerController } from '@/shared/hooks/useExplorerController'
 import { useKeyboardShortcut } from '@/shared/hooks/useKeyboardShortcut'
 import { useResizablePanel } from '@/shared/hooks/useResizablePanel'
+import { lazyWithPreload } from '@/shared/lib/performance/lazy-with-preload'
+import { scheduleIdleWork } from '@/shared/lib/performance/schedule-idle-work'
 import {
   isMetricsGuideHash,
   resolveAnalysisShellState
@@ -22,6 +21,24 @@ import {
 const FileTreeView = lazy(() =>
   import('@/features/file-analysis').then((module) => ({
     default: module.FileTreeView
+  }))
+)
+
+const DependencyGraph = lazyWithPreload(() =>
+  import('@/features/graph').then((module) => ({
+    default: module.DependencyGraph
+  }))
+)
+
+const CycleTriageWorkspace = lazyWithPreload(() =>
+  import('@/features/cycle-triage').then((module) => ({
+    default: module.CycleTriageWorkspace
+  }))
+)
+
+const SimulationDialog = lazyWithPreload(() =>
+  import('@/features/simulation').then((module) => ({
+    default: module.SimulationDialog
   }))
 )
 
@@ -91,6 +108,8 @@ function AppContent() {
     showCycleNearbyImports,
     setShowCycleNearbyImports,
     clearFocusedModule,
+    resolveNodeByFile,
+    prefetchFile,
     isLayoutTransitioning
   } = useAppLogic()
 
@@ -128,6 +147,7 @@ function AppContent() {
     setCycleTriageFocusFilePath,
     showCycleNearbyImports,
     setShowCycleNearbyImports,
+    resolveNodeByFile,
     clearFocusedModule,
     clearGraph,
     generateGraphForFile,
@@ -151,6 +171,25 @@ function AppContent() {
     }
   }, [analysisData, explorer, viewMode])
 
+  useEffect(() => {
+    if (!analysisData) {
+      return
+    }
+
+    const preloadHeavyViews = () => {
+      DependencyGraph.preload()
+      CycleTriageWorkspace.preload()
+      SimulationDialog.preload()
+    }
+
+    if (typeof window === 'undefined') {
+      preloadHeavyViews()
+      return
+    }
+
+    return scheduleIdleWork(preloadHeavyViews)
+  }, [analysisData])
+
   const analysisShellState = resolveAnalysisShellState({
     hasAnalysisData: analysisData != null,
     isLoading
@@ -166,6 +205,7 @@ function AppContent() {
           data={analysisData.fileTree}
           onFileSelect={explorer.handleFileSelect}
           onSimulateDelete={handleSimulateDelete}
+          onFileHover={prefetchFile}
         />
       </Suspense>
     )
@@ -178,23 +218,25 @@ function AppContent() {
   if (analysisShellState === 'ready' && analysisData) {
     mainContent =
       explorer.viewMode === 'graph' ? (
-        <div className='h-full bg-background'>
-          <DependencyGraph
-            nodes={graphElements.nodes}
-            edges={graphElements.edges}
-            focusNodeId={graphElements.focusNodeId}
-            hoveredFile={hoveredFile}
-            layoutDirection={layoutDirection}
-            onLayoutDirectionChange={setLayoutDirection}
-            onNodeClick={(fileId) => explorer.navigateToFile(fileId)}
-            isLayoutTransitioning={isLayoutTransitioning}
-            initialViewMode={explorer.graphViewMode}
-            highlightedModule={explorer.highlightedModule}
-            initialFocusedModuleId={explorer.focusedModulePath}
-            onViewModeChange={explorer.handleGraphViewModeChange}
-            onModuleSelect={explorer.handleModuleSelect}
-          />
-        </div>
+        <Suspense fallback={<DashboardSkeleton />}>
+          <div className='h-full bg-background'>
+            <DependencyGraph
+              nodes={graphElements.nodes}
+              edges={graphElements.edges}
+              focusNodeId={graphElements.focusNodeId}
+              hoveredFile={hoveredFile}
+              layoutDirection={layoutDirection}
+              onLayoutDirectionChange={setLayoutDirection}
+              onNodeClick={(fileId) => explorer.navigateToFile(fileId)}
+              isLayoutTransitioning={isLayoutTransitioning}
+              initialViewMode={explorer.graphViewMode}
+              highlightedModule={explorer.highlightedModule}
+              initialFocusedModuleId={explorer.focusedModulePath}
+              onViewModeChange={explorer.handleGraphViewModeChange}
+              onModuleSelect={explorer.handleModuleSelect}
+            />
+          </div>
+        </Suspense>
       ) : explorer.viewMode === 'architecture' ? (
         <Suspense fallback={<DashboardSkeleton />}>
           <ArchitecturePage
@@ -209,17 +251,19 @@ function AppContent() {
           <MetricsGuidePage onBack={explorer.handleBackFromUtility} />
         </Suspense>
       ) : explorer.viewMode === 'cycle-triage' ? (
-        <CycleTriageWorkspace
-          analysisData={analysisData}
-          selectedCycleId={explorer.selectedCycleId}
-          onSelectedCycleIdChange={explorer.handleCycleSelection}
-          focusFilePath={explorer.cycleTriageFocusFilePath}
-          onFocusFilePathChange={explorer.handleCycleFocusFilePathChange}
-          showNearbyImports={explorer.showCycleNearbyImports}
-          onShowNearbyImportsChange={explorer.handleCycleNearbyImportsChange}
-          onBack={explorer.handleBackFromUtility}
-          onNavigateToFile={explorer.navigateToFile}
-        />
+        <Suspense fallback={<DashboardSkeleton />}>
+          <CycleTriageWorkspace
+            analysisData={analysisData}
+            selectedCycleId={explorer.selectedCycleId}
+            onSelectedCycleIdChange={explorer.handleCycleSelection}
+            focusFilePath={explorer.cycleTriageFocusFilePath}
+            onFocusFilePathChange={explorer.handleCycleFocusFilePathChange}
+            showNearbyImports={explorer.showCycleNearbyImports}
+            onShowNearbyImportsChange={explorer.handleCycleNearbyImportsChange}
+            onBack={explorer.handleBackFromUtility}
+            onNavigateToFile={explorer.navigateToFile}
+          />
+        </Suspense>
       ) : explorer.viewMode === 'setup-guide' ? (
         <Suspense fallback={<DashboardSkeleton />}>
           <SetupGuidePage
@@ -340,10 +384,12 @@ function AppContent() {
         />
       }
       footerOverlay={
-        <SimulationDialog
-          result={simulationResult}
-          onClose={handleSimulationClose}
-        />
+        <Suspense fallback={null}>
+          <SimulationDialog
+            result={simulationResult}
+            onClose={handleSimulationClose}
+          />
+        </Suspense>
       }
     />
   )

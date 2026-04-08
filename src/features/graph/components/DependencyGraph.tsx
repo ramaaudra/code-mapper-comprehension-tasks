@@ -38,6 +38,7 @@ import {
 
 import { HotspotStatusLabel } from '@/shared/components/ui/hotspot-status-label'
 import { getRelativePath, truncateMiddle } from '@/shared/lib/utils'
+import { LRUCache } from '@/shared/lib/utils/lruCache'
 import '@xyflow/react/dist/style.css'
 import { perfMonitor } from '@/shared/lib/utils/perfMonitor'
 
@@ -45,10 +46,18 @@ import { graphCopy } from '../content/graphCopy'
 import { useAdaptiveQuality } from '../hooks/useAdaptiveQuality'
 import { useModuleGraph } from '../hooks/useModuleGraph'
 import {
+  createFileLayoutCacheKey,
+  createModuleLayoutCacheKey
+} from '../lib/graph-layout-cache'
+import {
   createModuleRelationMap,
   layoutFocusedModuleNodes
 } from '../utils/moduleFocusGraph'
 import { AggregatedEdge } from './AggregatedEdge'
+import {
+  GRAPH_SHORTCUTS_HINT_ID,
+  GraphShortcutsHint
+} from './GraphShortcutsHint'
 import { ModuleNodeComponent } from './ModuleNode'
 import { type ViewMode, ViewModeToggle } from './ViewModeToggle'
 import { ZoomControls } from './ZoomControls'
@@ -180,9 +189,6 @@ function getFileIcon(fileName: string) {
       return File
   }
 }
-
-const GRAPH_SHORTCUTS_HINT =
-  'Keyboard shortcuts: + zoom in, - zoom out, 0 reset, F fit graph.'
 
 function appendLookupMatch(
   lookup: Map<string, string[]>,
@@ -603,6 +609,13 @@ function DependencyGraphInner({
     isLoading: isModuleLoading,
     folders
   } = useModuleGraph()
+  const fileLayoutCacheRef = useRef(
+    new LRUCache<string, DependencyFlowNode[]>(24)
+  )
+  const moduleLayoutCacheRef = useRef(
+    new LRUCache<string, ModuleGraphNode[]>(16)
+  )
+  const lastAutoFitKeyRef = useRef<string | null>(null)
 
   // Sync internal viewMode ketika parent me-reset (misal: user klik file dari file tree)
   useEffect(() => {
@@ -695,14 +708,30 @@ function DependencyGraphInner({
     if (viewMode !== 'module' || isModuleLoading) {
       return filteredModuleNodes
     }
+
+    const layoutCacheKey = createModuleLayoutCacheKey({
+      nodes: filteredModuleNodes,
+      edges: filteredModuleEdges,
+      layoutDirection,
+      focusedModuleId
+    })
+    const cachedLayout = moduleLayoutCacheRef.current.get(layoutCacheKey)
+
+    if (cachedLayout) {
+      return cachedLayout
+    }
+
     const endMeasure = perfMonitor.startMeasure('module-layout')
     try {
-      return layoutModuleNodes(
+      const nextLayout = layoutModuleNodes(
         filteredModuleNodes,
         filteredModuleEdges,
         layoutDirection,
         focusedModuleId
       )
+
+      moduleLayoutCacheRef.current.set(layoutCacheKey, nextLayout)
+      return nextLayout
     } finally {
       endMeasure()
     }
@@ -786,10 +815,30 @@ function DependencyGraphInner({
       return [] // Empty during transition or in module view
     }
 
+    const layoutCacheKey = createFileLayoutCacheKey({
+      nodes: fileNodes,
+      edges: fileEdges,
+      layoutDirection,
+      focusNodeId
+    })
+    const cachedLayout = fileLayoutCacheRef.current.get(layoutCacheKey)
+
+    if (cachedLayout) {
+      return cachedLayout
+    }
+
     const endMeasure = perfMonitor.startMeasure('graph-layout')
 
     try {
-      return layoutNodes(fileNodes, fileEdges, layoutDirection, focusNodeId)
+      const nextLayout = layoutNodes(
+        fileNodes,
+        fileEdges,
+        layoutDirection,
+        focusNodeId
+      )
+
+      fileLayoutCacheRef.current.set(layoutCacheKey, nextLayout)
+      return nextLayout
     } finally {
       endMeasure()
     }
@@ -859,34 +908,90 @@ function DependencyGraphInner({
     [fileEdges, quality.enableAnimations]
   )
 
-  const fitViewToGraph = useCallback(() => {
-    if (layoutedNodes.length === 0) {
+  const fileAutoFitKey = useMemo(() => {
+    if (
+      viewMode !== 'file' ||
+      isLayoutTransitioning ||
+      layoutedNodes.length === 0
+    ) {
+      return null
+    }
+
+    return createFileLayoutCacheKey({
+      nodes: fileNodes,
+      edges: fileEdges,
+      layoutDirection,
+      focusNodeId
+    })
+  }, [
+    fileEdges,
+    fileNodes,
+    focusNodeId,
+    isLayoutTransitioning,
+    layoutDirection,
+    layoutedNodes.length,
+    viewMode
+  ])
+
+  const moduleAutoFitKey = useMemo(() => {
+    if (
+      viewMode !== 'module' ||
+      isModuleLoading ||
+      layoutedModuleNodes.length === 0
+    ) {
+      return null
+    }
+
+    return createModuleLayoutCacheKey({
+      nodes: filteredModuleNodes,
+      edges: filteredModuleEdges,
+      layoutDirection,
+      focusedModuleId
+    })
+  }, [
+    filteredModuleEdges,
+    filteredModuleNodes,
+    focusedModuleId,
+    isModuleLoading,
+    layoutDirection,
+    layoutedModuleNodes.length,
+    viewMode
+  ])
+
+  useEffect(() => {
+    if (!fileAutoFitKey) {
       return
     }
+
+    const autoFitKey = `file:${fileAutoFitKey}`
+    if (lastAutoFitKeyRef.current === autoFitKey) {
+      return
+    }
+
+    lastAutoFitKeyRef.current = autoFitKey
     reactFlow.fitView({
       padding: 0.2,
       duration: 400
     })
-  }, [layoutedNodes, reactFlow])
+  }, [fileAutoFitKey, reactFlow])
 
   useEffect(() => {
-    fitViewToGraph()
-  }, [fitViewToGraph])
-
-  const fitViewToModuleGraph = useCallback(() => {
-    if (viewMode !== 'module') {
+    if (!moduleAutoFitKey) {
       return
     }
-    setTimeout(() => {
+
+    const autoFitKey = `module:${moduleAutoFitKey}`
+    if (lastAutoFitKeyRef.current === autoFitKey) {
+      return
+    }
+
+    lastAutoFitKeyRef.current = autoFitKey
+    const timeoutId = window.setTimeout(() => {
       reactFlow.fitView({ padding: 0.25, duration: 400 })
     }, 50)
-  }, [viewMode, reactFlow])
 
-  useEffect(() => {
-    if (viewMode === 'module' && !isModuleLoading) {
-      fitViewToModuleGraph()
-    }
-  }, [layoutedModuleNodes, viewMode, isModuleLoading, fitViewToModuleGraph])
+    return () => window.clearTimeout(timeoutId)
+  }, [moduleAutoFitKey, reactFlow])
 
   const handleGraphKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
@@ -962,7 +1067,7 @@ function DependencyGraphInner({
       ref={graphRegionRef}
       role='region'
       aria-label='Dependency graph canvas'
-      aria-describedby='graph-shortcuts-hint'
+      aria-describedby={GRAPH_SHORTCUTS_HINT_ID}
       tabIndex={0}
       onKeyDown={handleGraphKeyDown}
       onMouseDownCapture={() => graphRegionRef.current?.focus()}
@@ -1039,7 +1144,6 @@ function DependencyGraphInner({
             strokeOpacity: 0.75
           }
         }}
-        fitView
         minZoom={0.1}
         maxZoom={2.5}
         nodesDraggable={false}
@@ -1084,12 +1188,7 @@ function DependencyGraphInner({
 
       <ZoomIndicator />
 
-      <p
-        id='graph-shortcuts-hint'
-        className='pointer-events-none absolute bottom-4 left-4 z-20 max-w-xs rounded-md border border-border bg-background/90 px-3 py-2 text-xs leading-relaxed text-muted-foreground shadow-sm backdrop-blur'
-      >
-        {GRAPH_SHORTCUTS_HINT}
-      </p>
+      <GraphShortcutsHint />
 
       <ZoomControls
         onZoomIn={() => reactFlow.zoomIn({ duration: 150 })}

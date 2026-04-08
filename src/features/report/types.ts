@@ -1,5 +1,6 @@
 import type { ArchitectureData } from '@/shared/context/DataContext'
 import type { AnalysisData } from '@/shared/types/analysis'
+import type { ReportBootstrapData } from '@/shared/types/report-bootstrap'
 
 export interface ReportData {
   projectName: string
@@ -15,3 +16,5 @@ export interface ReportData {
   analysisData: AnalysisData
   architectureData: ArchitectureData
 }
+
+export type { ReportBootstrapData }

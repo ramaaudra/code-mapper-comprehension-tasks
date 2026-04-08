@@ -5,6 +5,7 @@ import type {
   FolderArchitectureMetrics
 } from '@/features/architecture/types/architecture'
 import type { AnalysisData } from '@/shared/types/analysis'
+import type { ReportBootstrapData } from '@/shared/types/report-bootstrap'
 
 export interface ArchitectureData {
   folders: FolderArchitectureMetrics[]
@@ -18,6 +19,8 @@ export interface DataContextValue {
   error: Error | null
   refetch: () => void
   generatedAt?: string
+  runtimeMode?: 'live' | 'report'
+  reportBootstrap?: ReportBootstrapData | null
 }
 
 export const DataContext = createContext<DataContextValue | undefined>(

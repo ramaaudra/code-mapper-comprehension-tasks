@@ -1,11 +1,20 @@
-import { DataContext } from '@/shared/context/DataContext'
+import { startTransition, useEffect, useMemo, useState } from 'react'
 
-import type { ReportData } from './types'
+import { DataContext } from '@/shared/context/DataContext'
+import { scheduleIdleWork } from '@/shared/lib/performance/schedule-idle-work'
+
+import {
+  readEmbeddedReportBootstrap,
+  readEmbeddedReportData
+} from './lib/report-payload'
+
+import type { ReportBootstrapData, ReportData } from './types'
 import type { ReactNode } from 'react'
 
 declare global {
   interface Window {
     __CODE_MAPPER_DATA__?: ReportData
+    __CODE_MAPPER_REPORT_BOOTSTRAP__?: ReportBootstrapData
   }
 }
 
@@ -14,28 +23,69 @@ interface StaticProviderProps {
 }
 
 export function StaticProvider({ children }: StaticProviderProps) {
-  const data = window.__CODE_MAPPER_DATA__
+  const bootstrap = readEmbeddedReportBootstrap(window)
+  const [data, setData] = useState<ReportData | null>(() => {
+    if (bootstrap) {
+      return null
+    }
 
-  if (!data) {
+    return readEmbeddedReportData(document, window)
+  })
+  const [loadError, setLoadError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    if (data) {
+      return
+    }
+
+    return scheduleIdleWork(
+      () => {
+        const nextData = readEmbeddedReportData(document, window)
+
+        if (!nextData) {
+          setLoadError(
+            new Error(
+              'Report data not found. Open this file from a generated report.'
+            )
+          )
+          return
+        }
+
+        startTransition(() => {
+          setData(nextData)
+        })
+      },
+      globalThis,
+      {
+        idleTimeoutMs: 600,
+        fallbackDelayMs: 16
+      }
+    )
+  }, [data])
+
+  const value = useMemo(
+    () => ({
+      analysisData: data?.analysisData ?? null,
+      architectureData: data?.architectureData ?? null,
+      isLoading: data == null && loadError == null,
+      error: loadError,
+      refetch: () => {},
+      generatedAt: data?.generatedAt ?? bootstrap?.generatedAt,
+      runtimeMode: 'report' as const,
+      reportBootstrap: bootstrap
+    }),
+    [bootstrap, data, loadError]
+  )
+
+  if (!bootstrap && !data && loadError) {
     return (
       <div className='flex h-screen items-center justify-center'>
         <div className='text-center'>
           <h1 className='text-xl font-semibold text-destructive'>Error</h1>
-          <p className='mt-2 text-muted-foreground'>
-            Report data not found. Open this file from a generated report.
-          </p>
+          <p className='mt-2 text-muted-foreground'>{loadError.message}</p>
         </div>
       </div>
     )
-  }
-
-  const value = {
-    analysisData: data.analysisData,
-    architectureData: data.architectureData,
-    isLoading: false,
-    error: null,
-    refetch: () => {},
-    generatedAt: data.generatedAt
   }
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

@@ -1,4 +1,11 @@
-import { forwardRef, memo, useImperativeHandle, useRef } from 'react'
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef
+} from 'react'
 import { Tree } from 'react-arborist'
 
 import { Button } from '@/shared/components/ui/button'
@@ -20,7 +27,10 @@ import {
 import { reachabilityCopy } from '@/shared/content/reachabilityCopy'
 import { getFileIcon, hasMatchInSet, normalizePath } from '@/shared/lib/utils'
 
-import { useFileAnalysisContext } from '../context/FileAnalysisContext'
+import {
+  useFileAnalysisInteraction,
+  useFileAnalysisPrepared
+} from '../context/FileAnalysisContext'
 import { FileSearchBar, type FileSearchBarRef } from './FileSearchBar'
 
 import type { FileReviewStory } from '@/shared/lib/utils/file-review-story'
@@ -134,96 +144,86 @@ const createNodeRenderer = (
 
           {/* Orphan indicator */}
           {isOrphan && (
-            <TooltipProvider delayDuration={300}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Ghost className='h-3.5 w-3.5 text-muted-foreground' />
-                </TooltipTrigger>
-                <TooltipContent side='right'>
-                  <p className='text-xs'>
-                    {reachabilityCopy.treeTooltipTitle}:{' '}
-                    {reachabilityCopy.treeTooltipDescription}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Ghost className='h-3.5 w-3.5 text-muted-foreground' />
+              </TooltipTrigger>
+              <TooltipContent side='right'>
+                <p className='text-xs'>
+                  {reachabilityCopy.treeTooltipTitle}:{' '}
+                  {reachabilityCopy.treeTooltipDescription}
+                </p>
+              </TooltipContent>
+            </Tooltip>
           )}
 
           {/* Circular dependency */}
           {isInCycle && (
-            <TooltipProvider delayDuration={300}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <AlertTriangle className='h-3.5 w-3.5 text-muted-foreground' />
-                </TooltipTrigger>
-                <TooltipContent side='right'>
-                  <p className='text-xs'>Circular dependency detected</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <AlertTriangle className='h-3.5 w-3.5 text-muted-foreground' />
+              </TooltipTrigger>
+              <TooltipContent side='right'>
+                <p className='text-xs'>Circular dependency detected</p>
+              </TooltipContent>
+            </Tooltip>
           )}
 
           {/* Broken by simulation */}
           {isBroken && (
-            <TooltipProvider delayDuration={300}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Bomb className='h-3.5 w-3.5 text-muted-foreground' />
-                </TooltipTrigger>
-                <TooltipContent side='right'>
-                  <p className='text-xs'>
-                    Will break if simulated file is deleted
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Bomb className='h-3.5 w-3.5 text-muted-foreground' />
+              </TooltipTrigger>
+              <TooltipContent side='right'>
+                <p className='text-xs'>
+                  Will break if simulated file is deleted
+                </p>
+              </TooltipContent>
+            </Tooltip>
           )}
 
           {/* New orphan by simulation */}
           {isNewOrphan && (
-            <TooltipProvider delayDuration={300}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Ghost className='h-3.5 w-3.5 text-muted-foreground' />
-                </TooltipTrigger>
-                <TooltipContent side='right'>
-                  <p className='text-xs'>
-                    {reachabilityCopy.simulationBadge} if the simulated file is
-                    deleted
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Ghost className='h-3.5 w-3.5 text-muted-foreground' />
+              </TooltipTrigger>
+              <TooltipContent side='right'>
+                <p className='text-xs'>
+                  {reachabilityCopy.simulationBadge} if the simulated file is
+                  deleted
+                </p>
+              </TooltipContent>
+            </Tooltip>
           )}
 
           {/* Delete simulation button - only on hover */}
           {node.isLeaf && (
             <div className='opacity-0 transition-opacity group-hover:opacity-100'>
-              <TooltipProvider delayDuration={300}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='h-5 w-5'
-                      disabled={isSimulating}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onSimulateDelete(node.id)
-                      }}
-                    >
-                      {isSimulating ? (
-                        <div className='h-3 w-3 animate-spin rounded-full border-b border-muted-foreground' />
-                      ) : (
-                        <Trash2 className='h-3 w-3 text-muted-foreground' />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side='right'>
-                    <p className='text-xs'>Simulate deletion</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='h-5 w-5'
+                    disabled={isSimulating}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSimulateDelete(node.id)
+                    }}
+                  >
+                    {isSimulating ? (
+                      <div className='h-3 w-3 animate-spin rounded-full border-b border-muted-foreground' />
+                    ) : (
+                      <Trash2 className='h-3 w-3 text-muted-foreground' />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side='right'>
+                  <p className='text-xs'>Simulate deletion</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           )}
         </div>
@@ -308,29 +308,47 @@ export const FileTreeView = forwardRef<FileTreeViewRef, FileTreeViewProps>(
       hoveredFile,
       setHoveredFile,
       searchQuery,
-      filesInCycle,
-      orphanFilesSet,
-      fileReviewStoryMap,
       brokenFilesSet,
       newOrphansSet,
       isSimulating
-    } = useFileAnalysisContext()
+    } = useFileAnalysisInteraction()
+    const { filesInCycle, orphanFilesSet, fileReviewStoryMap } =
+      useFileAnalysisPrepared()
 
-    const NodeRenderer = createNodeRenderer(
-      filesInCycle,
-      orphanFilesSet,
-      fileReviewStoryMap,
-      hoveredFile,
-      (id) => {
+    const handleFileHover = useCallback(
+      (id: string | null) => {
         setHoveredFile(id)
         if (id) {
           onFileHover?.(id)
         }
       },
-      onSimulateDelete,
-      brokenFilesSet,
-      newOrphansSet,
-      isSimulating
+      [onFileHover, setHoveredFile]
+    )
+
+    const NodeRenderer = useMemo(
+      () =>
+        createNodeRenderer(
+          filesInCycle,
+          orphanFilesSet,
+          fileReviewStoryMap,
+          hoveredFile,
+          handleFileHover,
+          onSimulateDelete,
+          brokenFilesSet,
+          newOrphansSet,
+          isSimulating
+        ),
+      [
+        filesInCycle,
+        orphanFilesSet,
+        fileReviewStoryMap,
+        hoveredFile,
+        handleFileHover,
+        onSimulateDelete,
+        brokenFilesSet,
+        newOrphansSet,
+        isSimulating
+      ]
     )
 
     if (!data || data.length === 0) {
@@ -345,45 +363,48 @@ export const FileTreeView = forwardRef<FileTreeViewRef, FileTreeViewProps>(
     }
 
     return (
-      <div className='flex h-full flex-col bg-background'>
-        <div className='shrink-0 border-b border-border px-4 py-3'>
-          <span className='text-xs font-medium uppercase tracking-wider text-muted-foreground'>
-            File Explorer
-          </span>
-        </div>
+      <TooltipProvider delayDuration={300}>
+        <div className='flex h-full flex-col bg-background'>
+          <div className='shrink-0 border-b border-border px-4 py-3'>
+            <span className='text-xs font-medium uppercase tracking-wider text-muted-foreground'>
+              File Explorer
+            </span>
+          </div>
 
-        <div className='shrink-0 px-3 py-2'>
-          <FileSearchBar ref={searchBarRef} />
-        </div>
+          <div className='shrink-0 px-3 py-2'>
+            <FileSearchBar ref={searchBarRef} />
+          </div>
 
-        <div className='flex-1 overflow-hidden'>
-          <div className='h-full px-2 pb-4'>
-            <Tree
-              ref={treeRef}
-              data={data}
-              width='100%'
-              height={800}
-              rowHeight={32}
-              indent={16}
-              openByDefault={false}
-              searchTerm={searchQuery}
-              onSelect={(nodes) => {
-                const selectedNode: NodeApi<FileTreeNode> | undefined = nodes[0]
-                if (!selectedNode) {
-                  return
-                }
-                if (selectedNode?.isLeaf) {
-                  onFileSelect(selectedNode.id)
-                } else {
-                  onFileSelect(null)
-                }
-              }}
-            >
-              {NodeRenderer}
-            </Tree>
+          <div className='flex-1 overflow-hidden'>
+            <div className='h-full px-2 pb-4'>
+              <Tree
+                ref={treeRef}
+                data={data}
+                width='100%'
+                height={800}
+                rowHeight={32}
+                indent={16}
+                openByDefault={false}
+                searchTerm={searchQuery}
+                onSelect={(nodes) => {
+                  const selectedNode: NodeApi<FileTreeNode> | undefined =
+                    nodes[0]
+                  if (!selectedNode) {
+                    return
+                  }
+                  if (selectedNode?.isLeaf) {
+                    onFileSelect(selectedNode.id)
+                  } else {
+                    onFileSelect(null)
+                  }
+                }}
+              >
+                {NodeRenderer}
+              </Tree>
+            </div>
           </div>
         </div>
-      </div>
+      </TooltipProvider>
     )
   }
 )

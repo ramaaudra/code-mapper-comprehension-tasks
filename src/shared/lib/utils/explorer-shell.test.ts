@@ -4,7 +4,8 @@ import test from 'node:test'
 import {
   buildMetricsGuideHash,
   isMetricsGuideHash,
-  parseMetricsGuideHash
+  parseMetricsGuideHash,
+  resolveAnalysisShellState
 } from './explorer-shell'
 
 const buildGuideHash = buildMetricsGuideHash as unknown as (
@@ -39,4 +40,28 @@ test('isMetricsGuideHash recognizes legacy and canonical guide hashes', () => {
   assert.equal(isMetricsGuideHash('#metrics-guide/reference/how-to-read'), true)
   assert.equal(isMetricsGuideHash('#which-screen'), true)
   assert.equal(isMetricsGuideHash('#graph'), false)
+})
+
+test('resolveAnalysisShellState prefers loading over empty when analysis is still fetching', () => {
+  assert.equal(
+    resolveAnalysisShellState({
+      hasAnalysisData: false,
+      isLoading: true
+    }),
+    'loading'
+  )
+  assert.equal(
+    resolveAnalysisShellState({
+      hasAnalysisData: true,
+      isLoading: false
+    }),
+    'ready'
+  )
+  assert.equal(
+    resolveAnalysisShellState({
+      hasAnalysisData: false,
+      isLoading: false
+    }),
+    'empty'
+  )
 })

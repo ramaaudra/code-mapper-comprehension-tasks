@@ -6,7 +6,7 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
       gcTime: 10 * 60 * 1000, // 10 minutes - cache garbage collection
-      refetchOnWindowFocus: true, // Auto-refresh when user focuses tab
+      refetchOnWindowFocus: false, // Avoid re-fetching large analysis payloads on tab focus
       retry: 1 // Retry failed requests once
     },
     mutations: {

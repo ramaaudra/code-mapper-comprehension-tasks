@@ -35,8 +35,8 @@ export function useAnalysisData(): UseAnalysisDataResult {
   const queryClient = useQueryClient()
   const [changesStatus, setChangesStatus] = useState<ChangesStatus | null>(null)
 
-  // Check if we're in report mode (static data available)
-  const isReportMode = context?.analysisData != null
+  const isReportMode =
+    context?.runtimeMode === 'report' || context?.analysisData != null
 
   // In report mode: use static data, no fetching
   // In live mode: use React Query
@@ -109,9 +109,15 @@ export function useAnalysisData(): UseAnalysisDataResult {
     riskAnalysis,
     evolutionarySummary,
     fileEvolutionMap,
-    analysisLoadedAt: isReportMode ? Date.now() : dataUpdatedAt,
-    isLoading: isReportMode ? false : isLoading,
-    loadError: isReportMode ? null : error?.message || null,
+    analysisLoadedAt: isReportMode
+      ? context?.generatedAt
+        ? new Date(context.generatedAt).getTime()
+        : Date.now()
+      : dataUpdatedAt,
+    isLoading: isReportMode ? (context?.isLoading ?? false) : isLoading,
+    loadError: isReportMode
+      ? (context?.error?.message ?? null)
+      : error?.message || null,
     loadAnalysis,
     reanalyze,
     changesStatus: isReportMode ? null : changesStatus,

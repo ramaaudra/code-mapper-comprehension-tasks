@@ -10,7 +10,16 @@ export const graphCopy = {
     emptyDescription:
       'This file has no import or export links in the current analysis. Select a shared or recently changed file from the tree to review broader impact.',
     showAllModules: 'Global Map',
-    showAllModulesCompact: 'Map'
+    showAllModulesCompact: 'Map',
+    shortcuts: {
+      title: 'Keyboard shortcuts',
+      items: [
+        { key: '+', label: 'Zoom in' },
+        { key: '-', label: 'Zoom out' },
+        { key: '0', label: 'Reset view' },
+        { key: 'F', label: 'Fit graph to screen' }
+      ]
+    }
   },
   node: {
     chips: {

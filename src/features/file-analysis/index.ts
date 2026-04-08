@@ -3,6 +3,8 @@ export type { FileTreeViewRef } from './components/FileTreeView'
 export { FileSearchBar } from './components/FileSearchBar'
 export {
   FileAnalysisProvider,
+  useFileAnalysisInteraction,
+  useFileAnalysisPrepared,
   useFileAnalysisContext
 } from './context/FileAnalysisContext'
 export { FileTreeSkeleton } from './components/FileTreeSkeleton'

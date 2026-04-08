@@ -1,55 +1,63 @@
 import { useCallback, useRef } from 'react'
 
+import { scheduleIdleWork } from '@/shared/lib/performance/schedule-idle-work'
+import { normalizePath } from '@/shared/lib/utils'
+
 import type { AnalysisData } from '@/shared/types/analysis'
 
 export function usePrefetch(
   analysisData: AnalysisData | null,
-  generateGraphForFile: (
+  prepareGraphForFile: (
     fileId: string,
     sourceData?: AnalysisData | null
   ) => string | null
 ) {
-  // Simple Set to track which files have been prefetched
   const prefetchCache = useRef<Set<string>>(new Set())
-  const prefetchQueue = useRef<string[]>([])
+  const pendingPrefetches = useRef<Map<string, () => void>>(new Map())
 
   const prefetch = useCallback(
     (fileId: string) => {
-      if (prefetchCache.current.has(fileId)) {
-        return // Already prefetched
+      if (!analysisData) {
+        return
       }
 
-      if (prefetchQueue.current.includes(fileId)) {
-        return // Already queued
+      const cacheKey = normalizePath(fileId)
+
+      if (prefetchCache.current.has(cacheKey)) {
+        return
       }
 
-      prefetchQueue.current.push(fileId)
+      if (pendingPrefetches.current.has(cacheKey)) {
+        return
+      }
 
-      // Use requestIdleCallback for low-priority prefetch
-      requestIdleCallback(
+      const cancelScheduledPrefetch = scheduleIdleWork(
         () => {
-          const result = generateGraphForFile(fileId, analysisData)
+          pendingPrefetches.current.delete(cacheKey)
+          const result = prepareGraphForFile(fileId, analysisData)
           if (result) {
-            // Note: actual graph elements are in the main cache (LRU)
-            // This just marks as prefetched
-            prefetchCache.current.add(fileId)
-          }
-
-          // Remove from queue
-          const index = prefetchQueue.current.indexOf(fileId)
-          if (index > -1) {
-            prefetchQueue.current.splice(index, 1)
+            prefetchCache.current.add(cacheKey)
+            prefetchCache.current.add(normalizePath(result))
           }
         },
-        { timeout: 2000 } // Max 2s delay
+        globalThis,
+        {
+          idleTimeoutMs: 2000,
+          fallbackDelayMs: 150
+        }
       )
+
+      pendingPrefetches.current.set(cacheKey, cancelScheduledPrefetch)
     },
-    [generateGraphForFile, analysisData]
+    [analysisData, prepareGraphForFile]
   )
 
   const clearPrefetchCache = useCallback(() => {
+    pendingPrefetches.current.forEach((cancelScheduledPrefetch) => {
+      cancelScheduledPrefetch()
+    })
+    pendingPrefetches.current.clear()
     prefetchCache.current.clear()
-    prefetchQueue.current = []
   }, [])
 
   return { prefetch, clearPrefetchCache }

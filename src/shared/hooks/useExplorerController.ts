@@ -26,6 +26,10 @@ import type { Dispatch, RefObject, SetStateAction } from 'react'
 interface UseExplorerControllerOptions {
   treeRef: RefObject<FileTreeViewRef | null>
   analysisData: AnalysisData | null
+  resolveNodeByFile?: (
+    rawFileId: string,
+    resolvedFileId: string
+  ) => AnalysisNode | null
   selectedFileId: string | null
   setSelectedFileId: (value: string | null) => void
   selectedNode: AnalysisNode | null
@@ -61,6 +65,7 @@ interface UseExplorerControllerOptions {
 export function useExplorerController({
   treeRef,
   analysisData,
+  resolveNodeByFile,
   selectedFileId,
   setSelectedFileId,
   selectedNode,
@@ -101,18 +106,6 @@ export function useExplorerController({
     setFocusedModulePath,
     clearFocusedModule
   })
-
-  const resolveFileId = useCallback(
-    (fileId: string) => {
-      const dependencyMap = analysisData?.dependencyMap ?? {}
-      const allFiles = Object.keys(dependencyMap)
-
-      return (
-        allFiles.find((candidate) => matchesFile(candidate, fileId)) || fileId
-      )
-    },
-    [analysisData]
-  )
 
   const isPrimaryViewMode = useCallback(
     (candidate: ExplorerViewMode): candidate is PrimaryExplorerViewMode => {
@@ -186,6 +179,10 @@ export function useExplorerController({
 
   const resolveNode = useCallback(
     (rawFileId: string, resolvedFileId: string) => {
+      if (resolveNodeByFile) {
+        return resolveNodeByFile(rawFileId, resolvedFileId)
+      }
+
       return (
         analysisData?.nodes.find((node) =>
           matchesFile(node.id, resolvedFileId)
@@ -194,7 +191,7 @@ export function useExplorerController({
         null
       )
     },
-    [analysisData]
+    [analysisData, resolveNodeByFile]
   )
 
   const handleFileSelect = useCallback(
@@ -231,9 +228,7 @@ export function useExplorerController({
         nextFocusFilePath: null
       })
 
-      const matchedFileId = resolveFileId(fileId)
-      const resolvedFocusId =
-        generateGraphForFile(matchedFileId) || matchedFileId
+      const resolvedFocusId = generateGraphForFile(fileId) || fileId
       setSelectedFileId(resolvedFocusId)
       setSelectedNode(resolveNode(fileId, resolvedFocusId))
 
@@ -245,7 +240,6 @@ export function useExplorerController({
       clearUtilityHash,
       generateGraphForFile,
       resetModulePanel,
-      resolveFileId,
       resolveNode,
       setFocusedModulePath,
       setGraphViewMode,
@@ -265,12 +259,11 @@ export function useExplorerController({
         return null
       }
 
-      const matchedFile = resolveFileId(fileId)
-      const resolvedFileId = handleFileSelect(matchedFile)
+      const resolvedFileId = handleFileSelect(fileId)
 
-      if (treeRef.current && matchedFile) {
+      if (treeRef.current) {
         try {
-          treeRef.current.select(matchedFile, { focus: true })
+          treeRef.current.select(resolvedFileId ?? fileId, { focus: true })
         } catch (error) {
           console.warn('Failed to focus file in tree:', error)
         }
@@ -278,7 +271,7 @@ export function useExplorerController({
 
       return resolvedFileId
     },
-    [analysisData, handleFileSelect, resolveFileId, treeRef]
+    [analysisData, handleFileSelect, treeRef]
   )
 
   const handleShowOverview = useCallback(() => {
