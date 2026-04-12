@@ -12,7 +12,9 @@ import {
 
 import type { ReviewThresholdCalibration } from '@/shared/lib/metric-thresholds'
 import type {
+  ApiFileRiskProfile,
   FileRiskProfile,
+  RiskCategory,
   RiskLevel,
   RiskMetrics,
   RiskProfile,
@@ -102,6 +104,78 @@ export function getCalibratedPropagationRiskThresholds(
  */
 export function getRiskLabel(level: RiskLevel): string {
   return getPropagationRiskBandLabel(level)
+}
+
+const LEGACY_CATEGORY_BY_LEVEL: Record<RiskLevel, RiskCategory> = {
+  critical: 'Kritis',
+  high: 'Tinggi',
+  medium: 'Sedang',
+  low: 'Rendah'
+}
+
+const LEVEL_BY_LEGACY_CATEGORY: Record<RiskCategory, RiskLevel> = {
+  Kritis: 'critical',
+  Tinggi: 'high',
+  Sedang: 'medium',
+  Rendah: 'low'
+}
+
+export function getLegacyRiskCategory(level: RiskLevel): RiskCategory {
+  return LEGACY_CATEGORY_BY_LEVEL[level]
+}
+
+export function getRiskLevelFromLegacyCategory(
+  category: RiskCategory
+): RiskLevel {
+  return LEVEL_BY_LEGACY_CATEGORY[category]
+}
+
+function resolveCompatibilityRiskLevel(band: string): RiskLevel | null {
+  switch (band) {
+    case 'critical':
+    case 'Kritis':
+      return 'critical'
+    case 'high':
+    case 'Tinggi':
+      return 'high'
+    case 'medium':
+    case 'Sedang':
+      return 'medium'
+    case 'low':
+    case 'Rendah':
+      return 'low'
+    default:
+      return null
+  }
+}
+
+function elevateRiskLevelForCycle(
+  level: RiskLevel,
+  hasCycle: boolean
+): RiskLevel {
+  if (!hasCycle || level === 'critical' || level === 'high') {
+    return level
+  }
+
+  return 'high'
+}
+
+export function normalizeFileRiskProfile(
+  profile: ApiFileRiskProfile
+): FileRiskProfile {
+  const levelFromCategory = profile.category
+    ? getRiskLevelFromLegacyCategory(profile.category)
+    : null
+  const resolvedLevel = elevateRiskLevelForCycle(
+    profile.level ?? levelFromCategory ?? getRiskLevel(profile.score),
+    profile.factors.inCycle
+  )
+
+  return {
+    ...profile,
+    level: resolvedLevel,
+    category: getLegacyRiskCategory(resolvedLevel)
+  }
 }
 
 /**
@@ -271,18 +345,8 @@ export const ARCHITECTURE_THRESHOLDS = {
  * @deprecated Use getRiskColorClass with RiskLevel instead
  */
 export function getRiskColor(category: string): string {
-  switch (category) {
-    case 'Kritis':
-      return 'bg-status-critical-solid'
-    case 'Tinggi':
-      return 'bg-status-warning-solid'
-    case 'Sedang':
-      return 'bg-status-caution-solid'
-    case 'Rendah':
-      return 'bg-status-success-solid'
-    default:
-      return 'bg-muted'
-  }
+  const level = resolveCompatibilityRiskLevel(category)
+  return level ? getRiskColorClass(level) : 'bg-muted'
 }
 
 /**
@@ -291,12 +355,12 @@ export function getRiskColor(category: string): string {
 export function getRiskBadgeTone(
   category: string
 ): 'danger' | 'warning' | 'info' | 'success' {
-  switch (category) {
-    case 'Kritis':
+  switch (resolveCompatibilityRiskLevel(category)) {
+    case 'critical':
       return 'danger'
-    case 'Tinggi':
+    case 'high':
       return 'warning'
-    case 'Sedang':
+    case 'medium':
       return 'info'
     default:
       return 'success'

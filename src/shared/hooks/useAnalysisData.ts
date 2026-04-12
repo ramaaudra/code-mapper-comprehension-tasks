@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useContext, useMemo, useState } from 'react'
 
 import { DataContext } from '@/shared/context/DataContext'
+import { normalizeAnalysisData } from '@/shared/lib/analysis-normalization'
 import {
   type ChangesStatus,
   fetchAnalysisData,
@@ -52,7 +53,8 @@ export function useAnalysisData(): UseAnalysisDataResult {
 
   // Use memoized data based on mode
   const analysisData = useMemo(() => {
-    return isReportMode ? context.analysisData : data || null
+    const sourceData = isReportMode ? context.analysisData : data || null
+    return normalizeAnalysisData(sourceData)
   }, [isReportMode, context?.analysisData, data])
 
   const riskAnalysis = useMemo(() => {

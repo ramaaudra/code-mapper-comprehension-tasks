@@ -1,6 +1,7 @@
 import { startTransition, useEffect, useMemo, useState } from 'react'
 
 import { DataContext } from '@/shared/context/DataContext'
+import { normalizeAnalysisData } from '@/shared/lib/analysis-normalization'
 import { scheduleIdleWork } from '@/shared/lib/performance/schedule-idle-work'
 
 import {
@@ -65,7 +66,7 @@ export function StaticProvider({ children }: StaticProviderProps) {
 
   const value = useMemo(
     () => ({
-      analysisData: data?.analysisData ?? null,
+      analysisData: normalizeAnalysisData(data?.analysisData),
       architectureData: data?.architectureData ?? null,
       isLoading: data == null && loadError == null,
       error: loadError,

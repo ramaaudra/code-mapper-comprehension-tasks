@@ -67,6 +67,20 @@ export interface FileRiskFactors {
 export interface FileRiskProfile {
   file: string
   score: number
+  level: RiskLevel
+  /** @deprecated Use level instead. Maintained for compatibility during migration. */
   category: RiskCategory
   factors: FileRiskFactors
+}
+
+/**
+ * API-compatible risk profile shape during migration.
+ * Supports older payloads that still send only legacy category labels.
+ */
+export interface ApiFileRiskProfile extends Omit<
+  FileRiskProfile,
+  'level' | 'category'
+> {
+  level?: RiskLevel
+  category?: RiskCategory
 }
