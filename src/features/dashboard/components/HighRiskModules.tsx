@@ -14,7 +14,8 @@ import { truncateMiddle } from '@/shared/lib/utils'
 import {
   getRiskColorClass,
   getRiskDescription,
-  getRiskLevel
+  getRiskLevel,
+  getRiskTextClass
 } from '@/shared/lib/utils/risk'
 
 import { dashboardCopy } from '../content/dashboardCopy'
@@ -41,6 +42,14 @@ function getRiskScoreColor(
   thresholdCalibration?: ReviewThresholdCalibration
 ): string {
   return getRiskColorClass(getRiskLevel(score, thresholdCalibration))
+}
+
+function buildModuleAriaLabel(module: RiskModule): string {
+  return `${module.path}. Spread risk ${module.riskScore.toFixed(
+    1
+  )}. Spread potential ${module.instability.toFixed(
+    2
+  )}. Shared by ${module.fanIn} modules.`
 }
 
 export function HighRiskModules({
@@ -91,7 +100,7 @@ export function HighRiskModules({
         <div className='flex items-center justify-between'>
           <div className='space-y-1'>
             <CardTitle className='flex items-center gap-2 text-base font-medium'>
-              <AlertTriangle className='h-4 w-4 text-orange-500' />
+              <AlertTriangle className='h-4 w-4 text-status-warning-foreground' />
               {dashboardCopy.highRiskModules.title}
               <span className='text-xs font-normal text-muted-foreground'>
                 ({sortedModules.length})
@@ -129,7 +138,9 @@ export function HighRiskModules({
                 </p>
                 <p className='text-popover-foreground/80'>
                   •{' '}
-                  <span className='font-medium text-red-500'>
+                  <span
+                    className={`font-medium ${getRiskTextClass('critical')}`}
+                  >
                     {formatReviewSignalBandRange(
                       'propagationRisk',
                       'critical',
@@ -138,7 +149,7 @@ export function HighRiskModules({
                   </span>
                   : Critical — {HEURISTIC_LABELS.criticalPropagationRiskBand}
                   <br />•{' '}
-                  <span className='font-medium text-orange-500'>
+                  <span className={`font-medium ${getRiskTextClass('high')}`}>
                     {formatReviewSignalBandRange(
                       'propagationRisk',
                       'high',
@@ -147,7 +158,7 @@ export function HighRiskModules({
                   </span>
                   : {getRiskDescription('high')}
                   <br />•{' '}
-                  <span className='font-medium text-yellow-500'>
+                  <span className={`font-medium ${getRiskTextClass('medium')}`}>
                     {formatReviewSignalBandRange(
                       'propagationRisk',
                       'medium',
@@ -156,7 +167,7 @@ export function HighRiskModules({
                   </span>
                   : {getRiskDescription('medium')}
                   <br />•{' '}
-                  <span className='font-medium text-green-500'>
+                  <span className={`font-medium ${getRiskTextClass('low')}`}>
                     {formatReviewSignalBandRange(
                       'propagationRisk',
                       'low',
@@ -197,6 +208,7 @@ export function HighRiskModules({
               type='button'
               key={module.path}
               onClick={() => onViewModule?.(module.path)}
+              aria-label={buildModuleAriaLabel(module)}
               className={cn(
                 'w-full rounded-lg bg-muted/20 p-4 text-left',
                 'cursor-pointer transition-colors duration-200 hover:bg-muted/30',
@@ -214,6 +226,7 @@ export function HighRiskModules({
               <div className='flex items-center gap-4'>
                 <div
                   className='flex-1 cursor-help'
+                  aria-hidden='true'
                   title={`Risk: ${module.riskScore.toFixed(1)} (Ca × I)`}
                 >
                   <div className='relative h-1.5 w-full overflow-hidden rounded-full bg-primary/20'>
@@ -223,7 +236,10 @@ export function HighRiskModules({
                     />
                   </div>
                 </div>
-                <div className='flex shrink-0 items-center gap-4 text-xs'>
+                <div
+                  className='flex shrink-0 items-center gap-4 text-xs'
+                  aria-hidden='true'
+                >
                   <span
                     className='w-16 cursor-help text-right font-data tabular-nums text-muted-foreground transition-colors hover:text-foreground'
                     title={dashboardCopy.highRiskModules.instabilityTitle(

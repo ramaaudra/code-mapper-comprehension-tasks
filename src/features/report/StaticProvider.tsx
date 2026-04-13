@@ -81,9 +81,11 @@ export function StaticProvider({ children }: StaticProviderProps) {
   if (!bootstrap && !data && loadError) {
     return (
       <div className='flex h-screen items-center justify-center'>
-        <div className='text-center'>
-          <h1 className='text-xl font-semibold text-destructive'>Error</h1>
-          <p className='mt-2 text-muted-foreground'>{loadError.message}</p>
+        <div className='max-w-md rounded-xl border border-status-critical-border bg-status-critical-surface px-5 py-4 text-center text-status-critical-foreground shadow-sm'>
+          <h1 className='text-xl font-semibold'>Error</h1>
+          <p className='mt-2 text-sm text-status-critical-foreground/85'>
+            {loadError.message}
+          </p>
         </div>
       </div>
     )

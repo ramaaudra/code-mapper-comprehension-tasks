@@ -38,10 +38,10 @@ function renderEdge(
 ) {
   const stroke =
     className === 'cycle'
-      ? 'hsl(var(--destructive))'
+      ? 'hsl(var(--status-critical-solid))'
       : 'hsl(var(--muted-foreground))'
   const strokeOpacity =
-    className === 'cycle' ? (isRecommended ? 1 : 0.82) : 0.28
+    className === 'cycle' ? (isRecommended ? 1 : 0.88) : 0.58
   const strokeWidth = className === 'cycle' ? (isRecommended ? 3.25 : 2.5) : 1.5
 
   return (
@@ -97,7 +97,7 @@ export function CycleGraph({
         className={
           item.files.length === 2 ? 'h-[300px] w-full' : 'h-[360px] w-full'
         }
-        role='img'
+        role='group'
         aria-label='Cycle graph'
       >
         <defs>
@@ -112,7 +112,7 @@ export function CycleGraph({
             <path
               d={CYCLE_GRAPH_CHEVRON_MARKER.path}
               fill='none'
-              stroke='hsl(var(--destructive))'
+              stroke='hsl(var(--status-critical-solid))'
               strokeWidth={String(CYCLE_GRAPH_CHEVRON_MARKER.strokeWidth)}
               strokeLinecap='round'
               strokeLinejoin='round'
@@ -143,8 +143,8 @@ export function CycleGraph({
             cy={centerY}
             r='112'
             fill='none'
-            stroke='hsl(var(--destructive))'
-            strokeOpacity='0.1'
+            stroke='hsl(var(--status-critical-solid))'
+            strokeOpacity='0.55'
             strokeDasharray='6 8'
           />
         ) : null}
@@ -155,7 +155,7 @@ export function CycleGraph({
             r='188'
             fill='none'
             stroke='hsl(var(--muted-foreground))'
-            strokeOpacity='0.12'
+            strokeOpacity='0.42'
             strokeDasharray='4 8'
           />
         ) : null}
@@ -182,7 +182,7 @@ export function CycleGraph({
             textAnchor='middle'
             fontSize='11'
             fontWeight='600'
-            fill='hsl(var(--destructive))'
+            fill='hsl(var(--status-critical-foreground))'
             fontFamily='Atkinson Hyperlegible Next, sans-serif'
           >
             Start here
@@ -223,9 +223,9 @@ export function CycleGraph({
             ? 'hsl(var(--background))'
             : 'hsl(var(--muted))'
           const stroke = node.isCycleNode
-            ? 'hsl(var(--destructive))'
+            ? 'hsl(var(--status-critical-solid))'
             : 'hsl(var(--border))'
-          const strokeOpacity = node.isCycleNode ? 0.35 : 0.6
+          const strokeOpacity = node.isCycleNode ? 0.72 : 0.6
           const textFill = node.isCycleNode
             ? 'hsl(var(--foreground))'
             : 'hsl(var(--muted-foreground))'

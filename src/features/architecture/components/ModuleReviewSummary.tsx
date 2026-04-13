@@ -59,7 +59,7 @@ export function ModuleReviewSummary({
         {folder.hasCycle ? (
           <Badge
             variant='outline'
-            className='border-destructive/30 bg-destructive/5 text-destructive'
+            className='border-status-critical-border bg-status-critical-surface text-status-critical-foreground'
           >
             Cycle members present
           </Badge>

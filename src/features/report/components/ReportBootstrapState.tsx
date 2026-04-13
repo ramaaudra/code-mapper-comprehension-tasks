@@ -109,7 +109,9 @@ export function ReportBootstrapState({
             side panels will replace this loading state automatically.
           </p>
           {loadError ? (
-            <p className='mt-3 text-sm text-destructive'>{loadError}</p>
+            <div className='mt-3 rounded-lg border border-status-critical-border bg-status-critical-surface px-3 py-2 text-sm text-status-critical-foreground'>
+              {loadError}
+            </div>
           ) : (
             <div className='mt-4 h-2 overflow-hidden rounded-full bg-muted'>
               <div className='h-full w-1/2 animate-pulse rounded-full bg-primary/70' />

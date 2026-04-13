@@ -737,7 +737,7 @@ function FilesTab({
                   {cycleBadgeCopy ? (
                     <Badge
                       variant='outline'
-                      className='border-destructive/30 bg-destructive/5 text-[11px] font-medium text-destructive'
+                      className='border-status-critical-border bg-status-critical-surface text-[11px] font-medium text-status-critical-foreground'
                     >
                       {cycleBadgeCopy.label}
                     </Badge>
@@ -759,7 +759,7 @@ function FilesTab({
                     )}
                   </span>
                   {cycleBadgeCopy ? (
-                    <span className='block text-xs leading-relaxed text-destructive/90'>
+                    <span className='block text-xs leading-relaxed text-status-critical-foreground/85'>
                       {cycleBadgeCopy.description}
                     </span>
                   ) : null}

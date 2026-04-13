@@ -25,15 +25,15 @@ export function CircularProgress({
   // Color based on value
   const getColor = () => {
     if (percentage >= 0.8) {
-      return 'text-green-500'
+      return 'text-status-success-solid'
     }
     if (percentage >= 0.6) {
-      return 'text-yellow-500'
+      return 'text-status-caution-solid'
     }
     if (percentage >= 0.4) {
-      return 'text-orange-500'
+      return 'text-status-warning-solid'
     }
-    return 'text-red-500'
+    return 'text-status-critical-solid'
   }
 
   return (

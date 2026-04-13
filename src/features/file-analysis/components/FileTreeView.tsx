@@ -102,6 +102,20 @@ const createNodeRenderer = (
     const reviewStory =
       fileReviewStoryMap.get(normalizedNodeId) ||
       fileReviewStoryMap.get(node.id)
+    const accessibleStatusSummary = [
+      reviewStory?.showTreeIndicator ? reviewStory.assessment.title : null,
+      reviewStory?.showTreeIndicator ? reviewStory.shortReason : null,
+      isOrphan
+        ? `${reachabilityCopy.treeTooltipTitle}: ${reachabilityCopy.treeTooltipDescription}`
+        : null,
+      isInCycle ? 'Circular dependency detected.' : null,
+      isBroken ? 'Will break if the simulated file is deleted.' : null,
+      isNewOrphan
+        ? `${reachabilityCopy.simulationBadge} if the simulated file is deleted.`
+        : null
+    ]
+      .filter(Boolean)
+      .join(' ')
 
     const hasStatus = isInCycle || isOrphan || isBroken || isNewOrphan
     const showReviewIndicator = Boolean(
@@ -145,6 +159,9 @@ const createNodeRenderer = (
         <span className='flex-1 truncate font-mono text-sm text-foreground'>
           {node.data.name}
         </span>
+        {accessibleStatusSummary ? (
+          <span className='sr-only'>{accessibleStatusSummary}</span>
+        ) : null}
 
         {/* Status indicators - show if selected, hovered, has status, or has high risk */}
         <div
@@ -167,7 +184,10 @@ const createNodeRenderer = (
           {isOrphan && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Ghost className='h-3.5 w-3.5 text-muted-foreground' />
+                <Ghost
+                  className='h-3.5 w-3.5 text-muted-foreground'
+                  aria-hidden='true'
+                />
               </TooltipTrigger>
               <TooltipContent side='right'>
                 <p className='text-xs'>
@@ -182,7 +202,10 @@ const createNodeRenderer = (
           {isInCycle && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <AlertTriangle className='h-3.5 w-3.5 text-muted-foreground' />
+                <AlertTriangle
+                  className='h-3.5 w-3.5 text-muted-foreground'
+                  aria-hidden='true'
+                />
               </TooltipTrigger>
               <TooltipContent side='right'>
                 <p className='text-xs'>Circular dependency detected</p>
@@ -194,7 +217,10 @@ const createNodeRenderer = (
           {isBroken && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Bomb className='h-3.5 w-3.5 text-muted-foreground' />
+                <Bomb
+                  className='h-3.5 w-3.5 text-muted-foreground'
+                  aria-hidden='true'
+                />
               </TooltipTrigger>
               <TooltipContent side='right'>
                 <p className='text-xs'>
@@ -208,7 +234,10 @@ const createNodeRenderer = (
           {isNewOrphan && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Ghost className='h-3.5 w-3.5 text-muted-foreground' />
+                <Ghost
+                  className='h-3.5 w-3.5 text-muted-foreground'
+                  aria-hidden='true'
+                />
               </TooltipTrigger>
               <TooltipContent side='right'>
                 <p className='text-xs'>
@@ -227,7 +256,7 @@ const createNodeRenderer = (
                   <Button
                     variant='ghost'
                     size='icon'
-                    className='h-5 w-5'
+                    className='h-6 w-6'
                     aria-label={`Simulate deletion for ${node.data.name}`}
                     disabled={isSimulating}
                     onClick={(e) => {
@@ -283,6 +312,7 @@ function ReviewIndicator({
       <Tooltip>
         <TooltipTrigger asChild>
           <span
+            aria-hidden='true'
             className={`inline-block h-2 w-2 cursor-help rounded-full ${toneClass[story.badgeTone]}`}
           />
         </TooltipTrigger>

@@ -17,27 +17,39 @@ const toneStyles: Record<
   {
     container: string
     value: string
+    label: string
+    helper: string
   }
 > = {
   default: {
     container: 'border-border bg-muted/35',
-    value: 'text-foreground'
+    value: 'text-foreground',
+    label: 'text-foreground/80',
+    helper: 'text-muted-foreground'
   },
   info: {
     container: 'border-border bg-muted/35',
-    value: 'text-foreground'
+    value: 'text-foreground',
+    label: 'text-foreground/80',
+    helper: 'text-muted-foreground'
   },
   success: {
     container: 'border-status-success-border bg-status-success-surface',
-    value: 'text-status-success-foreground'
+    value: 'text-status-success-foreground',
+    label: 'text-status-success-foreground/85',
+    helper: 'text-status-success-foreground/80'
   },
   warning: {
     container: 'border-border bg-muted/35',
-    value: 'text-foreground'
+    value: 'text-foreground',
+    label: 'text-foreground/80',
+    helper: 'text-muted-foreground'
   },
   danger: {
-    container: 'border-destructive/30 bg-destructive/5',
-    value: 'text-destructive'
+    container: 'border-status-critical-border bg-status-critical-surface',
+    value: 'text-status-critical-foreground',
+    label: 'text-status-critical-foreground/85',
+    helper: 'text-status-critical-foreground/80'
   }
 }
 
@@ -67,7 +79,12 @@ export function MetricValueCard({
       >
         {value}
       </div>
-      <div className='mt-1.5 flex items-center gap-1 text-sm font-medium text-foreground/80'>
+      <div
+        className={cn(
+          'mt-1.5 flex items-center gap-1 text-sm font-medium',
+          style.label
+        )}
+      >
         <span>{label}</span>
         {tooltip ? (
           <InfoTooltip
@@ -82,7 +99,7 @@ export function MetricValueCard({
         ) : null}
       </div>
       {helper ? (
-        <div className='mt-2 text-xs text-muted-foreground'>{helper}</div>
+        <div className={cn('mt-2 text-xs', style.helper)}>{helper}</div>
       ) : null}
     </div>
   )

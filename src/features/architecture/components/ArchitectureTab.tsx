@@ -86,7 +86,7 @@ export function ArchitectureTab() {
             {avgInstability.toFixed(2)}
           </span>
           {foldersWithCycles > 0 && (
-            <span className='text-destructive'>
+            <span className='rounded-md border border-status-critical-border bg-status-critical-surface px-2 py-0.5 text-status-critical-foreground'>
               {architectureCopy.tab.modulesInCycles(foldersWithCycles)}
             </span>
           )}

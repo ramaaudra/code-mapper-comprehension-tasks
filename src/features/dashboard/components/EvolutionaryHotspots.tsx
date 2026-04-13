@@ -33,10 +33,10 @@ function getToneClasses(hotspot: EvolutionaryHotspotItem): string {
   const tone = getHotspotTone(hotspot.hotspotStatus)
 
   if (tone === 'danger') {
-    return 'border-red-500/40 bg-red-500/5'
+    return 'border-status-critical-border bg-status-critical-surface'
   }
   if (tone === 'warning') {
-    return 'border-orange-500/40 bg-orange-500/5'
+    return 'border-status-warning-border bg-status-warning-surface'
   }
   return 'border-border bg-muted/20'
 }
@@ -81,7 +81,7 @@ export function EvolutionaryHotspots({
         <div className='flex items-center justify-between gap-2'>
           <div className='space-y-1'>
             <CardTitle className='flex items-center gap-2 text-base font-medium'>
-              <RefreshCw className='h-4 w-4 text-orange-500' />
+              <RefreshCw className='h-4 w-4 text-status-warning-foreground' />
               {dashboardCopy.evolutionaryHotspots.title}
             </CardTitle>
             <CardDescription>

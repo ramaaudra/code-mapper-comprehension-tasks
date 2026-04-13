@@ -386,7 +386,9 @@ const NodeDetailPanel = memo(function NodeDetailPanel({
                 <button
                   type='button'
                   onClick={() => setShowCopyMenu(!showCopyMenu)}
-                  className='p-0.5 text-muted-foreground transition-colors hover:text-foreground'
+                  aria-haspopup='menu'
+                  aria-expanded={showCopyMenu}
+                  className='flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
                 >
                   <Copy className='h-3 w-3' />
                   <span className='sr-only'>Copy path</span>

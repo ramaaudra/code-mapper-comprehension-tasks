@@ -98,7 +98,7 @@ export function ArchitecturePage({
     return (
       <div className='flex h-full items-center justify-center bg-background'>
         <div className='text-center'>
-          <AlertTriangle className='mx-auto mb-4 h-12 w-12 text-destructive' />
+          <AlertTriangle className='mx-auto mb-4 h-12 w-12 text-status-critical-foreground' />
           <h2 className='mb-2 text-lg font-semibold'>
             {architectureCopy.page.errorTitle}
           </h2>

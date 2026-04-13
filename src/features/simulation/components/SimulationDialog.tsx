@@ -26,7 +26,7 @@ export function SimulationDialog({ result, onClose }: SimulationDialogProps) {
           {/* Broken Files Section */}
           <div>
             <h3 className='flex items-center gap-2 font-semibold'>
-              <FileWarning className='h-5 w-5 text-red-500' />
+              <FileWarning className='h-5 w-5 text-status-critical-foreground' />
               Files That Will Break ({result?.brokenFiles.length || 0})
             </h3>
             <div className='mt-2 max-h-40 space-y-1 overflow-y-auto'>
@@ -50,7 +50,7 @@ export function SimulationDialog({ result, onClose }: SimulationDialogProps) {
           {/* Reachability follow-up section */}
           <div>
             <h3 className='flex items-center gap-2 font-semibold'>
-              <FileX className='h-5 w-5 text-yellow-500' />
+              <FileX className='h-5 w-5 text-status-caution-foreground' />
               {reachabilityCopy.simulationSectionTitle} (
               {result?.newOrphans.length || 0})
             </h3>

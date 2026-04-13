@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-import { Badge } from '@/shared/components/ui/badge'
+import { Badge, badgeVariants } from '@/shared/components/ui/badge'
 import {
   Card,
   CardContent,
@@ -105,6 +105,24 @@ const HealthIndicator = ({
         </div>
       </div>
     </div>
+  )
+}
+
+function DialogCountTrigger({
+  count,
+  label
+}: {
+  count: number
+  label: string
+}) {
+  return (
+    <button
+      type='button'
+      aria-label={`Open ${label} dialog`}
+      className={`${badgeVariants({ variant: 'default' })} cursor-pointer hover:opacity-80`}
+    >
+      {count}
+    </button>
   )
 }
 
@@ -216,17 +234,15 @@ export default function MetricsPanel({
                 onOpenChange={setCriticalDialogOpen}
               >
                 <DialogTrigger asChild>
-                  <Badge
-                    variant='default'
-                    className='cursor-pointer hover:opacity-80'
-                  >
-                    {mostDependedOn.length}
-                  </Badge>
+                  <DialogCountTrigger
+                    count={mostDependedOn.length}
+                    label='Most Depended On'
+                  />
                 </DialogTrigger>
                 <DialogContent className='max-w-2xl'>
                   <DialogHeader>
                     <DialogTitle className='flex items-center gap-2'>
-                      <ShieldCheck className='h-5 w-5 text-red-500' />
+                      <ShieldCheck className='h-5 w-5 text-status-critical-foreground' />
                       Most Depended On ({mostDependedOn.length})
                     </DialogTitle>
                   </DialogHeader>
@@ -314,17 +330,15 @@ export default function MetricsPanel({
                 onOpenChange={setComplexDialogOpen}
               >
                 <DialogTrigger asChild>
-                  <Badge
-                    variant='default'
-                    className='cursor-pointer hover:opacity-80'
-                  >
-                    {topImporters.length}
-                  </Badge>
+                  <DialogCountTrigger
+                    count={topImporters.length}
+                    label='Top Importers'
+                  />
                 </DialogTrigger>
                 <DialogContent className='max-w-2xl'>
                   <DialogHeader>
                     <DialogTitle className='flex items-center gap-2'>
-                      <Puzzle className='h-5 w-5 text-blue-500' />
+                      <Puzzle className='h-5 w-5 text-primary' />
                       Top Importers ({topImporters.length})
                     </DialogTitle>
                   </DialogHeader>

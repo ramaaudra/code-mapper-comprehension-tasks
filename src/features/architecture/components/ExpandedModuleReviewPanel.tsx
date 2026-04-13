@@ -72,7 +72,7 @@ function ReviewGroupSection({
                     {item.file.hasCycle ? (
                       <Badge
                         variant='outline'
-                        className='border-destructive/30 bg-destructive/5 text-[11px] font-medium text-destructive'
+                        className='border-status-critical-border bg-status-critical-surface text-[11px] font-medium text-status-critical-foreground'
                       >
                         Cycle member
                       </Badge>
@@ -148,7 +148,7 @@ export function ExpandedModuleReviewPanel({
       />
 
       {folder.hasCycle ? (
-        <div className='flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-destructive'>
+        <div className='flex items-start gap-3 rounded-xl border border-status-critical-border bg-status-critical-surface p-4 text-status-critical-foreground'>
           <WarningCircle size={16} weight='fill' className='mt-0.5 shrink-0' />
           <div className='space-y-1'>
             <p className='text-sm font-semibold'>
