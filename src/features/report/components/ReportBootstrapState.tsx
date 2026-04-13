@@ -1,3 +1,5 @@
+import { StatusAnnouncer } from '@/shared/components/ui/StatusAnnouncer'
+
 import type { ReportBootstrapData } from '@/shared/types/report-bootstrap'
 
 interface ReportBootstrapStateProps {
@@ -27,9 +29,18 @@ export function ReportBootstrapState({
   bootstrap,
   loadError
 }: ReportBootstrapStateProps) {
+  const bootstrapAnnouncement = !bootstrap
+    ? (loadError ??
+      'Preparing report. Loading the interactive overview, graph, file explorer, and detail panels.')
+    : loadError
+
   if (!bootstrap) {
     return (
       <div className='flex h-full items-center justify-center px-6'>
+        <StatusAnnouncer
+          message={bootstrapAnnouncement}
+          politeness={loadError ? 'assertive' : 'polite'}
+        />
         <div className='max-w-lg space-y-3 text-center'>
           <h2 className='text-xl font-semibold text-foreground'>
             Preparing report
@@ -45,6 +56,10 @@ export function ReportBootstrapState({
 
   return (
     <div className='h-full overflow-auto bg-background'>
+      <StatusAnnouncer
+        message={bootstrapAnnouncement}
+        politeness={loadError ? 'assertive' : 'polite'}
+      />
       <div className='mx-auto flex max-w-5xl flex-col gap-8 px-6 py-8'>
         <section className='space-y-4'>
           <div className='space-y-2'>

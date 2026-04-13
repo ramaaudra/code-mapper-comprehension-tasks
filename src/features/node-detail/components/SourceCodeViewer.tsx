@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { CheckCircle, Copy } from '@/shared/components/ui/icons'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
+import { StatusAnnouncer } from '@/shared/components/ui/StatusAnnouncer'
 
 import type { HighlightProps, PrismTheme } from 'prism-react-renderer'
 
@@ -20,7 +21,6 @@ type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number]
 interface SourceCodeViewerProps {
   code: string
   language: string
-  theme?: 'light' | 'dark' | 'auto'
   showLineNumbers?: boolean
   maxLines?: number
   className?: string
@@ -29,7 +29,6 @@ interface SourceCodeViewerProps {
 interface PrismModule {
   Highlight: React.ComponentType<HighlightProps>
   themes: {
-    vsLight: PrismTheme
     vsDark: PrismTheme
   }
 }
@@ -52,24 +51,9 @@ function normalizeLanguage(language: string): string {
   return languageMap[normalized] || normalized
 }
 
-function getEffectiveTheme(
-  theme: 'light' | 'dark' | 'auto',
-  prismModule: PrismModule
-): PrismTheme {
-  if (theme === 'auto') {
-    const isDark = document.documentElement.classList.contains('dark')
-    return isDark ? prismModule.themes.vsDark : prismModule.themes.vsLight
-  }
-
-  return theme === 'dark'
-    ? prismModule.themes.vsDark
-    : prismModule.themes.vsLight
-}
-
 export function SourceCodeViewer({
   code,
   language,
-  theme = 'auto',
   showLineNumbers = true,
   maxLines = 1000,
   className = ''
@@ -77,6 +61,7 @@ export function SourceCodeViewer({
   const [prismModule, setPrismModule] = useState<PrismModule | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [prismLoadError, setPrismLoadError] = useState<string | null>(null)
 
   // Lazy load prism-react-renderer
   useEffect(() => {
@@ -87,9 +72,15 @@ export function SourceCodeViewer({
         const mod = await import('prism-react-renderer')
         if (mounted) {
           setPrismModule(mod as unknown as PrismModule)
+          setPrismLoadError(null)
         }
       } catch (error) {
         console.error('Failed to load prism-react-renderer:', error)
+        if (mounted) {
+          setPrismLoadError(
+            'Syntax highlighting is unavailable. Showing plain text instead.'
+          )
+        }
       } finally {
         if (mounted) {
           setIsLoading(false)
@@ -132,6 +123,7 @@ export function SourceCodeViewer({
       <div
         className={`relative flex flex-col rounded-md border border-border bg-muted/30 ${className}`}
       >
+        <StatusAnnouncer message='Loading syntax highlighter.' />
         <div className='flex h-40 items-center justify-center text-muted-foreground'>
           <div className='flex items-center gap-2'>
             <div className='h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent' />
@@ -148,6 +140,10 @@ export function SourceCodeViewer({
       <div
         className={`relative flex flex-col rounded-md border border-border bg-muted/30 ${className}`}
       >
+        <StatusAnnouncer
+          message={copied ? 'Code copied to clipboard.' : prismLoadError}
+          politeness={prismLoadError ? 'assertive' : 'polite'}
+        />
         <div className='flex flex-none items-center justify-between border-b border-border bg-muted/50 px-3 py-2'>
           <span className='text-xs text-muted-foreground'>{language}</span>
           <button
@@ -181,13 +177,13 @@ export function SourceCodeViewer({
     )
   }
 
-  const effectiveTheme = getEffectiveTheme(theme, prismModule)
   const Highlight = prismModule.Highlight
 
   return (
     <div
       className={`relative flex flex-col rounded-md border border-border bg-muted/30 ${className}`}
     >
+      <StatusAnnouncer message={copied ? 'Code copied to clipboard.' : null} />
       {/* Header with language and copy button */}
       <div className='flex flex-none items-center justify-between border-b border-border bg-muted/50 px-3 py-2'>
         <div className='flex items-center gap-2'>
@@ -226,7 +222,7 @@ export function SourceCodeViewer({
       {/* Code with syntax highlighting */}
       <ScrollArea className='h-full flex-1'>
         <Highlight
-          theme={effectiveTheme}
+          theme={prismModule.themes.vsDark}
           code={displayCode}
           language={effectiveLanguage}
         >

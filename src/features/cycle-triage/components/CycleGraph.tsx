@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { getRelativePath } from '@/shared/lib/utils'
 
 import { cycleTriageCopy } from '../content/cycleTriageCopy'
@@ -61,6 +63,7 @@ export function CycleGraph({
   showNearbyDependents,
   onNavigateToFile
 }: CycleGraphProps) {
+  const [focusedFilePath, setFocusedFilePath] = useState<string | null>(null)
   const model = buildCycleGraphModel({ item, showNearbyDependents })
   const recommendedEdge = item.suggestedInvestigation.candidateEdge
   const recommendedEdgeModel = recommendedEdge
@@ -214,6 +217,8 @@ export function CycleGraph({
           : null}
 
         {model.nodes.map((node) => {
+          const isActionable = typeof onNavigateToFile === 'function'
+          const isFocused = focusedFilePath === node.filePath
           const fill = node.isCycleNode
             ? 'hsl(var(--background))'
             : 'hsl(var(--muted))'
@@ -224,9 +229,49 @@ export function CycleGraph({
           const textFill = node.isCycleNode
             ? 'hsl(var(--foreground))'
             : 'hsl(var(--muted-foreground))'
+          const relativePath = getRelativePath(node.filePath)
+          const segments = relativePath.split('/')
+          const basename = segments[segments.length - 1] || relativePath
+          const label =
+            basename.length <= 18
+              ? basename
+              : `${basename.slice(0, 9)}…${basename.slice(-7)}`
 
           return (
-            <g key={node.filePath}>
+            <g
+              key={node.filePath}
+              role={isActionable ? 'button' : undefined}
+              tabIndex={isActionable ? 0 : -1}
+              aria-label={
+                isActionable
+                  ? `Open ${relativePath} in file details`
+                  : undefined
+              }
+              style={{
+                cursor: isActionable ? 'pointer' : 'default'
+              }}
+              onClick={() => onNavigateToFile?.(node.filePath)}
+              onKeyDown={(event) => {
+                if (!isActionable) {
+                  return
+                }
+
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  onNavigateToFile?.(node.filePath)
+                }
+              }}
+              onFocus={() => {
+                if (isActionable) {
+                  setFocusedFilePath(node.filePath)
+                }
+              }}
+              onBlur={() => {
+                if (focusedFilePath === node.filePath) {
+                  setFocusedFilePath(null)
+                }
+              }}
+            >
               <rect
                 x={node.x - CYCLE_GRAPH_NODE_WIDTH / 2}
                 y={node.y - CYCLE_GRAPH_NODE_HEIGHT / 2}
@@ -236,11 +281,8 @@ export function CycleGraph({
                 fill={fill}
                 fillOpacity={0.96}
                 stroke={stroke}
-                strokeOpacity={strokeOpacity}
-                style={{
-                  cursor: onNavigateToFile ? 'pointer' : 'default'
-                }}
-                onClick={() => onNavigateToFile?.(node.filePath)}
+                strokeOpacity={isFocused ? 1 : strokeOpacity}
+                strokeWidth={isFocused ? 3 : undefined}
               />
               <text
                 x={node.x}
@@ -250,24 +292,10 @@ export function CycleGraph({
                 fontWeight={node.isCycleNode ? '600' : '500'}
                 fill={textFill}
                 fontFamily='Atkinson Hyperlegible Mono, monospace'
-                style={{
-                  cursor: onNavigateToFile ? 'pointer' : 'default'
-                }}
-                onClick={() => onNavigateToFile?.(node.filePath)}
               >
-                {(() => {
-                  const relativePath = getRelativePath(node.filePath)
-                  const segments = relativePath.split('/')
-                  const basename = segments[segments.length - 1] || relativePath
-
-                  if (basename.length <= 18) {
-                    return basename
-                  }
-
-                  return `${basename.slice(0, 9)}…${basename.slice(-7)}`
-                })()}
+                {label}
               </text>
-              <title>{getRelativePath(node.filePath)}</title>
+              <title>{relativePath}</title>
             </g>
           )
         })}

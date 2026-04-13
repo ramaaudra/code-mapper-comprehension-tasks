@@ -35,7 +35,46 @@ import { FileSearchBar, type FileSearchBarRef } from './FileSearchBar'
 
 import type { FileReviewStory } from '@/shared/lib/utils/file-review-story'
 import type { FileTreeNode } from '@/shared/types/analysis'
-import type { NodeApi, NodeRendererProps, TreeApi } from 'react-arborist'
+import type {
+  NodeApi,
+  NodeRendererProps,
+  RowRendererProps,
+  TreeApi
+} from 'react-arborist'
+
+const FileTreeRow = memo(
+  ({ node, attrs, innerRef, children }: RowRendererProps<FileTreeNode>) => (
+    <div
+      {...attrs}
+      ref={innerRef}
+      role='treeitem'
+      onFocus={(event) => {
+        event.stopPropagation()
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter') {
+          return
+        }
+
+        event.preventDefault()
+        node.handleClick(event as unknown as React.MouseEvent)
+
+        if (!node.isLeaf) {
+          node.toggle()
+        }
+      }}
+      onClick={(event) => {
+        node.handleClick(event)
+
+        if (!node.isLeaf) {
+          node.toggle()
+        }
+      }}
+    >
+      {children}
+    </div>
+  )
+)
 
 const createNodeRenderer = (
   filesInCycle: Set<string>,
@@ -69,34 +108,16 @@ const createNodeRenderer = (
       reviewStory?.showTreeIndicator &&
       (reviewStory.alwaysShowTreeIndicator || node.isSelected || isHovered)
     )
+    const showLeafAction =
+      node.isLeaf && (node.isSelected || isHovered || node.isFocused)
 
     return (
       <div
-        role='treeitem'
-        aria-selected={node.isSelected}
-        tabIndex={0}
         style={style}
         ref={dragHandle}
         className={`group flex h-8 cursor-pointer items-center gap-2 rounded-md px-2 transition-colors ${
           node.isSelected ? 'bg-primary/5' : 'hover:bg-muted'
         } ${isHovered && !node.isSelected ? 'bg-muted' : ''}`}
-        onClick={() => {
-          if (node.isLeaf) {
-            node.select()
-          } else {
-            node.toggle()
-          }
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            if (node.isLeaf) {
-              node.select()
-            } else {
-              node.toggle()
-            }
-          }
-        }}
         onMouseEnter={() => {
           if (node.isLeaf) {
             setHoveredFile(node.id)
@@ -198,15 +219,16 @@ const createNodeRenderer = (
             </Tooltip>
           )}
 
-          {/* Delete simulation button - only on hover */}
-          {node.isLeaf && (
-            <div className='opacity-0 transition-opacity group-hover:opacity-100'>
+          {/* Delete simulation button - shown only when the row is active */}
+          {showLeafAction ? (
+            <div>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant='ghost'
                     size='icon'
                     className='h-5 w-5'
+                    aria-label={`Simulate deletion for ${node.data.name}`}
                     disabled={isSimulating}
                     onClick={(e) => {
                       e.stopPropagation()
@@ -225,7 +247,7 @@ const createNodeRenderer = (
                 </TooltipContent>
               </Tooltip>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     )
@@ -376,7 +398,11 @@ export const FileTreeView = forwardRef<FileTreeViewRef, FileTreeViewProps>(
           </div>
 
           <div className='flex-1 overflow-hidden'>
-            <div className='h-full px-2 pb-4'>
+            <div
+              className='h-full px-2 pb-4'
+              role='region'
+              aria-label='File Explorer'
+            >
               <Tree
                 ref={treeRef}
                 data={data}
@@ -398,6 +424,7 @@ export const FileTreeView = forwardRef<FileTreeViewRef, FileTreeViewProps>(
                     onFileSelect(null)
                   }
                 }}
+                renderRow={FileTreeRow}
               >
                 {NodeRenderer}
               </Tree>

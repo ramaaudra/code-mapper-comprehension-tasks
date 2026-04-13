@@ -51,8 +51,9 @@ export function NodeDetailSupportingSignalsSection({
               <TooltipProvider delayDuration={200} key={signal.id}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div
-                      className={`flex cursor-help items-start gap-2 rounded-md p-2 ${getRiskBgOpacityClass(signal.riskLevel, 10)}`}
+                    <button
+                      type='button'
+                      className={`flex w-full cursor-help items-start gap-2 rounded-md p-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${getRiskBgOpacityClass(signal.riskLevel, 10)}`}
                     >
                       <div className='mt-0.5 shrink-0'>
                         {signal.riskLevel === 'low' ? (
@@ -76,7 +77,7 @@ export function NodeDetailSupportingSignalsSection({
                           {signal.description}
                         </p>
                       </div>
-                    </div>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent
                     side='top'

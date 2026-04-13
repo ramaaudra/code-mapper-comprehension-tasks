@@ -8,6 +8,7 @@ import {
   RotateCcw
 } from '@/shared/components/ui/icons'
 import { SimpleTooltip } from '@/shared/components/ui/simple-tooltip'
+import { StatusAnnouncer } from '@/shared/components/ui/StatusAnnouncer'
 import {
   ToggleGroup,
   ToggleGroupItem
@@ -103,6 +104,7 @@ export function TopBar({
 
   return (
     <header className={layoutClasses.header}>
+      <StatusAnnouncer message={loadError} politeness='assertive' />
       <div className={layoutClasses.brandRow}>
         <SimpleTooltip
           content={
@@ -289,9 +291,13 @@ export function TopBar({
           >
             {loadError && runtimeMode === 'live' && (
               <SimpleTooltip content={loadError} side='bottom' asChild>
-                <div className='flex h-9 w-9 items-center justify-center text-status-warning-solid sm:h-10 sm:w-10'>
+                <button
+                  type='button'
+                  aria-label={loadError}
+                  className='flex h-9 w-9 items-center justify-center rounded-md text-status-warning-solid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-10 sm:w-10'
+                >
                   <AlertTriangle className='h-4 w-4' aria-hidden='true' />
-                </div>
+                </button>
               </SimpleTooltip>
             )}
 

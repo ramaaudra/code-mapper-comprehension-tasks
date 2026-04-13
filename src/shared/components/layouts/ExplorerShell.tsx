@@ -1,3 +1,5 @@
+import { SkipLink } from '@/shared/components/ui/SkipLink'
+
 import { AppLayout } from './AppLayout'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
@@ -65,6 +67,7 @@ export function ExplorerShell({
 }: ExplorerShellProps) {
   return (
     <AppLayout>
+      <SkipLink href='#primary-content' label='Skip to Main Content' />
       <TopBar
         runtimeMode={runtimeMode}
         isLoading={isLoading}
@@ -90,7 +93,11 @@ export function ExplorerShell({
 
       <div className='flex min-h-0 w-full flex-1 overflow-hidden'>
         <Sidebar isCollapsed={isTreeCollapsed}>{sidebar}</Sidebar>
-        <main className='flex-1 overflow-hidden' aria-label='Primary content'>
+        <main
+          id='primary-content'
+          className='flex-1 overflow-hidden'
+          aria-label='Primary content'
+        >
           {main}
         </main>
         {rightPanels}

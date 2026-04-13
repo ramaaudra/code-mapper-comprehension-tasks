@@ -37,6 +37,7 @@ import {
 } from 'react'
 
 import { HotspotStatusLabel } from '@/shared/components/ui/hotspot-status-label'
+import { StatusAnnouncer } from '@/shared/components/ui/StatusAnnouncer'
 import { getRelativePath, truncateMiddle } from '@/shared/lib/utils'
 import { LRUCache } from '@/shared/lib/utils/lruCache'
 import '@xyflow/react/dist/style.css'
@@ -1037,6 +1038,9 @@ function DependencyGraphInner({
     [onNodeClick]
   )
 
+  const fileLoadingAnnouncement = `${graphCopy.canvas.fileLoadingTitle}. ${graphCopy.canvas.fileLoadingDescription}`
+  const moduleLoadingAnnouncement = `${graphCopy.canvas.moduleLoadingTitle}. ${graphCopy.canvas.moduleLoadingDescription}`
+
   // Show skeleton during transition (only for file view)
   if (
     viewMode === 'file' &&
@@ -1044,6 +1048,7 @@ function DependencyGraphInner({
   ) {
     return (
       <div className='flex h-full items-center justify-center px-6'>
+        <StatusAnnouncer message={fileLoadingAnnouncement} />
         <div className='flex max-w-sm flex-col items-center gap-3 rounded-xl border border-border bg-card/70 px-6 py-5 text-center shadow-sm'>
           <div
             className='h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent'
@@ -1073,6 +1078,13 @@ function DependencyGraphInner({
       onMouseDownCapture={() => graphRegionRef.current?.focus()}
       className='graph-container relative h-full w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring'
     >
+      <StatusAnnouncer
+        message={
+          viewMode === 'module' && isModuleLoading
+            ? moduleLoadingAnnouncement
+            : null
+        }
+      />
       <div className='pointer-events-none absolute inset-x-3 top-3 z-[100] sm:inset-x-4 sm:top-4'>
         <div className='grid w-full grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-3'>
           <div />

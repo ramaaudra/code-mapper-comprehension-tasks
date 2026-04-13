@@ -24,3 +24,6 @@ dist-ssr
 *.test.*
 *.test.ts
 *.test.tsx
+!src/features/graph/lib/file-graph-model.test.ts
+!src/shared/lib/analysis-preparation.test.ts
+!src/shared/lib/utils/risk.test.ts

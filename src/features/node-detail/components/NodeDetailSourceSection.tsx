@@ -113,7 +113,6 @@ export function NodeDetailSourceSection({
         <SourceCodeViewer
           code={fileContent.content}
           language={detectLanguage(displayBasename || nodePath)}
-          theme='auto'
           showLineNumbers={true}
           maxLines={MAX_LINES}
           className='h-full rounded-none border-0'
