@@ -2,7 +2,8 @@ import { shellCopy } from '../../content/shellCopy.ts'
 
 import type {
   ExplorerContextChip,
-  ExplorerRuntimeMode
+  ExplorerRuntimeMode,
+  UtilityExplorerViewMode
 } from '../../types/explorer.ts'
 
 interface ResolveTopBarActionGroupsOptions {
@@ -62,4 +63,16 @@ export function shouldShowTopBarContextChip(
   }
 
   return contextChip.label !== shellCopy.contextChips.cycles.triage
+}
+
+interface ShouldShowAnalysisSetupActionOptions {
+  hasUnresolvedImports: boolean
+  activeUtilityViewMode: UtilityExplorerViewMode | null
+}
+
+export function shouldShowAnalysisSetupAction({
+  hasUnresolvedImports,
+  activeUtilityViewMode
+}: ShouldShowAnalysisSetupActionOptions) {
+  return hasUnresolvedImports || activeUtilityViewMode === 'setup-guide'
 }

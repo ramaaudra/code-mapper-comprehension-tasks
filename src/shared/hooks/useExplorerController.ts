@@ -566,6 +566,9 @@ export function useExplorerController({
       : undefined
   }, [analysisData])
 
+  const projectName = analysisData?.projectName
+  const rootPath = analysisData?.rootPath
+
   const hasUnresolvedImports =
     (analysisData?.warnings?.unresolvedImports?.length ?? 0) > 0
 
@@ -612,6 +615,8 @@ export function useExplorerController({
     selectedModuleForPanel,
     selectedModuleData,
     fileCount,
+    projectName,
+    rootPath,
     hasUnresolvedImports,
     handleFileSelect,
     navigateToFile,

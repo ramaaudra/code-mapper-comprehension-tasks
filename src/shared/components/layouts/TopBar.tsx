@@ -17,6 +17,7 @@ import { shellCopy } from '@/shared/content/shellCopy'
 import {
   cn,
   resolveTopBarActionGroups,
+  shouldShowAnalysisSetupAction,
   resolveTopBarIconLabels,
   resolveTopBarLayoutClasses,
   shouldShowTopBarContextChip
@@ -47,6 +48,8 @@ interface TopBarProps {
   onShowSetupGuide: () => void
   hasUnresolvedImports: boolean
   fileCount?: number
+  projectName?: string
+  rootPath?: string
   analysisLoadedAt?: number | string | null
   hasChanges?: boolean
   totalChanges?: number
@@ -70,6 +73,8 @@ export function TopBar({
   onShowSetupGuide,
   hasUnresolvedImports,
   fileCount,
+  projectName,
+  rootPath,
   analysisLoadedAt,
   hasChanges = false,
   totalChanges = 0
@@ -85,6 +90,10 @@ export function TopBar({
     isLoading,
     hasChanges,
     totalChanges
+  })
+  const showAnalysisSetupAction = shouldShowAnalysisSetupAction({
+    hasUnresolvedImports,
+    activeUtilityViewMode
   })
   const timestampLabel =
     runtimeMode === 'report' && analysisLoadedAt
@@ -129,9 +138,17 @@ export function TopBar({
         </SimpleTooltip>
 
         <div className='flex min-w-0 items-center gap-2'>
-          <p className='truncate text-base font-semibold text-foreground'>
-            {shellCopy.brand}
-          </p>
+          <SimpleTooltip
+            content={rootPath ?? shellCopy.brand}
+            side='bottom'
+            asChild
+          >
+            <p className='truncate text-base font-semibold text-foreground'>
+              {projectName
+                ? `${shellCopy.brand} \u00B7 ${projectName}`
+                : shellCopy.brand}
+            </p>
+          </SimpleTooltip>
           {hasData && fileCount !== undefined && (
             <span className='hidden rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground xl:inline-flex'>
               {shellCopy.fileCount(fileCount)}
@@ -212,34 +229,36 @@ export function TopBar({
               </Button>
             </SimpleTooltip>
 
-            <SimpleTooltip
-              content={shellCopy.utilities.analysisSetup.tooltip}
-              side='bottom'
-              asChild
-            >
-              <Button
-                variant={
-                  activeUtilityViewMode === 'setup-guide'
-                    ? 'secondary'
-                    : 'ghost'
-                }
-                size='sm'
-                onClick={onShowSetupGuide}
-                className={cn(
-                  'h-9 touch-manipulation gap-1.5 px-3 text-xs font-medium sm:h-10',
-                  activeUtilityViewMode !== 'setup-guide' &&
-                    'text-muted-foreground hover:text-foreground'
-                )}
+            {showAnalysisSetupAction && (
+              <SimpleTooltip
+                content={shellCopy.utilities.analysisSetup.tooltip}
+                side='bottom'
+                asChild
               >
-                {shellCopy.utilities.analysisSetup.label}
-                {hasUnresolvedImports && (
-                  <AlertTriangle
-                    className='h-3.5 w-3.5 shrink-0 text-status-warning-foreground'
-                    aria-hidden='true'
-                  />
-                )}
-              </Button>
-            </SimpleTooltip>
+                <Button
+                  variant={
+                    activeUtilityViewMode === 'setup-guide'
+                      ? 'secondary'
+                      : 'ghost'
+                  }
+                  size='sm'
+                  onClick={onShowSetupGuide}
+                  className={cn(
+                    'h-9 touch-manipulation gap-1.5 px-3 text-xs font-medium sm:h-10',
+                    activeUtilityViewMode !== 'setup-guide' &&
+                      'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {shellCopy.utilities.analysisSetup.label}
+                  {hasUnresolvedImports && (
+                    <AlertTriangle
+                      className='h-3.5 w-3.5 shrink-0 text-status-warning-foreground'
+                      aria-hidden='true'
+                    />
+                  )}
+                </Button>
+              </SimpleTooltip>
+            )}
 
             {shouldShowTopBarContextChip(contextChip) && contextChip && (
               <Badge

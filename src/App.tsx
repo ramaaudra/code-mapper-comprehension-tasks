@@ -292,6 +292,7 @@ function AppContent() {
                 sourceView: 'overview'
               })
             }
+            onShowSetupGuide={() => explorer.handleShowSetupGuide('overview')}
             onShowModuleGraph={explorer.handleShowModuleGraph}
             isLayoutTransitioning={isLayoutTransitioning}
           />
@@ -346,6 +347,8 @@ function AppContent() {
       onShowSetupGuide={explorer.handleShowSetupGuide}
       hasUnresolvedImports={explorer.hasUnresolvedImports}
       fileCount={explorer.fileCount}
+      projectName={explorer.projectName}
+      rootPath={explorer.rootPath}
       analysisLoadedAt={analysisLoadedAt}
       hasChanges={changesStatus?.hasChanges ?? false}
       totalChanges={changesStatus?.totalChanges ?? 0}

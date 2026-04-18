@@ -1,4 +1,5 @@
 import { useCycleTriageItems } from '@/features/cycle-triage'
+import { setupGuideCopy } from '@/features/setup-guide/content/setupGuideCopy'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -12,6 +13,7 @@ import { InfoTooltip } from '@/shared/components/ui/info-tooltip'
 import { cn, getBasename } from '@/shared/lib/utils'
 
 import { dashboardCopy } from '../content/dashboardCopy'
+import { resolveAnalysisQualityIssue } from '../lib/analysis-quality-story'
 import { CleanupCandidatesDialog } from './CleanupCandidatesDialog'
 
 import type {
@@ -23,6 +25,7 @@ interface IssuesPanelProps {
   data: AnalysisData | null
   onNavigateToFile?: (file: string) => void
   onShowCycleTriage?: (cycleId?: string) => void
+  onShowSetupGuide?: () => void
   cleanupDialogOpen: boolean
   onCleanupDialogOpenChange: (open: boolean) => void
   onShowCleanupCandidates?: () => void
@@ -49,11 +52,13 @@ export function IssuesPanel({
   data,
   onNavigateToFile,
   onShowCycleTriage,
+  onShowSetupGuide,
   cleanupDialogOpen,
   onCleanupDialogOpenChange,
   onShowCleanupCandidates
 }: IssuesPanelProps) {
   const { items: cycleItems } = useCycleTriageItems(data)
+  const analysisQualityIssue = resolveAnalysisQualityIssue(data?.warnings)
 
   if (!data?.issues) {
     return (
@@ -102,6 +107,99 @@ export function IssuesPanel({
 
   return (
     <div className='space-y-4 overflow-x-hidden'>
+      {analysisQualityIssue && (
+        <Card className='overflow-hidden border-status-warning-border bg-status-warning-surface'>
+          <CardHeader className='pb-3'>
+            <div className='flex flex-wrap items-start justify-between gap-3'>
+              <div className='space-y-1'>
+                <div className='flex items-center gap-2'>
+                  <AlertTriangle className='h-4 w-4 text-status-warning-foreground' />
+                  <span className='text-sm font-medium'>
+                    {analysisQualityIssue.title}
+                  </span>
+                </div>
+                <p className='max-w-2xl text-xs leading-relaxed text-status-warning-foreground/85'>
+                  {analysisQualityIssue.description}
+                </p>
+              </div>
+
+              <div className='flex flex-wrap items-center justify-end gap-2'>
+                <Badge
+                  variant='outline'
+                  className='border-status-warning-border bg-background/70 text-status-warning-foreground'
+                >
+                  {analysisQualityIssue.affectedImportCount}{' '}
+                  {
+                    dashboardCopy.issuesPanel.analysisQuality
+                      .affectedImportsLabel
+                  }
+                </Badge>
+                <Badge
+                  variant='outline'
+                  className='border-status-warning-border bg-background/70 text-status-warning-foreground'
+                >
+                  {analysisQualityIssue.affectedPatternCount}{' '}
+                  {
+                    dashboardCopy.issuesPanel.analysisQuality
+                      .affectedPatternsLabel
+                  }
+                </Badge>
+                <Badge
+                  variant='outline'
+                  className='border-status-warning-border bg-background/70 text-status-warning-foreground'
+                >
+                  {analysisQualityIssue.affectedFilesCount}{' '}
+                  {dashboardCopy.issuesPanel.analysisQuality.affectedFilesLabel}
+                </Badge>
+                {onShowSetupGuide && (
+                  <Button
+                    size='sm'
+                    onClick={onShowSetupGuide}
+                    className='h-9 gap-1.5 px-3'
+                  >
+                    {analysisQualityIssue.ctaLabel}
+                    <ArrowRight className='h-3.5 w-3.5' />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className='space-y-3'>
+            <div className='space-y-2'>
+              {data?.warnings?.unresolvedImports.slice(0, 3).map((item) => (
+                <div
+                  key={item.pattern}
+                  className='flex flex-wrap items-start justify-between gap-2 rounded-lg border border-status-warning-border/70 bg-background/75 px-3 py-3'
+                >
+                  <div className='min-w-0 space-y-1'>
+                    <code className='text-sm font-medium text-foreground'>
+                      {item.pattern}
+                    </code>
+                    <p className='text-xs text-muted-foreground'>
+                      {setupGuideCopy.unresolvedImports.summary(
+                        item.count,
+                        item.files.length
+                      )}
+                    </p>
+                  </div>
+                  <Badge
+                    variant='outline'
+                    className='border-status-warning-border bg-background/70 text-status-warning-foreground'
+                  >
+                    {item.count}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+
+            <p className='text-xs text-status-warning-foreground/85'>
+              {dashboardCopy.issuesPanel.analysisQuality.previewHint}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className='overflow-hidden border-status-critical-border bg-status-critical-surface'>
         <CardHeader className='pb-3'>
           <div className='flex flex-wrap items-start justify-between gap-3'>
@@ -165,12 +263,12 @@ export function IssuesPanel({
                     <p className='font-semibold text-popover-foreground'>
                       Why is it problematic?
                     </p>
-                    <p className='text-popover-foreground/80'>
-                      • Creates tight coupling between modules
-                      <br />• Makes code harder to test in isolation
-                      <br />• Can cause initialization surprises
-                      <br />• Makes refactors less predictable
-                    </p>
+                    <ul className='space-y-1 pl-4 text-popover-foreground/80'>
+                      <li>Creates tight coupling between modules</li>
+                      <li>Makes code harder to test in isolation</li>
+                      <li>Can cause initialization surprises</li>
+                      <li>Makes refactors less predictable</li>
+                    </ul>
                   </div>
                 </div>
               </InfoTooltip>
@@ -191,7 +289,7 @@ export function IssuesPanel({
                     key={item.key}
                     type='button'
                     onClick={item.onClick}
-                    className='w-full rounded-lg border border-border/60 bg-background/70 px-3 py-3 text-left transition hover:border-primary/35 hover:bg-background'
+                    className='w-full rounded-lg border border-border/60 bg-background/70 px-3 py-3 text-left transition hover:border-primary/35 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
                   >
                     <div className='flex flex-wrap items-start justify-between gap-2'>
                       <div className='min-w-0 space-y-1'>

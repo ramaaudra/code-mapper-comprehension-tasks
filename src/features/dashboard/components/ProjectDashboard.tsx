@@ -6,7 +6,14 @@ import {
   DependencyGraph,
   type DependencyNodeData
 } from '@/features/graph'
-import { CaretRight, Lightbulb } from '@/shared/components/ui/icons'
+import { DetailPanelState } from '@/shared/components/ui/detail-panel-state'
+import {
+  AlertTriangle,
+  CaretRight,
+  Lightbulb,
+  RefreshCw
+} from '@/shared/components/ui/icons'
+import { StatusAnnouncer } from '@/shared/components/ui/StatusAnnouncer'
 import { createModuleReviewThresholdCalibration } from '@/shared/lib/metric-thresholds'
 import {
   buildEvolutionaryHotspots,
@@ -56,6 +63,49 @@ function OverviewSectionHeader({
   )
 }
 
+interface OverviewSectionStateProps {
+  title: string
+  description: string
+  announcement: string
+  tone?: 'default' | 'danger'
+}
+
+interface ArchitectureSectionStateCopy {
+  loadingTitle: string
+  loadingDescription: string
+  errorTitle: string
+  errorDescription: string
+}
+
+function OverviewSectionState({
+  title,
+  description,
+  announcement,
+  tone = 'default'
+}: OverviewSectionStateProps) {
+  return (
+    <>
+      <StatusAnnouncer
+        message={announcement}
+        politeness={tone === 'danger' ? 'assertive' : 'polite'}
+      />
+      <DetailPanelState
+        title={title}
+        description={description}
+        tone={tone}
+        compact
+        icon={
+          tone === 'danger' ? (
+            <AlertTriangle className='h-5 w-5' />
+          ) : (
+            <RefreshCw className='h-5 w-5 animate-spin' />
+          )
+        }
+      />
+    </>
+  )
+}
+
 interface ProjectDashboardProps {
   analysisData: AnalysisData | null
   dependencyGraph: {
@@ -72,6 +122,7 @@ interface ProjectDashboardProps {
   onShowArchitecture?: () => void
   onShowMetricsGuide?: () => void
   onShowCycleTriage?: (cycleId?: string) => void
+  onShowSetupGuide?: () => void
   onShowModuleGraph?: (modulePath: string) => void
   isLayoutTransitioning?: boolean
 }
@@ -88,11 +139,16 @@ export const ProjectDashboard = memo(function ProjectDashboard({
   onShowArchitecture: _onShowArchitecture,
   onShowMetricsGuide,
   onShowCycleTriage,
+  onShowSetupGuide,
   onShowModuleGraph,
   isLayoutTransitioning
 }: ProjectDashboardProps) {
   const [cleanupDialogOpen, setCleanupDialogOpen] = useState(false)
-  const { data: architectureData } = useArchitectureFolders()
+  const {
+    data: architectureData,
+    isLoading: isArchitectureLoading,
+    error: architectureError
+  } = useArchitectureFolders()
   const evolutionarySummary = analysisData?.evolutionaryMetrics.summary ?? null
   const moduleThresholdCalibration = useMemo(() => {
     if (!architectureData?.folders) {
@@ -230,6 +286,45 @@ export const ProjectDashboard = memo(function ProjectDashboard({
   }, [analysisData])
 
   if (viewMode === 'overview' && !selectedFileId) {
+    const architectureErrorMessage =
+      architectureError instanceof Error ? architectureError.message : null
+    function renderArchitectureSectionState(
+      sectionStateCopy: ArchitectureSectionStateCopy
+    ) {
+      if (isArchitectureLoading) {
+        return (
+          <OverviewSectionState
+            title={sectionStateCopy.loadingTitle}
+            description={sectionStateCopy.loadingDescription}
+            announcement={sectionStateCopy.loadingTitle}
+          />
+        )
+      }
+
+      if (!architectureError) {
+        return null
+      }
+
+      return (
+        <OverviewSectionState
+          title={sectionStateCopy.errorTitle}
+          description={
+            architectureErrorMessage
+              ? `${sectionStateCopy.errorDescription} ${architectureErrorMessage}`
+              : sectionStateCopy.errorDescription
+          }
+          announcement={sectionStateCopy.errorTitle}
+          tone='danger'
+        />
+      )
+    }
+
+    const reviewFirstState = renderArchitectureSectionState(
+      dashboardCopy.sectionStates.reviewFirst
+    )
+    const systemContextState = renderArchitectureSectionState(
+      dashboardCopy.sectionStates.systemContext
+    )
     const snapshot = {
       totalFiles:
         analysisData?.detailedMetrics?.totalFiles ??
@@ -300,12 +395,14 @@ export const ProjectDashboard = memo(function ProjectDashboard({
                     title={dashboardCopy.sections.reviewFirst.title}
                     description={dashboardCopy.sections.reviewFirst.description}
                   />
-                  <PriorityReviewQueue
-                    items={reviewQueue}
-                    onViewModule={onShowModuleGraph}
-                    onShowCycleTriage={onShowCycleTriage}
-                    onShowCleanupCandidates={() => setCleanupDialogOpen(true)}
-                  />
+                  {reviewFirstState ?? (
+                    <PriorityReviewQueue
+                      items={reviewQueue}
+                      onViewModule={onShowModuleGraph}
+                      onShowCycleTriage={onShowCycleTriage}
+                      onShowCleanupCandidates={() => setCleanupDialogOpen(true)}
+                    />
+                  )}
                 </section>
               )
             }
@@ -322,8 +419,8 @@ export const ProjectDashboard = memo(function ProjectDashboard({
                   />
                   <IssuesPanel
                     data={analysisData}
-                    onNavigateToFile={onNavigateToFile}
                     onShowCycleTriage={onShowCycleTriage}
+                    onShowSetupGuide={onShowSetupGuide}
                     cleanupDialogOpen={cleanupDialogOpen}
                     onCleanupDialogOpenChange={setCleanupDialogOpen}
                     onShowCleanupCandidates={() => setCleanupDialogOpen(true)}
@@ -342,16 +439,18 @@ export const ProjectDashboard = memo(function ProjectDashboard({
                       dashboardCopy.sections.systemContext.description
                     }
                   />
-                  <SupportingContextSection
-                    breakdown={healthBreakdown}
-                    riskMetrics={{
-                      criticalCount: criticalRisks.length,
-                      warningCount: warningRisks.length,
-                      godObjectCount: couplingDistribution.godObjects.length
-                    }}
-                    couplingDistribution={couplingDistribution}
-                    onNavigateToFile={onNavigateToFile}
-                  />
+                  {systemContextState ?? (
+                    <SupportingContextSection
+                      breakdown={healthBreakdown}
+                      riskMetrics={{
+                        criticalCount: criticalRisks.length,
+                        warningCount: warningRisks.length,
+                        godObjectCount: couplingDistribution.godObjects.length
+                      }}
+                      couplingDistribution={couplingDistribution}
+                      onNavigateToFile={onNavigateToFile}
+                    />
+                  )}
                 </section>
               )
             }
@@ -378,12 +477,14 @@ export const ProjectDashboard = memo(function ProjectDashboard({
                         <dt className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
                           {label}
                         </dt>
-                        <dd className='mt-2 text-2xl font-semibold tracking-tight text-foreground'>
-                          {value}
+                        <dd className='mt-2 space-y-1'>
+                          <span className='block text-2xl font-semibold tracking-tight text-foreground'>
+                            {value}
+                          </span>
+                          <span className='block text-sm leading-relaxed text-muted-foreground'>
+                            {subValue}
+                          </span>
                         </dd>
-                        <p className='mt-1 text-sm leading-relaxed text-muted-foreground'>
-                          {subValue}
-                        </p>
                       </div>
                     ))}
                   </dl>

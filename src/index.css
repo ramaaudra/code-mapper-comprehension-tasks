@@ -10,109 +10,13 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
-    /* One accent: soft blue */
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --status-critical-surface: 0 100% 97%;
-    --status-critical-border: 0 78% 82%;
-    --status-critical-foreground: 0 68% 34%;
-    --status-critical-solid: 0 74% 51%;
-    --status-warning-surface: 29 100% 96%;
-    --status-warning-border: 29 88% 79%;
-    --status-warning-foreground: 24 79% 31%;
-    --status-warning-solid: 29 89% 50%;
-    --status-caution-surface: 48 100% 95%;
-    --status-caution-border: 46 92% 78%;
-    --status-caution-foreground: 38 77% 30%;
-    --status-caution-solid: 45 92% 48%;
-    --status-success-surface: 142 45% 95%;
-    --status-success-border: 142 40% 77%;
-    --status-success-foreground: 142 65% 27%;
-    --status-success-solid: 142 64% 39%;
-    --radius: 0.75rem;
-
-    /* Node Styling - Light (Monochrome Grey Scale) */
-    --node-selected-bg: 0 0% 100%;
-    --node-selected-border: 0 0% 20%;
-    --node-selected-ring: 0 0% 75%;
-
-    --node-incoming-bg: 0 0% 96%;
-    --node-incoming-border: 0 0% 65%;
-    --node-incoming-hover: 0 0% 45%;
-
-    --node-outgoing-bg: 0 0% 92%;
-    --node-outgoing-border: 0 0% 55%;
-    --node-outgoing-hover: 0 0% 35%;
-
-    --node-placeholder-bg: 0 0% 88%;
-    --node-placeholder-border: 0 0% 50%;
-    --node-placeholder-hover: 0 0% 30%;
-
-    /* Chip/Badge Colors (Monochrome) */
-    --chip-selected-bg: 0 0% 20%;
-    --chip-selected-fg: 0 0% 100%;
-
-    --chip-incoming-bg: 0 0% 85%;
-    --chip-incoming-fg: 0 0% 25%;
-
-    --chip-outgoing-bg: 0 0% 75%;
-    --chip-outgoing-fg: 0 0% 15%;
-
-    --chip-placeholder-bg: 0 0% 65%;
-    --chip-placeholder-fg: 0 0% 10%;
-
-    /* Risk Badge Colors (Monochrome with high contrast) */
-    --risk-danger: 0 0% 25%;
-    --risk-warning: 0 0% 45%;
-    --risk-success: 0 0% 65%;
-
-    --guide-quick-surface: 221 15% 98%;
-    --guide-quick-border: 221 15% 88%;
-    --guide-reference-surface: 0 0% 100%;
-    --guide-reference-border: 0 0% 90%;
-
-    /* Guide metric family tones (semantic, not raw Tailwind palette) */
-    --guide-core-surface: 205 80% 96%;
-    --guide-core-border: 205 55% 82%;
-    --guide-core-foreground: 205 60% 38%;
-    --guide-derived-surface: 38 90% 96%;
-    --guide-derived-border: 38 60% 78%;
-    --guide-derived-foreground: 30 70% 36%;
-    --guide-review-surface: 152 50% 95%;
-    --guide-review-border: 152 40% 76%;
-    --guide-review-foreground: 152 55% 30%;
-    /* Neutral midpoint for instability gradient */
-    --guide-neutral-foreground: 215 15% 45%;
-
-    color-scheme: light;
-  }
-
-  .dark {
-    /* Pure Neutral Monochrome Dark */
+    /* Dark-only neutral system */
     --background: 0 0% 6.7%;
     --foreground: 0 0% 95%;
     --card: 0 0% 10%;
     --card-foreground: 0 0% 95%;
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 95%;
-    /* Monochrome accent: white/light grey */
     --primary: 0 0% 90%;
     --primary-foreground: 0 0% 6.7%;
     --secondary: 0 0% 14%;
@@ -142,10 +46,10 @@
     --status-success-border: 145 44% 29%;
     --status-success-foreground: 144 74% 80%;
     --status-success-solid: 142 69% 54%;
-    /* Canvas-specific background */
+    --radius: 0.75rem;
     --canvas-background: 0 0% 6.7%;
 
-    /* Node Styling - Dark (Monochrome Grey Scale Inverted) */
+    /* Node styling */
     --node-selected-bg: 0 0% 10%;
     --node-selected-border: 0 0% 75%;
     --node-selected-ring: 0 0% 25%;
@@ -162,7 +66,7 @@
     --node-placeholder-border: 0 0% 40%;
     --node-placeholder-hover: 0 0% 55%;
 
-    /* Chip/Badge Colors (Monochrome) */
+    /* Chip and badge colors */
     --chip-selected-bg: 0 0% 85%;
     --chip-selected-fg: 0 0% 10%;
 
@@ -175,7 +79,7 @@
     --chip-placeholder-bg: 0 0% 40%;
     --chip-placeholder-fg: 0 0% 85%;
 
-    /* Risk Badge Colors (Monochrome with high contrast) */
+    /* Risk badge colors */
     --risk-danger: 0 0% 75%;
     --risk-warning: 0 0% 60%;
     --risk-success: 0 0% 45%;
@@ -185,7 +89,7 @@
     --guide-reference-surface: 0 0% 7%;
     --guide-reference-border: 0 0% 18%;
 
-    /* Guide metric family tones (dark mode) */
+    /* Guide metric family tones */
     --guide-core-surface: 205 35% 16%;
     --guide-core-border: 205 40% 30%;
     --guide-core-foreground: 205 65% 78%;

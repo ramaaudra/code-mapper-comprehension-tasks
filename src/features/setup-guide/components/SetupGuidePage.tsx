@@ -24,12 +24,40 @@ interface SetupGuidePageProps {
   onBack: () => void
 }
 
-function InlineCode({ children }: { children: React.ReactNode }) {
+interface StatusTone {
+  badgeClassName: string
+  cardClassName: string
+  iconClassName: string
+}
+
+const WARNING_STATUS_TONE: StatusTone = {
+  badgeClassName:
+    'border-status-warning-border bg-status-warning-surface text-status-warning-foreground hover:bg-status-warning-surface',
+  cardClassName: 'border-status-warning-border bg-status-warning-surface/20',
+  iconClassName: 'text-status-warning-foreground'
+}
+
+const SUCCESS_STATUS_TONE: StatusTone = {
+  badgeClassName:
+    'border-status-success-border bg-status-success-surface text-status-success-foreground hover:bg-status-success-surface',
+  cardClassName: 'border-status-success-border bg-status-success-surface/20',
+  iconClassName: 'text-status-success-foreground'
+}
+
+function InlineCode({
+  children
+}: {
+  children: React.ReactNode
+}): React.JSX.Element {
   return (
     <code className='rounded bg-muted px-1.5 py-0.5 font-mono text-xs'>
       {children}
     </code>
   )
+}
+
+function getStatusTone(hasUnresolvedImports: boolean): StatusTone {
+  return hasUnresolvedImports ? WARNING_STATUS_TONE : SUCCESS_STATUS_TONE
 }
 
 const TSCONFIG_EXAMPLE = `{
@@ -43,11 +71,16 @@ const TSCONFIG_EXAMPLE = `{
   }
 }`
 
-export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
+export function SetupGuidePage({
+  warnings,
+  onBack
+}: SetupGuidePageProps): React.JSX.Element {
   const hasUnresolvedImports = (warnings?.unresolvedImports.length ?? 0) > 0
+  const StatusIcon = hasUnresolvedImports ? AlertTriangle : CheckCircle
   const statusCopy = hasUnresolvedImports
     ? setupGuideCopy.status.warningsDetected
     : setupGuideCopy.status.analysisReady
+  const statusTone = getStatusTone(hasUnresolvedImports)
 
   return (
     <ScrollArea className='h-full bg-background'>
@@ -68,14 +101,7 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
               <Badge variant='outline'>
                 {setupGuideCopy.header.surfaceBadge}
               </Badge>
-              <Badge
-                variant='secondary'
-                className={
-                  hasUnresolvedImports
-                    ? 'bg-amber-500/15 text-amber-700 hover:bg-amber-500/15 dark:bg-amber-500/20 dark:text-amber-300'
-                    : 'bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/15 dark:bg-emerald-500/20 dark:text-emerald-300'
-                }
-              >
+              <Badge variant='outline' className={statusTone.badgeClassName}>
                 {statusCopy.badge}
               </Badge>
             </div>
@@ -88,20 +114,10 @@ export function SetupGuidePage({ warnings, onBack }: SetupGuidePageProps) {
           </div>
         </div>
 
-        <Card
-          className={
-            hasUnresolvedImports
-              ? 'border-amber-500/40'
-              : 'border-emerald-500/40'
-          }
-        >
+        <Card className={statusTone.cardClassName}>
           <CardHeader className='pb-2'>
             <CardTitle className='flex items-center gap-2 text-base'>
-              {hasUnresolvedImports ? (
-                <AlertTriangle className='h-4 w-4 text-amber-500' />
-              ) : (
-                <CheckCircle className='h-4 w-4 text-emerald-500' />
-              )}
+              <StatusIcon className={`h-4 w-4 ${statusTone.iconClassName}`} />
               {statusCopy.title}
             </CardTitle>
           </CardHeader>

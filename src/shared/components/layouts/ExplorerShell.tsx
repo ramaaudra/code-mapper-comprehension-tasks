@@ -30,6 +30,8 @@ interface ExplorerShellProps {
   onShowSetupGuide: () => void
   hasUnresolvedImports: boolean
   fileCount?: number
+  projectName?: string
+  rootPath?: string
   analysisLoadedAt?: number | string | null
   hasChanges?: boolean
   totalChanges?: number
@@ -57,6 +59,8 @@ export function ExplorerShell({
   onShowSetupGuide,
   hasUnresolvedImports,
   fileCount,
+  projectName,
+  rootPath,
   analysisLoadedAt,
   hasChanges,
   totalChanges,
@@ -86,6 +90,8 @@ export function ExplorerShell({
         onShowSetupGuide={onShowSetupGuide}
         hasUnresolvedImports={hasUnresolvedImports}
         fileCount={fileCount}
+        projectName={projectName}
+        rootPath={rootPath}
         analysisLoadedAt={analysisLoadedAt}
         hasChanges={hasChanges}
         totalChanges={totalChanges}

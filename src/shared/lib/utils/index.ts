@@ -133,6 +133,7 @@ export {
 export {
   resolveTopBarActionGroups,
   resolveTopBarIconLabels,
+  shouldShowAnalysisSetupAction,
   shouldShowTopBarContextChip
 } from './top-bar'
 export { resolveTopBarLayoutClasses } from './top-bar-layout'

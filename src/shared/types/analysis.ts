@@ -152,6 +152,7 @@ export interface DependencyInfo {
   target: string
   strength: number
   line: number
+  isTypeOnly?: boolean
 }
 
 export interface CircularDependencyInfo {
@@ -200,6 +201,7 @@ export interface AnalysisEdge {
   kind: 'static' | 'dynamic'
   strength: number
   line: number
+  isTypeOnly?: boolean
 }
 
 export interface FileTreeNode {
@@ -232,4 +234,6 @@ export interface AnalysisData {
   detailedMetrics?: DetailedMetrics
   warnings?: AnalysisWarnings
   entryDetectionContext?: EntryDetectionContext
+  projectName?: string
+  rootPath?: string
 }

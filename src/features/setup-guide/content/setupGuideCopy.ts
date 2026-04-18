@@ -2,7 +2,7 @@ export const setupGuideCopy = {
   header: {
     title: 'Analysis Setup',
     description:
-      'Review configuration guidance and unresolved imports so the analysis matches your real project structure.',
+      'Use this page when unresolved imports reduce analysis accuracy and you need concrete recovery steps.',
     surfaceBadge: 'Analysis Setup'
   },
   status: {
@@ -10,13 +10,13 @@ export const setupGuideCopy = {
       badge: 'Warnings Detected',
       title: 'Unresolved imports need attention',
       description:
-        'Some alias-based imports could not be resolved. This usually means path mapping is incomplete or the referenced file no longer exists.'
+        'Some project imports could not be resolved. Dependency paths, shared impact, and review guidance may be incomplete until these references are fixed and the analysis is rerun.'
     },
     analysisReady: {
       badge: 'Analysis Ready',
       title: 'Analysis configuration looks healthy',
       description:
-        'Path mappings were detected successfully, so import resolution should match the project configuration more closely.'
+        'No unresolved project-import warnings were detected in this snapshot.'
     }
   },
   unresolvedImports: {
@@ -26,12 +26,12 @@ export const setupGuideCopy = {
       `${importCount} import${importCount === 1 ? '' : 's'} from ${fileCount} file${fileCount === 1 ? '' : 's'}`
   },
   instructions: {
-    title: 'How to Fix',
+    title: 'How to Restore Analysis Accuracy',
     steps: {
       createConfig: {
         title: '1. Create or update a config file',
         description:
-          'Make sure one of these files exists in the project root with correct path mappings: tsconfig.app.json > tsconfig.json > jsconfig.json.'
+          'If these imports use aliases, make sure one of these files exists in the project root with correct path mappings: tsconfig.app.json > tsconfig.json > jsconfig.json.'
       },
       rerunAnalysis: {
         title: '2. Re-run the analysis',
@@ -41,7 +41,7 @@ export const setupGuideCopy = {
       viteProjects: {
         title: '3. For Vite projects',
         description:
-          'Keep path mappings in tsconfig.json or tsconfig.app.json, not only in vite.config.ts. Code Mapper reads tsconfig/jsconfig path settings.'
+          'Keep path mappings in tsconfig.json or tsconfig.app.json, not only in vite.config.ts. Code Mapper reads tsconfig/jsconfig path settings, not Vite aliases alone.'
       },
       troubleshooting: {
         title: '4. Troubleshooting tips',

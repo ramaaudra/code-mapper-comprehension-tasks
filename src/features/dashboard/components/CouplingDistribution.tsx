@@ -79,17 +79,16 @@ export function CouplingDistribution({
                   <p className='font-semibold text-popover-foreground'>
                     Coupling Levels:
                   </p>
-                  <div className='space-y-0.5 text-popover-foreground/80'>
+                  <ul className='space-y-0.5 pl-4 text-popover-foreground/80'>
                     {couplingBucketDefinitions.map((bucket) => (
-                      <p key={bucket.label}>
-                        •{' '}
+                      <li key={bucket.label}>
                         <span className={`font-medium ${bucket.textColor}`}>
                           {bucket.label}
                         </span>
                         : {bucket.range} dependencies — {bucket.descriptor}
-                      </p>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
               </div>
             </InfoTooltip>
@@ -131,7 +130,7 @@ export function CouplingDistribution({
                 key={bucket.label}
                 type='button'
                 onClick={() => setSelectedBucketLabel(bucket.label)}
-                className='w-full space-y-1 rounded-md px-1 py-1 text-left transition-colors hover:bg-muted/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
+                className='min-h-11 w-full space-y-1 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
                 title={`${bucket.count} files with ${bucket.range} dependencies`}
               >
                 <div className='flex items-center justify-between text-xs'>
@@ -144,7 +143,7 @@ export function CouplingDistribution({
                 </div>
                 <div className='relative h-1.5 w-full overflow-hidden rounded-full bg-primary/20'>
                   <div
-                    className={`h-full transition-all ${bucket.color}`}
+                    className={`h-full ${bucket.color}`}
                     style={{ width: `${bucket.percentage}%` }}
                   />
                 </div>

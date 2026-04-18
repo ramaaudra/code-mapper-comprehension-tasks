@@ -34,6 +34,24 @@ export const dashboardCopy = {
         'Use these summaries when you need more evidence about shared impact, coupling, or overall refactor safety.'
     }
   },
+  sectionStates: {
+    reviewFirst: {
+      loadingTitle: 'Preparing the ranked review queue',
+      loadingDescription:
+        'Module-level architecture metrics are still loading. Use Current Issues below for immediate blockers until the next safe review move is ready.',
+      errorTitle: 'Could not rank the next review move',
+      errorDescription:
+        'Architecture metrics failed to load, so spread risk and recent change pressure are not available yet.'
+    },
+    systemContext: {
+      loadingTitle: 'Loading supporting review context',
+      loadingDescription:
+        'Change safety and coupling evidence will appear here after the architecture metrics finish loading.',
+      errorTitle: 'Could not load supporting review context',
+      errorDescription:
+        'Architecture metrics failed to load, so the supporting evidence for coupling and refactor safety is unavailable right now.'
+    }
+  },
   guideTeaser: {
     title: 'Need help reading the metrics?',
     description:
@@ -95,6 +113,16 @@ export const dashboardCopy = {
   issuesPanel: {
     emptyStateTitle: 'Issues Analysis',
     emptyStateDescription: 'No analysis data available',
+    analysisQuality: {
+      title: 'Analysis quality warning',
+      description:
+        'Fix unresolved imports before you trust dependency paths, shared impact, or refactor guidance from this snapshot.',
+      affectedImportsLabel: 'Imports',
+      affectedPatternsLabel: 'Patterns',
+      affectedFilesLabel: 'Files',
+      previewHint:
+        'Open setup guidance to inspect the unresolved patterns and follow the recovery steps.'
+    },
     cycles: {
       title: 'Dependency cycles to fix',
       description:

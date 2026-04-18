@@ -57,7 +57,7 @@ export function InfoTooltip({
             type='button'
             aria-label={resolvedTriggerLabel}
             className={cn(
-              'cursor-help text-muted-foreground transition-colors hover:text-foreground',
+              'inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
               iconClassName
             )}
           >

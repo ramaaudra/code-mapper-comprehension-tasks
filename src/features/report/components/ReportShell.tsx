@@ -200,6 +200,7 @@ export function ReportShell() {
             sourceView: 'overview'
           })
         }
+        onShowSetupGuide={() => explorer.handleShowSetupGuide('overview')}
         onShowModuleGraph={explorer.handleShowModuleGraph}
         isLayoutTransitioning={ui.isLayoutTransitioning}
       />
@@ -231,6 +232,10 @@ export function ReportShell() {
       fileCount={
         analysisData ? explorer.fileCount : reportBootstrap?.summary.totalFiles
       }
+      projectName={
+        analysisData ? explorer.projectName : reportBootstrap?.projectName
+      }
+      rootPath={explorer.rootPath}
       analysisLoadedAt={generatedAt ?? reportBootstrap?.generatedAt ?? null}
       hasChanges={false}
       totalChanges={0}
