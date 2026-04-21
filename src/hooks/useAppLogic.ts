@@ -8,7 +8,10 @@ import { useGraphGeneration, usePrefetch } from '@/features/graph'
 import { useSimulation } from '@/features/simulation'
 import { useAnalysisData } from '@/shared/hooks/useAnalysisData'
 import { useExplorerUiState } from '@/shared/hooks/useExplorerUiState'
+import { createUiLogger } from '@/shared/lib/logger/uiLogger'
 import { normalizePath } from '@/shared/lib/utils'
+
+const appLogicLogger = createUiLogger('AppLogic')
 
 export function useAppLogic() {
   const explorerUi = useExplorerUiState()
@@ -161,7 +164,11 @@ export function useAppLogic() {
         try {
           treeRef.current.select(resolvedFileId ?? fileId, { focus: true })
         } catch (error) {
-          console.warn('Failed to focus file in tree:', error)
+          appLogicLogger.warn('Failed to focus file in tree', error, {
+            event: 'tree_focus_failed',
+            fileId,
+            resolvedFileId: resolvedFileId ?? fileId
+          })
         }
       }
     },
@@ -190,10 +197,10 @@ export function useAppLogic() {
     }
 
     if (result?.issues?.circularDependencies?.length) {
-      console.info(
-        'Circular Dependencies Found:',
-        result.issues.circularDependencies
-      )
+      appLogicLogger.info('Circular dependencies found after reanalysis', {
+        cycleCount: result.issues.circularDependencies.length,
+        event: 'circular_dependencies_found'
+      })
     }
 
     return result

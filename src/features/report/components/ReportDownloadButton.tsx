@@ -14,6 +14,7 @@ import {
   RefreshCw as Loader2,
   WarningCircle
 } from '@/shared/components/ui/icons'
+import { createUiLogger } from '@/shared/lib/logger/uiLogger'
 
 import { reportCopy } from '../content/reportCopy'
 
@@ -23,6 +24,8 @@ import type { ApiErrorResponse } from '@/shared/lib/api/types'
 interface ReportDownloadButtonProps {
   buttonProps?: Omit<ButtonProps, 'children' | 'disabled' | 'onClick'>
 }
+
+const reportDownloadLogger = createUiLogger('ReportDownloadButton')
 
 export function ReportDownloadButton({
   buttonProps
@@ -68,7 +71,10 @@ export function ReportDownloadButton({
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Failed to download:', error)
+      reportDownloadLogger.error('Failed to download report', error, {
+        event: 'report_download_failed',
+        operation: 'download_report'
+      })
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to generate report'
       )

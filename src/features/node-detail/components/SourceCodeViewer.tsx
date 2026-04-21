@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { CheckCircle, Copy } from '@/shared/components/ui/icons'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { StatusAnnouncer } from '@/shared/components/ui/StatusAnnouncer'
+import { createUiLogger } from '@/shared/lib/logger/uiLogger'
 
 import type { HighlightProps, PrismTheme } from 'prism-react-renderer'
 
@@ -32,6 +33,8 @@ interface PrismModule {
     vsDark: PrismTheme
   }
 }
+
+const sourceCodeViewerLogger = createUiLogger('SourceCodeViewer')
 
 function isSupportedLanguage(lang: string): lang is SupportedLanguage {
   return SUPPORTED_LANGUAGES.includes(lang as SupportedLanguage)
@@ -75,7 +78,14 @@ export function SourceCodeViewer({
           setPrismLoadError(null)
         }
       } catch (error) {
-        console.error('Failed to load prism-react-renderer:', error)
+        sourceCodeViewerLogger.error(
+          'Failed to load prism-react-renderer',
+          error,
+          {
+            event: 'syntax_highlighter_load_failed',
+            operation: 'load_syntax_highlighter'
+          }
+        )
         if (mounted) {
           setPrismLoadError(
             'Syntax highlighting is unavailable. Showing plain text instead.'
@@ -102,9 +112,12 @@ export function SourceCodeViewer({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
-      console.error('Failed to copy code:', error)
+      sourceCodeViewerLogger.error('Failed to copy code', error, {
+        event: 'copy_source_code_failed',
+        language
+      })
     }
-  }, [code])
+  }, [code, language])
 
   // Normalize and validate language
   const normalizedLanguage = normalizeLanguage(language)

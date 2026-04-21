@@ -23,6 +23,7 @@ import {
 import { DataContext } from '@/shared/context/DataContext'
 import { architectureApi } from '@/shared/lib/api/architecture'
 import { findDependencyPath } from '@/shared/lib/api/pathfinding'
+import { createUiLogger } from '@/shared/lib/logger/uiLogger'
 import {
   createDecisionAssessment,
   getBasename,
@@ -68,6 +69,8 @@ const DECISION_CARD_TONE_ICON = {
   success: <CheckCircle className='h-4 w-4 text-status-success-foreground' />,
   default: <CheckCircle className='h-4 w-4 text-status-success-foreground' />
 } satisfies Record<DecisionStatusTone, ReactNode>
+
+const nodeDetailLogger = createUiLogger('NodeDetailPanel')
 
 interface NodeDetailPanelProps {
   node: AnalysisNode | string | null
@@ -347,7 +350,11 @@ const NodeDetailPanel = memo(function NodeDetailPanel({
       setTracedPath(pathResult ?? [])
       setIsPathModalOpen(true)
     } catch (error) {
-      console.error('Failed to trace path:', error)
+      nodeDetailLogger.error('Failed to trace path', error, {
+        endNode: targetFile,
+        event: 'dependency_path_trace_failed',
+        startNode: resolvedNodeId
+      })
     } finally {
       setIsTracing(false)
     }

@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react'
 
 import { buildCycleTriageSearch } from '@/features/cycle-triage/lib/cycle-triage-url'
 import { useModuleExplorerState } from '@/features/graph'
+import { createUiLogger } from '@/shared/lib/logger/uiLogger'
 import {
   buildMetricsGuideHash,
   isMetricsGuideHash,
@@ -61,6 +62,8 @@ interface UseExplorerControllerOptions {
   isTreeCollapsed: boolean
   setIsTreeCollapsed: Dispatch<SetStateAction<boolean>>
 }
+
+const explorerControllerLogger = createUiLogger('ExplorerController')
 
 export function useExplorerController({
   treeRef,
@@ -265,7 +268,11 @@ export function useExplorerController({
         try {
           treeRef.current.select(resolvedFileId ?? fileId, { focus: true })
         } catch (error) {
-          console.warn('Failed to focus file in tree:', error)
+          explorerControllerLogger.warn('Failed to focus file in tree', error, {
+            event: 'tree_focus_failed',
+            fileId,
+            resolvedFileId: resolvedFileId ?? fileId
+          })
         }
       }
 

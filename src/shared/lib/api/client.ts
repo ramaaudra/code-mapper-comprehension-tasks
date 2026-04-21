@@ -1,5 +1,9 @@
 import axios from 'axios'
 
+import { createUiLogger } from '@/shared/lib/logger/uiLogger'
+
+const apiClientLogger = createUiLogger('ApiClient')
+
 function resolveBaseURL(): string {
   const metaEnv = import.meta.env ?? {}
   const envBaseURL =
@@ -26,9 +30,13 @@ function resolveBaseURL(): string {
         return targetURL.pathname === '/' ? '' : targetURL.pathname
       }
     } catch (error) {
-      console.warn(
-        'Failed to parse VITE_API_URL, fallback to current origin:',
-        error
+      apiClientLogger.warn(
+        'Failed to parse VITE_API_URL, fallback to current origin',
+        error,
+        {
+          event: 'api_base_url_parse_failed',
+          configuredValue: envBaseURL
+        }
       )
     }
   }

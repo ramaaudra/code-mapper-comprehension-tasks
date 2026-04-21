@@ -9,6 +9,7 @@ import {
   fetchChangesStatus,
   reanalyzeProject
 } from '@/shared/lib/api/analysis'
+import { createUiLogger } from '@/shared/lib/logger/uiLogger'
 
 import type { AnalysisData } from '@/shared/types/analysis'
 import type { FileRiskProfile } from '@/shared/types/risk'
@@ -30,6 +31,7 @@ interface UseAnalysisDataResult {
 const EMPTY_RISK_ANALYSIS: FileRiskProfile[] = []
 const EMPTY_FILE_EVOLUTION_MAP: AnalysisData['evolutionaryMetrics']['files'] =
   {}
+const analysisDataLogger = createUiLogger('AnalysisData')
 
 export function useAnalysisData(): UseAnalysisDataResult {
   const context = useContext(DataContext)
@@ -101,7 +103,10 @@ export function useAnalysisData(): UseAnalysisDataResult {
       await queryClient.invalidateQueries({ queryKey: ['analysis'] })
       return result
     } catch (err) {
-      console.error('Reanalysis failed:', err)
+      analysisDataLogger.error('Reanalysis failed', err, {
+        event: 'reanalyze_failed',
+        operation: 'reanalyze_analysis'
+      })
       return null
     }
   }, [isReportMode, context?.analysisData, queryClient])
