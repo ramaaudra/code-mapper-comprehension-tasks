@@ -1,4 +1,5 @@
 import { api } from './client'
+import { normalizeSimulationResponse } from './simulation-normalization'
 import { unwrapApiResponse } from './types'
 
 import type { ApiSuccessResponse, SimulationResponse } from './types'
@@ -12,5 +13,5 @@ export async function simulateRemoval(payload: {
     '/api/simulate-removal',
     payload
   )
-  return unwrapApiResponse(data)
+  return normalizeSimulationResponse(unwrapApiResponse(data))
 }
