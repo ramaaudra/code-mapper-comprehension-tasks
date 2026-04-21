@@ -3,35 +3,29 @@ import { reachabilityCopy } from '@/shared/content/reachabilityCopy'
 export const dashboardCopy = {
   page: {
     title: 'Project Overview',
-    description:
-      'Review the safest next moves before you open the graph or edit a shared area.'
+    description: 'Review prioritized actions and system health.'
   },
   sections: {
     quickSnapshot: {
       eyebrow: 'Quick Snapshot',
       title: 'Repository size and recent pressure',
-      description:
-        'Use this row for orientation only. It should confirm scale, not decide your next review step.',
-      helper:
-        'Use these numbers only to size the repo and recent pressure. Keep your first decision in the review queue above.'
+      description: '',
+      helper: ''
     },
     reviewFirst: {
       eyebrow: 'Start Here',
       title: 'Start with the next safe review move',
-      description:
-        'This ranked list already combines shared spread risk and recent change pressure, so you only need to read one decision surface first.'
+      description: ''
     },
     currentIssues: {
       eyebrow: 'Current Issues',
       title: 'Blockers and cleanup follow-up',
-      description:
-        'Open blockers first, then return to lower-risk cleanup when the urgent review work is under control.'
+      description: ''
     },
     systemContext: {
       eyebrow: 'Supporting Context',
       title: 'Why the queue is prioritizing these areas',
-      description:
-        'Use these summaries when you need more evidence about shared impact, coupling, or overall refactor safety.'
+      description: ''
     }
   },
   sectionStates: {
@@ -59,8 +53,15 @@ export const dashboardCopy = {
     cta: 'Open Guide'
   },
   priorityReviewQueue: {
-    primaryBadge: 'Primary next move',
-    supportingBadge: 'Supporting follow-up'
+    categoryLabels: {
+      cycles: 'Active Cycle',
+      'critical-risk': 'High Spread Risk',
+      'warning-risk': 'Shared Area',
+      hotspot: 'Active Hotspot',
+      cleanup: 'Cleanup Candidate',
+      healthy: 'Healthy',
+      fallback: 'Review'
+    }
   },
   highRiskModules: {
     title: 'Shared areas that can spread change',
@@ -126,16 +127,14 @@ export const dashboardCopy = {
     cycles: {
       title: 'Dependency cycles to fix',
       description:
-        'Break these first to reduce coordination cost and make refactors easier to reason about.',
+        'Cycles increase testing surface and make refactors less predictable.',
       empty: 'No dependency cycles detected.',
       cta: 'Review cycles',
-      previewHint:
-        'Open the triage workspace to compare loops, inspect the cycle graph, and decide where to investigate first.'
+      previewHint: ''
     },
     cleanup: {
       title: 'Cleanup candidates',
-      description:
-        'Open the list to confirm whether these files are still used before deleting anything.',
+      description: 'Files unreachable from detected entry points.',
       cta: 'Open cleanup list',
       formalTitle: reachabilityCopy.collectionTitle,
       emptyTitle: `No ${reachabilityCopy.collectionTitle.toLowerCase()} found.`,
@@ -145,11 +144,9 @@ export const dashboardCopy = {
   },
   architectureHealth: {
     title: 'Change Safety Summary',
-    description:
-      'A story-first summary of the blockers and shared-risk signals affecting refactor safety.',
+    description: '',
     reviewPostureLabel: 'Review posture',
-    reviewPostureDetail: (score: number) =>
-      `Secondary score: ${score}/100. Use it only as a compact cross-check after reading the story above.`,
+    reviewPostureDetail: (score: number) => `Score: ${score}/100`,
     scoreTooltip: {
       title: 'How this summary is scored',
       description:

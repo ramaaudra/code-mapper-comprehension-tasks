@@ -40,7 +40,7 @@ import type { Edge, Node } from '@xyflow/react'
 interface OverviewSectionHeaderProps {
   eyebrow: string
   title: string
-  description: string
+  description?: string
 }
 
 function OverviewSectionHeader({
@@ -55,9 +55,11 @@ function OverviewSectionHeader({
       </p>
       <div className='space-y-1'>
         <h2 className='text-2xl font-bold text-foreground'>{title}</h2>
-        <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground/90'>
-          {description}
-        </p>
+        {description ? (
+          <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground/90'>
+            {description}
+          </p>
+        ) : null}
       </div>
     </div>
   )
@@ -463,11 +465,13 @@ export const ProjectDashboard = memo(function ProjectDashboard({
                   description={dashboardCopy.sections.quickSnapshot.description}
                 />
                 <div className='rounded-2xl border border-border/70 bg-muted/15'>
-                  <div className='border-b border-border/70 px-4 py-3'>
-                    <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground'>
-                      {dashboardCopy.sections.quickSnapshot.helper}
-                    </p>
-                  </div>
+                  {dashboardCopy.sections.quickSnapshot.helper ? (
+                    <div className='border-b border-border/70 px-4 py-3'>
+                      <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground'>
+                        {dashboardCopy.sections.quickSnapshot.helper}
+                      </p>
+                    </div>
+                  ) : null}
                   <dl className='grid gap-px bg-border/70 sm:grid-cols-2 xl:grid-cols-4'>
                     {overviewCards.map(({ label, value, subValue }) => (
                       <div

@@ -25,7 +25,7 @@ export function SupportingContextSection({
   onNavigateToFile
 }: SupportingContextSectionProps) {
   return (
-    <div className='grid items-start gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] xl:items-start'>
+    <div className='grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]'>
       <ArchitectureHealthScore
         breakdown={breakdown}
         riskMetrics={riskMetrics}

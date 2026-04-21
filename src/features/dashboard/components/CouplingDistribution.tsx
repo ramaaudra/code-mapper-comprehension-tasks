@@ -53,7 +53,7 @@ export function CouplingDistribution({
 
   return (
     <TooltipProvider>
-      <Card>
+      <Card className='flex h-full flex-col'>
         <CardHeader className='pb-2'>
           <div className='flex items-center justify-between gap-3'>
             <div className='space-y-1'>
@@ -94,7 +94,7 @@ export function CouplingDistribution({
             </InfoTooltip>
           </div>
         </CardHeader>
-        <CardContent className='space-y-4'>
+        <CardContent className='flex flex-1 flex-col gap-4 space-y-0'>
           <p className='max-w-[36rem] text-sm leading-relaxed text-foreground'>
             <span className='text-muted-foreground'>
               {dashboardCopy.couplingSnapshot.averagePrefix}{' '}
@@ -151,7 +151,7 @@ export function CouplingDistribution({
             ))}
           </div>
 
-          <p className='border-t border-border pt-3 text-xs leading-relaxed text-muted-foreground'>
+          <p className='mt-auto border-t border-border pt-3 text-xs leading-relaxed text-muted-foreground'>
             {dashboardCopy.couplingSnapshot.bucketHelper}
           </p>
 

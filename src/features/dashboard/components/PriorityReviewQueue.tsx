@@ -15,6 +15,7 @@ import {
 import { dashboardCopy } from '../content/dashboardCopy'
 
 import type {
+  OverviewReviewQueueCategory,
   OverviewReviewQueueItem,
   OverviewReviewTarget
 } from '../lib/overview-priority'
@@ -27,7 +28,7 @@ interface PriorityReviewQueueProps {
 }
 
 function getQueueItemIcon(item: OverviewReviewQueueItem): React.ReactNode {
-  if (item.target.kind === 'cycles') {
+  if (item.category === 'cycles') {
     return <RefreshCw className={cn('h-4 w-4', getRiskTextClass('critical'))} />
   }
 
@@ -37,6 +38,14 @@ function getQueueItemIcon(item: OverviewReviewQueueItem): React.ReactNode {
 
   return (
     <AlertTriangle className={cn('h-4 w-4', getRiskTextClass(item.tone))} />
+  )
+}
+
+function getCategoryLabel(category: OverviewReviewQueueCategory): string {
+  return (
+    dashboardCopy.priorityReviewQueue.categoryLabels[
+      category as keyof typeof dashboardCopy.priorityReviewQueue.categoryLabels
+    ] || dashboardCopy.priorityReviewQueue.categoryLabels.fallback
   )
 }
 
@@ -76,15 +85,13 @@ export function PriorityReviewQueue({
                   <span className='shrink-0'>{getQueueItemIcon(item)}</span>
                   <span
                     className={cn(
-                      'rounded-full border px-2.5 py-1 text-xs font-medium',
+                      'rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider',
                       isPrimary
-                        ? 'border-primary/25 bg-primary/10 text-foreground'
-                        : 'border-border/70 bg-muted/30 text-muted-foreground'
+                        ? 'border-primary/25 bg-primary/15 text-foreground'
+                        : 'border-border/70 bg-muted/40 text-muted-foreground'
                     )}
                   >
-                    {isPrimary
-                      ? dashboardCopy.priorityReviewQueue.primaryBadge
-                      : dashboardCopy.priorityReviewQueue.supportingBadge}
+                    {getCategoryLabel(item.category)}
                   </span>
                   <span
                     className={cn(
@@ -98,15 +105,24 @@ export function PriorityReviewQueue({
                 </div>
 
                 <div className='space-y-1.5'>
-                  <p className='text-lg font-semibold leading-tight text-foreground'>
+                  <p
+                    className={cn(
+                      'font-semibold leading-tight text-foreground',
+                      isPrimary ? 'text-lg' : 'text-base'
+                    )}
+                  >
                     {item.title}
                   </p>
-                  <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground'>
-                    {item.reason}
-                  </p>
-                  <CardDescription className='max-w-3xl text-sm leading-relaxed text-foreground/90'>
-                    {item.recommendedAction}
-                  </CardDescription>
+                  {isPrimary ? (
+                    <>
+                      <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground'>
+                        {item.reason}
+                      </p>
+                      <CardDescription className='max-w-3xl text-sm leading-relaxed text-foreground/90'>
+                        {item.recommendedAction}
+                      </CardDescription>
+                    </>
+                  ) : null}
                 </div>
               </div>
 
@@ -119,14 +135,14 @@ export function PriorityReviewQueue({
 
           const className = cn(
             'w-full rounded-xl border p-4 text-left',
-            'min-h-11 transition-colors duration-200 hover:bg-muted/20',
+            'min-h-11 transition-all duration-200 hover:border-border/80 hover:bg-muted/30',
             interactive &&
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
             isPrimary
               ? cn(
                   'border-border bg-muted/10',
                   item.tone !== 'info' && getRiskBorderClass(item.tone),
-                  item.tone !== 'info' && getRiskBgOpacityClass(item.tone, 10)
+                  item.tone !== 'info' && getRiskBgOpacityClass(item.tone, 15)
                 )
               : 'border-border/60 bg-background/60'
           )

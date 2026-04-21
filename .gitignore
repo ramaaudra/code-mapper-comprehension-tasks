@@ -28,4 +28,5 @@ dist-ssr
 !src/features/dashboard/lib/overview-hardening.test.ts
 !src/shared/lib/analysis-preparation.test.ts
 !src/shared/lib/utils/risk.test.ts
+!src/shared/lib/api/simulation.test.ts
 !tests/accessibility/dark-mode-contract.test.ts

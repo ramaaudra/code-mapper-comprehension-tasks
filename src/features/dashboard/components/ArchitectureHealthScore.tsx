@@ -114,16 +114,18 @@ export function ArchitectureHealthScore({
   const ToneIcon = healthStory.tone === 'healthy' ? CheckCircle : AlertTriangle
 
   return (
-    <Card>
+    <Card className='flex h-full flex-col'>
       <CardHeader className='pb-2'>
         <div className='flex items-start justify-between gap-3'>
           <div className='space-y-1'>
-            <CardTitle className='text-base font-medium'>
+            <CardTitle className='text-base font-medium text-muted-foreground'>
               {dashboardCopy.architectureHealth.title}
             </CardTitle>
-            <CardDescription className='max-w-2xl leading-relaxed'>
-              {dashboardCopy.architectureHealth.description}
-            </CardDescription>
+            {dashboardCopy.architectureHealth.description ? (
+              <CardDescription className='max-w-2xl leading-relaxed'>
+                {dashboardCopy.architectureHealth.description}
+              </CardDescription>
+            ) : null}
           </div>
           <TooltipProvider>
             <InfoTooltip
@@ -200,7 +202,7 @@ export function ArchitectureHealthScore({
           </TooltipProvider>
         </div>
       </CardHeader>
-      <CardContent className='space-y-4'>
+      <CardContent className='flex flex-1 flex-col gap-4 space-y-0'>
         <div className='flex flex-wrap items-center gap-2'>
           <span
             className={`rounded-full border px-2.5 py-1 text-xs font-medium ${toneClassName}`}
@@ -209,7 +211,7 @@ export function ArchitectureHealthScore({
           </span>
         </div>
 
-        <div className='space-y-3'>
+        <div className='flex flex-1 flex-col space-y-3'>
           <p className='max-w-2xl text-lg font-semibold leading-relaxed text-foreground'>
             {healthStory.summary}
           </p>
@@ -227,17 +229,16 @@ export function ArchitectureHealthScore({
           </div>
         </div>
 
-        <div className='border-t border-border/70 pt-3'>
+        <div className='mt-auto flex items-center justify-between border-t border-border/70 pt-3'>
+          <div className='flex items-center gap-2 text-sm leading-relaxed text-foreground/90'>
+            <span className='text-xs font-medium uppercase tracking-tight text-muted-foreground'>
+              {dashboardCopy.architectureHealth.reviewPostureLabel}
+            </span>
+            <span className='font-semibold text-foreground'>
+              {structuralProfile.summaryLabel}
+            </span>
+          </div>
           <p className='text-xs font-medium text-muted-foreground'>
-            {dashboardCopy.architectureHealth.reviewPostureLabel}
-          </p>
-          <p className='mt-1 max-w-2xl text-sm leading-relaxed text-foreground/90'>
-            <span className='font-medium text-foreground'>
-              {structuralProfile.summaryLabel}.
-            </span>{' '}
-            {structuralProfile.description}
-          </p>
-          <p className='mt-2 text-xs leading-relaxed text-muted-foreground'>
             {dashboardCopy.architectureHealth.reviewPostureDetail(finalScore)}
           </p>
         </div>

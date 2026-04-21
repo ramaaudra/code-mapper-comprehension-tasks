@@ -193,9 +193,11 @@ export function IssuesPanel({
               ))}
             </div>
 
-            <p className='text-xs text-status-warning-foreground/85'>
-              {dashboardCopy.issuesPanel.analysisQuality.previewHint}
-            </p>
+            {dashboardCopy.issuesPanel.analysisQuality.previewHint ? (
+              <p className='text-xs text-status-warning-foreground/85'>
+                {dashboardCopy.issuesPanel.analysisQuality.previewHint}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
       )}
@@ -314,9 +316,11 @@ export function IssuesPanel({
                 ))}
               </div>
 
-              <p className='text-xs text-muted-foreground'>
-                {dashboardCopy.issuesPanel.cycles.previewHint}
-              </p>
+              {dashboardCopy.issuesPanel.cycles.previewHint ? (
+                <p className='text-xs text-muted-foreground'>
+                  {dashboardCopy.issuesPanel.cycles.previewHint}
+                </p>
+              ) : null}
             </>
           )}
         </CardContent>

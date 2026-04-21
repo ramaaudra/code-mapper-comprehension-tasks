@@ -40,9 +40,18 @@ export type OverviewReviewTarget =
       value?: undefined
     }
 
+export type OverviewReviewQueueCategory =
+  | 'cycles'
+  | 'critical-risk'
+  | 'warning-risk'
+  | 'hotspot'
+  | 'cleanup'
+  | 'healthy'
+
 export interface OverviewReviewQueueItem {
   id: string
   tone: RiskLevel | 'info'
+  category: OverviewReviewQueueCategory
   title: string
   reason: string
   recommendedAction: string
@@ -67,6 +76,7 @@ export function buildOverviewReviewQueue(
     items.push({
       id: 'cycles',
       tone: 'critical',
+      category: 'cycles',
       title: 'Break dependency cycles before broader refactors',
       reason:
         'Cycles widen retest scope and make refactors less predictable across the codebase.',
@@ -85,6 +95,7 @@ export function buildOverviewReviewQueue(
     items.push({
       id: `critical-risk:${topCriticalRisk.path}`,
       tone: 'critical',
+      category: 'critical-risk',
       title: `Review ${topCriticalRisk.path} before editing shared flows`,
       reason:
         'Changes here can spread into many dependent modules, so a local edit may need broader verification.',
@@ -109,6 +120,7 @@ export function buildOverviewReviewQueue(
         input.topHotspot.hotspotStatus === 'critical-hotspot'
           ? 'critical'
           : 'high',
+      category: 'hotspot',
       title: `Review ${input.topHotspot.modulePath} while this module is still changing`,
       reason:
         'Recent churn is still concentrated here, so another edit deserves closer review before the area settles down.',
@@ -128,6 +140,7 @@ export function buildOverviewReviewQueue(
     items.push({
       id: `warning-risk:${topWarningRisk.path}`,
       tone: 'high',
+      category: 'warning-risk',
       title: `Plan broader checks before editing ${topWarningRisk.path}`,
       reason:
         'This shared area can still spread change beyond a local edit, even if it is not in the critical band.',
@@ -146,6 +159,7 @@ export function buildOverviewReviewQueue(
     items.push({
       id: 'cleanup-candidates',
       tone: 'info',
+      category: 'cleanup',
       title: `Validate ${input.orphanCount} cleanup candidate${input.orphanCount === 1 ? '' : 's'} after blocker work`,
       reason:
         'These files may be removable, but they are lower priority than active structural risk.',
@@ -163,6 +177,7 @@ export function buildOverviewReviewQueue(
     items.push({
       id: 'healthy-baseline',
       tone: 'info',
+      category: 'healthy',
       title: 'No urgent review blockers detected',
       reason:
         'Nothing in the current analysis is pushing this repository into a high-risk review posture.',
