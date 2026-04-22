@@ -27,6 +27,9 @@ interface PriorityReviewQueueProps {
   onShowCleanupCandidates?: () => void
 }
 
+const categoryLabels: Record<OverviewReviewQueueCategory, string> =
+  dashboardCopy.priorityReviewQueue.categoryLabels
+
 function getQueueItemIcon(item: OverviewReviewQueueItem): React.ReactNode {
   if (item.category === 'cycles') {
     return <RefreshCw className={cn('h-4 w-4', getRiskTextClass('critical'))} />
@@ -42,11 +45,7 @@ function getQueueItemIcon(item: OverviewReviewQueueItem): React.ReactNode {
 }
 
 function getCategoryLabel(category: OverviewReviewQueueCategory): string {
-  return (
-    dashboardCopy.priorityReviewQueue.categoryLabels[
-      category as keyof typeof dashboardCopy.priorityReviewQueue.categoryLabels
-    ] || dashboardCopy.priorityReviewQueue.categoryLabels.fallback
-  )
+  return categoryLabels[category]
 }
 
 export function PriorityReviewQueue({

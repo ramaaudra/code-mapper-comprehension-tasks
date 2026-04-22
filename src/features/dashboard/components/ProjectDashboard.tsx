@@ -40,27 +40,15 @@ import type { Edge, Node } from '@xyflow/react'
 interface OverviewSectionHeaderProps {
   eyebrow: string
   title: string
-  description?: string
 }
 
-function OverviewSectionHeader({
-  eyebrow,
-  title,
-  description
-}: OverviewSectionHeaderProps) {
+function OverviewSectionHeader({ eyebrow, title }: OverviewSectionHeaderProps) {
   return (
     <div className='space-y-1.5'>
       <p className='text-xs font-medium uppercase tracking-label text-muted-foreground/85'>
         {eyebrow}
       </p>
-      <div className='space-y-1'>
-        <h2 className='text-2xl font-bold text-foreground'>{title}</h2>
-        {description ? (
-          <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground/90'>
-            {description}
-          </p>
-        ) : null}
-      </div>
+      <h2 className='text-2xl font-bold text-foreground'>{title}</h2>
     </div>
   )
 }
@@ -121,7 +109,6 @@ interface ProjectDashboardProps {
   viewMode: 'overview' | 'architecture'
   selectedFileId: string | null
   onNavigateToFile: (fileId: string) => void
-  onShowArchitecture?: () => void
   onShowMetricsGuide?: () => void
   onShowCycleTriage?: (cycleId?: string) => void
   onShowSetupGuide?: () => void
@@ -138,7 +125,6 @@ export const ProjectDashboard = memo(function ProjectDashboard({
   viewMode,
   selectedFileId,
   onNavigateToFile,
-  onShowArchitecture: _onShowArchitecture,
   onShowMetricsGuide,
   onShowCycleTriage,
   onShowSetupGuide,
@@ -395,7 +381,6 @@ export const ProjectDashboard = memo(function ProjectDashboard({
                   <OverviewSectionHeader
                     eyebrow={dashboardCopy.sections.reviewFirst.eyebrow}
                     title={dashboardCopy.sections.reviewFirst.title}
-                    description={dashboardCopy.sections.reviewFirst.description}
                   />
                   {reviewFirstState ?? (
                     <PriorityReviewQueue
@@ -415,9 +400,6 @@ export const ProjectDashboard = memo(function ProjectDashboard({
                   <OverviewSectionHeader
                     eyebrow={dashboardCopy.sections.currentIssues.eyebrow}
                     title={dashboardCopy.sections.currentIssues.title}
-                    description={
-                      dashboardCopy.sections.currentIssues.description
-                    }
                   />
                   <IssuesPanel
                     data={analysisData}
@@ -437,9 +419,6 @@ export const ProjectDashboard = memo(function ProjectDashboard({
                   <OverviewSectionHeader
                     eyebrow={dashboardCopy.sections.systemContext.eyebrow}
                     title={dashboardCopy.sections.systemContext.title}
-                    description={
-                      dashboardCopy.sections.systemContext.description
-                    }
                   />
                   {systemContextState ?? (
                     <SupportingContextSection
@@ -462,16 +441,8 @@ export const ProjectDashboard = memo(function ProjectDashboard({
                 <OverviewSectionHeader
                   eyebrow={dashboardCopy.sections.quickSnapshot.eyebrow}
                   title={dashboardCopy.sections.quickSnapshot.title}
-                  description={dashboardCopy.sections.quickSnapshot.description}
                 />
                 <div className='rounded-2xl border border-border/70 bg-muted/15'>
-                  {dashboardCopy.sections.quickSnapshot.helper ? (
-                    <div className='border-b border-border/70 px-4 py-3'>
-                      <p className='max-w-3xl text-sm leading-relaxed text-muted-foreground'>
-                        {dashboardCopy.sections.quickSnapshot.helper}
-                      </p>
-                    </div>
-                  ) : null}
                   <dl className='grid gap-px bg-border/70 sm:grid-cols-2 xl:grid-cols-4'>
                     {overviewCards.map(({ label, value, subValue }) => (
                       <div

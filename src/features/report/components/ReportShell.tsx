@@ -192,7 +192,6 @@ export function ReportShell() {
         viewMode={explorer.viewMode}
         selectedFileId={explorer.selectedFileId}
         onNavigateToFile={explorer.navigateToFile}
-        onShowArchitecture={explorer.handleShowArchitecture}
         onShowMetricsGuide={() => explorer.handleShowMetricsGuide('overview')}
         onShowCycleTriage={(cycleId) =>
           explorer.handleShowCycleTriage({

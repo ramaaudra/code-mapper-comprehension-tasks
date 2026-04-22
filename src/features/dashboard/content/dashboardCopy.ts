@@ -8,24 +8,19 @@ export const dashboardCopy = {
   sections: {
     quickSnapshot: {
       eyebrow: 'Quick Snapshot',
-      title: 'Repository size and recent pressure',
-      description: '',
-      helper: ''
+      title: 'Repository size and recent pressure'
     },
     reviewFirst: {
       eyebrow: 'Start Here',
-      title: 'Start with the next safe review move',
-      description: ''
+      title: 'Start with the next safe review move'
     },
     currentIssues: {
       eyebrow: 'Current Issues',
-      title: 'Blockers and cleanup follow-up',
-      description: ''
+      title: 'Blockers and cleanup follow-up'
     },
     systemContext: {
       eyebrow: 'Supporting Context',
-      title: 'Why the queue is prioritizing these areas',
-      description: ''
+      title: 'Why the queue is prioritizing these areas'
     }
   },
   sectionStates: {
@@ -59,8 +54,7 @@ export const dashboardCopy = {
       'warning-risk': 'Shared Area',
       hotspot: 'Active Hotspot',
       cleanup: 'Cleanup Candidate',
-      healthy: 'Healthy',
-      fallback: 'Review'
+      healthy: 'Healthy'
     }
   },
   highRiskModules: {
@@ -129,8 +123,7 @@ export const dashboardCopy = {
       description:
         'Cycles increase testing surface and make refactors less predictable.',
       empty: 'No dependency cycles detected.',
-      cta: 'Review cycles',
-      previewHint: ''
+      cta: 'Review cycles'
     },
     cleanup: {
       title: 'Cleanup candidates',
@@ -144,7 +137,6 @@ export const dashboardCopy = {
   },
   architectureHealth: {
     title: 'Change Safety Summary',
-    description: '',
     reviewPostureLabel: 'Review posture',
     reviewPostureDetail: (score: number) => `Score: ${score}/100`,
     scoreTooltip: {

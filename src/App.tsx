@@ -282,7 +282,6 @@ function AppContent() {
             viewMode={explorer.viewMode}
             selectedFileId={selectedFileId}
             onNavigateToFile={explorer.navigateToFile}
-            onShowArchitecture={explorer.handleShowArchitecture}
             onShowMetricsGuide={() =>
               explorer.handleShowMetricsGuide('overview')
             }

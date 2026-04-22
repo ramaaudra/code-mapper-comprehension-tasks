@@ -1,8 +1,7 @@
-import { describeStructuralPositionStory } from '@/features/architecture/lib/structural-position-story'
+import { getStructuralPositionSummaryLabel } from '@/features/architecture/lib/structural-position-story'
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
@@ -99,7 +98,7 @@ export function ArchitectureHealthScore({
     breakdown,
     riskMetrics
   )
-  const structuralProfile = describeStructuralPositionStory(
+  const structuralPositionSummaryLabel = getStructuralPositionSummaryLabel(
     breakdown.stabilityScore
   )
   const healthStory = getOverviewHealthStory({
@@ -121,11 +120,6 @@ export function ArchitectureHealthScore({
             <CardTitle className='text-base font-medium text-muted-foreground'>
               {dashboardCopy.architectureHealth.title}
             </CardTitle>
-            {dashboardCopy.architectureHealth.description ? (
-              <CardDescription className='max-w-2xl leading-relaxed'>
-                {dashboardCopy.architectureHealth.description}
-              </CardDescription>
-            ) : null}
           </div>
           <TooltipProvider>
             <InfoTooltip
@@ -235,7 +229,7 @@ export function ArchitectureHealthScore({
               {dashboardCopy.architectureHealth.reviewPostureLabel}
             </span>
             <span className='font-semibold text-foreground'>
-              {structuralProfile.summaryLabel}
+              {structuralPositionSummaryLabel}
             </span>
           </div>
           <p className='text-xs font-medium text-muted-foreground'>

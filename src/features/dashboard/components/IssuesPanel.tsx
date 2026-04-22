@@ -315,12 +315,6 @@ export function IssuesPanel({
                   </button>
                 ))}
               </div>
-
-              {dashboardCopy.issuesPanel.cycles.previewHint ? (
-                <p className='text-xs text-muted-foreground'>
-                  {dashboardCopy.issuesPanel.cycles.previewHint}
-                </p>
-              ) : null}
             </>
           )}
         </CardContent>

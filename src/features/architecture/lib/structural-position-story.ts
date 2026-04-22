@@ -40,6 +40,11 @@ export interface StructuralPositionStory {
   rangeLabel: string
 }
 
+export function getStructuralPositionSummaryLabel(instability: number): string {
+  return STRUCTURAL_POSITION_STORY[resolveStructuralPosition(instability)]
+    .summaryLabel
+}
+
 export function describeStructuralPositionStory(
   instability: number
 ): StructuralPositionStory {
