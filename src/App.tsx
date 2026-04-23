@@ -313,7 +313,7 @@ function AppContent() {
             <p className='text-sm leading-relaxed text-muted-foreground'>
               Run the command{' '}
               <code className='rounded bg-muted px-1 py-0.5'>
-                code-mapper analyze &lt;project-path&gt;
+                tauta analyze &lt;project-path&gt;
               </code>{' '}
               in your terminal to load the first project snapshot.
             </p>

@@ -14,7 +14,9 @@ import type { ReactNode } from 'react'
 
 declare global {
   interface Window {
+    __TAUTA_DATA__?: ReportData
     __CODE_MAPPER_DATA__?: ReportData
+    __TAUTA_REPORT_BOOTSTRAP__?: ReportBootstrapData
     __CODE_MAPPER_REPORT_BOOTSTRAP__?: ReportBootstrapData
   }
 }

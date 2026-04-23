@@ -40,7 +40,7 @@ export function ReportDownloadButton({
   } = buttonProps ?? {}
 
   const parseErrorMessage = async (response: Response): Promise<string> => {
-    const contentType = response.headers.get('content-type') || ''
+    const contentType = response.headers.get('content-type') ?? ''
 
     if (contentType.includes('application/json')) {
       const data = (await response.json()) as ApiErrorResponse
@@ -65,7 +65,7 @@ export function ReportDownloadButton({
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `code-mapper-report-${new Date().toISOString().split('T')[0]}.html`
+      a.download = `tauta-report-${new Date().toISOString().split('T')[0]}.html`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)

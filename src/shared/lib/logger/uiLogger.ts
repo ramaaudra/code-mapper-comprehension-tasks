@@ -66,7 +66,7 @@ function normalizeUiLogDetails(details: unknown[]): unknown[] {
 }
 
 function formatUiLogMessage(scope: string, message: string): string {
-  return `[Code Mapper][${scope}] ${message}`
+  return `[Tauta][${scope}] ${message}`
 }
 
 export function createUiLogger(

@@ -10,7 +10,7 @@ export default defineConfig({
     emptyOutDir: true,
     lib: {
       entry: path.resolve(__dirname, 'src/features/report/report-entry.tsx'),
-      name: 'CodeMapperReport',
+      name: 'TautaReport',
       formats: ['iife'],
       fileName: 'report-bundle'
     },

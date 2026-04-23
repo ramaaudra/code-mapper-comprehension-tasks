@@ -41,7 +41,7 @@ export const setupGuideCopy = {
       viteProjects: {
         title: '3. For Vite projects',
         description:
-          'Keep path mappings in tsconfig.json or tsconfig.app.json, not only in vite.config.ts. Code Mapper reads tsconfig/jsconfig path settings, not Vite aliases alone.'
+          'Keep path mappings in tsconfig.json or tsconfig.app.json, not only in vite.config.ts. Tauta reads tsconfig/jsconfig path settings, not Vite aliases alone.'
       },
       troubleshooting: {
         title: '4. Troubleshooting tips',

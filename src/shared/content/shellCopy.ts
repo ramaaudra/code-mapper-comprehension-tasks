@@ -1,5 +1,5 @@
 export const shellCopy = {
-  brand: 'Code Mapper',
+  brand: 'Tauta',
   regions: {
     primaryNavigation: 'Primary Navigation',
     help: 'Help & Setup',

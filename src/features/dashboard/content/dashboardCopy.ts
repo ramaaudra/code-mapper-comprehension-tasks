@@ -57,32 +57,6 @@ export const dashboardCopy = {
       healthy: 'Healthy'
     }
   },
-  highRiskModules: {
-    title: 'Shared areas that can spread change',
-    description:
-      'Review these modules carefully before editing shared flows or services.',
-    emptyTitle: 'No module data available',
-    emptyDescription: 'Run analysis to see propagation-risk hotspots',
-    columns: {
-      spreadRisk: 'Spread Risk',
-      spreadPotential: 'Spread Potential',
-      sharedBy: 'Shared By'
-    },
-    footerCta: 'View all in Architecture tab →',
-    tooltip: {
-      title: 'What is Propagation Risk?',
-      intro:
-        'Spread risk estimates how widely a module change may travel through the codebase when many other areas depend on it.',
-      heuristicLabel: 'Heuristic:',
-      thresholdsIntro: 'Risk Zones:',
-      thresholdsNote:
-        'These thresholds are product heuristics for triage, not universal scientific cutoffs.',
-      summary:
-        'A high score means many dependents combined with a dependency structure that can spread change impact widely.'
-    },
-    instabilityTitle: (value: string) =>
-      `Instability (I): ${value}\n0.0 = Stable, 1.0 = Unstable`
-  },
   evolutionaryHotspots: {
     title: 'Recently active areas to review first',
     description:
