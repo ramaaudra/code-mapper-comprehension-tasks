@@ -66,13 +66,13 @@ export function shouldShowTopBarContextChip(
 }
 
 interface ShouldShowAnalysisSetupActionOptions {
-  hasUnresolvedImports: boolean
+  hasAnalysisSetupWarnings: boolean
   activeUtilityViewMode: UtilityExplorerViewMode | null
 }
 
 export function shouldShowAnalysisSetupAction({
-  hasUnresolvedImports,
+  hasAnalysisSetupWarnings,
   activeUtilityViewMode
 }: ShouldShowAnalysisSetupActionOptions) {
-  return hasUnresolvedImports || activeUtilityViewMode === 'setup-guide'
+  return hasAnalysisSetupWarnings || activeUtilityViewMode === 'setup-guide'
 }

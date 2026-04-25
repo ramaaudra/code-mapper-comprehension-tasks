@@ -576,8 +576,9 @@ export function useExplorerController({
   const projectName = analysisData?.projectName
   const rootPath = analysisData?.rootPath
 
-  const hasUnresolvedImports =
-    (analysisData?.warnings?.unresolvedImports?.length ?? 0) > 0
+  const hasAnalysisSetupWarnings =
+    (analysisData?.warnings?.unresolvedImports?.length ?? 0) > 0 ||
+    (analysisData?.warnings?.unsupportedFiles?.total ?? 0) > 0
 
   const activePrimaryViewMode = useMemo<PrimaryExplorerViewMode | null>(() => {
     return isPrimaryViewMode(viewMode) ? viewMode : null
@@ -599,10 +600,9 @@ export function useExplorerController({
     return resolveExplorerContextChip({
       viewMode,
       graphViewMode,
-      currentHash: buildMetricsGuideHash(),
-      hasUnresolvedImports
+      currentHash: buildMetricsGuideHash()
     })
-  }, [graphViewMode, hasUnresolvedImports, viewMode])
+  }, [graphViewMode, viewMode])
 
   return {
     treeRef,
@@ -624,7 +624,7 @@ export function useExplorerController({
     fileCount,
     projectName,
     rootPath,
-    hasUnresolvedImports,
+    hasAnalysisSetupWarnings,
     handleFileSelect,
     navigateToFile,
     handleShowOverview,

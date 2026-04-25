@@ -227,7 +227,7 @@ export function ReportShell() {
       }
       onToggleTree={explorer.toggleTreeView}
       onShowSetupGuide={explorer.handleShowSetupGuide}
-      hasUnresolvedImports={explorer.hasUnresolvedImports}
+      hasAnalysisSetupWarnings={explorer.hasAnalysisSetupWarnings}
       fileCount={
         analysisData ? explorer.fileCount : reportBootstrap?.summary.totalFiles
       }

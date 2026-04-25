@@ -28,7 +28,7 @@ interface ExplorerShellProps {
   isTreeCollapsed: boolean
   onToggleTree: () => void
   onShowSetupGuide: () => void
-  hasUnresolvedImports: boolean
+  hasAnalysisSetupWarnings: boolean
   fileCount?: number
   projectName?: string
   rootPath?: string
@@ -57,7 +57,7 @@ export function ExplorerShell({
   isTreeCollapsed,
   onToggleTree,
   onShowSetupGuide,
-  hasUnresolvedImports,
+  hasAnalysisSetupWarnings,
   fileCount,
   projectName,
   rootPath,
@@ -88,7 +88,7 @@ export function ExplorerShell({
         isTreeCollapsed={isTreeCollapsed}
         onToggleTree={onToggleTree}
         onShowSetupGuide={onShowSetupGuide}
-        hasUnresolvedImports={hasUnresolvedImports}
+        hasAnalysisSetupWarnings={hasAnalysisSetupWarnings}
         fileCount={fileCount}
         projectName={projectName}
         rootPath={rootPath}

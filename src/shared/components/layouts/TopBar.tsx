@@ -46,7 +46,7 @@ interface TopBarProps {
   isTreeCollapsed: boolean
   onToggleTree: () => void
   onShowSetupGuide: () => void
-  hasUnresolvedImports: boolean
+  hasAnalysisSetupWarnings: boolean
   fileCount?: number
   projectName?: string
   rootPath?: string
@@ -71,7 +71,7 @@ export function TopBar({
   isTreeCollapsed,
   onToggleTree,
   onShowSetupGuide,
-  hasUnresolvedImports,
+  hasAnalysisSetupWarnings,
   fileCount,
   projectName,
   rootPath,
@@ -92,7 +92,7 @@ export function TopBar({
     totalChanges
   })
   const showAnalysisSetupAction = shouldShowAnalysisSetupAction({
-    hasUnresolvedImports,
+    hasAnalysisSetupWarnings,
     activeUtilityViewMode
   })
   const timestampLabel =
@@ -250,7 +250,7 @@ export function TopBar({
                   )}
                 >
                   {shellCopy.utilities.analysisSetup.label}
-                  {hasUnresolvedImports && (
+                  {hasAnalysisSetupWarnings && (
                     <AlertTriangle
                       className='h-3.5 w-3.5 shrink-0 text-status-warning-foreground'
                       aria-hidden='true'

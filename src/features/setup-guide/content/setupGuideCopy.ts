@@ -17,6 +17,12 @@ export const setupGuideCopy = {
       title: 'Analysis configuration looks healthy',
       description:
         'No unresolved project-import warnings were detected in this snapshot.'
+    },
+    scopeNotice: {
+      badge: 'Scope Notice',
+      title: 'Some files were skipped by design',
+      description:
+        'This analysis focuses on JavaScript and TypeScript source files. Skipped files are listed so you know why they do not appear in the dependency graph.'
     }
   },
   unresolvedImports: {
@@ -24,6 +30,14 @@ export const setupGuideCopy = {
     totalSuffix: 'total',
     summary: (importCount: number, fileCount: number) =>
       `${importCount} import${importCount === 1 ? '' : 's'} from ${fileCount} file${fileCount === 1 ? '' : 's'}`
+  },
+  unsupportedFiles: {
+    title: 'Skipped Non-Code Files',
+    totalSuffix: 'skipped',
+    supportedLabel: 'Analyzed extensions',
+    examplesLabel: 'Examples',
+    extensionSummary: (count: number) =>
+      `${count} file${count === 1 ? '' : 's'}`
   },
   instructions: {
     title: 'How to Restore Analysis Accuracy',

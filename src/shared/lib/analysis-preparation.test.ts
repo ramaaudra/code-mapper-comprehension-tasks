@@ -129,7 +129,17 @@ function createAnalysisData(): AnalysisData {
     warnings: {
       hasPathMappings: true,
       unresolvedImports: [],
-      totalUnresolvedCount: 0
+      totalUnresolvedCount: 0,
+      unsupportedFiles: {
+        total: 0,
+        byExtension: {},
+        examples: [],
+        supportedExtensions: ['.js', '.jsx', '.ts', '.tsx'],
+        message:
+          'Tauta skipped files outside the JavaScript and TypeScript analysis scope.',
+        suggestion:
+          'Keep the default include pattern for code analysis, or narrow custom include patterns to JS/TS source files.'
+      }
     }
   } satisfies AnalysisDataWithLegacyRisk)
 

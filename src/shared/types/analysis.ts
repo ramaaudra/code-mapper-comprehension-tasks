@@ -133,6 +133,16 @@ export interface AnalysisWarnings {
   hasPathMappings: boolean
   unresolvedImports: UnresolvedImport[]
   totalUnresolvedCount: number
+  unsupportedFiles?: UnsupportedFilesWarning
+}
+
+export interface UnsupportedFilesWarning {
+  total: number
+  byExtension: Record<string, number>
+  examples: string[]
+  supportedExtensions: string[]
+  message: string
+  suggestion: string
 }
 
 /**

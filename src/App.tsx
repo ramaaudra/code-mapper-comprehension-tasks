@@ -344,7 +344,7 @@ function AppContent() {
       }
       onToggleTree={explorer.toggleTreeView}
       onShowSetupGuide={explorer.handleShowSetupGuide}
-      hasUnresolvedImports={explorer.hasUnresolvedImports}
+      hasAnalysisSetupWarnings={explorer.hasAnalysisSetupWarnings}
       fileCount={explorer.fileCount}
       projectName={explorer.projectName}
       rootPath={explorer.rootPath}

@@ -26,7 +26,6 @@ interface ResolveExplorerContextChipOptions {
   viewMode: ExplorerViewMode
   graphViewMode: GraphViewMode
   currentHash: string
-  hasUnresolvedImports: boolean
 }
 
 interface ResolveAnalysisShellStateOptions {
@@ -145,8 +144,7 @@ export function resolveAnalysisShellState({
 export function resolveExplorerContextChip({
   viewMode,
   graphViewMode,
-  currentHash: _currentHash,
-  hasUnresolvedImports: _hasUnresolvedImports
+  currentHash: _currentHash
 }: ResolveExplorerContextChipOptions): ExplorerContextChip | null {
   if (viewMode === 'cycle-triage') {
     return {

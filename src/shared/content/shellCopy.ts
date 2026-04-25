@@ -25,7 +25,7 @@ export const shellCopy = {
     analysisSetup: {
       label: 'Analysis Setup',
       tooltip:
-        'Review setup guidance and unresolved import warnings for accurate analysis.'
+        'Review setup guidance, unresolved import warnings, and analysis scope notices.'
     }
   },
   contextChips: {
