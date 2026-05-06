@@ -403,6 +403,7 @@ export const ProjectDashboard = memo(function ProjectDashboard({
                   />
                   <IssuesPanel
                     data={analysisData}
+                    onNavigateToFile={onNavigateToFile}
                     onShowCycleTriage={onShowCycleTriage}
                     onShowSetupGuide={onShowSetupGuide}
                     cleanupDialogOpen={cleanupDialogOpen}
